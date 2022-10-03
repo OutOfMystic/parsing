@@ -1,0 +1,740 @@
+Fri Sep 23 21:02:10 2022 [31m[49mController: (TypeError) can only concatenate list (not "str") to list[30mFri Sep 23 21:02:10 2022 [31m[49mController: (TypeError) can only concatenate list (not "str") to list[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\manager\controller.py", line 62, in load_connections
+    parsing_settings = [priority] + parsing_settings
+TypeError: can only concatenate list (not "str") to list
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:05:05 2022 [31m[49mController: (NameError) name 'parsing_settings' is not defined[30mFri Sep 23 21:05:05 2022 [31m[49mController: (NameError) name 'parsing_settings' is not defined[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\manager\controller.py", line 62, in load_connections
+    subject_url = parsing_settings[1]
+NameError: name 'parsing_settings' is not defined
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:06:52 2022 [31m[49mController: (IndexError) list assignment index out of range[30mFri Sep 23 21:06:52 2022 [31m[49mController: (IndexError) list assignment index out of range[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\manager\controller.py", line 65, in load_connections
+    all_connections[group][subject_id] = parsing_settings
+IndexError: list assignment index out of range
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:19:59 2022 [31m[49mController: (TypeError) argument of type 'int' is not iterable[30mFri Sep 23 21:19:59 2022 [31m[49mController: (TypeError) argument of type 'int' is not iterable[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\manager\controller.py", line 64, in load_connections
+    if group.url_filter(subject_url):
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 11, in <lambda>
+    url_filter = lambda url: 'ticketland.ru' in url and 'lenkom' in url
+TypeError: argument of type 'int' is not iterable
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:37:50 2022 [31m[49mController: (TypeError) argument of type 'int' is not iterable[30mFri Sep 23 21:37:50 2022 [31m[49mController: (TypeError) argument of type 'int' is not iterable[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\manager\controller.py", line 64, in load_connections
+    if group.url_filter(subject_url):
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 11, in <lambda>
+    url_filter = lambda url: 'ticketland.ru' in url and 'lenkom' in url
+TypeError: argument of type 'int' is not iterable
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:38:11 2022 [31m[49mController: (TypeError) argument of type 'int' is not iterable[30mFri Sep 23 21:38:11 2022 [31m[49mController: (TypeError) argument of type 'int' is not iterable[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\manager\controller.py", line 64, in load_connections
+    if group.url_filter(subject_url):
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 11, in <lambda>
+    url_filter = lambda url: 'ticketland.ru' in url and 'lenkom' in url
+TypeError: argument of type 'int' is not iterable
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:40:09 2022 tickets-star.com.Parser: [31m[49mGroup: (IndexError) list index out of range[30mFri Sep 23 21:40:09 2022 tickets-star.com.Parser: [31m[49mGroup: (IndexError) list index out of range[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 79, in _start_parser_and_add_data
+    scheme = self.router.get_scheme(subject_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 20, in get_scheme
+    group_scheme = self.get_group_scheme(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 12, in get_group_scheme
+    scheme_id = db_manager.get_scheme_id(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 78, in get_scheme_id
+    return records[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:40:10 2022 tickets-star.com.Parser: [31m[49mGroup: (IndexError) list index out of range[30mFri Sep 23 21:40:10 2022 tickets-star.com.Parser: [31m[49mGroup: (IndexError) list index out of range[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 76, in _start_parser_and_add_data
+    margin_rules = db_manager.get_margin(margin_name)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 175, in get_margin
+    rules = self.fetchall()[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 21:41:08 2022 tickets-star.com.Parser: [31m[49mGroup| (IndexError) list index out of range[30mFri Sep 23 21:41:08 2022 tickets-star.com.Parser: [31m[49mGroup| (IndexError) list index out of range[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 79, in _start_parser_and_add_data
+    scheme = self.router.get_scheme(subject_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 20, in get_scheme
+    group_scheme = self.get_group_scheme(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 12, in get_group_scheme
+    scheme_id = db_manager.get_scheme_id(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 78, in get_scheme_id
+    return records[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:41:09 2022 ticketland.ru.LenkomParser: [31m[49mGroup| (IndexError) list index out of range[30mFri Sep 23 21:41:09 2022 ticketland.ru.LenkomParser: [31m[49mGroup| (IndexError) list index out of range[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 79, in _start_parser_and_add_data
+    scheme = self.router.get_scheme(subject_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 20, in get_scheme
+    group_scheme = self.get_group_scheme(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 12, in get_group_scheme
+    scheme_id = db_manager.get_scheme_id(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 78, in get_scheme_id
+    return records[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:41:09 2022 tickets-star.com.Parser: [31m[49mGroup| (IndexError) list index out of range[30mFri Sep 23 21:41:09 2022 tickets-star.com.Parser: [31m[49mGroup| (IndexError) list index out of range[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 76, in _start_parser_and_add_data
+    margin_rules = db_manager.get_margin(margin_name)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 175, in get_margin
+    rules = self.fetchall()[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 21:41:37 2022 tickets-star.com.Parser: [31m[49mGroup| (IndexError) list index out of range[30mFri Sep 23 21:41:37 2022 tickets-star.com.Parser: Group| (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 79, in _start_parser_and_add_data
+    scheme = self.router.get_scheme(subject_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 20, in get_scheme
+    group_scheme = self.get_group_scheme(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 12, in get_group_scheme
+    scheme_id = db_manager.get_scheme_id(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 78, in get_scheme_id
+    return records[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:41:38 2022 tickets-star.com.Parser: [31m[49mGroup| (IndexError) list index out of range[30mFri Sep 23 21:41:38 2022 tickets-star.com.Parser: Group| (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 76, in _start_parser_and_add_data
+    margin_rules = db_manager.get_margin(margin_name)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 175, in get_margin
+    rules = self.fetchall()[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 21:41:39 2022 ticketland.ru.LenkomParser: [31m[49mGroup| (IndexError) list index out of range[30mFri Sep 23 21:41:39 2022 ticketland.ru.LenkomParser: Group| (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 79, in _start_parser_and_add_data
+    scheme = self.router.get_scheme(subject_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 20, in get_scheme
+    group_scheme = self.get_group_scheme(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 12, in get_group_scheme
+    scheme_id = db_manager.get_scheme_id(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 78, in get_scheme_id
+    return records[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:41:40 2022 tickets-star.com.Parser: [31m[49mGroup| (IndexError) pop from empty list[30mFri Sep 23 21:41:40 2022 tickets-star.com.Parser: Group| (IndexError) pop from empty list
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 74, in _start_parser_and_add_data
+    priority = event_data.pop(0)
+IndexError: pop from empty list
+[30m
+[33m[49m | . Жду 2.1с[30m
+Fri Sep 23 21:41:40 2022 ticketland.ru.LenkomParser: [31m[49mGroup| (IndexError) list index out of range[30mFri Sep 23 21:41:40 2022 ticketland.ru.LenkomParser: Group| (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 76, in _start_parser_and_add_data
+    margin_rules = db_manager.get_margin(margin_name)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 175, in get_margin
+    rules = self.fetchall()[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 21:42:24 2022 tickets-star.com.Parser| [31m[49mGroup: (IndexError) list index out of range[30mFri Sep 23 21:42:24 2022 tickets-star.com.Parser| Group: (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 79, in _start_parser_and_add_data
+    scheme = self.router.get_scheme(subject_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 20, in get_scheme
+    group_scheme = self.get_group_scheme(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 12, in get_group_scheme
+    scheme_id = db_manager.get_scheme_id(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 78, in get_scheme_id
+    return records[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:42:25 2022 tickets-star.com.Parser| [31m[49mGroup: (IndexError) list index out of range[30mFri Sep 23 21:42:25 2022 tickets-star.com.Parser| Group: (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 76, in _start_parser_and_add_data
+    margin_rules = db_manager.get_margin(margin_name)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 175, in get_margin
+    rules = self.fetchall()[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 21:42:26 2022 ticketland.ru.LenkomParser| [31m[49mGroup: (IndexError) list index out of range[30mFri Sep 23 21:42:26 2022 ticketland.ru.LenkomParser| Group: (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 79, in _start_parser_and_add_data
+    scheme = self.router.get_scheme(subject_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 20, in get_scheme
+    group_scheme = self.get_group_scheme(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 12, in get_group_scheme
+    scheme_id = db_manager.get_scheme_id(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 78, in get_scheme_id
+    return records[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:42:26 2022 tickets-star.com.Parser| [31m[49mGroup: (IndexError) pop from empty list[30mFri Sep 23 21:42:26 2022 tickets-star.com.Parser| Group: (IndexError) pop from empty list
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 74, in _start_parser_and_add_data
+    priority = event_data.pop(0)
+IndexError: pop from empty list
+[30m
+[33m[49m | . Жду 2.1с[30m
+Fri Sep 23 21:42:26 2022 ticketland.ru.LenkomParser| [31m[49mGroup: (IndexError) list index out of range[30mFri Sep 23 21:42:26 2022 ticketland.ru.LenkomParser| Group: (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 76, in _start_parser_and_add_data
+    margin_rules = db_manager.get_margin(margin_name)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 175, in get_margin
+    rules = self.fetchall()[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 21:42:27 2022 ticketland.ru.LenkomParser| [31m[49mGroup: (IndexError) pop from empty list[30mFri Sep 23 21:42:27 2022 ticketland.ru.LenkomParser| Group: (IndexError) pop from empty list
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 74, in _start_parser_and_add_data
+    priority = event_data.pop(0)
+IndexError: pop from empty list
+[30m
+[33m[49m | . Жду 2.1с[30m
+Fri Sep 23 21:43:55 2022 tickets-star.com.Parser| [31m[49mGroup: (IndexError) list index out of range[30mFri Sep 23 21:43:55 2022 tickets-star.com.Parser| Group: (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 80, in _start_parser_and_add_data
+    scheme = self.router.get_scheme(subject_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 20, in get_scheme
+    group_scheme = self.get_group_scheme(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 12, in get_group_scheme
+    scheme_id = db_manager.get_scheme_id(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 78, in get_scheme_id
+    return records[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:43:56 2022 ticketland.ru.LenkomParser| [31m[49mGroup: (IndexError) list index out of range[30mFri Sep 23 21:43:56 2022 ticketland.ru.LenkomParser| Group: (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 80, in _start_parser_and_add_data
+    scheme = self.router.get_scheme(subject_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 20, in get_scheme
+    group_scheme = self.get_group_scheme(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\router.py", line 12, in get_group_scheme
+    scheme_id = db_manager.get_scheme_id(event_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 78, in get_scheme_id
+    return records[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:43:57 2022 tickets-star.com.Parser| [31m[49mGroup: (IndexError) list index out of range[30mFri Sep 23 21:43:57 2022 tickets-star.com.Parser| Group: (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\group.py", line 77, in _start_parser_and_add_data
+    margin_rules = db_manager.get_margin(margin_name)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 17, in wrapper
+    return func(*args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\connection\database.py", line 175, in get_margin
+    rules = self.fetchall()[0][0]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 21:55:49 2022 Ложь во спас 18окт19 Ленком-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str instead[30mFri Sep 23 21:55:49 2022 Ложь во спас 18окт19 Ленком-Основная| Main: (AssertionError) row is not an integer, got str instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\tickets_star_com_seats.py", line 69, in body
+    self.register_sector(each_sector, seats)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 108, in register_sector
+    assert isinstance(row, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str instead
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:55:51 2022 Ложь во спас 18окт19 Ленком-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str instead[30mFri Sep 23 21:55:51 2022 Ложь во спас 18окт19 Ленком-Основная| Main: (AssertionError) row is not an integer, got str instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\tickets_star_com_seats.py", line 69, in body
+    self.register_sector(each_sector, seats)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 108, in register_sector
+    assert isinstance(row, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str instead
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 21:55:52 2022 Спектакль «Ш 29окт19 Ленком-Основная| [31m[49mMain: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'[30mFri Sep 23 21:55:52 2022 Спектакль «Ш 29окт19 Ленком-Основная| Main: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 190, in run_try
+    self.scheme.release_sectors(self._parsed_sectors)
+TypeError: release_sectors() missing 1 required positional argument: 'cur_priority'
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:55:53 2022 Безумный ден 14окт19 Ленком-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str instead[30mFri Sep 23 21:55:53 2022 Безумный ден 14окт19 Ленком-Основная| Main: (AssertionError) row is not an integer, got str instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\tickets_star_com_seats.py", line 69, in body
+    self.register_sector(each_sector, seats)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 108, in register_sector
+    assert isinstance(row, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str instead
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:55:54 2022 Ложь во спас 18окт19 Ленком-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str instead[30mFri Sep 23 21:55:54 2022 Ложь во спас 18окт19 Ленком-Основная| Main: (AssertionError) row is not an integer, got str instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\tickets_star_com_seats.py", line 69, in body
+    self.register_sector(each_sector, seats)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 108, in register_sector
+    assert isinstance(row, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str instead
+[30m
+[33m[49m | . Жду 2.1с[30m
+Fri Sep 23 21:55:54 2022 Спектакль «Ш 29окт19 Ленком-Основная| [31m[49mMain: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'[30mFri Sep 23 21:55:54 2022 Спектакль «Ш 29окт19 Ленком-Основная| Main: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 190, in run_try
+    self.scheme.release_sectors(self._parsed_sectors)
+TypeError: release_sectors() missing 1 required positional argument: 'cur_priority'
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 21:55:55 2022 Безумный ден 14окт19 Ленком-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str instead[30mFri Sep 23 21:55:55 2022 Безумный ден 14окт19 Ленком-Основная| Main: (AssertionError) row is not an integer, got str instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\tickets_star_com_seats.py", line 69, in body
+    self.register_sector(each_sector, seats)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 108, in register_sector
+    assert isinstance(row, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str instead
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 21:55:57 2022 Спектакль «Ш 29окт19 Ленком-Основная| [31m[49mMain: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'[30mFri Sep 23 21:55:57 2022 Спектакль «Ш 29окт19 Ленком-Основная| Main: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 190, in run_try
+    self.scheme.release_sectors(self._parsed_sectors)
+TypeError: release_sectors() missing 1 required positional argument: 'cur_priority'
+[30m
+[33m[49m | . Жду 2.1с[30m
+Fri Sep 23 21:55:58 2022 Безумный ден 14окт19 Ленком-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str instead[30mFri Sep 23 21:55:58 2022 Безумный ден 14окт19 Ленком-Основная| Main: (AssertionError) row is not an integer, got str instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\tickets_star_com_seats.py", line 69, in body
+    self.register_sector(each_sector, seats)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 108, in register_sector
+    assert isinstance(row, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str instead
+[30m
+[33m[49m | . Жду 2.1с[30m
+Fri Sep 23 21:59:54 2022 Ложь во спас 18окт19 Ленком-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str instead[30mFri Sep 23 21:59:54 2022 Ложь во спас 18окт19 Ленком-Основная| Main: (AssertionError) row is not an integer, got str instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\tickets_star_com_seats.py", line 69, in body
+    self.register_sector(each_sector, seats)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 108, in register_sector
+    assert isinstance(row, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str instead
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 21:59:56 2022 Ложь во спас 18окт19 Ленком-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str instead[30mFri Sep 23 21:59:56 2022 Ложь во спас 18окт19 Ленком-Основная| Main: (AssertionError) row is not an integer, got str instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\tickets_star_com_seats.py", line 69, in body
+    self.register_sector(each_sector, seats)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 108, in register_sector
+    assert isinstance(row, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str instead
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 21:59:57 2022 Правда-хорош 30окт19 МХТ-Малая| [31m[49mMain: (UnicodeDecodeError) 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte[30mFri Sep 23 21:59:57 2022 Правда-хорош 30окт19 МХТ-Малая| Main: (UnicodeDecodeError) 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 202, in body
+    self.check_sectors()
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 172, in check_sectors
+    input(utils.green('Press enter to continue...'))
+  File "C:\Users\Admin\AppData\Local\Programs\Python\Python39\lib\codecs.py", line 322, in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 22:01:31 2022 Правда-хорош 30окт19 МХТ-Малая| [31m[49mMain: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'[30mFri Sep 23 22:01:31 2022 Правда-хорош 30окт19 МХТ-Малая| Main: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 190, in run_try
+    self.scheme.release_sectors(self._parsed_sectors)
+TypeError: release_sectors() missing 1 required positional argument: 'cur_priority'
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 22:01:32 2022 Ложь во спас 18окт19 Ленком-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str instead[30mFri Sep 23 22:01:32 2022 Ложь во спас 18окт19 Ленком-Основная| Main: (AssertionError) row is not an integer, got str instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\tickets_star_com_seats.py", line 69, in body
+    self.register_sector(each_sector, seats)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 108, in register_sector
+    assert isinstance(row, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str instead
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 22:01:34 2022 Правда-хорош 30окт19 МХТ-Малая| [31m[49mMain: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'[30mFri Sep 23 22:01:34 2022 Правда-хорош 30окт19 МХТ-Малая| Main: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 190, in run_try
+    self.scheme.release_sectors(self._parsed_sectors)
+TypeError: release_sectors() missing 1 required positional argument: 'cur_priority'
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 22:01:34 2022 Ложь во спас 18окт19 Ленком-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str instead[30mFri Sep 23 22:01:34 2022 Ложь во спас 18окт19 Ленком-Основная| Main: (AssertionError) row is not an integer, got str instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\tickets_star_com_seats.py", line 69, in body
+    self.register_sector(each_sector, seats)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 108, in register_sector
+    assert isinstance(row, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str instead
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 22:01:36 2022 Безумный ден 14окт19 Ленком-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str instead[30mFri Sep 23 22:01:36 2022 Безумный ден 14окт19 Ленком-Основная| Main: (AssertionError) row is not an integer, got str instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\tickets_star_com_seats.py", line 69, in body
+    self.register_sector(each_sector, seats)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 108, in register_sector
+    assert isinstance(row, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str instead
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 22:01:36 2022 Весёлые врем 29окт19 МХТ-Малая| [31m[49mMain: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'[30mFri Sep 23 22:01:36 2022 Весёлые врем 29окт19 МХТ-Малая| Main: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 190, in run_try
+    self.scheme.release_sectors(self._parsed_sectors)
+TypeError: release_sectors() missing 1 required positional argument: 'cur_priority'
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 22:01:37 2022 Правда-хорош 30окт19 МХТ-Малая| [31m[49mMain: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'[30mFri Sep 23 22:01:37 2022 Правда-хорош 30окт19 МХТ-Малая| Main: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 190, in run_try
+    self.scheme.release_sectors(self._parsed_sectors)
+TypeError: release_sectors() missing 1 required positional argument: 'cur_priority'
+[30m
+[33m[49m | . Жду 2.1с[30m
+Fri Sep 23 22:01:57 2022 Правда-хорош 30окт19 МХТ-Малая| [31m[49mMain: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'[30mFri Sep 23 22:01:57 2022 Правда-хорош 30окт19 МХТ-Малая| Main: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 190, in run_try
+    self.scheme.release_sectors(self._parsed_sectors)
+TypeError: release_sectors() missing 1 required positional argument: 'cur_priority'
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 22:01:59 2022 Правда-хорош 30окт19 МХТ-Малая| [31m[49mMain: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'[30mFri Sep 23 22:01:59 2022 Правда-хорош 30окт19 МХТ-Малая| Main: (TypeError) release_sectors() missing 1 required positional argument: 'cur_priority'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 190, in run_try
+    self.scheme.release_sectors(self._parsed_sectors)
+TypeError: release_sectors() missing 1 required positional argument: 'cur_priority'
+[30m
+[33m[49m | . Жду 1.2с[30m
+Fri Sep 23 22:05:21 2022 МХТ-Малая| [31m[49mScheme: (TypeError) unhashable type: 'list'[30mFri Sep 23 22:05:21 2022 МХТ-Малая| Scheme: (TypeError) unhashable type: 'list'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\scheme.py", line 133, in _release_sectors
+    bookings.discard(to_discard)
+TypeError: unhashable type: 'list'
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 22:07:33 2022 МХТ-Малая| [31m[49mScheme: (TypeError) unhashable type: 'list'[30mFri Sep 23 22:07:33 2022 МХТ-Малая| Scheme: (TypeError) unhashable type: 'list'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\scheme.py", line 133, in _release_sectors
+    bookings.discard(to_discard)
+TypeError: unhashable type: 'list'
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 22:07:34 2022 МХТ-Малая| [31m[49mScheme: (TypeError) unhashable type: 'list'[30mFri Sep 23 22:07:34 2022 МХТ-Малая| Scheme: (TypeError) unhashable type: 'list'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\scheme.py", line 133, in _release_sectors
+    bookings.discard(to_discard)
+TypeError: unhashable type: 'list'
+[30m
+[33m[49m | . Жду 0.5с[30m
+Fri Sep 23 22:07:35 2022 Поколение Ма 30окт13 МХТ-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str (-) instead[30mFri Sep 23 22:07:35 2022 Поколение Ма 29окт19 МХТ-Основная| [31m[49mMain: (AssertionError) row is not an integer, got str (-) instead[30mFri Sep 23 22:07:35 2022 Поколение Ма 29окт19 МХТ-Основная| Main: (AssertionError) row is not an integer, got str (-) instead
+Fri Sep 23 22:07:35 2022 Поколение Ма 30окт13 МХТ-Основная| Main: (AssertionError) row is not an integer, got str (-) instead
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 226, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 110, in register_sector
+    assert isinstance(seat, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str (-) instead
+[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 189, in run_try
+    self.body()
+  File "C:\Users\Admin\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 226, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\models\parser.py", line 110, in register_sector
+    assert isinstance(seat, int), ('row is not an integer, got '
+AssertionError: row is not an integer, got str (-) instead
+[30m
+[33m[49m | . Жду 0.5с[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Sep 28 15:01:08 2022 [31m[49mCommand: (RuntimeError) No command "scheme" found[30mWed Sep 28 15:01:08 2022 Command: (RuntimeError) No command "scheme" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\command.py", line 23, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "scheme" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Sep 28 15:09:45 2022 [31m[49mCommand: (RuntimeError) No command "sdaf" found[30mWed Sep 28 15:09:45 2022 Command: (RuntimeError) No command "sdaf" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\command.py", line 34, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "sdaf" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Thu Sep 29 12:51:17 2022 [31m[49mCommand: (KeyError) 'tickets'[30mThu Sep 29 12:51:17 2022 Command: (KeyError) 'tickets'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 29, in handle_scheme
+    sectors = value[1]['sectors']
+KeyError: 'tickets'
+[30m
+[33m[49m | . Жду 0.5с[30m
+Thu Sep 29 12:52:39 2022 [31m[49mCommand: (KeyError) 'tickets'[30mThu Sep 29 12:52:39 2022 Command: (KeyError) 'tickets'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 32, in handle_scheme
+    for ticket in value[1]['tickets']:
+KeyError: 'tickets'
+[30m
+[33m[49m | . Жду 0.5с[30m
+Thu Sep 29 13:13:34 2022 [31m[49mCommand: (IndexError) list index out of range[30mThu Sep 29 13:13:34 2022 Command: (IndexError) list index out of range
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\command.py", line 32, in home
+    return CustomPrompt.select(args_row)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\command.py", line 22, in select
+    scheme_id = args[1]
+IndexError: list index out of range
+[30m
+[33m[49m | . Жду 0.5с[30m
+Thu Sep 29 15:30:23 2022 [31m[49mCommand: (AttributeError) 'tuple' object has no attribute 'append'[30mThu Sep 29 15:30:23 2022 Command: (AttributeError) 'tuple' object has no attribute 'append'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\command.py", line 34, in home
+    return CustomPrompt.select(args_row)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\command.py", line 25, in select
+    return scheme.select_scheme(scheme_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 14, in select_scheme
+    to_store.append(id_)
+AttributeError: 'tuple' object has no attribute 'append'
+[30m
+[33m[49m | . Жду 0.5с[30m
+Thu Sep 29 15:31:51 2022 [31m[49mCommand: (TypeError) '>=' not supported between instances of 'str' and 'int'[30mThu Sep 29 15:31:51 2022 Command: (TypeError) '>=' not supported between instances of 'str' and 'int'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 29, in handle_scheme
+    return select_sector(args_row, scheme, scheme_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 55, in select_sector
+    return sector.select_sector(constructor, sector_id, scheme_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\sector.py", line 5, in select_sector
+    sector_name, sector = get_sector(constructor, sector_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\sector.py", line 21, in get_sector
+    if sector_id >= len(constructor['sectors']):
+TypeError: '>=' not supported between instances of 'str' and 'int'
+[30m
+[33m[49m | . Жду 0.5с[30m
+Thu Sep 29 15:38:12 2022 [31m[49mCommand: (TypeError) 'int' object is not iterable[30mThu Sep 29 15:38:12 2022 Command: (TypeError) 'int' object is not iterable
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\sector.py", line 16, in handle_sector
+    detail_sector(sector_name, sector)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\sector.py", line 39, in detail_sector
+    rows_mins = [min(row) for row in rows]
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\sector.py", line 39, in <listcomp>
+    rows_mins = [min(row) for row in rows]
+TypeError: 'int' object is not iterable
+[30m
+[33m[49m | . Жду 0.5с[30m
+Thu Sep 29 15:48:40 2022 [31m[49mCommand: (ValueError) min() arg is an empty sequence[30mThu Sep 29 15:48:40 2022 Command: (ValueError) min() arg is an empty sequence
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 37, in handle_scheme
+    sector.detail_sector(*sector_data)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\sector.py", line 40, in detail_sector
+    min_seat = min(rows_mins)
+ValueError: min() arg is an empty sequence
+[30m
+[33m[49m | . Жду 0.5с[30m
+Thu Sep 29 15:54:02 2022 [31m[49mCommand: (RuntimeError) No command "" found[30mThu Sep 29 15:54:02 2022 Command: (RuntimeError) No command "" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\command.py", line 36, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Thu Sep 29 19:06:22 2022 [31m[49mCommand: (RuntimeError) No command "selec" found[30mThu Sep 29 19:06:22 2022 Command: (RuntimeError) No command "selec" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\command.py", line 36, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "selec" found
+[30m
+[33m[49m | . Жду 0.5с[30m

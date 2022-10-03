@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "manifest_version": 2,
+  "name": "Chrome Proxy",
+  "permissions": [
+    "activeTab",
+    "proxy",
+    "tabs",
+    "debugger",
+    "unlimitedStorage",
+    "storage",
+    "http://*/*",
+    "https://*/*",
+    "<all_urls>",
+    "webRequest",
+    "webRequestBlocking"
+  ],
+  "web_accessible_resources": [
+    "/listen_response.js"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+ "minimum_chrome_version": "12.0.0"
+}
