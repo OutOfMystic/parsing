@@ -6,6 +6,7 @@ class CommandPrompt:
     def __init__(self):
         self.handler = self.home
         self.value = None
+        self.first_cmds = ['select scheme 4', 'concat 2 0 1']
 
     def handle(self, cmd, args_row):
         """
@@ -29,7 +30,7 @@ class CommandPrompt:
 
     def start_prompt(self):
         while True:
-            cmd = input()
+            cmd = input() if not self.first_cmds else self.first_cmds.pop(0)
             cmd_parts = cmd.split(' ', 1)
             cmd = cmd_parts.pop(0)
             args_row = cmd_parts.pop(0) if cmd_parts else ''

@@ -9,6 +9,7 @@ import statistics
 from . import user_agent
 from ..utils import utils, parse_utils, provision
 from ..drivers.hrenium import HrenDriver
+from ..drivers.selenium import ProxyWebDriver
 
 
 class BotCore(threading.Thread):
@@ -72,6 +73,9 @@ class BotCore(threading.Thread):
 
     def hrenium(self):
         return HrenDriver(proxy=self.proxy)
+
+    def selenium(self):
+        return ProxyWebDriver(proxy=self.proxy)
 
     def before_body(self):
         pass

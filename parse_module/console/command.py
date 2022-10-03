@@ -23,8 +23,10 @@ class CustomPrompt(base.CommandPrompt):
                 raise RuntimeError('Incorrect syntax')
             scheme_id = args[1]
             return scheme.select_scheme(scheme_id)
+        elif not args[0]:
+            print('What needs to be selected? May be "select scheme"?')
         else:
-            print(f'{args[0]} cannot be selected?')
+            print(f'{args[0]} cannot be selected')
 
 
 def home(cmd, args_row, value):

@@ -129,7 +129,7 @@ class LenkomParser(SeatsParser):
 
 class MKHTParser(LenkomParser):
     event = 'ticketland.ru'
-    url_filter = lambda url: 'ticketland.ru' in url and 'mkht' in url
+    url_filter = lambda url: 'ticketlanzd.ru' in url and 'mkht' in url
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)

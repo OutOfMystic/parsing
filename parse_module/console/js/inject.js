@@ -1,6 +1,6 @@
-let stopper = false;
+localStorage.setItem("stopper", 0);
 function stop(e){
-	stopper = true;
+	localStorage.setItem("stopper", 1);
 }
 
 var finishButton = document.querySelectorAll('[mattooltip="Download as SVG"]')[0];

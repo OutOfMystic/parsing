@@ -5,6 +5,7 @@ from importlib.resources import files
 
 from ..drivers.selenium import ProxyWebDriver
 from . import js
+from ..utils import parse_utils
 
 
 def union(main_name, main, minor_name, minor):
@@ -41,13 +42,11 @@ def delete_sectors(constructor, sector_ids, main_sector_id=None):
     replaces = {}
 
     last_sector_id = sector_ids.pop(0)
-    for cur_id, sector in sectors:
-        if cur_id - decrement > last_sector_id:
+    for cur_id, sector in enumerate(sectors):
+        if cur_id == last_sector_id:
+            decrement += 1
             if sector_ids:
                 last_sector_id = sector_ids.pop(0)
-                decrement += 1
-            else:
-                replaces[cur_id] = cur_id - decrement
         else:
             replaces[cur_id] = cur_id - decrement
 
@@ -60,7 +59,9 @@ def delete_sectors(constructor, sector_ids, main_sector_id=None):
             main_sector['outline'] += ' ' + outline.strip()
         del sectors[sector_id_fixed]
 
-    for before, after in replaces:
+    replaces_list = [(key, value,) for key, value in replaces.items()]
+    replaces_list.sort(key = lambda row: row[0])
+    for before, after in replaces_list:
         apply_changes(constructor, before, after)
 
 
@@ -77,25 +78,31 @@ def change_outline(constructor, sector_id):
     if driver is None:
         driver = ProxyWebDriver()
 
-    class_names = 'app-input ng-tns-c80-0 ng-pristine ng-valid ng-touched'
+    class_names = ('mat-focus-indicator mat-tooltip-trigger '
+                   'mat-mini-fab mat-button-base mat-basic')
+    xpath = parse_utils.class_names_to_xpath(class_names)
     if driver.current_url != 'https://yqnn.github.io/svg-path-editor/':
         driver.get('https://yqnn.github.io/svg-path-editor/')
-        driver.expl_wait('xpath', class_names)
-        driver.execute_script(inject_script)
+        driver.expl_wait('xpath', xpath)
 
+    class_names = 'app-input ng-tns-c80-0 ng-untouched ng-pristine ng-valid'
+    driver.execute_script(inject_script)
     textarea = driver.find_element_by_class_names(class_names)
     textarea.clear()
+    time.sleep(1)
     textarea.send_keys(outline)
+    #driver.execute_script(f'arguments[0].value = "{outline}";', textarea)
 
     outline = get_textfield(driver, textarea)
     sector['outline'] = outline
+    print(outline)
 
 
 def get_textfield(driver, textarea):
     while True:
-        if driver.execute_script("return stopper;"):
+        if driver.execute_script('return localStorage.getItem("stopper");') == '1':
             driver.minimize_window()
-            return driver.execute_script("return argumets[0].value;", textarea)
+            return driver.execute_script("return arguments[0].value;", textarea)
         else:
             time.sleep(0.1)
 

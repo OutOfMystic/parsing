@@ -22,10 +22,7 @@ def handle_scheme(cmd, args_row, value):
     if cmd == 'quit':
         return CommandPrompt.home, None
     elif cmd == 'list':
-        if args_row == 'sectors':
-            return list_sectors(scheme_name, scheme)
-        else:
-            print('Have you mentioned "list sectors"?\nScheme: ', end='')
+        return list_sectors(scheme_name, scheme)
     elif cmd == 'select':
         if args_row.startswith('sector'):
             return select_sector(args_row, scheme, scheme_id)
@@ -89,9 +86,9 @@ def concat_sectors(constructor, main_sector_id, *sector_ids):
     assert max(sector_ids) < sector_count, f"Sector #{max(sector_ids)} is not " \
                                             f"less than amount ({sector_count})"
     main_name, main_sector = sector.get_sector(constructor, main_sector_id)
-    to_concat = map(sector.get_sector, sector_ids)
-    for minor_sector in to_concat:
-        main_sector = constructor.union(main_name, main_sector, *minor_sector)
+    for sector_id in sector_ids:
+        minor_sector = sector.get_sector(constructor, sector_id)
+        main_sector = constructing.union(main_name, main_sector, *minor_sector)
     constructing.delete_sectors(constructor, sector_ids, main_sector_id=main_sector_id)
     constructing.change_outline(constructor, main_sector_id)
 
@@ -102,3 +99,4 @@ def save_scheme(constructor, scheme_id):
              f"SET json='{jsoned}' WHERE id={scheme_id}")
     db_manager.execute(script)
     db_manager.commit()
+    print(f'Successfully saved scheme #{scheme_id}!\nScheme:', end='')

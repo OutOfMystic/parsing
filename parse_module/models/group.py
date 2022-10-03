@@ -82,10 +82,7 @@ class SeatsParserGroup:
         scheme = self.router.get_scheme(subject_id)
         scheme.bind(priority, margin)
 
-        event_data.append(scheme)
-        event_data.append(priority)
-
-        parser = self.parser_class(self.controller, *event_data[3:], **extra)
+        parser = self.parser_class(self.controller, *event_data[3:], scheme, priority, **extra)
         parser.start()
         self.bprint(f'SEATS parser {self.parent_event} ({event_data[3]} {event_data[5]}) has started')
         self.parsers.append(parser)

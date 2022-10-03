@@ -62,8 +62,17 @@ class ParserScheme(Scheme):
         self._customize(scheme)
 
     def bind(self, priority, margin_func):
-        self._margins[priority] = margin_func
-        self._bookings[priority] = set()
+        try:
+            self._lock.acquire()
+            self._margins[priority] = margin_func
+            self._bookings[priority] = set()
+            self._prohibitions[priority] = set()
+            self._update_prohibitions(priority)
+        except Exception as err:
+            mes = utils.red(f'{self.name}: Error binding parser to scheme: {err}')
+            print(mes)
+        finally:
+            self._lock.release()
 
     def unbind(self, priority):
         try:
@@ -76,7 +85,7 @@ class ParserScheme(Scheme):
             del self._bookings[priority]
             del self._prohibitions[priority]
         except Exception as err:
-            mes = utils.red(f'Error unbinding parser from scheme: {err}')
+            mes = utils.red(f'{self.name}: Error unbinding parser from scheme: {err}')
             print(mes)
         finally:
             self._lock.release()
@@ -132,7 +141,8 @@ class ParserScheme(Scheme):
         # applying changes of bookings in local storage
         self._bookings[cur_priority] = bookings.union(to_book)
         self._bookings[cur_priority] = bookings.difference(to_discard)
-        self._update_prohibitions(cur_priority)
+        if to_book or to_discard:
+            self._update_prohibitions(cur_priority)
 
         self._lock.release()
 

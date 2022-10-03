@@ -74,8 +74,8 @@ class SeatsParser(core.BotCore):
         super().__init__()
         self.controller = controller
         self.event_name, self.url, self.date, \
-            self.venue, self.scheme, self.priority, \
-            self.parsing_initial = event_data
+            self.venue, self.parsing_initial, \
+            self.scheme, self.priority = event_data
         self.domain = double_split(self.url, '://', '/')
         self.name = self._format_name()
         self.session = None
@@ -89,9 +89,9 @@ class SeatsParser(core.BotCore):
         """
         Registers sector ``sector_name`` during ``body``
         execution. ``seats`` can be of two formats:
-         - ``[[row1, seat1], [row2, seat2], ...]``,
          - ``{(row1, seat1): price1, (row2, seat2): price2, ...}``,
-        It's desirable to use the second one
+         - ``[[row1, seat1], [row2, seat2], ...]``
+        It's desirable to use the first one
 
         :param sector_name: the same name as in database
         :param seats: list or dict of seats data
