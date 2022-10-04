@@ -173,7 +173,7 @@ class SeatsParser(core.BotCore):
         found_mes = 'Found sectors. They were registered correctly'
         print_mes += format_sectors_block(found_mes, found, utils.Fore.GREEN)
         print(print_mes, end='')
-        input(utils.green('Press enter to continue...'))
+        input(utils.green('Press enter to continue...\n'))
 
     def _format_name(self):
         event_name = self.event_name.replace(' - ', '-') \
