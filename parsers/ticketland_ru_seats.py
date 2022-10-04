@@ -59,7 +59,10 @@ class LenkomParser(SeatsParser):
             tl_csrf, self.performance_id, self.limit, self.is_special_sale = event_vars
         self.tl_csrf_no_f = tl_csrf.replace('=', '%3D')
 
-    def reformat(self, sectors):
+    def get_scene(self):
+        pass
+
+    def reformat(self, sectors, scene):
         pass
 
     def body(self):
@@ -122,22 +125,23 @@ class LenkomParser(SeatsParser):
                     'name': ticket['section']['name'],
                     'tickets': {(row, seat): cost}
                 })
-        self.reformat(a_sectors)
+
+        self.reformat(a_sectors, self.get_scene())
         for sector in a_sectors:
             self.register_sector(sector['name'], sector['tickets'])
 
 
-class MKHTParser(LenkomParser):
+class MalyyParser(LenkomParser):
     event = 'ticketland.ru'
-    url_filter = lambda url: 'ticketland.ru' in url and 'mkht' in url
+    url_filter = lambda url: 'ticketland.ru' in url and 'malyy' in url
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
 
-    def reformat(self, sectors):
+    def reformat(self, sectors, scene):
         for sector in sectors:
-            if sector['name'] == 'залупа, конская':
-                sector['name'] = "Конская залупа"
+            if sector['name'] == 'Балкон 2 ярус':
+                sector['name'] = "Балкон второго яруса"
 
     def body(self):
         super().body()
