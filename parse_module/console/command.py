@@ -8,14 +8,6 @@ class CustomPrompt(base.CommandPrompt):
         self.handler = home
 
     @staticmethod
-    def list_(args_row):
-        args = args_row.split(' ')
-        if args[0] == 'scheme':
-            return scheme.list_scheme()
-        else:
-            print('What needs to be listed?')
-
-    @staticmethod
     def select(args_row):
         args = args_row.split(' ')
         if args[0] == 'scheme':
@@ -31,7 +23,7 @@ class CustomPrompt(base.CommandPrompt):
 
 def home(cmd, args_row, value):
     if cmd == 'list':
-        return CustomPrompt.list_(args_row)
+        return scheme.list_scheme()
     elif cmd == 'select':
         return CustomPrompt.select(args_row)
     else:
