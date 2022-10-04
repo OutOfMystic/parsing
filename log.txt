@@ -462,3 +462,158 @@ Mon Oct  3 15:27:08 2022 Ћожь во спас 18окт19 Ћенком-ќсновна€| [31m[49mMain: (
 UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
 [30m
 [33m[49m | . ∆ду 0.5с[30m
+Mon Oct  3 18:11:46 2022 [31m[49mCommand: (TimeoutException) Message: [30mMon Oct  3 18:11:46 2022 Command: (TimeoutException) Message: 
+
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 40, in handle_scheme
+    concat_sectors(scheme, *args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 93, in concat_sectors
+    constructing.change_outline(constructor, main_sector_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\constructing.py", line 97, in change_outline
+    driver.expl_wait('xpath', xpath)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\drivers\selenium.py", line 81, in expl_wait
+    WebDriverWait(self, wait_time).until(valued_condition)
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\support\wait.py", line 80, in until
+    raise TimeoutException(message, screen, stacktrace)
+selenium.common.exceptions.TimeoutException: Message: 
+
+[30m
+[33m[49m | . ∆ду 0.5с[30m
+Mon Oct  3 18:12:24 2022 [31m[49mCommand: (TimeoutException) Message: [30mMon Oct  3 18:12:24 2022 Command: (TimeoutException) Message: 
+
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 40, in handle_scheme
+    concat_sectors(scheme, *args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 93, in concat_sectors
+    constructing.change_outline(constructor, main_sector_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\constructing.py", line 97, in change_outline
+    driver.expl_wait('xpath', xpath)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\drivers\selenium.py", line 81, in expl_wait
+    WebDriverWait(self, wait_time).until(valued_condition)
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\support\wait.py", line 80, in until
+    raise TimeoutException(message, screen, stacktrace)
+selenium.common.exceptions.TimeoutException: Message: 
+
+[30m
+[33m[49m | . ∆ду 0.5с[30m
+Mon Oct  3 18:15:16 2022 [31m[49mCommand: (InvalidElementStateException) Message: invalid element state: Element must be user-editable in order to clear it.[30mMon Oct  3 18:15:16 2022 Command: (InvalidElementStateException) Message: invalid element state: Element must be user-editable in order to clear it.
+  (Session info: chrome=106.0.5249.91)
+  (Driver info: chromedriver=2.42.591088 (7b2b2dca23cca0862f674758c9a3933e685c27d5),platform=Windows NT 10.0.19041 x86_64)
+
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 40, in handle_scheme
+    concat_sectors(scheme, *args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 93, in concat_sectors
+    constructing.change_outline(constructor, main_sector_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\constructing.py", line 100, in change_outline
+    textarea.clear()
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\webelement.py", line 95, in clear
+    self._execute(Command.CLEAR_ELEMENT)
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\webelement.py", line 633, in _execute
+    return self._parent.execute(command, params)
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 321, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 242, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.InvalidElementStateException: Message: invalid element state: Element must be user-editable in order to clear it.
+  (Session info: chrome=106.0.5249.91)
+  (Driver info: chromedriver=2.42.591088 (7b2b2dca23cca0862f674758c9a3933e685c27d5),platform=Windows NT 10.0.19041 x86_64)
+
+[30m
+[33m[49m | . ∆ду 0.5с[30m
+Mon Oct  3 18:24:13 2022 [31m[49mCommand: (WebDriverException) Message: unknown error: Cannot set properties of undefined (setting 'value')[30mMon Oct  3 18:24:13 2022 Command: (WebDriverException) Message: unknown error: Cannot set properties of undefined (setting 'value')
+  (Session info: chrome=106.0.5249.91)
+  (Driver info: chromedriver=2.42.591088 (7b2b2dca23cca0862f674758c9a3933e685c27d5),platform=Windows NT 10.0.19041 x86_64)
+
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 40, in handle_scheme
+    concat_sectors(scheme, *args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 93, in concat_sectors
+    constructing.change_outline(constructor, main_sector_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\constructing.py", line 107, in change_outline
+    driver.execute_script(f'var textArea = document.querySelectorA'
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 634, in execute_script
+    return self.execute(command, {
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 321, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 242, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.WebDriverException: Message: unknown error: Cannot set properties of undefined (setting 'value')
+  (Session info: chrome=106.0.5249.91)
+  (Driver info: chromedriver=2.42.591088 (7b2b2dca23cca0862f674758c9a3933e685c27d5),platform=Windows NT 10.0.19041 x86_64)
+
+[30m
+[33m[49m | . ∆ду 0.5с[30m
+Mon Oct  3 18:24:40 2022 [31m[49mCommand: (WebDriverException) Message: unknown error: Cannot set properties of undefined (setting 'value')[30mMon Oct  3 18:24:40 2022 Command: (WebDriverException) Message: unknown error: Cannot set properties of undefined (setting 'value')
+  (Session info: chrome=106.0.5249.91)
+  (Driver info: chromedriver=2.42.591088 (7b2b2dca23cca0862f674758c9a3933e685c27d5),platform=Windows NT 10.0.19041 x86_64)
+
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 40, in handle_scheme
+    concat_sectors(scheme, *args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 93, in concat_sectors
+    constructing.change_outline(constructor, main_sector_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\constructing.py", line 107, in change_outline
+    driver.execute_script(f'var textArea = document.querySelectorA'
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 634, in execute_script
+    return self.execute(command, {
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 321, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 242, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.WebDriverException: Message: unknown error: Cannot set properties of undefined (setting 'value')
+  (Session info: chrome=106.0.5249.91)
+  (Driver info: chromedriver=2.42.591088 (7b2b2dca23cca0862f674758c9a3933e685c27d5),platform=Windows NT 10.0.19041 x86_64)
+
+[30m
+[33m[49m | . ∆ду 0.5с[30m
+Mon Oct  3 18:46:47 2022 [31m[49mCommand: (AttributeError) 'dict' object has no attribute 'strip'[30mMon Oct  3 18:46:47 2022 Command: (AttributeError) 'dict' object has no attribute 'strip'
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 40, in handle_scheme
+    concat_sectors(scheme, *args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 92, in concat_sectors
+    constructing.delete_sectors(constructor, sector_ids, main_sector_id=main_sector_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\constructing.py", line 60, in delete_sectors
+    main_sector['outline'] += ' ' + outline.strip()
+AttributeError: 'dict' object has no attribute 'strip'
+[30m
+[33m[49m | . ∆ду 0.5с[30m
+Tue Oct  4 08:06:38 2022 [31m[49mCommand: (NoSuchElementException) Message: no such element: Unable to locate element: {"method":"xpath","selector":"//*[@class='panel-info ng-tns-c83-8 ng-star-inserted']"}[30mTue Oct  4 08:06:38 2022 Command: (NoSuchElementException) Message: no such element: Unable to locate element: {"method":"xpath","selector":"//*[@class='panel-info ng-tns-c83-8 ng-star-inserted']"}
+  (Session info: chrome=106.0.5249.91)
+  (Driver info: chromedriver=2.42.591088 (7b2b2dca23cca0862f674758c9a3933e685c27d5),platform=Windows NT 10.0.19041 x86_64)
+
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 40, in handle_scheme
+    concat_sectors(scheme, *args)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\scheme.py", line 94, in concat_sectors
+    constructing.change_outline(constructor, new_main_id)
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\console\constructing.py", line 99, in change_outline
+    while driver.find_element_by_class_names(class_names).text == '265':
+  File "C:\Users\Admin\PycharmProjects\parsing\parse_module\drivers\selenium.py", line 85, in find_element_by_class_names
+    return self.find_element('xpath', xpath)
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 976, in find_element
+    return self.execute(Command.FIND_ELEMENT, {
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 321, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\Admin\PycharmProjects\parsing\Envs\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 242, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.NoSuchElementException: Message: no such element: Unable to locate element: {"method":"xpath","selector":"//*[@class='panel-info ng-tns-c83-8 ng-star-inserted']"}
+  (Session info: chrome=106.0.5249.91)
+  (Driver info: chromedriver=2.42.591088 (7b2b2dca23cca0862f674758c9a3933e685c27d5),platform=Windows NT 10.0.19041 x86_64)
+
+[30m
+[33m[49m | . ∆ду 0.5с[30m

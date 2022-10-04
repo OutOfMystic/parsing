@@ -37,7 +37,10 @@ def handle_scheme(cmd, args_row, value):
         print('Scheme: ', end='')
     elif cmd == 'concat':
         args = [int(arg) for arg in args_row.split(' ')]
-        concat_sectors(scheme, *args)
+        if len(args) < 2:
+            print('Not enought arguments\nScheme: ')
+        else:
+            concat_sectors(scheme, *args)
     elif cmd == 'save':
         save_scheme(scheme, scheme_id)
     else:
@@ -79,7 +82,7 @@ def list_sectors(sector_name, constructor):
     return handle_scheme, None
 
 
-def concat_sectors(constructor, main_sector_id, *sector_ids):
+def concat_sectors(constructor, main_sector_id, *sector_ids, name=None):
     assert main_sector_id not in sector_ids, f"Sector #{main_sector_id} is in both" \
                                              f" main and minor cases"
     sector_count = len(constructor['sectors'])
@@ -88,9 +91,14 @@ def concat_sectors(constructor, main_sector_id, *sector_ids):
     main_name, main_sector = sector.get_sector(constructor, main_sector_id)
     for sector_id in sector_ids:
         minor_sector = sector.get_sector(constructor, sector_id)
-        main_sector = constructing.union(main_name, main_sector, *minor_sector)
-    constructing.delete_sectors(constructor, sector_ids, main_sector_id=main_sector_id)
-    constructing.change_outline(constructor, main_sector_id)
+        constructing.union(main_name, main_sector, *minor_sector)
+    new_main_id = constructing.delete_sectors(constructor, sector_ids,
+                                              main_sector_id=main_sector_id)
+    constructing.change_outline(constructor, new_main_id)
+    if name:
+        constructor['sectors'][new_main_id]['name'] = name
+        main_name = name
+    print(f'Sectors were concatenated into a one sector with name {main_name}')
 
 
 def save_scheme(constructor, scheme_id):
@@ -99,4 +107,4 @@ def save_scheme(constructor, scheme_id):
              f"SET json='{jsoned}' WHERE id={scheme_id}")
     db_manager.execute(script)
     db_manager.commit()
-    print(f'Successfully saved scheme #{scheme_id}!\nScheme:', end='')
+    print(f'Successfully saved scheme #{scheme_id}!\nScheme: ', end='')
