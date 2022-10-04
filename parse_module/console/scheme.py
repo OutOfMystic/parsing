@@ -20,6 +20,7 @@ def select_scheme(id_):
 def handle_scheme(cmd, args_row, value):
     scheme_name, scheme, scheme_id = value
     if cmd == 'quit':
+        print('You are now in a main menu')
         return CommandPrompt.home, None
     elif cmd == 'list':
         return list_sectors(scheme_name, scheme)
@@ -98,7 +99,7 @@ def concat_sectors(constructor, main_sector_id, *sector_ids, name=None):
     if name:
         constructor['sectors'][new_main_id]['name'] = name
         main_name = name
-    print(f'Sectors were concatenated into a one sector with name {main_name}')
+    print(f'Sectors were concatenated into a one sector with name {main_name}\nScheme: ', end='')
 
 
 def save_scheme(constructor, scheme_id):

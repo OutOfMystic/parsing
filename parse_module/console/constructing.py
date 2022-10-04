@@ -29,6 +29,10 @@ def union(main_name, main, minor_name, minor):
     if not main:
         raise RuntimeError(f'Sector {main_name} is empty')
 
+    main_sector_id = main[0][3]
+    for ticket in minor:
+        ticket[3] = main_sector_id
+
     main += minor
     main.sort(key=ticket_sort_func)
 
@@ -55,7 +59,7 @@ def delete_sectors(constructor, sector_ids, main_sector_id=None):
         main_sector = constructor['sectors'][main_sector_id]
     for decrement_, sector_id in enumerate(sector_ids):
         sector_id_fixed = sector_id - decrement_
-        if main_sector is not None:
+        if main_sector is not None and 'outline' in sectors[sector_id_fixed]:
             outline = sectors[sector_id_fixed]['outline']
             main_sector['outline'] += ' ' + outline.strip()
         del sectors[sector_id_fixed]
@@ -77,6 +81,9 @@ def apply_changes(constructor, before, after):
 def change_outline(constructor, sector_id):
     global driver
     sector = constructor['sectors'][sector_id]
+    if 'outline' not in sector:
+        raise RuntimeError(f'Sector {sector["name"]} has no '
+                           f'outline. Use another sector as main')
     outline = sector['outline']
     if driver is None:
         driver = ProxyWebDriver()
