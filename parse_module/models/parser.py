@@ -98,12 +98,11 @@ class SeatsParser(core.BotCore):
         """
         assert isinstance(seats, (dict, list, tuple)), \
             'Wrong seats data format: should be iterable'
-        assert sector_name not in self._parsed_sectors, \
-            f"Sector '{sector_name}' has already been registered"
         lower_sectors = (sector.lower() for sector in self.scheme.sectors)
         if sector_name.lower() not in lower_sectors:
             mes = f"Sector '{sector_name}' wasn\'t found on the scheme, being ignored!"
             self.bprint(mes, color=utils.Fore.YELLOW)
+
 
         if seats:
             if isinstance(seats, dict):
@@ -121,7 +120,18 @@ class SeatsParser(core.BotCore):
                                               f'{type(row).__name__} ({row}) instead')
                 assert isinstance(seat, int), ('seat is not an integer, got '
                                                f'{type(seat).__name__} {type(seat)} ({seat}) instead')
-        self._parsed_sectors[sector_name] = seats
+
+        if sector_name in self._parsed_sectors:
+            if isinstance(seats, tuple):
+                seats = list(seats)
+            if isinstance(seats, list):
+                self._parsed_sectors[sector_name] += seats
+            elif isinstance(seats, dict):
+                self._parsed_sectors[sector_name].update(seats)
+        else:
+            if isinstance(seats, tuple):
+                seats = list(seats)
+            self._parsed_sectors[sector_name] = seats
 
     def print_sectors_level1(self):
         """
