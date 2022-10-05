@@ -5,7 +5,8 @@ from . import base
 class CustomPrompt(base.CommandPrompt):
     def __init__(self):
         super().__init__()
-        self.handler = home
+        self.handler = get_home
+        self.handle('', '')
 
     @staticmethod
     def select(args_row):
@@ -19,6 +20,10 @@ class CustomPrompt(base.CommandPrompt):
             print('What needs to be selected? May be "select scheme"?')
         else:
             print(f'{args[0]} cannot be selected')
+
+
+def get_home(cmd, args_row, value):
+    return home, None, 'Main'
 
 
 def home(cmd, args_row, value):
