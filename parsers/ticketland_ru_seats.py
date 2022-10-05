@@ -131,17 +131,167 @@ class LenkomParser(SeatsParser):
             self.register_sector(sector['name'], sector['tickets'])
 
 
+class MkhtParser(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'ticketland.ru' in url and 'mkht' in url
+
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+
+    def reformat(self, sectors, scene):
+        to_del = []
+
+        for i, sector in enumerate(sectors):
+            if 'покой' in sector['name'].lower():
+                to_del.append(i)
+                continue
+            elif 'бенуар правая сторона' in sector['name'].lower():
+                to_del.append(i)
+                continue
+
+            sector['name'] = sector['name'].replace('  ', ' ')
+
+            # Основная сцена
+
+            if 'неудоб' in sector['name'].lower():
+                sec_name, sec_side = sector['name'].split()[:-1]
+
+                if 'лев' in sec_side.lower():
+                    side = 'левая'
+                elif 'прав' in sec_side.lower():
+                    side = 'правая'
+                else:
+                    side = '-'
+
+                sector['name'] = f'{sec_name.capitalize()} {side} сторона'
+
+            if 'откид' in sector['name']:
+                if 'Бельэтаж' in sector['name']:
+                    if 'откидное А' in sector['name']:
+                        sector['name'] = sector['name'].replace('откидное А', 'правая сторона (откидное А)')
+                    elif 'откидное Б':
+                        sector['name'] = sector['name'].replace('откидное Б', 'левая сторона (откидное Б)')
+                elif 'Партер' in sector['name']:
+                    sector['name'] = sector['name'].replace('откидное', 'откидные')
+
+            if 'бенуар' in sector['name'].lower():
+                if 'ложа' in sector['name'].lower():
+                    if 'прав' in sector['name']:
+                        sector['name'] = 'Бенуар ложа правая'
+                    elif 'лев' in sector['name']:
+                        sector['name'] = 'Бенуар ложа левая'
+                else:
+                    pass
+                    # Бенуар правая сторона. Мб из малой сцены
+
+            # Малая сцена
+
+            sector['name'] = sector['name'].replace(' ', ', ', 1)
+
+        for i in to_del[::-1]:
+            del sectors[i]
+
+    def body(self):
+        super().body()
+        self.check_sectors()
+
+
 class MalyyParser(LenkomParser):
     event = 'ticketland.ru'
-    url_filter = lambda url: 'ticketland.ru' in url and 'malyy' in url
+    url_filter = lambda url: 'ticketlanzd.ru' in url and 'malyy' in url
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
 
     def reformat(self, sectors, scene):
         for sector in sectors:
+            sector['name'] = sector['name'].replace('  ', ' ')
+
             if sector['name'] == 'Балкон 2 ярус':
                 sector['name'] = "Балкон второго яруса"
+            elif sector['name'] == 'Балкон 1 ярус':
+                sector['name'] = "Балкон первого яруса"
+            elif '№' in sector['name']:
+                sector['name'] = sector['name'].replace('№ ', '№')
+                sector['name'] = sector['name'].replace(' правая сторона', ', правая сторона')
+                sector['name'] = sector['name'].replace(' левая сторона', ', левая сторона')
+
+                if 'Ложа 1 яруса' in sector['name']:
+                    sector['name'] = sector['name'].replace('Ложа 1 яруса', 'Ложа первого яруса')
+
+            if ' левая №' in sector['name']:
+                sec_name, sec_num = sector['name'].split(' левая №')
+                sector['name'] = f'{sec_name} {sec_num} левая сторона'
+            elif ' правая №' in sector['name']:
+                sec_name, sec_num = sector['name'].split(' правая №')
+                sector['name'] = f'{sec_name} {sec_num} правая сторона'
+            elif '1-го' in sector['name']:
+                sector['name'] = sector['name'].replace('1-го', '1')
+
+    def body(self):
+        super().body()
+        self.check_sectors()
+
+
+class NaciyParser(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'ticketlanzd.ru' in url and 'naciy' in url
+
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+
+    def reformat(self, sectors, scene):
+        for sector in sectors:
+            sector['name'] = sector['name'].replace('  ', ' ')
+
+    def body(self):
+        super().body()
+        self.check_sectors()
+
+
+class OperettyParser(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'ticketlanzd.ru' in url and 'operetty' in url
+
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+
+    def reformat(self, sectors, scene):
+        for sector in sectors:
+            sector['name'] = sector['name'].replace('  ', ' ')
+
+    def body(self):
+        super().body()
+        self.check_sectors()
+
+
+class VakhtangovaParser(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'ticketlanzd.ru' in url and 'vakhtangova' in url
+
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+
+    def reformat(self, sectors, scene):
+        for sector in sectors:
+            sector['name'] = sector['name'].replace('  ', ' ')
+            sector['name'] = sector['name'].replace('N', '№')
+
+            if ' Ложа №' in sector['name']:
+                sec_name_side, sec_num = sector['name'].split(' Ложа №')
+                sec_name = sec_name_side.split()[0]
+                sec_name_format = sec_name.lower() + 'а'
+                if 'прав' in sec_name_side:
+                    side = 'правая'
+                elif 'лев' in sec_name_side:
+                    side = 'левая'
+                else:
+                    side = '-'
+                sector['name'] = f'Ложа {sec_name_format} {sec_num} {side} сторона'
+
+            if 'откид' in sector['name']:
+                if 'Партер' in sector['name']:
+                    sector['name'] = sector['name'].replace('откидное', 'откидные')
 
     def body(self):
         super().body()
