@@ -154,6 +154,7 @@ class MkhtParser(LenkomParser):
             # Основная сцена
 
             if 'неудоб' in sector['name'].lower():
+                continue
                 sec_name, sec_side = sector['name'].split()[:-1]
 
                 if 'лев' in sec_side.lower():
@@ -182,9 +183,7 @@ class MkhtParser(LenkomParser):
                         sector['name'] = 'Бенуар ложа левая'
                 else:
                     pass
-                    # Бенуар правая сторона. Мб из малой сцены
-
-            # Малая сцена
+                    # Бенуар правая сторона.
 
             sector['name'] = sector['name'].replace(' ', ', ', 1)
 

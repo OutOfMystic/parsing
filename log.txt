@@ -3099,3 +3099,1253 @@ RuntimeError: No command "sel" found
 >>>>>>> 943ec21be244d557ec5953a8998ee393a397884a
 [30m
 [33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:10:52 2022 [31m[49mCommand: (RuntimeError) No command "lis" found[30mWed Oct  5 14:10:52 2022 Command: (RuntimeError) No command "lis" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "lis" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:11:01 2022 [31m[49mCommand: (RuntimeError) No command "quit" found[30mWed Oct  5 14:11:01 2022 Command: (RuntimeError) No command "quit" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "quit" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:11:04 2022 [31m[49mCommand: (RuntimeError) No command "exit" found[30mWed Oct  5 14:11:04 2022 Command: (RuntimeError) No command "exit" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "exit" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:11:06 2022 [31m[49mCommand: (RuntimeError) No command "end" found[30mWed Oct  5 14:11:06 2022 Command: (RuntimeError) No command "end" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "end" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:12:58 2022 [31m[49mCommand: (RuntimeError) No command "дшые" found[30mWed Oct  5 14:12:58 2022 Command: (RuntimeError) No command "дшые" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "дшые" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:13:05 2022 [31m[49mCommand: (RuntimeError) No command "quit" found[30mWed Oct  5 14:13:05 2022 Command: (RuntimeError) No command "quit" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "quit" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:13:06 2022 [31m[49mCommand: (RuntimeError) No command "exit" found[30mWed Oct  5 14:13:06 2022 Command: (RuntimeError) No command "exit" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "exit" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:13:09 2022 [31m[49mCommand: (RuntimeError) No command "quit" found[30mWed Oct  5 14:13:09 2022 Command: (RuntimeError) No command "quit" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "quit" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:13:11 2022 [31m[49mCommand: (RuntimeError) No command "quit" found[30mWed Oct  5 14:13:11 2022 Command: (RuntimeError) No command "quit" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "quit" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:13:14 2022 [31m[49mCommand: (RuntimeError) No command "quit" found[30mWed Oct  5 14:13:14 2022 Command: (RuntimeError) No command "quit" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "quit" found
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:17 2022 Сирано де Бе 27окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:17 2022 Сирано де Бе 27окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:17 2022 Заговор чувс 11ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:17 2022 Заговор чувс 11ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:17 2022 Серёжа 8ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:17 2022 Серёжа 8ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+gistered[30m[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+Wed Oct  5 14:17:17 2022 Серёжа 8ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[33m[49m | . Жду 0.5с[30m
+nt call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:17 2022 ХХ век. Бал 23окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:17 2022 ХХ век. Бал 23окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:18 2022 Номер 13D 16окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:18 2022 Номер 13D 24окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:18 2022 Номер 13D 16окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+Wed Oct  5 14:17:18 2022 Номер 13D 24окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:18 2022 Идеальный му 5окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:18 2022 Идеальный му 5окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:18 2022 Месяц в дере 20окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:18 2022 Месяц в дере 20окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:18 2022 Сирано де Бе 27окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:18 2022 Мефисто 5ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:18 2022 Серёжа 22ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+Wed Oct  5 14:17:18 2022 Сирано де Бе 27окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+Wed Oct  5 14:17:18 2022 Мефисто 5ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+Wed Oct  5 14:17:18 2022 Мефисто 5ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30m[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+Wed Oct  5 14:17:18 2022 Мефисто 5ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[33m[49m | . Жду 0.5с[30m
+[33m[49m | . Жду 1.2с[30m
+[33m[49m | . Жду 0.5с[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:18 2022 Серёжа 22ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:18 2022 Серёжа 22ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:18 2022 Карамазовы 24ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:18 2022 Карамазовы 24ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:19 2022 Заговор чувс 11ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:19 2022 Заговор чувс 11ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:19 2022 Серёжа 8ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:19 2022 Серёжа 8ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:19 2022 Серёжа 8ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:19 2022 Серёжа 8ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:19 2022 Новая оптими 18окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:19 2022 Новая оптими 19окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:19 2022 Новая оптими 19окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+Wed Oct  5 14:17:19 2022 Новая оптими 18окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:19 2022 ХХ век. Бал 23окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:19 2022 ХХ век. Бал 23окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:19 2022 Номер 13D 24окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:19 2022 Номер 13D 16окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:19 2022 Номер 13D 24окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:19 2022 Идеальный му 21окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:19 2022 Идеальный му 21окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:19 2022 Идеальный му 5окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:19 2022 Идеальный му 5окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:19 2022 Поколение Ма 30окт13 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:19 2022 Поколение Ма 30окт13 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:19 2022 Враки, или З 10окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:20 2022 Враки, или З 10окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+gistered[30mWed Oct  5 14:17:20 2022 Враки, или З 10окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:20 2022 Месяц в дере 20окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:20 2022 Месяц в дере 20окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:20 2022 Серёжа 22ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:20 2022 Серёжа 22ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:20 2022 Мефисто 5ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:20 2022 Мефисто 5ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+Wed Oct  5 14:17:20 2022 Мефисто 5ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30m[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:20 2022 Мефисто 5ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:20 2022 Карамазовы 24ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:20 2022 Карамазовы 24ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:20 2022 Серёжа 22ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:20 2022 Серёжа 22ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:21 2022 Новая оптими 18окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:21 2022 Новая оптими 19окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+Wed Oct  5 14:17:21 2022 Новая оптими 18окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:21 2022 Сирано де Бе 27окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:21 2022 Сирано де Бе 27окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:21 2022 Заговор чувс 11ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:21 2022 Заговор чувс 11ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+Wed Oct  5 14:17:21 2022 Идеальный му 21окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:21 2022 Идеальный му 21окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:21 2022 Серёжа 8ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:21 2022 Серёжа 8ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:21 2022 Поколение Ма 30окт13 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:21 2022 Поколение Ма 30окт13 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:21 2022 Враки, или З 10окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:21 2022 Враки, или З 10окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+Wed Oct  5 14:17:21 2022 Серёжа 8ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30m[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+Wed Oct  5 14:17:21 2022 Серёжа 8ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[33m[49m | . Жду 1.2с[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:21 2022 Враки, или З 10окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:21 2022 Враки, или З 10окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:21 2022 ХХ век. Бал 23окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:21 2022 ХХ век. Бал 23окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:22 2022 Сирано де Бе 27окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 Сирано де Бе 27окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:22 2022 Номер 13D 24окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 Номер 13D 24окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+Wed Oct  5 14:17:22 2022 Номер 13D 16окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 Номер 13D 16окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[33m[49m | . Жду 2.1с[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:22 2022 Серёжа 8ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 Серёжа 8ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+Wed Oct  5 14:17:22 2022 Заговор чувс 11ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30m[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+Wed Oct  5 14:17:22 2022 Заговор чувс 11ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[33m[49m | . Жду 0.5с[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:22 2022 Идеальный му 5окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 Идеальный му 5окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:22 2022 Серёжа 8ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 Серёжа 8ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:22 2022 ХХ век. Бал 23окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 ХХ век. Бал 23окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:22 2022 Месяц в дере 20окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 Месяц в дере 20окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:22 2022 Серёжа 22ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 Серёжа 22ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:22 2022 Мефисто 5ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 Мефисто 5ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 Мефисто 5ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+Wed Oct  5 14:17:22 2022 Мефисто 5ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[33m[49m | . Жду 2.1с[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:22 2022 Карамазовы 24ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:22 2022 Карамазовы 24ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:23 2022 Номер 13D 16окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:23 2022 Номер 13D 16окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:23 2022 Серёжа 22ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:23 2022 Серёжа 22ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:23 2022 Номер 13D 24окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:23 2022 Номер 13D 24окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:23 2022 Новая оптими 18окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:23 2022 Новая оптими 19окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:23 2022 Новая оптими 18окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+Wed Oct  5 14:17:23 2022 Новая оптими 19окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:23 2022 Сирано де Бе 27окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:23 2022 Сирано де Бе 27окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:23 2022 Серёжа 22ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:23 2022 Серёжа 22ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 0.5с[30m
+Wed Oct  5 14:17:23 2022 Серёжа 8ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:23 2022 Серёжа 8ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+Wed Oct  5 14:17:24 2022 Заговор чувс 11ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30m[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:24 2022 Заговор чувс 11ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:24 2022 Враки, или З 10окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:24 2022 Враки, или З 10окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:24 2022 Серёжа 8ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:24 2022 Серёжа 8ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:24 2022 Идеальный му 21окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:24 2022 Враки, или З 10окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:24 2022 Идеальный му 21окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+Wed Oct  5 14:17:24 2022 Враки, или З 10окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+istered[30m[33m[49m | . Жду 2.1с[30m
+к. Бал 23окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:24 2022 Поколение Ма 30окт13 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:24 2022 Поколение Ма 30окт13 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:17:24 2022 Номер 13D 16окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:24 2022 Номер 13D 16окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:24 2022 Номер 13D 24окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:24 2022 Номер 13D 24окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:25 2022 Серёжа 22ноя19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:25 2022 Серёжа 22ноя19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 1.2с[30m
+Wed Oct  5 14:17:26 2022 Сирано де Бе 27окт19 МХТ-Основная| [31m[49mMain: (AssertionError) Sector 'Балкон, правая сторона' has already been registered[30mWed Oct  5 14:17:26 2022 Сирано де Бе 27окт19 МХТ-Основная| Main: (AssertionError) Sector 'Балкон, правая сторона' has already been registered
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 193, in run_try
+    self.body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 195, in body
+    super().body()
+  File "C:\Users\mrvak\PycharmProjects\parsing\parsers\ticketland_ru_seats.py", line 131, in body
+    self.register_sector(sector['name'], sector['tickets'])
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\models\parser.py", line 101, in register_sector
+    assert sector_name not in self._parsed_sectors, \
+AssertionError: Sector 'Балкон, правая сторона' has already been registered
+[30m
+[33m[49m | . Жду 2.1с[30m
+Wed Oct  5 14:27:35 2022 [31m[49mCommand: (RuntimeError) No command "дшые" found[30mWed Oct  5 14:27:35 2022 Command: (RuntimeError) No command "дшые" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "дшые" found
+[30m
+[33m[49m | . Жду 0.5с[30m
