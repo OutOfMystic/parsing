@@ -149,4 +149,4 @@ cython_debug/
 *log.txt
 *tab
 *test.py
-*parsers.json
+parsers.json
