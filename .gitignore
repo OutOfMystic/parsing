@@ -146,7 +146,7 @@ cython_debug/
 # Specific files #
 ##################
 
-log.txt
-tab
-test.py
+*log.txt
+*tab
+*test.py
 
