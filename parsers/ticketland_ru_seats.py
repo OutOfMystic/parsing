@@ -132,8 +132,8 @@ class LenkomParser(SeatsParser):
 
 
 class MkhtParser(LenkomParser):
-    event = 'ticketland.ru'
-    url_filter = lambda url: 'ticketland.ru' in url and 'mkht' in url
+    event = 'ticketlanzd.ru'
+    url_filter = lambda url: 'ticketlanzd.ru' in url and 'mkht' in url
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -242,6 +242,9 @@ class NaciyParser(LenkomParser):
         for sector in sectors:
             sector['name'] = sector['name'].replace('  ', ' ')
 
+            if 'ложи' in sector['name'].lower():
+                sector['name'] = sector['name'].capitalize()
+
     def body(self):
         super().body()
         self.check_sectors()
@@ -265,7 +268,7 @@ class OperettyParser(LenkomParser):
 
 class VakhtangovaParser(LenkomParser):
     event = 'ticketland.ru'
-    url_filter = lambda url: 'ticketlanzd.ru' in url and 'vakhtangova' in url
+    url_filter = lambda url: 'ticketland.ru' in url and 'vakhtangova' in url
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -273,6 +276,9 @@ class VakhtangovaParser(LenkomParser):
     def reformat(self, sectors, scene):
         for sector in sectors:
             sector['name'] = sector['name'].replace('  ', ' ')
+
+            # Основная сцена
+
             sector['name'] = sector['name'].replace('N', '№')
 
             if ' Ложа №' in sector['name']:
@@ -290,6 +296,11 @@ class VakhtangovaParser(LenkomParser):
             if 'откид' in sector['name']:
                 if 'Партер' in sector['name']:
                     sector['name'] = sector['name'].replace('откидное', 'откидные')
+
+            # Арт-кафе
+
+            if sector['name'].lower() == 'арт-кафе':
+                sector['name'] = sector['name'].replace('-', ' ').capitalize()
 
     def body(self):
         super().body()

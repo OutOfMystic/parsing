@@ -4349,3 +4349,139 @@ Wed Oct  5 14:27:35 2022 [31m[49mCommand: (RuntimeError) No command "‰¯˚Â" fou
 RuntimeError: No command "‰¯˚Â" found
 [30m
 [33m[49m | . ∆‰Û 0.5Ò[30m
+Thu Oct  6 09:49:01 2022 [31m[49mDB: (OperationalError) server closed the connection unexpectedly[30mThu Oct  6 09:49:01 2022 DB: (OperationalError) server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.OperationalError: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+[30m
+[33m[49m | . ∆‰Û 0.5Ò[30m
+Thu Oct  6 09:49:02 2022 [31m[49mDB: (InterfaceError) cursor already closed[30mThu Oct  6 09:49:02 2022 DB: (InterfaceError) cursor already closed
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.InterfaceError: cursor already closed
+[30m
+[33m[49m | . ∆‰Û 1.2Ò[30m
+Thu Oct  6 09:49:03 2022 [31m[49mDB: (InterfaceError) cursor already closed[30mThu Oct  6 09:49:03 2022 DB: (InterfaceError) cursor already closed
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.InterfaceError: cursor already closed
+[30m
+[33m[49m | . ∆‰Û 2.1Ò[30m
+Thu Oct  6 09:49:05 2022 [31m[49mDB: (InterfaceError) cursor already closed[30mThu Oct  6 09:49:05 2022 DB: (InterfaceError) cursor already closed
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.InterfaceError: cursor already closed
+[30m
+[33m[49m | . ∆‰Û 3.4Ò[30m
+Thu Oct  6 09:49:09 2022 [31m[49mDB: (InterfaceError) cursor already closed[30mThu Oct  6 09:49:09 2022 DB: (InterfaceError) cursor already closed
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.InterfaceError: cursor already closed
+[30m
+[33m[49m | . ∆‰Û 5.3Ò[30m
+Thu Oct  6 09:49:14 2022 [31m[49mDB: (InterfaceError) cursor already closed[30mThu Oct  6 09:49:14 2022 DB: (InterfaceError) cursor already closed
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.InterfaceError: cursor already closed
+[30m
+[33m[49m | . ∆‰Û 8.1Ò[30m
+Thu Oct  6 09:49:22 2022 [31m[49mDB: (InterfaceError) cursor already closed[30mThu Oct  6 09:49:23 2022 DB: (InterfaceError) cursor already closed
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.InterfaceError: cursor already closed
+[30m
+[33m[49m | . ∆‰Û 12.6Ò[30m
+Thu Oct  6 09:49:35 2022 [31m[49mDB: (InterfaceError) cursor already closed[30mThu Oct  6 09:49:35 2022 DB: (InterfaceError) cursor already closed
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.InterfaceError: cursor already closed
+[30m
+[33m[49m | . ∆‰Û 20.0Ò[30m
+Thu Oct  6 09:59:07 2022 [31m[49mDB: (OperationalError) server closed the connection unexpectedly[30mThu Oct  6 09:59:07 2022 DB: (OperationalError) server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.OperationalError: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+[30m
+[33m[49m | . ∆‰Û 0.5Ò[30m
+Thu Oct  6 09:59:07 2022 [31m[49mDB: (InterfaceError) cursor already closed[30mThu Oct  6 09:59:07 2022 DB: (InterfaceError) cursor already closed
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.InterfaceError: cursor already closed
+[30m
+[33m[49m | . ∆‰Û 1.2Ò[30m
+Thu Oct  6 09:59:09 2022 [31m[49mDB: (InterfaceError) cursor already closed[30mThu Oct  6 09:59:09 2022 DB: (InterfaceError) cursor already closed
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.InterfaceError: cursor already closed
+[30m
+[33m[49m | . ∆‰Û 2.1Ò[30m
+Thu Oct  6 09:59:11 2022 [31m[49mDB: (InterfaceError) cursor already closed[30mThu Oct  6 09:59:11 2022 DB: (InterfaceError) cursor already closed
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.InterfaceError: cursor already closed
+[30m
+[33m[49m | . ∆‰Û 3.4Ò[30m
+Thu Oct  6 09:59:14 2022 [31m[49mDB: (InterfaceError) cursor already closed[30mThu Oct  6 09:59:14 2022 DB: (InterfaceError) cursor already closed
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+psycopg2.InterfaceError: cursor already closed
+[30m
+[33m[49m | . ∆‰Û 5.3Ò[30m
+Thu Oct  6 14:36:21 2022 [31m[49mCommand: (RuntimeError) No command "lsit" found[30mThu Oct  6 14:36:21 2022 Command: (RuntimeError) No command "lsit" found
+[31m[49mTraceback (most recent call last):
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\utils\provision.py", line 105, in _tryfunc
+    result = func(*args, **kwargs)
+  File "C:\Users\mrvak\PycharmProjects\parsing\parse_module\console\command.py", line 35, in home
+    raise RuntimeError(f'No command "{cmd}" found')
+RuntimeError: No command "lsit" found
+[30m
+[33m[49m | . ∆‰Û 0.5Ò[30m
