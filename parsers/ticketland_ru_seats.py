@@ -132,7 +132,7 @@ class LenkomParser(SeatsParser):
 
 
 class MkhtParser(LenkomParser):
-    event = 'ticketlanzd.ru'
+    event = 'ticketland.ru'
     url_filter = lambda url: 'ticketlanzd.ru' in url and 'mkht' in url
 
     def __init__(self, *args, **extra):
@@ -184,7 +184,13 @@ class MkhtParser(LenkomParser):
                     pass
                     # Бенуар правая сторона.
 
-            sector['name'] = sector['name'].replace(' ', ', ', 1)
+            if 'сектор' not in sector['name'].lower():
+                sector['name'] = sector['name'].replace(' ', ', ', 1)
+
+            # Новая сцена
+
+            if 'галерея' == sector['name'].lower():
+                sector['name'] = sector['name'].capitalize()
 
         for i in to_del[::-1]:
             del sectors[i]
@@ -268,7 +274,7 @@ class OperettyParser(LenkomParser):
 
 class VakhtangovaParser(LenkomParser):
     event = 'ticketland.ru'
-    url_filter = lambda url: 'ticketland.ru' in url and 'vakhtangova' in url
+    url_filter = lambda url: 'ticketlanzd.ru' in url and 'vakhtangova' in url
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
