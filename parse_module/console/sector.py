@@ -5,8 +5,7 @@ from ..utils import utils
 def select_sector(constructor, sector_id, scheme_id):
     sector_name, sector = get_sector(constructor, sector_id)
     to_store = [sector_name, sector, scheme_id]
-    print(f'{sector_name}: ', end='')
-    return handle_sector, to_store
+    return handle_sector, to_store, sector_name
 
 
 def handle_sector(cmd, args_row, value):
@@ -16,7 +15,7 @@ def handle_sector(cmd, args_row, value):
     elif cmd == 'show':
         detail_sector(sector_name, sector)
     else:
-        print(f'Unknown command "{cmd}". May be you wanted to quit before?\nSector: ', end='')
+        print(f'Unknown command "{cmd}". May be you wanted to quit before?')
 
 
 def get_sector(constructor, sector_id: int):
@@ -58,5 +57,5 @@ def detail_sector(sector_name, sector):
         str_rows.append(row_str)
     connected_rows = '\n'.join(str_rows)
 
-    mes = f'{sector_name} \n{connected_rows}'
+    mes = f'{sector_name}\n{connected_rows}'
     print(mes)

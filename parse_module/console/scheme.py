@@ -1,8 +1,7 @@
 import json
 
 from ..connection import db_manager
-from .base import print_cols, CommandPrompt
-from . import sector, constructing
+from . import sector, constructing, base, command
 
 
 def select_scheme(id_):
@@ -11,47 +10,57 @@ def select_scheme(id_):
     payload = db_manager.fetchall()
     if not payload:
         raise RuntimeError(f'Didn\'t find scheme with id {id_}')
-    print('Scheme: ', end='')
     to_store = list(payload[0])
     to_store.append(id_)
-    return handle_scheme, to_store
+    return handle_scheme, to_store, to_store[0]
 
 
 def handle_scheme(cmd, args_row, value):
     scheme_name, scheme, scheme_id = value
     if cmd == 'quit':
-        return CommandPrompt.home, None
+        print('You are now in a main menu')
+        return command.get_home('', '', None)
     elif cmd == 'list':
         return list_sectors(scheme_name, scheme)
     elif cmd == 'select':
         if args_row.startswith('sector'):
             return select_sector(args_row, scheme, scheme_id)
         else:
-            print('Have you mentioned "select sector"?\nScheme: ', end='')
+            print('Have you meant "select sector"?')
     elif cmd == 'show':
         print(scheme_name + ':')
         for i, _ in enumerate(scheme['sectors']):
             print(i, end=' ')
             sector_data = sector.get_sector(scheme, i)
             sector.detail_sector(*sector_data)
-        print('Scheme: ', end='')
     elif cmd == 'concat':
-        args = [int(arg) for arg in args_row.split(' ')]
+        args = base.split_args(args_row)
         if len(args) < 2:
-            print('Not enought arguments\nScheme: ')
+            print('Not enough arguments')
         else:
-            concat_sectors(scheme, *args)
+            if args[-2] == '-n':
+                name = args[-1]
+                args = args[:-2]
+            else:
+                name = None
+            if len(args) < 2:
+                print('Not enough arguments')
+            try:
+                int_args = [int(arg) for arg in args]
+            except:
+                raise RuntimeError('Concat arguments in exclusion of name should be numbers')
+            concat_sectors(scheme, *int_args, name=name)
     elif cmd == 'save':
         save_scheme(scheme, scheme_id)
     else:
         print(f'Unknown command "{cmd}". May be you wanted to'
-              f' quit before?\nScheme: ', end='')
+              f' quit before?')
 
 
 def list_scheme():
     db_manager.execute("SELECT id, name FROM public.tables_constructor")
     records = db_manager.fetchall()
-    print_cols(records, (4, 60))
+    base.print_cols(records, (4, 60))
 
 
 def select_sector(args_row, constructor, scheme_id):
@@ -77,8 +86,7 @@ def list_sectors(sector_name, constructor):
         row = [i, sectors[i]['name'], sector_count]
         print_data.append(row)
     print(f'"{sector_name}" sectors:')
-    print_cols(print_data, (4, 30, 5))
-    print('Scheme: ', end='')
+    base.print_cols(print_data, (4, 30, 5))
     return handle_scheme, None
 
 
@@ -107,4 +115,4 @@ def save_scheme(constructor, scheme_id):
              f"SET json='{jsoned}' WHERE id={scheme_id}")
     db_manager.execute(script)
     db_manager.commit()
-    print(f'Successfully saved scheme #{scheme_id}!\nScheme: ', end='')
+    print(f'Successfully saved scheme #{scheme_id}!')

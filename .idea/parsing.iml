@@ -4,9 +4,16 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/Envs" />
+<<<<<<< HEAD
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.9 (parsing)" jdkType="Python SDK" />
+=======
+      <excludeFolder url="file://$MODULE_DIR$/downloads" />
+      <excludeFolder url="file://$MODULE_DIR$/venv" />
+    </content>
+    <orderEntry type="jdk" jdkName="Python 3.10 (parsing) (2)" jdkType="Python SDK" />
+>>>>>>> 850577b2555cd0bd89254f21809635d10ff451a5
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

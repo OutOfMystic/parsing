@@ -19,7 +19,11 @@ class Parser(EventParser):
         self.session = ProxySession(self)
         self.our_threaters = [
             'lenkom',
-            'mkht-im-chekhova'
+            'mkht-im-chekhova',
+            'malyy-teatr',
+            'teatr-operetty',
+            'teatr-imeni-evgeniya-vakhtangova',
+            'teatr-naciy'
         ]
 
     def get_events(self, link):
