@@ -1,6 +1,6 @@
 {
   "ticketland_ru_events": false,
-  "ticketland_ru_seats": true,
+  "ticketland_ru_seats": false,
   "tickets_star_com_events": false,
-  "tickets_star_com_seats": false
+  "tickets_star_com_seats": true
 }

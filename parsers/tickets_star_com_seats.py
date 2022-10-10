@@ -20,11 +20,18 @@ class Parser(SeatsParser):
         place1 = soup.find_all('div', class_='place1')
         for place in place1:
             t = place.get('title').translate({ord(i): None for i in '<strong><br/>'})
-            print(t)
-            sector = t.split('ряд')[0].strip()
-            row = (' '.join(re.findall(r'ряд([^<>]+),', t))).strip()
+            loja=t.find('ложа')
+            if loja != -1:
+                sector=t.split(' ложа')[0].strip()
+                row = (' '.join(re.findall(r' ложа ([^<>]+),', t))).strip()
+            else:
+                sector = t.split('ряд')[0].strip()
+                row = (' '.join(re.findall(r'ряд([^<>]+),', t))).strip()
             seat = (' '.join(re.findall(r'место([^<>]+) Стоимость', t))).strip()
             price = (' '.join(re.findall(r'Стоимость:([^<>]+) руб.', t))).strip()
+            row = int(row)
+            seat = int(seat.replace('+', ''))
+            price = int(price)
             s.append([sector, row, seat, price])
         return s
 
@@ -42,7 +49,18 @@ class Parser(SeatsParser):
         s = [s[x:4 + x] for x in range(0, len(s), 4)]
 
         return s
+    def sect(self,x):
 
+        a = [
+            ['ложа бельэтажа правая','Ложи бельэтажа правая сторона'],
+            ['ложа балкона левая','Ложи балкона левая сторона'],
+            ['ложа балкона правая','Ложи балкона правая сторона']
+        ]
+        for i in a:
+            if x==i[0]:
+                x=i[1]
+
+        return x
     def get_places(self):
         resp = self.session.get(self.url, headers={'user-agent': 'Custom'})
         soup = BeautifulSoup(resp.text, 'lxml')
@@ -62,9 +80,16 @@ class Parser(SeatsParser):
                 sector.append(place[0])
 
         for each_sector in sector:
+            #each_sector=self.sect(each_sector)
+            #print('each_sector=',each_sector)
             seats = {}
             for section, row, seat, price in places:
+                #section=self.sect(section)
+                #print('section=',section)
                 if each_sector == section:
                     seats[row, seat] = price
+            each_sector=self.sect(each_sector).capitalize()
             self.register_sector(each_sector, seats)
-
+            print(each_sector,seats)
+        self.print_sectors_level1()
+        self.check_sectors()
