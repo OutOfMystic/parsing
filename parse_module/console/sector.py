@@ -69,13 +69,18 @@ def apply(sector, arg_row):
         raise RuntimeError('There should be two arguments in the command: '
                            'condition and operation')
     condition, operation = args
-    program = (f'if ({condition}):\n'
-               f'    {operation}\n'
-               f'    affected += 1')
+    operation = operation.replace('row', 'ticket[5]') \
+                         .replace('seat', 'ticket[6]')
+    condition = condition.replace('row', 'ticket[5]') \
+                         .replace('seat', 'ticket[6]')
 
     affected = 0
-    for ticket in sector:
-        seat = ticket[6]
-        row = ticket[5]
-        exec(program, {'seat': seat, 'row': row, 'affected': affected})
+    program = (f'if {condition}:\n'
+               f'    {operation}\n'
+               f'    affected += 1')
+    for ticket_id, ticket in enumerate(sector):
+        current_locals = {'ticket': ticket, 'affected': affected}
+        exec(program, {}, current_locals)
+        sector[ticket_id] = current_locals['ticket']
+        affected = current_locals['affected']
     print(f'{affected} seats were affected')

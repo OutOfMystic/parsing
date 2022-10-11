@@ -7,7 +7,7 @@ class CommandPrompt:
         self.handler = self.home
         self.value = None
         self.prefix = None
-        self.first_cmds = [] #['select scheme 4', 'concat 2 0 1']
+        self.first_cmds = [] # ['select scheme 4', 'select sector 3', 'show', 'apply "row == 8" "seat += 1"']
 
     def handle(self, cmd, args_row):
         """
