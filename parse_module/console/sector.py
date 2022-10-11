@@ -1,4 +1,4 @@
-from . import scheme
+from . import scheme, constructing, base
 from ..utils import utils
 
 
@@ -14,6 +14,8 @@ def handle_sector(cmd, args_row, value):
         return scheme.select_scheme(scheme_id)
     elif cmd == 'show':
         detail_sector(sector_name, sector)
+    elif cmd == 'apply':
+        apply(sector, args_row)
     else:
         print(f'Unknown command "{cmd}". May be you wanted to quit before?')
 
@@ -59,3 +61,21 @@ def detail_sector(sector_name, sector):
 
     mes = f'{sector_name}\n{connected_rows}'
     print(mes)
+
+
+def apply(sector, arg_row):
+    args = base.split_args(arg_row)
+    if len(args) != 2:
+        raise RuntimeError('There should be two arguments in the command: '
+                           'condition and operation')
+    condition, operation = args
+    program = (f'if ({condition}):\n'
+               f'    {operation}\n'
+               f'    affected += 1')
+
+    affected = 0
+    for ticket in sector:
+        seat = ticket[6]
+        row = ticket[5]
+        exec(program, {'seat': seat, 'row': row, 'affected': affected})
+    print(f'{affected} seats were affected')

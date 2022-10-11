@@ -78,15 +78,15 @@ def apply_changes(constructor, before, after):
             ticket[3] = after
 
 
-def change_outline(constructor, sector_id):
+def change_outline(sector):
     global driver
-    sector = constructor['sectors'][sector_id]
     if 'outline' not in sector:
         raise RuntimeError(f'Sector {sector["name"]} has no '
                            f'outline. Use another sector as main')
     outline = sector['outline']
     if driver is None:
         driver = ProxyWebDriver()
+    driver.maximize_window()
 
     class_names = ('mat-focus-indicator mat-tooltip-trigger '
                    'mat-mini-fab mat-button-base mat-basic')
@@ -95,19 +95,21 @@ def change_outline(constructor, sector_id):
         driver.get('https://yqnn.github.io/svg-path-editor/')
         driver.expl_wait('xpath', xpath)
 
+    class_names = 'panel-info ng-tns-c83-4 ng-star-inserted'
     textarea = _update_textarea(driver)
+    text_before = driver.find_element_by_class_names(class_names).text
     driver.execute_script(f'var textArea = document.querySelectorA'
                           f'll(\'[class="input-block ng-tns-c80-0"'
                           f']\')[0].querySelector("textarea");'
                           f'textArea.value = "{outline}";')
 
-    class_names = 'panel-info ng-tns-c83-4 ng-star-inserted'
-    while driver.find_element_by_class_names(class_names).text == '265':
+    while driver.find_element_by_class_names(class_names).text == text_before:
         time.sleep(0.2)
         textarea.send_keys(' ')
 
     outline = get_textfield(driver, textarea)
     sector['outline'] = outline.strip()
+    print("Outline was changed")
 
 
 def get_textfield(driver, textarea):

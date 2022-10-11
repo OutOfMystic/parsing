@@ -78,11 +78,11 @@ def split_args(args_row):
 
     quote_parts1 = args_row.split('"')[1:-1:2]
     for part in quote_parts1:
-        args_row = args_row.replace(part, delimiter + chr(12), count=1)
+        args_row = args_row.replace(part, delimiter + chr(12), 1)
 
     quote_parts2 = args_row.split("'")[1:-1:2]
     for part in quote_parts2:
-        args_row = args_row.replace(part, delimiter + chr(13), count=1)
+        args_row = args_row.replace(part, delimiter + chr(13), 1)
 
     args = args_row.split(' ')
     for i, arg in enumerate(args):

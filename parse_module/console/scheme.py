@@ -52,6 +52,10 @@ def handle_scheme(cmd, args_row, value):
             concat_sectors(scheme, *int_args, name=name)
     elif cmd == 'save':
         save_scheme(scheme, scheme_id)
+    elif cmd == 'outline':
+        new_main_id = int(args_row)
+        main_sector = scheme['sectors'][new_main_id]
+        constructing.change_outline(main_sector)
     else:
         print(f'Unknown command "{cmd}". May be you wanted to'
               f' quit before?')
@@ -102,7 +106,8 @@ def concat_sectors(constructor, main_sector_id, *sector_ids, name=None):
         constructing.union(main_name, main_sector, *minor_sector)
     new_main_id = constructing.delete_sectors(constructor, sector_ids,
                                               main_sector_id=main_sector_id)
-    constructing.change_outline(constructor, new_main_id)
+    main_sector = constructor['sectors'][new_main_id]
+    constructing.change_outline(main_sector)
     if name:
         constructor['sectors'][new_main_id]['name'] = name
         main_name = name
