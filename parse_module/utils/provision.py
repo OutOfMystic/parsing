@@ -1,10 +1,12 @@
 import os
 import sys
+import threading
 import time
 import json
 import inspect
 import traceback
 import concurrent.futures
+from typing import Callable, Iterable
 
 from . import utils
 import colorama
@@ -13,7 +15,7 @@ from colorama import Fore, Back
 colorama.init()
 
 
-class TryError:
+class TryError(Exception):
     pass
 
 
@@ -26,7 +28,7 @@ def pool(function, aims, max_threads):
          [args4],
          arg5
      ]
-     """
+    """
     results = {}
     maims = []
     for i, aim in enumerate(aims):
@@ -40,34 +42,77 @@ def pool(function, aims, max_threads):
             try:
                 result = future.result()
             except Exception as exc:
-                print('%r generated an exception: %s' % (aim, exc))
+                print('%r generated an exception: %s' % (key, exc))
                 result = None
             results[key] = result
     return results
 
 
-def multi_try(to_try,
+def threading_try(to_try,
+                  name='Main',
+                  to_except=None,
+                  tries=3,
+                  args=None,
+                  raise_exc=True,
+                  print_errors=True,
+                  multiplier=1.14,
+                  prefix='',
+                  error_descr=''):
+    """
+    The same as multi_try, but executes to_try code
+    into a new thread. After the new thread is started,
+    function return thread object but doesn't return a
+    result as multi_try
+
+    If you still want the result, you can send a mutable
+    object as argument and handle it
+    """
+    kwargs = {
+        'name': name,
+        'to_except': to_except,
+        'tries': tries,
+        'args': args,
+        'raise_exc': raise_exc,
+        'print_errors': print_errors,
+        'multiplier': multiplier,
+        'prefix': prefix,
+        'error_descr': error_descr
+    }
+    thread = threading.Thread(target=multi_try, args=(to_try,), kwargs=kwargs)
+    thread.start()
+    return thread
+
+
+def multi_try(to_try: Callable,
               name='Main',
-              to_except=None,
+              to_except: Callable = None,
               tries=3,
-              args=None,
+              args: Iterable = None,
+              kwargs: dict = None,
               raise_exc=True,
               print_errors=True,
               multiplier=1.14,
               prefix='',
               error_descr=''):
-    if args == None:
+    if kwargs is None:
+        kwargs = {}
+    if args is None:
         args = tuple()
-    if to_except == None:
+    if to_except is None:
         to_except = fpass
     seconds = 3.0
+    if tries == 1 and raise_exc is True:
+        raise RuntimeError('If tries == 1, exception should not be raised.'
+                           ' Set raise_exc to False')
+
     for i in range(tries):
         seconds = seconds ** multiplier
         result, exc = _tryfunc(to_try,
-                                 name,
-                                 prefix=prefix,
-                                 print_errors=print_errors,
-                                 args=args)
+                               name,
+                               prefix=prefix,
+                               print_errors=print_errors,
+                               args=args,
+                               kwargs=kwargs)
         error = str(exc)
         if result != TryError:
             return result
@@ -207,7 +252,7 @@ def parse_aim(aim, key):
 
 
 def try_open(path, default, json_=True):
-    tries = 5
+    tries = 3
     for i in range(tries):
         try:
             with open(path, 'r') as f:
@@ -219,7 +264,8 @@ def try_open(path, default, json_=True):
                 payload = json.loads(payload)
             return payload
         except Exception as err:
-            print(f'Error opening "{path}" file: {err}')
+            if not 'No such file or directory' in err.args:
+                print(f'Error opening "{path}" file: {err}')
             try_write(path, default, json_=json_)
             time.sleep(0.5)
     else:

@@ -1,7 +1,17 @@
 from threading import Lock
 
+from loguru import logger
+
 from ..connection import db_manager
 from ..utils import utils, provision
+from ..utils.exceptions import InternalError, SchemeError, ParsingError
+
+
+class Dancefloor:
+    def __init__(self, ticket_id):
+        self.ticket_id = ticket_id
+        self.amount = 0
+        self.price = 0
 
 
 class Scheme:
@@ -9,6 +19,7 @@ class Scheme:
         self.scheme_id = scheme_id
         self.name = ''
         self.sectors = {}
+        self.dancefloors = {}
 
     def get_scheme(self):
         name, scheme = db_manager.get_scheme(self.scheme_id)
@@ -17,16 +28,24 @@ class Scheme:
                         .replace('театр', '') \
                         .replace('Театр', '') \
                         .replace('  ', ' ').strip()
-        sector_names = [sector['name'] for sector in scheme['sectors']]
+        all_sectors = scheme['sectors']
+
         seats_list = scheme['seats']
 
-        for sector_name in sector_names:
-            self.sectors[sector_name] = {}
+        for sector in all_sectors:
+            sector_name = sector['name']
+            if 'count' not in sector:
+                self.sectors[sector_name] = {}
         for ticket_id, ticket in enumerate(seats_list):
             sector_id = ticket[3]
-            sector_name = sector_names[sector_id]
-            id_row_seat = (ticket_id, ticket[5], ticket[6])
-            self.sectors[sector_name][id_row_seat] = False
+            sector_name = all_sectors[sector_id]['name']
+            if ticket[8] == 1:
+                if sector_name in self.dancefloors:
+                    raise SchemeError(name)
+                self.dancefloors[sector_name] = Dancefloor(ticket_id)
+            else:
+                id_row_seat = (ticket_id, str(ticket[5]), str(ticket[6]))
+                self.sectors[sector_name][id_row_seat] = False
 
     def sector_names(self):
         return list(self.sectors.keys())
@@ -55,8 +74,8 @@ class ParserScheme(Scheme):
         super().__init__(scheme.scheme_id)
         self.event_id = event_id
         self.name = scheme.name
-        self._lock = Lock()
         self._margins = {}
+        self._lock = Lock()
         self._prohibitions = {}
         self._bookings = {}
         self._customize(scheme)
@@ -64,6 +83,8 @@ class ParserScheme(Scheme):
     def bind(self, priority, margin_func):
         try:
             self._lock.acquire()
+            assert priority not in self._margins, "Scheme with the same priority" \
+                                                  " has already been binded"
             self._margins[priority] = margin_func
             self._bookings[priority] = set()
             self._prohibitions[priority] = set()
@@ -78,8 +99,8 @@ class ParserScheme(Scheme):
         try:
             self._lock.acquire()
 
-            wiped_sectors = {sector_name: [] for sector_name in self.sectors}
-            self.release_sectors(wiped_sectors, priority)
+            wiped_sectors = {sector_name: {} for sector_name in self.sectors}
+            self._release_sectors(wiped_sectors, priority)
 
             del self._margins[priority]
             del self._bookings[priority]
@@ -90,12 +111,18 @@ class ParserScheme(Scheme):
         finally:
             self._lock.release()
 
-    def release_sectors(self, parsed_sectors, cur_priority):
+    def restore_margin(self, priority):
+        return self._margins[priority]
+
+    def release_sectors(self, parsed_sectors, parsed_dancefloors, cur_priority):
         self._lock.acquire()
         args = (parsed_sectors, cur_priority,)
         provision.multi_try(self._release_sectors, name='Scheme', tries=1,
-                            args=args, raise_exc=False, prefix=self.name,
-                            to_except=self._lock.release)
+                            args=args, raise_exc=False, prefix=self.name)
+        args = (parsed_dancefloors, cur_priority)
+        provision.multi_try(self._release_dancefloors, name='Scheme', tries=1,
+                            args=args, raise_exc=False, prefix=self.name)
+        self._lock.release()
 
     def _release_sectors(self, parsed_sectors, cur_priority):
         # calculations
@@ -111,14 +138,17 @@ class ParserScheme(Scheme):
             for elem in self._wipe_sector(sector_all, prohibited, bookings):
                 to_change.append(elem)
 
-        # handle not empty sectors
+        # handle non-empty sectors
         for scheme_name, parsed_name in sector_names:
             sector_all = self.sectors[scheme_name]
             sector_parsed = parsed_sectors[parsed_name]
             dict_sector = isinstance(sector_parsed, dict)
+            if not dict_sector:
+                raise ParsingError('List sectors are restricted in '
+                                   'current version, use dict instead')
             handle_func = self._handle_sector_dict if dict_sector else self._handle_sector_list
-            payload = handle_func(sector_all, sector_parsed, prohibited, bookings)
-            changes, bookings_, discards = payload
+            changes, bookings_, discards = handle_func(sector_all, sector_parsed,
+                                                       prohibited, bookings)
             to_change.extend(changes)
             to_book.extend(bookings_)
             to_discard.extend(discards)
@@ -129,37 +159,78 @@ class ParserScheme(Scheme):
         db_manager.update_tickets(to_change, margin_func)
 
         # applying changes of tickets in local storage
-        changes = {ticket[0]: ticket[1] for ticket in to_change}
+        changes = {record[0]: record[1] for record in to_change}
         for scheme_name, parsed_name in sector_names:
             sector_all = self.sectors[scheme_name]
             for id_row_seat in sector_all:
                 id_ = id_row_seat[0]
-                if id_ not in changes:
-                    continue
-                sector_all[id_row_seat] = changes[id_]
+                if id_ in changes:
+                    sector_all[id_row_seat] = changes[id_]
 
         # applying changes of bookings in local storage
         self._bookings[cur_priority] = bookings.union(to_book)
+        bookings = self._bookings[cur_priority]
         self._bookings[cur_priority] = bookings.difference(to_discard)
         if to_book or to_discard:
             self._update_prohibitions(cur_priority)
 
-        self._lock.release()
+    def _release_dancefloors(self, parsed_dancefloors, cur_priority):
+        to_change = {}
+        differences = differences_lower(self.dancefloors, parsed_dancefloors)
+        empty_sector_names, sector_names, unexpected_names = differences
+
+        # handle empty sectors
+        for empty_sector_name in empty_sector_names:
+            dancefloor_all = self.dancefloors[empty_sector_name]
+            to_change[dancefloor_all] = None
+
+        for sector_name, parsed_name in sector_names:
+            dancefloor_all = self.dancefloors[sector_name]
+            amount_parsed, price_parsed = parsed_dancefloors[parsed_name]
+            if dancefloor_all.amount != amount_parsed:
+                to_change[dancefloor_all] = (price_parsed, amount_parsed,)
+            elif dancefloor_all.price != price_parsed:
+                to_change[dancefloor_all] = (price_parsed, amount_parsed,)
+
+        # sending changes to database
+        parsed_dancefloors.clear()
+        margin_func = self._margins[cur_priority]
+        db_manager.update_dancefloors(to_change, margin_func)
+
+        # applying changes of tickets in local storage
+        for dancefloor, price_amount in to_change.items():
+            if price_amount is None:
+                dancefloor.amount = 0
+            else:
+                price, amount = price_amount
+                dancefloor.amount = amount
+                dancefloor.price = price
 
     def _customize(self, scheme):
         db_tickets = db_manager.get_all_tickets(self.event_id)
         first_id = min(db_tickets.keys())
         try:
+            to_change = []
             for sector_name, sector_all in scheme.sectors.items():
                 new_sector = {}
                 self.sectors[sector_name] = new_sector
                 for id_, row, seat in sector_all:
                     new_id = first_id + id_
                     new_ticket = (new_id, row, seat)
+                    # if db_tickets[new_id]:
+                    #     to_change.append((new_id, False,))
+                    # new_sector[new_ticket] = False
                     new_sector[new_ticket] = db_tickets[new_id]
+            db_manager.update_tickets(to_change, lambda price: price)
+            for sector_name, dancefloor in scheme.dancefloors.items():
+                ticket_id = dancefloor.ticket_id
+                new_id = ticket_id + first_id
+                new_sector = Dancefloor(new_id)
+                self.dancefloors[sector_name] = new_sector
         except KeyError:
-            print(utils.red(f'Schema configuration was changed on event {self.event_id}!\n'
-                            f'Scheme is {self.scheme_id}'))
+            raise InternalError(f'Schema {self.scheme_id} cannot '
+                                f'be applied to event {self.event_id}!\n'
+                                f'This scheme was assigned wrong! Try to reassign it')
 
     def _update_prohibitions(self, cur_priority):
         for priority in self._bookings:
@@ -176,7 +247,6 @@ class ParserScheme(Scheme):
         return prohibited
 
     def _wipe_sector(self, sector_all, prohibited, booking):
-
         to_change = []
 
         for seat, seat_avail_subject in sector_all.items():
@@ -218,15 +288,22 @@ class ParserScheme(Scheme):
             ticket_id = seat[0]
 
             if row_seat in sector_parsed:
-                if not seat_avail_subject:
-                    price = sector_parsed[row_seat]
-                    to_change.append((ticket_id, True, price,))
+                price = sector_parsed[row_seat]
+                price = price // 100 * 100
+                if price < 1:
+                    print(utils.yellow(f'Zero price for ticket {ticket_id}'))
+                    continue
+                if seat_avail_subject != price:
+                    to_change.append((ticket_id, price,))
                 to_book.append(ticket_id)
             else:
                 if seat_avail_subject:
                     if (ticket_id in booking) and (ticket_id not in prohibited):
                         to_change.append((ticket_id, False,))
                 to_discard.append(ticket_id)
+        #print(to_change)
+        #print(to_book)
+        #print(to_discard)
         return to_change, to_book, to_discard
 
 

@@ -1,26 +1,61 @@
-import time
+import threading
+import weakref
+from abc import abstractmethod, ABC
+from urllib.parse import urlparse
+
+from loguru import logger
+from requests.exceptions import ProxyError
 
 from ..manager import core
 from ..connection import db_manager
 from ..utils import utils
 from ..utils.date import Date
-from ..utils.parse_utils import double_split
+from ..utils.exceptions import ParsingError
 
 
-class EventParser(core.BotCore):
+class ParserBase(core.BotCore, ABC):
+    proxy_check_url = 'http://httpbin.org/'
+    proxy_check_method = 'get'
+
     def __init__(self, controller):
         super().__init__()
         self.controller = controller
+        self.session = None
+        self.last_state = None
+        self._notifier_event = None
+        self._notifier_locker = None
+
+    def set_notifier(self, event: threading.Event, locker: threading.Event):
+        if self._notifier_event:
+            self.bprint(f'Notifier for parser {self.name} has already been set. Refused.', color=utils.Fore.RED)
+        else:
+            self._notifier_event = event
+            self._notifier_locker = locker
+
+    def detach_notifier(self):
+        self._notifier_event = None
+        self._notifier_locker = None
+
+    def trigger_notifier(self):
+        if self._notifier_event:
+            self._notifier_event.set()
+            self._notifier_locker.wait(timeout=10)
+
+
+class EventParser(ParserBase, ABC):
+
+    def __init__(self, controller):
+        super().__init__(controller)
         self.events = {}
         self._new_condition = {}
-        self._events_state = []
-        self.session = None
 
     def _change_events_state(self):
         to_remove, _, to_add = utils.differences(self.events, self._new_condition)
 
         if to_remove:
-            db_manager.remove_parsed_events(to_remove)
+            new_to_remove = [old_to_remove[:3] for old_to_remove in to_remove]
+            db_manager.remove_parsed_events(new_to_remove)
+            # db_manager.remove_parsed_events(to_remove)
         for event in to_remove:
             del self.events[event]
 
@@ -30,8 +65,8 @@ class EventParser(core.BotCore):
 
     def _add_events(self, events_to_send):
         listed_events = []
-        for event_name, url, date in events_to_send:
-            columns = self._new_condition[event_name, url, date]
+        for event_name, url, date, hash_ in events_to_send:
+            columns = self._new_condition[event_name, url, date, hash_]
             columns = columns.copy()
             if date is None:
                 date = "null"
@@ -40,7 +75,7 @@ class EventParser(core.BotCore):
             if venue is None:
                 venue = "null"
             listed_event = [
-                self.name, event_name, columns['create_time'],
+                self.name, event_name,
                 url, venue, columns, date
             ]
             listed_events.append(listed_event)
@@ -49,41 +84,65 @@ class EventParser(core.BotCore):
 
     def register_event(self, event_name, url, date=None,
                        venue=None, **columns):
+        event_name = event_name.replace('\n', ' ')
+        if venue is not None:
+            venue = venue.replace('\n', ' ')
         columns['venue'] = venue
-        columns['create_time'] = int(time.time())
         formatted_date = str(Date(date))
-        self._new_condition[event_name, url, formatted_date] = columns
+        aliased_name = self.controller.event_aliases[event_name]
+        cols_hash = utils.get_dict_hash(columns)
+        self._new_condition[aliased_name, url, formatted_date, cols_hash] = columns
 
     def run_try(self):
-        super().run_try()
+        count_error = 0
+        while True:
+            try:
+                super().run_try() # TODO: убрать while
+                break
+            except ProxyError as error:
+                count_error += 1
+                if count_error == 50:
+                    raise ProxyError(error)
+                self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+
         if self.step == 0:
             db_manager.delete_parsed_events(self.name)
         self._change_events_state()
+        self.last_state = self._new_condition.copy()
         self._new_condition.clear()
+        self.trigger_notifier()
 
     def run(self):
-        self.proxy = self.controller.proxy_hub.get()
+        self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
         super().run()
 
 
-class SeatsParser(core.BotCore):
+class SeatsParser(ParserBase, ABC):
     event = 'Parent Event'
     url_filter = lambda event: 'ticketland.ru' in event
+    proxy_check_url = 'http://httpbin.org/'
 
-    def __init__(self, controller, *event_data, **extra):
-        super().__init__()
-        self.controller = controller
-        self.event_name, self.url, self.date, \
-            self.venue, self.parsing_initial, \
-            self.scheme, self.priority = event_data
-        self.domain = double_split(self.url, '://', '/')
+    def __init__(self, controller, event_id, event_name,
+                 url, date, venue, signature, scheme,
+                 priority, parent, **extra):
+        super().__init__(controller)
+        self.db_event_id = event_id
+        self.event_name = event_name
+        self.url = url
+        self.date = date
+        self.venue = venue
+        self.signature = signature
+        self.scheme = scheme
+        self.priority = priority
+        self.parent = parent
+        self.step_counter = 10
+        self.domain = str(urlparse(self.url).hostname).replace('www.', '')
         self.name = self._format_name()
-        self.session = None
-        self._set_extra(extra)
-        self._parsed_sectors = {}
 
-    def __del__(self):
-        self.scheme.unbind(self.priority)
+        self._set_extra(extra)
+        self.parsed_sectors = {}
+        self.parsed_dancefloors = {}
+        self.stop = weakref.finalize(self, self._finalize_parser)
 
     def register_sector(self, sector_name, seats):
         """
@@ -97,41 +156,63 @@ class SeatsParser(core.BotCore):
         :param seats: list or dict of seats data
         """
         assert isinstance(seats, (dict, list, tuple)), \
-            'Wrong seats data format: should be iterable'
+            'Wrong seats data format, should be iterable'
         lower_sectors = (sector.lower() for sector in self.scheme.sectors)
         if sector_name.lower() not in lower_sectors:
-            mes = f"Sector '{sector_name}' wasn\'t found on the scheme, being ignored!"
+            mes = f"Sector '{sector_name}' wasn\'t found on the scheme, being ignored! " \
+                  f"{self.__class__.__name__} DEBUG_DATA = '{self.url}'"
+            if hasattr(self, 'venue'):
+                mes += f' {self.venue}'
             self.bprint(mes, color=utils.Fore.YELLOW)
-
 
         if seats:
             if isinstance(seats, dict):
                 row, seat = list(seats.keys())[0]
                 price = seats[row, seat]
-                assert isinstance(row, int), ('row is not an integer, got '
-                                              f'{type(row).__name__} instead')
-                assert isinstance(seat, int), ('row is not an integer, got '
+                assert isinstance(row, str), ('row is not a string, got '
+                                              f'{type(row).__name__} ({row}) instead')
+                assert isinstance(seat, str), ('seat is not a string, got '
                                                f'{type(seat).__name__} ({seat}) instead')
-                assert isinstance(price, int), ('row is not an integer, got '
+                assert isinstance(price, int), ('price is not an integer, got '
                                                 f'{type(price).__name__} ({price}) instead')
             else:
                 row, seat = seats[0]
-                assert isinstance(row, int), ('row is not an integer, got '
+                assert isinstance(row, str), ('row is not a string, got '
                                               f'{type(row).__name__} ({row}) instead')
-                assert isinstance(seat, int), ('seat is not an integer, got '
-                                               f'{type(seat).__name__} {type(seat)} ({seat}) instead')
+                assert isinstance(seat, str), ('seat is not a string, got '
+                                               f'{type(seat).__name__} ({seat}) instead')
 
-        if sector_name in self._parsed_sectors:
+        if sector_name in self.parsed_sectors:
             if isinstance(seats, tuple):
                 seats = list(seats)
             if isinstance(seats, list):
-                self._parsed_sectors[sector_name] += seats
+                self.parsed_sectors[sector_name] += seats
             elif isinstance(seats, dict):
-                self._parsed_sectors[sector_name].update(seats)
+                self.parsed_sectors[sector_name].update(seats)
         else:
             if isinstance(seats, tuple):
                 seats = list(seats)
-            self._parsed_sectors[sector_name] = seats
+            self.parsed_sectors[sector_name] = seats
+
+    def register_dancefloor(self, sector_name, price, amount=1000):
+        """
+        Registers sector ``sector_name`` of dance floor type
+        with ``amount`` number of tickets. ``amount`` should be
+        specified only in certain cases. e.g., to limit table
+        seats to 4.
+
+        :param sector_name: the same name as in database
+        :param amount: amount of available tickets
+        """
+        lower_sectors = (sector.lower() for sector in self.scheme.dancefloors)
+        if sector_name.lower() not in lower_sectors:
+            mes = f"Dance floor sector '{sector_name}' wasn\'t found " \
+                  f"on the scheme, being ignored!"
+            self.bprint(mes, color=utils.Fore.YELLOW)
+        if sector_name in self.parsed_dancefloors:
+            raise ParsingError(f'Sector name {sector_name} is already registered')
+        else:
+            self.parsed_dancefloors[sector_name] = (price, amount,)
 
     def print_sectors_level1(self):
         """
@@ -162,15 +243,14 @@ class SeatsParser(core.BotCore):
 
     def check_sectors(self):
         db_sectors = self.scheme.sector_names()
-        parsed_sectors = self._parsed_sectors.keys()
+        parsed_sectors = self.parsed_sectors.keys()
         db_sectors = list(db_sectors)
         parsed_sectors = list(parsed_sectors)
         if not db_sectors:
-            self.bprint('Got empty scene from database', color=utils.Fore.RED)
+            self.bprint('Got empty scene from the database', color=utils.Fore.RED)
             return
         if not parsed_sectors:
-            self.bprint('Any parsed sectors were registered', color=utils.Fore.YELLOW)
-            return
+            self.bprint('No sector has been parsed', color=utils.Fore.YELLOW)
         missing, found, extra = utils.differences(db_sectors, parsed_sectors)
 
         print_mes = ''
@@ -189,30 +269,50 @@ class SeatsParser(core.BotCore):
         event_name = self.event_name.replace(' - ', '-') \
                                     .replace('\n', ' ')[:12]
         date = self.date.short()
-        return f'{event_name} {date} {self.scheme.name}'
+        return f'{event_name} {date} {self.scheme.name} {self.domain}'
 
     def _set_extra(self, extra):
         for attr, value in extra.items():
             setattr(self, attr, value)
 
+    def _finalize_parser(self):
+        super().stop()
+        self.scheme.unbind(self.priority)
+
     def run_try(self):
-        if self.terminator:
+        if not self.stop.alive:
             return False
         if self.driver:
             self.driver.get(self.url)
-        self.body()
-        self.scheme.release_sectors(self._parsed_sectors, self.priority)
-        self._parsed_sectors.clear()
+
+        count_error = 0
+        while True:
+            try:
+                self.body()
+                break
+            except ProxyError as error:
+                count_error += 1
+                if count_error == 50:
+                    raise ProxyError(error)
+                self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+
+        if self.stop.alive:
+            self.trigger_notifier()
+            self.last_state = (self.parsed_sectors.copy(), self.parsed_dancefloors.copy(),)
+            self.scheme.release_sectors(self.parsed_sectors, self.parsed_dancefloors, self.priority)
+            self.parsed_sectors.clear()
+            self.parsed_dancefloors.clear()
 
     def run_except(self):
-        self._parsed_sectors.clear()
+        self.parsed_sectors.clear()
         super().run_except()
 
+    @abstractmethod
     def body(self):
         pass
 
     def run(self):
-        self.proxy = self.controller.proxy_hub.get()
+        self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
         super().run()
 
 
@@ -244,13 +344,12 @@ def format_sectors_block(mes, sectors, color):
     return print_block
 
 
-def format_range(range):
-    if range[0] == range[1]:
-        formatted = str(range[0])
+def format_range(range_):
+    if range_[0] == range_[1]:
+        formatted = str(range_[0])
         return utils.green(formatted)
-    elif range[0] == -float('inf'):
+    elif range_[0] == -float('inf'):
         return utils.red('<EMPTY>')
     else:
-        formatted = str(range)
+        formatted = str(range_)
         return utils.green(formatted)
-

@@ -1,34 +1,68 @@
+import itertools
 import time
+from typing import Iterable, Any
+
 from colorama import Fore, Back
 
+from parse_module.utils.date import native_getitem
 
-def green(mes):
+
+class LowerDict(dict):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.aliases = {}
+
+    def __getitem__(self, item: str):
+        lower_key = item.lower()
+        key = self.aliases[lower_key]
+        return super().__getitem__(key)
+
+    def __setitem__(self, key: str, value):
+        lower = key.lower()
+        self.aliases[lower] = key
+        super().__setitem__(key, value)
+
+    def get(self, __key, default=None):
+        try:
+            return self.__getitem__(__key)
+        except KeyError:
+            return default
+
+
+def green(mes: str):
     return Fore.GREEN + Back.RESET + str(mes) + default_fore + default_back
 
 
-def red(mes):
+def red(mes: str):
     return Fore.RED + Back.RESET + str(mes) + default_fore + default_back
 
 
-def blue(mes):
+def blue(mes: str):
     return Fore.BLUE + Back.RESET + str(mes) + default_fore + default_back
 
 
-def blueprint(mes):
+def blueprint(mes: str):
     mes = Fore.BLUE + Back.RESET + str(mes) + default_fore + default_back
     print(mes)
 
 
-def yellow(mes):
+def yellow(mes: str):
     return Fore.YELLOW + Back.RESET + str(mes) + default_fore + default_back
 
 
-def colorize(mes, color):
+def colorize(mes: str,
+             color):
     return color + default_back + str(mes) + default_fore
 
 
-def lprint(mes, console_print=True, prefix=True, encoding=None,
-           color=None, filename='log.txt', end='\n', name=''):
+def lprint(mes: str,
+           console_print=True,
+           prefix=True,
+           encoding=None,
+           color=None,
+           filename='log.txt',
+           end='\n',
+           name=''):
     if color:
         mes = colorize(mes, color)
     if prefix and name:
@@ -43,14 +77,20 @@ def lprint(mes, console_print=True, prefix=True, encoding=None,
         print(mes, end=end)
 
 
-def differences(left, right):
+def differences(left: Iterable, right: Iterable, key_filter=None):
     # Returns items which are only in the
     # left array and only in the right array
-    set1 = set(left)
-    set2 = set(right)
+    left_unique = {key_filter(item): item for item in left} if key_filter else left
+    right_unique = {key_filter(item): item for item in right} if key_filter else right
+    set1 = set(left_unique)
+    set2 = set(right_unique)
     dif1 = list(set1 - set2)
     intersection = list(set1 & set2)
     dif2 = list(set2 - set1)
+    if key_filter:
+        dif1 = [key_filter(item) for item in dif1]
+        intersection = [key_filter(item) for item in intersection]
+        dif2 = [key_filter(item) for item in dif2]
     return dif1, intersection, dif2
 
 
@@ -62,34 +102,45 @@ def find_by_value(dict_, value):
         return None
 
 
-def str_in_elem(list_, str_):
+def str_in_elem(list_, str_, low=True):
+    str_ = str_.lower()
     for elem in list_:
-        if str_ in elem:
-            return True
+        if low:
+            if str_ in str(elem).lower():
+                return True
+        else:
+            if str_ in elem:
+                return True
     return False
 
 
-def elem_in_str(list_, str_):
+def elem_in_str(list_, str_, low=True):
+    str_ = str_.lower()
     for elem in list_:
-        if elem in str_:
-            return True
+        if low:
+            if elem.lower() in str(str_):
+                return True
+        else:
+            if elem in str_:
+                return True
     return False
 
 
-def pp_dict(d):
-    for key, value in d.items():
+def pp_dict(dict_: dict):
+    for key, value in dict_.items():
         print("{0}: {1}".format(key, value))
 
 
-def lp_dict(d):
+def lp_dict(dict_: dict):
     mes_lines = []
-    for key, value in d.items():
+    for key, value in dict_.items():
         mes_lines.append("{0}: {1}".format(key, value))
     mes = '\n'.join(mes_lines)
     lprint(mes)
 
 
-def reg_changes(item, key='1'):
+def reg_changes(item: Any,
+                key='1'):
     global reg_change_state
     if key not in reg_change_state:
         reg_change_state[key] = item
@@ -100,6 +151,37 @@ def reg_changes(item, key='1'):
         return False
 
 
+def groupby(iterable, key=None, native=False):
+    groups = groupdict(iterable, key=key, native=native)
+    group_list = list(groups.items())
+    group_list.sort(key=lambda row: row[0])
+    for key, elements in group_list:
+        yield key, elements
+
+
+def groupdict(iterable, key=None, native=False):
+    if key is None:
+        key = lambda x: x
+    groups = {}
+    for elem in iterable:
+        group_key = key(elem)
+        if group_key not in groups:
+            groups[group_key] = []
+        if native:
+            group = native_getitem(group_key, groups)
+            group.append(elem)
+        else:
+            groups[group_key].append(elem)
+    return groups
+
+
+def get_dict_hash(dict_):
+    listed = list(dict_.items())
+    listed.sort(key=lambda row: row[0])
+    plain = itertools.chain(listed)
+    return tuple(plain)
+
+
 reg_change_state = {}
-default_fore = Fore.BLACK
+default_fore = Fore.RESET
 default_back = Back.RESET

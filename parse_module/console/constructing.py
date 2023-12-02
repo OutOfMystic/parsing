@@ -3,7 +3,7 @@ import sys
 import time
 from importlib.resources import files
 
-from ..drivers.selenium import ProxyWebDriver
+from ..drivers.proxelenium import ProxyWebDriver
 from . import js
 from ..utils import parse_utils
 
@@ -79,6 +79,10 @@ def apply_changes(constructor, before, after):
 
 
 def change_outline(sector):
+    """
+    params: [sector_name]
+    open outline editor and edit sector {sector_name} outline
+    """
     global driver
     if 'outline' not in sector:
         raise RuntimeError(f'Sector {sector["name"]} has no '

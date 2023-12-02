@@ -354,7 +354,7 @@ def request_init(func, url, **kwargs):
     return r
 
 
-default_user_agent = ('Mozilla/5.0 (Windows NT 6.1; Win64; x64) Appl'
-                      'eWebKit/537.36 (KHTML, like Gecko) Chrome/80.0'
-                      '.3987.132 Safari/537.36')
+default_user_agent = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+                      ' AppleWebKit/537.36 (KHTML, like Gecko)'
+                      ' Chrome/111.0.0.0 Safari/537.36')
 #requests.packages.urllib3.disable_warnings(InsecureRequestWarning)

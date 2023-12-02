@@ -14,8 +14,11 @@ class Proxy:
         self.requests = self._format_requests()
 
     def __str__(self):
-        args = self.schema, self.ip, self.port, self.login, self.password
-        return '%s://%s:%d@%s:%s' % args
+        if self.login:
+            args = self.schema, self.ip, self.port, self.login, self.password
+            return '%s://%s:%d@%s:%s' % args
+        else:
+            return f'{self.schema}://{self.login:}{self.password}'
 
     def _format_requests(self):
         proxies = {

@@ -1,24 +1,38 @@
-import sys
+import os
+import pickle
 import json
 import threading
-from threading import Lock
-
-import psycopg2
 import time
 
+import psycopg2
+from loguru import logger
+
+from psycopg2.errors import ProgrammingError
+
+from ..manager.backstage import tasker
 from ..utils.provision import multi_try
-from ..utils import utils, provision
+from ..utils import utils, provision, date
+
+locked_counter = 0
 
 
 def locker(func):
-    def wrapper(*args):
+
+    def wrapper(*args, **kwargs):
+        global locked_counter
+
         try:
+            locked_counter += 1
             lock.acquire()
-            return func(*args)
+            return func(*args, **kwargs)
         except psycopg2.ProgrammingError as err:
-            print(f'Retrying {func.__name__}: {err}')
-            return wrapper(*args)
+            mes = f'Retrying {func.__name__}: {err}'
+            print(utils.yellow(mes))
+            return wrapper(*args, **kwargs)
+        except IndexError:
+            print('Didn\'t get a full response!')
         finally:
+            locked_counter -= 1
             lock.release()
     return wrapper
 
@@ -30,12 +44,31 @@ class DBConnection:
         self.user = user
         self.password = password
         self.database = database
+        self._save_mode = False
+        self._saved_selects = {}
         self.connection = None
         self.cursor = None
-        self.connect_db()
+        tasker.put(self.connect_db)
+
+    def save_mode_on(self):
+        logger.warning('DATABASE SAVE MODE TURNED ON')
+        self._save_mode = True
+        if os.path.exists('selects.pkl'):
+            with open('selects.pkl', 'rb') as fp:
+                saved_selects = pickle.load(fp)
+            if date.Day(saved_selects['date']) != date.Day(date.now()):
+                logger.info('Pickled selects are outdated, skipping')
+                return
+            self._saved_selects = saved_selects
+
+    def _update_saves(self, request, response):
+        self._saved_selects[request] = response
+        self._saved_selects['date'] = str(date.now())
+        with open('selects.pkl', 'wb+') as fp:
+            pickle.dump(self._saved_selects, fp)
 
     def connect_db(self):
-        multi_try(self._connect_db, name='Database', tries=5)
+        multi_try(self._connect_db, name='Database', tries=5, multiplier=1.01)
 
     def _connect_db(self):
         self.connection = psycopg2.connect(user=self.user,
@@ -44,38 +77,63 @@ class DBConnection:
                                            port=self.port,
                                            database=self.database)
         self.cursor = self.connection.cursor()
-        self.cursor.execute("SELECT version();")
-        record = self.cursor.fetchone()
-        print("Подключение к БД успешно: ", record, "\n")
+
+    def cursor_wrapper(self, func_name, *args):
+        while self.cursor is None:
+            time.sleep(0.1)
+        try:
+            function = getattr(self.cursor, func_name)
+            return function(*args)
+        except ProgrammingError as error:
+            print(utils.red(f'Unable to process command: {error}'))
+        except Exception as error:
+            raise error
+
+    def connection_wrapper(self, func_name, *args):
+        while self.connection is None:
+            time.sleep(0.1)
+        try:
+            function = getattr(self.connection, func_name)
+            return function(*args)
+        except ProgrammingError as error:
+            print(utils.red(f'Unable to process command: {error}'))
+        except Exception as error:
+            raise error
 
     def execute(self, request):
-        return provision.multi_try(self.cursor.execute, args=(request,),
-                                   to_except=self._connect_db, name='DB', tries=9)
+        return provision.multi_try(self.cursor_wrapper, args=('execute', request,),
+                                   to_except=self._connect_db, name='DB',
+                                   multiplier=1.05, tries=5)
+
+    def select(self, request):
+        if request in self._saved_selects:
+            fetched = self._saved_selects[request]
+            print(f'LOADED request with len {len(str(fetched))} {request}')
+        else:
+            self.execute(request)
+            fetched = self.fetchall()
+            if self._save_mode and fetched is not None:
+                self._update_saves(request, fetched)
+        return fetched
 
     def fetchall(self):
-        return provision.multi_try(self.cursor.fetchall, to_except=self._connect_db,
-                                   name='DB', tries=9)
+        return provision.multi_try(self.cursor_wrapper, args=('fetchall',),
+                                   to_except=self._connect_db, name='DB',
+                                   multiplier=1.05, tries=5)
 
     def commit(self):
-        return provision.multi_try(self.connection.commit, to_except=self._connect_db,
-                                   name='DB', tries=9)
+        return provision.multi_try(self.connection_wrapper, args=('commit',),
+                                   to_except=self._connect_db, name='DB',
+                                   multiplier=1.05, tries=5)
 
 
 class ParsingDB(DBConnection):
     def __init__(self):
-        super().__init__(host="195.2.81.173",
+        super().__init__(host="80.76.42.37",
                          port="5432",
-                         user="tenerunayo",
-                         password="umauwuNg24@A",
+                         user="django_project",
+                         password="C8iIb38QJjo",
                          database="crmdb")
-
-    @locker
-    def get_scheme_id(self, event_id):
-        self.execute("SELECT scheme_id "
-                     "FROM public.tables_event "
-                     f"WHERE id={event_id}")
-        records = self.fetchall()
-        return records[0][0]
 
     @locker
     def get_scheme(self, scheme_id):
@@ -84,6 +142,16 @@ class ParsingDB(DBConnection):
                      f"WHERE id={scheme_id}")
         records = self.fetchall()
         return records[0]
+
+    @locker
+    def get_scheme_names(self):
+        self.execute("SELECT id, name, venue FROM public.tables_constructor")
+        records = self.fetchall()
+        for id_, name, venue in records:
+            if not venue:
+                print(utils.red(f'Empty venue name for scheme {name} ({id_})!!!'))
+                continue
+        return {id_: venue for id_, _, venue in records}
 
     @locker
     def get_all_tickets(self, event_id):
@@ -97,7 +165,8 @@ class ParsingDB(DBConnection):
     def get_unfilled_tickets(self, event_id):
         self.execute("SELECT sector, id, row, seat "
                      "FROM public.tables_tickets "
-                     f"WHERE event_id_id={event_id} AND NOT status='available'")
+                     f"WHERE event_id_id={event_id} AND status "
+                     f"NOT IN ('available', 'hidden', 'ordered')")
         return self.fetchall()
 
     @locker
@@ -108,11 +177,52 @@ class ParsingDB(DBConnection):
 
     @locker
     def get_events_for_parsing(self):
-        self.execute("SELECT id, parsed_url FROM "
-                     "public.tables_event "
-                     "WHERE parsed_url IS NOT NULL")
+        self.execute("SELECT id, name, date, scheme_id, parsed_url, site_id "
+                     "FROM public.tables_event "
+                     "WHERE site_id <> 3 AND scheme_id IS NOT NULL")
         records = self.fetchall()
-        return records
+        connections = [{'event_id': id_, 'event_name': name, 'date': date,
+                        'parsing': parsing, 'site_id': site_id, 'scheme_id': scheme_id}
+                       for id_, name, date, scheme_id, parsing, site_id in records]
+        for connection in connections:
+            if connection['parsing'] is None:
+                connection['parsing'] = []
+            connection['event_id'] = int(connection['event_id'])
+        return connections
+
+    @locker
+    def reset_tickets(self, event_ids):
+        if not event_ids:
+            return
+        event_ids = ', '.join(str(event_id) for event_id in event_ids)
+        self.execute(f"UPDATE public.tables_tickets "
+                     f"SET status='not' "
+                     f"WHERE status='available-pars' AND "
+                     f"event_id_id NOT IN ({event_ids})")
+        self.commit()
+
+    @locker
+    def update_dancefloors(self, change_dict, margin_func):
+        scripts = []
+        for dancefloor, price_amount in change_dict.items():
+            if price_amount is None:
+                ticket_id = dancefloor.ticket_id
+                script = f"UPDATE public.tables_tickets " \
+                         f"SET status='not', no_schema_available=0 " \
+                         f"WHERE id={ticket_id};"
+            else:
+                origin_price, amount = price_amount
+                sell_price = margin_func(origin_price)
+                ticket_id = dancefloor.ticket_id
+                status = 'available-pars' if amount else 'not'
+                script = f"UPDATE public.tables_tickets " \
+                         f"SET status='{status}', original_price={origin_price}, " \
+                         f"sell_price={sell_price}, no_schema_available={amount} " \
+                         f"WHERE id={ticket_id};"
+            scripts.append(script)
+        if scripts:
+            self.execute('\n'.join(scripts))
+        self.commit()
 
     @locker
     def update_tickets(self, tickets, margin_func):
@@ -125,34 +235,37 @@ class ParsingDB(DBConnection):
         if false_string:
             self.execute("UPDATE public.tables_tickets "
                          "SET status='not' WHERE "
-                         f"id IN ({false_string}) AND NOT status='available';")
+                         f"id IN ({false_string}) AND "
+                         f"status='available-pars';")
             self.commit()
-            print(f'Falsed: {len(set_to_false)}')
+            #print(f'Falsed: {len(set_to_false)}')
         if true_string:
             self.execute("UPDATE public.tables_tickets "
                          "SET status='available-pars' "
-                         f"WHERE id IN ({set_to_true}) AND NOT status='available';")
+                         f"WHERE id IN ({set_to_true}) AND "
+                         f"status='not';")
             self.commit()
         scripts = []
         for price in true_with_price:
             sell_price = margin_func(price)
             scripts.append("UPDATE public.tables_tickets "
-                          f"SET status='available-pars', original_price={price}, "
-                          f"sell_price={sell_price} "
-                          f"WHERE id IN ({true_with_price[price]}) AND NOT status='available';")
-            true_count = true_with_price[price].count(',') + 1
-            print(f'Trued: {true_count} with price {price}')
+                           f"SET status='available-pars', original_price={price}, "
+                           f"sell_price={sell_price} "
+                           f"WHERE id IN ({true_with_price[price]}) AND "
+                           f"status='not';")
+            #true_count = true_with_price[price].count(',') + 1
+            #print(f'Trued: {true_count} with price {sell_price}')
         if scripts:
             self.execute('\n'.join(scripts))
         self.commit()
 
     @locker
     def add_parsed_events(self, rows):
-        str_rows = [f"('{v1}', '{v2}', {v3}, '{v4}', '{v5}', '{json.dumps(v6)}', '{v7}')"
-                    for v1, v2, v3, v4, v5, v6, v7 in rows]
+        str_rows = [f"('{v1}', '{v2}', '{v3}', '{v4}', '{json.dumps(v5)}', '{v6}')"
+                    for v1, v2, v3, v4, v5, v6 in rows]
         values = ", ".join(str_rows)
         columns = [
-            'parent', 'event_name', 'timeout', 'url',
+            'parent', 'event_name', 'url',
             'venue', 'extra', 'date'
         ]
         joined_cloumns = ', '.join(columns)
@@ -162,17 +275,50 @@ class ParsingDB(DBConnection):
         self.commit()
 
     @locker
-    def get_parsed_events(self):
-        self.execute('SELECT event_name, url, venue, timeout, '
+    def get_parsed_events(self, types=None):
+        if types is None:
+            self.execute('SELECT id, name from public.tables_parsingtypes')
+            types = {id_: name for id_, name in self.fetchall()}
+        self.execute('SELECT parent, event_name, url, venue, '
                      'extra, date from public.tables_parsedevents')
+
         records = self.fetchall()
-        return records
+        dicted = [{'parent': parent, 'event_name': name, 'url': url,
+                   'venue': venue if venue != 'null' else None, 'extra': extra, 'date': date}
+                  for parent, name, url, venue, extra, date in records]
+
+        for object_ in dicted:
+            type_id = utils.find_by_value(types, object_['parent'])
+            object_['type_id'] = type_id
+            # del object_['parent']
+        return dicted
 
     @locker
-    def get_margin(self, margin_name):
-        self.execute('SELECT rules from public.tables_margin '
-                         f"WHERE name='{margin_name}'")
-        rules = self.fetchall()[0][0]
+    def get_parsing_types(self):
+        self.execute('SELECT id, name from public.tables_parsingtypes')
+        return {id_: name for id_, name in self.fetchall()}
+
+    @locker
+    def add_parsing_type(self, name):
+        self.execute('INSERT INTO public.tables_parsingtypes (id, name) '
+                     f"VALUES (DEFAULT, '{name}')")
+        self.commit()
+
+    @locker
+    def get_site_parsers(self):
+        self.execute('SELECT id, parsers from public.tables_sites WHERE disabled=FALSE')
+        return {id_: int_keys(parsers) for id_, parsers in self.fetchall()
+                if parsers is not None}
+
+    @locker
+    def get_site_names(self):
+        self.execute('SELECT id, name from public.tables_sites')
+        return {id_: name for id_, name in self.fetchall()}
+
+    @locker
+    def get_margins(self):
+        self.execute('SELECT id, name, rules from public.tables_margin')
+        rules = {id_: (name, value,) for id_, name, value in self.fetchall()}
         return rules
 
     @locker
@@ -185,10 +331,44 @@ class ParsingDB(DBConnection):
         self.commit()
 
     @locker
+    def get_event_aliases(self):
+        self.execute("SELECT * from public.parsing_aliases")
+        aliases = {origin: alias for origin, alias in self.fetchall()}
+        return aliases
+
+    @locker
     def delete_parsed_events(self, parent):
         self.execute("DELETE FROM public.tables_parsedevents "
                      f"WHERE parent='{parent}'")
         self.commit()
+
+    @locker
+    def store_urls(self, parser_urls):
+        str_rows = [f"({event_id}, '{urls}')" for event_id, urls in parser_urls]
+        values = ", ".join(str_rows)
+        self.execute('TRUNCATE TABLE public.tables_stored_urls')
+        self.commit()
+        self.execute('INSERT INTO public.tables_stored_urls (id, urls) '
+                     f"VALUES {values}")
+        self.commit()
+
+    @locker
+    def get_parser_notifiers(self):
+        columns = ['name']
+        rows = self.select(f'SELECT {", ".join(columns)} FROM public.tables_eventnotifier')
+        event_parsers = []
+        for row in rows:
+            db_data = {column: value for column, value in zip(columns, row)}
+            event_parsers.append(db_data)
+
+        columns = ['event_id']
+        rows = self.select(f'SELECT {", ".join(columns)} FROM public.tables_seatsnotifier')
+        seats_parsers = []
+        for row in rows:
+            db_data = {column: value for column, value in zip(columns, row)}
+            seats_parsers.append(db_data)
+
+        return event_parsers, seats_parsers
 
 
 def divide_tickets(tickets):
@@ -198,20 +378,35 @@ def divide_tickets(tickets):
     for ticket in tickets:
         ticket_id = ticket[0]
         availability = ticket[1]
-        if len(ticket) == 3:
-            price = ticket[2]
-            if price not in true_with_price:
-                true_with_price[price] = []
-            true_with_price[price].append(ticket_id)
-        elif availability:
-            set_to_true.append(ticket_id)
-        else:
+        if availability is False:
             set_to_false.append(ticket_id)
+        elif availability is True:
+            set_to_true.append(ticket_id)
+        elif isinstance(availability, int):
+            if availability not in true_with_price:
+                true_with_price[availability] = []
+            true_with_price[availability].append(ticket_id)
+        else:
+            raise TypeError(f'Parsed ticket value should be int or bool,'
+                            f' not {type(availability).__name__}')
     for price in true_with_price:
         price_strs = [str(price) for price in true_with_price[price]]
         true_with_price[price] = ", ".join(price_strs)
     return set_to_false, set_to_true, true_with_price
 
 
+def int_keys(dict_):
+    if dict_ is None:
+        return {}
+    if not dict_:
+        return {}
+    new_dict = {}
+    for key, value in dict_.items():
+        key = int(key)
+        new_dict[key] = value
+    return new_dict
+
+
 lock = threading.Lock()
 db_manager = ParsingDB()
+db_manager.save_mode_on()

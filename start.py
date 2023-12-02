@@ -1,21 +1,46 @@
+import json
+
 from parse_module.manager.controller import Controller
 from parse_module.connection import db_manager
+from parse_module.manager.proxy.loader import parse_domain
+
+DEBUG = True
+DEBUG_DATA = 20207
+
+"""print(parse_domain('https://msk.kassir.ru/'))"""
 
 
 if __name__ == '__main__':
-    controller = Controller('parsers', 'parsers.json')
+    debug_url, debug_event_id = None, None
+    if DEBUG:
+        if isinstance(DEBUG_DATA, str):
+            debug_url = DEBUG_DATA
+        elif isinstance(DEBUG_DATA, int):
+            debug_event_id = DEBUG_DATA
+    controller = Controller('parsers', 'parsers.json', debug_url=debug_url,
+                            debug_event_id=debug_event_id)
     controller.run()
-    print('Ran')
 
 
 """if __name__ == '__main__':
-    db_manager.execute('SELECT date from public.tables_event')
-    data = db_manager.fetchall()
-    print(data)
-    print(data[0])
-    print(type(data[0]))
+    db_manager.execute('UPDATE public.tables_tickets '
+                       "SET status='not' "
+                       "WHERE status='available'")
+    db_manager.commit()
+    print('request complete')"""
 
 
+"""if __name__ == '__main__':
+    mes = ('UPDATE public.tables_tickets '
+           "SET status='not' "
+           "WHERE (status='available')")
+           #" AND (event_id_id=3119)")
+    db_manager.execute(mes)
+    db_manager.commit()
+    print('request complete')"""
+
+
+"""
 if __name__ == '__main__':
     bookings = {}
 

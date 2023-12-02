@@ -1,24 +1,30 @@
-import json
-from datetime import datetime
-from typing import Union, Any
 import secrets
 import string
-import requests
-from bs4 import BeautifulSoup, PageElement
+from bs4 import BeautifulSoup
+
 from parse_module.models.parser import EventParser
+from parse_module.utils.parse_utils import double_split
 from parse_module.manager.proxy.instances import ProxySession
-from parse_module.utils import utils
-from itertools import groupby
-import re
-import timestring
+
 
 class Parser(EventParser):
+    proxy_check_url = 'https://www.tickets-star.com/'
 
     def __init__(self, controller):
         super().__init__(controller)
-        self.delay = 180
+        self.delay = 3600
         self.driver_source = None
-        self.url = 'https://www.tickets-star.com/cat/176/CategoryId/2/'
+        self.our_urls = {
+            'https://www.tickets-star.com/cat/176/CategoryId/2/': '*',
+            'https://www.tickets-star.com/cirk/': '*',
+            # 'https://www.tickets-star.com/cat/229/StageId/63/': '*',  # Цирк вернадского
+            'https://www.tickets-star.com/cat/229/StageId/55/': '*',  # Цирк на цветном
+            'https://www.tickets-star.com/cat/229/PlaceId/338/': '*',  # ЦСКА АРЕНА
+            'https://www.tickets-star.com/cat/229/StageId/205397/': '*',  # Арена 2000 (Локомотив)
+            'https://www.tickets-star.com/megasport/': '*',
+            'https://www.tickets-star.com/crocus/': '*',
+            'https://www.tickets-star.com/mht-chekhova/': '*'
+        }
 
     def before_body(self):
         self.session = ProxySession(self)
@@ -29,63 +35,152 @@ class Parser(EventParser):
             letters_and_digits) for i in range(16))
         return (crypt_rand_string)
 
-    def get_edate(self,soup):
-        mydate = soup.find('div',class_='date_an_s').get_text()
-        mydate = mydate.split(',')[0]+mydate.split(',')[2]
-        day, month, y, t = mydate.strip().split(' ')
-        if len(day) == 1:
-            day = '0' + day
-        month = month[:3].capitalize()
-        f_d = f'{day} {month} {y} {t}'
-        return(f_d)
+    def get_places(self, soup):
+        places = []
 
-    def get_uri(self,soup):
-        teg_script = soup.find_all('script')
-        uri = teg_script[18]
-        pattern = re.compile("(\w+): '(.*?)'")
-        fields = dict(re.findall(pattern, uri.text))
-        p_id = fields['data'].split('=')[1]
+        place_btns = soup.find_all('a', class_='btn')
+        for place_btn in place_btns:
+            href = place_btn.get('href')
+            place_row = place_btn.parent.parent.parent
+            place_name = place_row.find('h2').text.strip()
+
+            places.append({
+                'name': place_name,
+                'url': 'https://www.tickets-star.com' + href,
+                'short_url': href,
+            })
+
+        return places
+
+    def get_events(self, soup):
+        a_events = []
+
+        all_events_soups = [soup]
+        bt_areas = soup.find_all('div', class_='bt_area')
+
+        if not bt_areas:
+            return a_events
+
+        if bt_areas[-1].text == 'Показать еще события':
+            php_id = self.get_uri(soup)
+            r_str = self.r_str()
+
+            while True:
+                more_soup, resp_pr = self.load_more_events(php_id, r_str)
+                all_events_soups.append(more_soup)
+
+                if resp_pr <= 0:
+                    break
+
+        for events_soup in all_events_soups:
+            bt_areas = events_soup.find_all('div', class_='bt_area')
+
+            if not bt_areas:
+                continue
+
+            last = -1 if bt_areas[-1].get('id') == 'LoadMore' else len(bt_areas)
+            for bt_area in bt_areas[:last]:
+                if 'купить' not in bt_area.text.lower():
+                    continue
+
+                event_row = bt_area.parent.parent
+                href = 'https://www.tickets-star.com' + bt_area.find('a', class_='btn').get('href')
+                title = event_row.find('h2').text.strip()
+                full_place = event_row.find('div', class_='rep_date').text.strip().split(', ')
+                venue = self.format_venue(full_place[0])
+                scene = 'not_present'
+                if len(full_place) > 1:
+                    scene = full_place[-1]
+
+                date = event_row.find('div', class_='rep_23').text.strip()
+                date = self.format_date(date)
+
+                a_events.append((title, href, date, scene, venue))
+
+        return a_events
+
+    def format_venue(self, venue):
+        if '(' in venue and ')' in venue:
+            city = double_split(venue, '(', ')')
+            venue = venue.replace(f'({city})', '').strip()
+
+        return venue
+
+    def get_uri(self, soup):
+        soup_txt = str(soup)
+        p_id = double_split(soup_txt, "RequestUri=", "'")
         return p_id
 
-    def get_links_events(self):
-        response=self.session.get(self.url, headers={'user-agent': self.user_agent})
-        soup=BeautifulSoup(response.text,'lxml')
-        afishes=soup.find_all('a',class_='btn')
-        links=[]
-        url='https://www.tickets-star.com'
-        for afisha in afishes:
-            response_a = self.session.get(url+afisha.get('href'))
-            soup_a=BeautifulSoup(response_a.text,'lxml')
-            bt_area=soup_a.find_all('div',class_='bt_area')
-            if not bt_area:
-                continue
-            resp_pr=0
-            PHPID=self.get_uri(soup_a)
-            headers = {'cookie': 'PHPSESSID='f'{self.r_str()}'}
-            payload = {'RequestUri':PHPID}
-            while bt_area[-1].text=='Показать еще события' or resp_pr>0:
-                for bt in bt_area[:-1]:
-                    resp_bt=self.session.get(url+bt.find('a',class_='btn').get('href'))
-                    soup=BeautifulSoup(resp_bt.text,'lxml')
-                    name=soup.find('h1').get_text()
-                    edate = self.get_edate(soup)
-                    links.append([name,url + bt.find('a', class_='btn').get('href'),edate])
-                url_p='https://www.tickets-star.com/Scripts/LoadMoreRepertoire.script.php'
-                url_pr='https://www.tickets-star.com/Scripts/LoadMoreRepertoireNextCount.script.php'
-                resp_p = self.session.post(url_p,data=payload,headers=headers)
-                resp_pr = self.session.post(url_pr,data=payload,headers=headers).text
-                resp_pr=int(resp_pr)
-                soup_p = BeautifulSoup(resp_p.text,'lxml')
-                bt_area = soup_p.find_all('div', class_='bt_area')
+    def load_more_events(self, php_id, r_str):
+        url_p = 'https://www.tickets-star.com/Scripts/LoadMoreRepertoire.script.php'
+        url_pr = 'https://www.tickets-star.com/Scripts/LoadMoreRepertoireNextCount.script.php'
+        headers = {'cookie': 'PHPSESSID='f'{r_str}'}
+        payload = {'RequestUri': php_id}
+        resp_p = self.session.post(url_p, data=payload, headers=headers)
+        resp_pr = self.session.post(url_pr, data=payload, headers=headers)
+        more_soup = BeautifulSoup(resp_p.text, 'lxml')
+        resp_pr = int(resp_pr.text)
 
-            for bt in bt_area:
-                resp_bt2 = self.session.get(url + bt.find('a', class_='btn').get('href'))
-                soup2 = BeautifulSoup(resp_bt2.text, 'lxml')
-                name2=soup2.find('h1').get_text()
-                edate2 = self.get_edate(soup2)
-                links.append([name2,url + bt.find('a', class_='btn').get('href'),edate2])
-        return links
+        return more_soup, resp_pr
+
+    def format_date(self, date):
+        date = date.split(',')[0] + date.split(',')[2]
+        day, month, y, t = date.strip().split(' ')
+
+        if len(day) == 1:
+            day = '0' + day
+
+        if 'мая' in month:
+            month = 'Май'
+        else:
+            month = month[:3].capitalize()
+
+        date_f = f'{day} {month} {y} {t}'
+        return date_f
+
+    def is_places_page(self, soup):
+        all_places = soup.find_all('div', id='allplacelist')
+        if len(all_places):
+            return True
+
+    def url_request(self, url):
+        r = self.session.get(url, headers={'user-agent': self.user_agent})
+        soup = BeautifulSoup(r.text, 'lxml')
+
+        return soup
+
+    def get_afisha_urls(self, our_url, our_places):
+        afisha_urls = []
+        soup = self.url_request(our_url)
+
+        if self.is_places_page(soup):
+            places = self.get_places(soup)
+
+            if our_places == '*':
+                for place in places:
+                    afisha_urls.append(place['url'])
+            else:
+                for our_place_short in our_places:
+                    for place in places:
+                        if our_place_short.lower() in place['name'].lower():
+                            afisha_urls.append(place['url'])
+                            break
+        else:
+            afisha_urls.append(our_url)
+
+        return afisha_urls
 
     def body(self):
-        for link in self.get_links_events():
-            self.register_event(link[0],link[1],date=link[2])
+        afisha_urls = []
+        for our_url, our_places in self.our_urls.items():
+            afisha_urls += self.get_afisha_urls(our_url, our_places)
+
+        a_events = []
+        for url in afisha_urls:
+            soup = self.url_request(url)
+            a_events += self.get_events(soup)
+
+        a_events = list(set(a_events))
+
+        for event in a_events:
+            self.register_event(event[0], event[1], date=event[2], scene=event[3], venue=event[4])
