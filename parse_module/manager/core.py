@@ -1,3 +1,4 @@
+import json
 import os
 import time
 import random
@@ -41,6 +42,9 @@ class BotCore(threading.Thread):
         return f'Bot "{self.name}" {proxy_str}'
 
     def bprint(self, mes, color=utils.Fore.GREEN):
+        with open('main.log', 'a+') as f:
+            row = {'name': self.name, 'mes': mes, 'color': color}
+            f.write(json.dumps(row) + '\n')
         mes = f'{self.name}| {utils.colorize(mes, color)}\n'
         print(mes, end='')
 

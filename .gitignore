@@ -164,6 +164,7 @@ check_missing_sectors.txt
 exec_tools/har_reader/har.json
 exec_tools/har_reader/requests_code.txt
 exec_tools/har_reader/requests_code.py
+exec_tools/order_exporter
 events_state.json
 
 working_directory/parsers.json

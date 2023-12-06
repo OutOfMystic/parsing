@@ -1,0 +1,69 @@
+
+
+
+def deprecated_get_ads():
+    input('INPUT an ads table')
+    rows = paste_clip()
+    cols = [[] for _ in rows[0]]
+    for row in rows:
+        for i, item in enumerate(row):
+            item = item.replace('\r', '')
+            if not item:
+                continue
+            cols[i].append(item)
+    money_on_site = {col[0] + col[1]: sum(int(item) for item in col[2:]) for col in cols}
+
+    db_manager.execute('SELECT venue, id from public.tables_constructor')
+    venue_on_scheme = {id_: venue for venue, id_ in db_manager.fetchall()}
+    db_manager.execute('SELECT scheme_id, site_id from public.tables_event')
+    events = [[site, venue_on_scheme[scheme]] for scheme, site in db_manager.fetchall() if scheme]
+    db_manager.execute('SELECT id, name from public.tables_sites')
+    site_names = {id_: name for id_, name in db_manager.fetchall()}
+
+    venues_on_site = {}
+    for site, events_on_site in utils.groupby(events, lambda row: row[0]):
+        venues = [event[1] for event in events_on_site]
+        a_venue = [venue for venue in set(venues) if venues if venues.count(venue) / len(venues) > 0.07]
+        site_name = site_names[site]
+        venues_on_site[site_name] = a_venue
+    del venues_on_site['theater-tickets.store']
+    del venues_on_site['theater-ticketing.ru']
+
+    money_on_venue = {venue: 0 for venue in venue_on_scheme.values()}
+    for site_name, money in money_on_site.items():
+        venues = venues_on_site[site_name]
+        proportion = 1 / len(venues)
+        for venue in venues:
+            money_share = proportion * money
+            money_on_venue[venue] += int(money_share)
+    return money_on_venue
+
+
+def deprecated_get_sites():
+    db_manager.execute('SELECT venue, id from public.tables_constructor')
+    venue_on_scheme = {id_: venue for venue, id_ in db_manager.fetchall()}
+    db_manager.execute('SELECT scheme_id, site_id from public.tables_event')
+    events = [[site, venue_on_scheme[scheme]] for scheme, site in db_manager.fetchall() if scheme]
+    db_manager.execute('SELECT id, name from public.tables_sites')
+    site_names = {id_: name for id_, name in db_manager.fetchall()}
+
+    venues_on_site = {}
+    for site, events_on_site in utils.groupby(events, lambda row: row[0]):
+        venues = [event[1] for event in events_on_site]
+        if not venues:
+            continue
+        a_venue = [venue for venue in set(venues) if venues.count(venue) / len(venues) > 0.07]
+        site_name = site_names[site]
+        venues_on_site[site_name] = a_venue
+    del venues_on_site['theater-tickets.store']
+    del venues_on_site['theater-ticketing.ru']
+
+    first_row = []
+    second_row = []
+    for site in venues_on_site.keys():
+        half_len = len(site) // 2
+        first_row.append(site[:half_len])
+        second_row.append(site[half_len:])
+    plain = '\t'.join(first_row) + '\n' + '\t'.join(second_row)
+    pyperclip.copy(plain)
+    input(f'{len(first_row)} sites copied')

@@ -1,3 +1,4 @@
+import json
 import threading
 import datetime as dt
 from urllib.parse import urlparse, urlunparse
@@ -24,6 +25,9 @@ class SeatsParserGroup:
         self.start_lock = threading.Lock()
 
     def bprint(self, mes, color=utils.Fore.GREEN):
+        with open('main.log', 'a+') as f:
+            row = {'name': self.name, 'mes': mes, 'color': color}
+            f.write(json.dumps(row) + '\n')
         mes = f'Group ({self.name})| {utils.colorize(mes, color)}\n'
         print(mes, end='')
 

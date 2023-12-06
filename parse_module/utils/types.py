@@ -18,7 +18,7 @@ class HashDict(dict):
     def __getitem__(self, item):
         hash_ = self.hash_function(item)
         try:
-            logger.debug(self.aliases.keys())
+            # logger.debug(self.aliases.keys())
             key = self.aliases[hash_]
             return super().__getitem__(key)
         except KeyError:
