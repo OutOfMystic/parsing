@@ -54,8 +54,7 @@ class Proxies:
         if domain not in self.proxies_on_domain:
             self.proxies_on_domain[domain] = ProxyOnDomain(domain)
         callback = self.proxies_on_domain[domain]
-        args = (self.all_proxies, url, callback,)
-        backstage.tasker.put(check.check_proxies, args)
+        backstage.tasker.put(check.check_proxies, self.all_proxies, url, callback)
         
     def _get_proxies_on_domain(self, url):
         domain = parse_domain(url)

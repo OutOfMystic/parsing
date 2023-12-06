@@ -3,11 +3,10 @@ import pickle
 import json
 import threading
 import time
+from collections import defaultdict
 
 import psycopg2
 from loguru import logger
-
-from psycopg2.errors import ProgrammingError
 
 from ..manager.backstage import tasker
 from ..utils.provision import multi_try
@@ -84,7 +83,7 @@ class DBConnection:
         try:
             function = getattr(self.cursor, func_name)
             return function(*args)
-        except ProgrammingError as error:
+        except psycopg2.ProgrammingError as error:
             print(utils.red(f'Unable to process command: {error}'))
         except Exception as error:
             raise error
@@ -95,7 +94,7 @@ class DBConnection:
         try:
             function = getattr(self.connection, func_name)
             return function(*args)
-        except ProgrammingError as error:
+        except psycopg2.ProgrammingError as error:
             print(utils.red(f'Unable to process command: {error}'))
         except Exception as error:
             raise error
@@ -136,12 +135,28 @@ class ParsingDB(DBConnection):
                          database="crmdb")
 
     @locker
-    def get_scheme(self, scheme_id):
-        self.execute("SELECT name, json FROM "
-                     "public.tables_constructor "
-                     f"WHERE id={scheme_id}")
-        records = self.fetchall()
-        return records[0]
+    def get_all_schemes(self):
+        records = self.select("SELECT id, name, json FROM "
+                              "public.tables_constructor")
+        return {id_: (name, json_,) for id_, name, json_ in records}
+
+    @locker
+    def get_scheme(self, tasks):
+        dicted_tasks = {}
+        event_lockers = []
+        for scheme_id, callback, event_locker in tasks:
+            dicted_tasks[scheme_id] = callback
+            event_lockers.append(event_locker)
+
+        scheme_ids = ', '.join(str(scheme_id) for scheme_id in dicted_tasks)
+        self.execute("SELECT name, json, id FROM public.tables_constructor "
+                     f"WHERE id IN ({scheme_ids})")
+
+        for name, json_, scheme_id in self.fetchall():
+            dicted_tasks[scheme_id].append(name)
+            dicted_tasks[scheme_id].append(json_)
+        for event_locker in event_lockers:
+            event_locker.set()
 
     @locker
     def get_scheme_names(self):
@@ -154,20 +169,21 @@ class ParsingDB(DBConnection):
         return {id_: venue for id_, _, venue in records}
 
     @locker
-    def get_all_tickets(self, event_id):
-        self.execute("SELECT id, status FROM public.tables_tickets "
-                     f"WHERE event_id_id={event_id}")
-        records = self.fetchall()
-        tickets = {id_: status == 'available-pars' for id_, status in records}
-        return tickets
+    def get_all_tickets(self, tasks):
+        dicted_tasks = {}
+        event_lockers = []
+        for event_id, callback, event_locker in tasks:
+            dicted_tasks[event_id] = callback
+            event_lockers.append(event_locker)
 
-    @locker
-    def get_unfilled_tickets(self, event_id):
-        self.execute("SELECT sector, id, row, seat "
-                     "FROM public.tables_tickets "
-                     f"WHERE event_id_id={event_id} AND status "
-                     f"NOT IN ('available', 'hidden', 'ordered')")
-        return self.fetchall()
+        event_ids = ', '.join(str(event_id) for event_id in dicted_tasks)
+        self.execute("SELECT id, status, event_id_id FROM public.tables_tickets "
+                     f"WHERE event_id_id IN ({event_ids})")
+
+        for id_, status, event_id in self.fetchall():
+            dicted_tasks[event_id][id_] = status == 'available-pars'
+        for event_locker in event_lockers:
+            event_locker.set()
 
     @locker
     def get_event_parsers(self):
@@ -188,6 +204,7 @@ class ParsingDB(DBConnection):
             if connection['parsing'] is None:
                 connection['parsing'] = []
             connection['event_id'] = int(connection['event_id'])
+        connections.sort(key=lambda key: key['event_id'])
         return connections
 
     @locker
@@ -290,7 +307,7 @@ class ParsingDB(DBConnection):
         for object_ in dicted:
             type_id = utils.find_by_value(types, object_['parent'])
             object_['type_id'] = type_id
-            # del object_['parent']
+
         return dicted
 
     @locker
@@ -375,9 +392,7 @@ def divide_tickets(tickets):
     set_to_false = []
     set_to_true = []
     true_with_price = {}
-    for ticket in tickets:
-        ticket_id = ticket[0]
-        availability = ticket[1]
+    for ticket_id, availability in tickets.items():
         if availability is False:
             set_to_false.append(ticket_id)
         elif availability is True:
@@ -409,4 +424,4 @@ def int_keys(dict_):
 
 lock = threading.Lock()
 db_manager = ParsingDB()
-db_manager.save_mode_on()
+# db_manager.save_mode_on()

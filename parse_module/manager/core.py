@@ -101,7 +101,7 @@ class BotCore(threading.Thread):
         if self.driver and self.url:
             self.driver.get(self.url)
         self.body()
-        logger.debug(f'Step ({self.name}) done')
+        # logger.debug(f'Step ({self.name}) done')
         if not self._terminator.alive:
             return False
 

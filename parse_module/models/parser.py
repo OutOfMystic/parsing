@@ -33,8 +33,9 @@ class ParserBase(core.BotCore, ABC):
             self._notifier_locker = locker
 
     def detach_notifier(self):
-        self._notifier_event = None
-        self._notifier_locker = None
+        if self._notifier_event:
+            self._notifier_event = None
+            self._notifier_locker = None
 
     def trigger_notifier(self):
         if self._notifier_event:
@@ -48,6 +49,13 @@ class EventParser(ParserBase, ABC):
         super().__init__(controller)
         self.events = {}
         self._new_condition = {}
+        self.stop = weakref.finalize(self, self._finalize_parser)
+
+    def _finalize_parser(self):
+        logger.debug(self.stop.alive)
+        super().stop()
+        logger.debug(self.stop.alive)
+        self.trigger_notifier()
 
     def _change_events_state(self):
         to_remove, _, to_add = utils.differences(self.events, self._new_condition)

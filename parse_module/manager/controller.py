@@ -27,8 +27,13 @@ PREDEFINED = True
 
 
 class Controller(threading.Thread):
-    def __init__(self, parsers_path, config_path, pending_delay=60, debug_url=None,
-                 debug_event_id=None):
+    def __init__(self,
+                 parsers_path,
+                 config_path,
+                 pending_delay=60,
+                 debug_url=None,
+                 debug_event_id=None,
+                 release=False):
         super().__init__()
         self.parsed_events = None
         self.schemes_on_event = {}
@@ -37,6 +42,7 @@ class Controller(threading.Thread):
         self._debug_url = debug_url
         self._debug_event_id = debug_event_id
         self.debug = True if self._debug_event_id or self._debug_url else False
+        self.release = release
 
         self._prepare_workdir()
         self.event_parsers = []
@@ -207,14 +213,22 @@ class Controller(threading.Thread):
             for group, connections in self.get_debug_ev_id_conns(all_connections):
                 group.update(connections)
 
-        self._reset_tickets()
-
+        # Do some database work at the end of step
         lock_time = time.time()
+        self._reset_tickets()
         self._update_db_with_stored_urls(predefined_connections + ai_connections)
-        while any(group.start_lock.locked() for group in self.seats_groups):
+
+        # Waiting for seats lockers to be released
+        lockers_states = [group.start_lock.locked() for group in self.seats_groups]
+        first_pending = lockers_states.count(True)
+        pending = first_pending
+        while pending:
             if time.time() - lock_time > self.pending_delay:
-                self.bprint('Seats lockers are still being released...', color=utils.Fore.YELLOW)
+                message = f'Seats groups\' lockers ({pending}/{first_pending}) are still being released...'
+                self.bprint(message, color=utils.Fore.YELLOW)
             time.sleep(5)
+            lockers_states = [group.start_lock.locked() for group in self.seats_groups]
+            pending = lockers_states.count(True)
 
     def _load_notifiers(self):
         events_to_load, seats_to_load = db_manager.get_parser_notifiers()
@@ -222,11 +236,25 @@ class Controller(threading.Thread):
         events_to_load_names = {data['name']: data for data in events_to_load}
         loaded_events_names = {notifier.parser.name: notifier
                                for notifier in self.event_notifiers}
-        to_del, _, to_add = utils.differences(loaded_events_names, events_to_load_names)
+        to_del, to_review, to_add = utils.differences(loaded_events_names, events_to_load_names)
+
+        # EVENTS PARSERS TO STOP
         for parsing_name in to_del:
             notifier = loaded_events_names[parsing_name]
             notifier.stop()
             self.event_notifiers.remove(notifier)
+
+        # EVENTS PARSERS TO REVIEW
+        for parsing_name in to_review:
+            notifier = loaded_events_names[parsing_name]
+            notifier_data = events_to_load_names[parsing_name]
+            delay = notifier_data.get('delay', None)
+            if delay is not None:
+                notifier.parser.delay = delay
+            for attribute, value in notifier_data.items():
+                setattr(notifier, attribute, value)
+
+        # EVENTS PARSERS TO LOAD
         event_parsers_to_add = {parser.name: parser for parser in self.event_parsers
                                 if parser.name in to_add}
         for parsing_name, event_parser in event_parsers_to_add.items():
@@ -239,15 +267,27 @@ class Controller(threading.Thread):
 
         seats_to_load_names = {notifier['event_id']: notifier for notifier in seats_to_load}
         loaded_seats_names = {notifier.event_id: notifier for notifier in self.seats_notifiers}
-        to_del, _, to_add = utils.differences(loaded_seats_names, seats_to_load_names)
+        all_seats_parsers = itertools.chain.from_iterable(group.parsers for group in self.seats_groups)
+        all_seats_parsers = list(all_seats_parsers)
+        to_del, to_review, to_add = utils.differences(loaded_seats_names, seats_to_load_names)
+
+        # SEATS PARSERS TO STOP
         for event_id in to_del:
             notifier = loaded_seats_names[event_id]
             notifier.stop()
             self.seats_notifiers.remove(notifier)
-        all_seats_parsers = itertools.chain.from_iterable(group.parsers for group in self.seats_groups)
 
-        all_seats_parsers = list(all_seats_parsers)
+        # SEATS PARSERS TO REVIEW
+        for event_id in to_review:
+            notifier = loaded_seats_names[event_id]
+            notifier_data = seats_to_load_names[event_id]
+            delay = notifier_data.get('delay', None)
+            if delay is not None:
+                notifier.parser.delay = delay
+            for attribute, value in notifier_data.items():
+                setattr(notifier, attribute, value)
 
+        # SEATS PARSERS TO LOAD
         seats_parsers_to_add = {parser.db_event_id: parser for parser in all_seats_parsers
                                 if parser.db_event_id in to_add}
         for event_id, seats_parser in seats_parsers_to_add.items():
@@ -260,7 +300,7 @@ class Controller(threading.Thread):
             self.seats_notifiers.append(notifier)
 
     def _reset_tickets(self):
-        if self._seats_prop < 0.6 or self.debug:
+        if not self.release or self.debug:
             return
         event_ids = set()
         for group in self.seats_groups:
@@ -312,7 +352,7 @@ class Controller(threading.Thread):
                     yield group, [connection]
 
     def _update_db_with_stored_urls(self, connections):
-        if random.random() < 0.1:
+        if random.random() < 0.1 or not self.release:
             return
         self.database_interaction()
         parsers_on_event = {}

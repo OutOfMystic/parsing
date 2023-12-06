@@ -250,20 +250,6 @@ def get_day_part(hour):
         return 'н'
 
 
-def native_getitem(item, dict_, default=None, try_again=True):
-    item_hash = hash(item)
-    for dict_item, dict_value in dict_.items():
-        if hash(dict_item) == item_hash:
-            return dict_value
-    else:
-        if try_again:
-            return native_getitem(item, dict_, default, False)
-        if default is None:
-            raise KeyError(repr(item))
-        else:
-            return default
-
-
 def native_issubitem(item, iterable):
     item_hash = hash(item)
     for dict_item in iterable:

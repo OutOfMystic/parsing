@@ -4,29 +4,7 @@ from typing import Iterable, Any
 
 from colorama import Fore, Back
 
-from parse_module.utils.date import native_getitem
-
-
-class LowerDict(dict):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.aliases = {}
-
-    def __getitem__(self, item: str):
-        lower_key = item.lower()
-        key = self.aliases[lower_key]
-        return super().__getitem__(key)
-
-    def __setitem__(self, key: str, value):
-        lower = key.lower()
-        self.aliases[lower] = key
-        super().__setitem__(key, value)
-
-    def get(self, __key, default=None):
-        try:
-            return self.__getitem__(__key)
-        except KeyError:
-            return default
+from parse_module.utils.types import HashDict
 
 
 def green(mes: str):
@@ -151,27 +129,23 @@ def reg_changes(item: Any,
         return False
 
 
-def groupby(iterable, key=None, native=False):
-    groups = groupdict(iterable, key=key, native=native)
+def groupby(iterable, key=None):
+    groups = groupdict(iterable, key=key)
     group_list = list(groups.items())
     group_list.sort(key=lambda row: row[0])
     for key, elements in group_list:
         yield key, elements
 
 
-def groupdict(iterable, key=None, native=False):
+def groupdict(iterable, key=None, hash_=False):
     if key is None:
         key = lambda x: x
-    groups = {}
+    groups = HashDict()
     for elem in iterable:
         group_key = key(elem)
         if group_key not in groups:
             groups[group_key] = []
-        if native:
-            group = native_getitem(group_key, groups)
-            group.append(elem)
-        else:
-            groups[group_key].append(elem)
+        groups[group_key].append(elem)
     return groups
 
 

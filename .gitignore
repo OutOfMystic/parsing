@@ -18,7 +18,7 @@ pyvenv.cfg
 build/
 develop-eggs/
 dist/
-downloads/
+working_directory/downloads/
 eggs/
 .eggs/
 lib/
@@ -150,13 +150,13 @@ aiframe/
 aiframe
 мегаспорт_сектора_без_выбора_мест.txt
 
-screen/
+working_directory/screen/
 
 log.txt
 tab
-proxies.json
+working_directory/proxies.json
 
-start.py
+working_directory/start.py
 test.py
 toolz.py
 check_missing_sectors.py
@@ -164,9 +164,10 @@ check_missing_sectors.txt
 exec_tools/har_reader/har.json
 exec_tools/har_reader/requests_code.txt
 exec_tools/har_reader/requests_code.py
+events_state.json
 
-parsers.json
-account_pickles/
+working_directory/parsers.json
+working_directory/account_pickles/
 my_bots/
 all_tickets/
 
