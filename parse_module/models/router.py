@@ -14,7 +14,7 @@ class SchemeRouter:
 
     def get_scheme(self, event_id, scheme_id):
         lock = self._get_lock(event_id)
-        return provision.multi_try(self._get_scheme, name='Route',
+        return provision.multi_try(self._get_scheme, name='Controller',
                                    to_except=lock.release, raise_exc=False,
                                    tries=1, args=(event_id, scheme_id, lock))
 

@@ -67,7 +67,7 @@ class DBConnection:
             pickle.dump(self._saved_selects, fp)
 
     def connect_db(self):
-        multi_try(self._connect_db, name='Database', tries=5, multiplier=1.01)
+        multi_try(self._connect_db, name='Controller', tries=5, multiplier=1.01)
 
     def _connect_db(self):
         self.connection = psycopg2.connect(user=self.user,
@@ -101,7 +101,7 @@ class DBConnection:
 
     def execute(self, request):
         return provision.multi_try(self.cursor_wrapper, args=('execute', request,),
-                                   to_except=self._connect_db, name='DB',
+                                   to_except=self._connect_db, name='Controller',
                                    multiplier=1.05, tries=5)
 
     def select(self, request):
@@ -117,13 +117,13 @@ class DBConnection:
 
     def fetchall(self):
         return provision.multi_try(self.cursor_wrapper, args=('fetchall',),
-                                   to_except=self._connect_db, name='DB',
-                                   multiplier=1.05, tries=5)
+                                   to_except=self._connect_db,
+                                   multiplier=1.05, tries=5, name='Controller')
 
     def commit(self):
         return provision.multi_try(self.connection_wrapper, args=('commit',),
-                                   to_except=self._connect_db, name='DB',
-                                   multiplier=1.05, tries=5)
+                                   to_except=self._connect_db,
+                                   multiplier=1.05, tries=5, name='Controller')
 
 
 class ParsingDB(DBConnection):
@@ -388,6 +388,23 @@ class ParsingDB(DBConnection):
         return event_parsers, seats_parsers
 
 
+class TableDict(dict):
+
+    def __init__(self, update_func):
+        super().__init__()
+        self.update_func = update_func
+        self.update_names()
+
+    def update_names(self):
+        actual_sites = self.update_func()
+        self.update(actual_sites)
+
+    def __getitem__(self, item):
+        if item not in self:
+            self.update_names()
+        return super().__getitem__(item)
+
+
 def divide_tickets(tickets):
     set_to_false = []
     set_to_true = []
@@ -424,4 +441,3 @@ def int_keys(dict_):
 
 lock = threading.Lock()
 db_manager = ParsingDB()
-# db_manager.save_mode_on()

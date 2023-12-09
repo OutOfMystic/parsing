@@ -90,7 +90,7 @@ class ProxyWebDriver(webdriver.Chrome):
                     super().__init__(ChromeDriverManager().install(), chrome_options=chrome_options)
                     if error is True and count_error >= 10:
                         mes = f'error SessionNotCreatedException: id_profile №{kwargs.get("id_profile")} is complite'
-                        print(f'{utils.colorize(mes, utils.Fore.GREEN)}\n', end='')
+                        print(f'{utils.colorize(mes, utils.Fore.LIGHTGREEN_EX)}\n', end='')
                     error = False
                 except SessionNotCreatedException:
                     error = True

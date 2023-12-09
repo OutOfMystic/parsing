@@ -88,7 +88,7 @@ class KassirParser(EventParser):
 
                 all_event_dates = self.get_all_event_dates(afisha_event_info)
                 if not all_event_dates:  # request to the event probably returned 404 doesn't exist
-                    self.lprint(f'[kassir_warning]: events_parser couldnt parse event from event response - '
+                    self.warning(f'[kassir_warning]: events_parser couldnt parse event from event response - '
                                 f'{afisha_event_info}', console_print=False)
                     continue
                 else:

@@ -1,3 +1,4 @@
+from parse_module.utils.logger import logger
 
 
 class MarginRules:

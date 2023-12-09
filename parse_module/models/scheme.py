@@ -1,8 +1,6 @@
 import threading
 from threading import Lock
 
-from loguru import logger
-
 from ..connection import db_manager
 from ..manager.backstage import tasker
 from ..utils import utils, provision
@@ -99,9 +97,6 @@ class ParserScheme(Scheme):
             self._bookings[priority] = set()
             self._prohibitions[priority] = set()
             self._update_prohibitions(priority)
-        except Exception as err:
-            mes = utils.red(f'{self.name}: Error binding parser to scheme: {err}')
-            print(mes)
         finally:
             self._lock.release()
 
@@ -124,14 +119,15 @@ class ParserScheme(Scheme):
     def restore_margin(self, priority):
         return self._margins[priority]
 
-    def release_sectors(self, parsed_sectors, parsed_dancefloors, cur_priority):
+    def release_sectors(self, parsed_sectors, parsed_dancefloors,
+                        cur_priority, from_thread):
         self._lock.acquire()
         args = (parsed_sectors, cur_priority,)
-        provision.multi_try(self._release_sectors, name='Scheme', tries=1,
-                            args=args, raise_exc=False, prefix=self.name)
+        provision.multi_try(self._release_sectors, name=from_thread, tries=1,
+                            args=args, raise_exc=False)
         args = (parsed_dancefloors, cur_priority)
-        provision.multi_try(self._release_dancefloors, name='Scheme', tries=1,
-                            args=args, raise_exc=False, prefix=self.name)
+        provision.multi_try(self._release_dancefloors, name=from_thread, tries=1,
+                            args=args, raise_exc=False)
         self._lock.release()
 
     def _release_sectors(self, parsed_sectors, cur_priority):

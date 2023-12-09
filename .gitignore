@@ -171,6 +171,7 @@ working_directory/parsers.json
 working_directory/account_pickles/
 my_bots/
 all_tickets/
+*.pkl
 
 afisha_exporter/result.json
 

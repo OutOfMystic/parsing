@@ -6,11 +6,9 @@ import random
 import threading
 import time
 
-from loguru import logger
-
-
 from .proxy import loader
 from .telecore import tele_core
+from ..connection.database import TableDict
 from ..models.ai_nlp.alias import EventAliases
 from ..models.ai_nlp.collect import cross_subject_object
 from ..models.ai_nlp.venue import VenueAliases
@@ -21,6 +19,7 @@ from ..models.parser import SeatsParser, EventParser
 from ..models.group import SeatsParserGroup
 from ..utils import provision, utils
 from ..utils.date import Date
+from ..utils.logger import logger
 from ..utils.utils import differences
 
 PREDEFINED = True
@@ -30,7 +29,7 @@ class Controller(threading.Thread):
     def __init__(self,
                  parsers_path,
                  config_path,
-                 pending_delay=60,
+                 pending_delay=30,
                  debug_url=None,
                  debug_event_id=None,
                  release=False):
@@ -51,6 +50,8 @@ class Controller(threading.Thread):
         self.seats_notifiers = []
         self.margins = {}
         self._events_were_reset = []
+        self._table_sites = TableDict(db_manager.get_site_names)
+        self._first = True
 
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
         self.event_aliases = EventAliases(step=5)
@@ -60,12 +61,8 @@ class Controller(threading.Thread):
         self.fast_time = time.time()
 
     @staticmethod
-    def bprint(mes, color=utils.Fore.GREEN):
-        with open('main.log', 'a+') as f:
-            row = {'name': 'Controller', 'mes': mes, 'color': color}
-            f.write(json.dumps(row) + '\n')
-        mes = f'Controller| {utils.colorize(mes, color)}\n'
-        print(mes, end='')
+    def bprint(mes, color=utils.Fore.LIGHTGREEN_EX):
+        logger.bprint_compatible(mes, 'Controller', color)
 
     @staticmethod
     def _prepare_workdir():
@@ -111,21 +108,21 @@ class Controller(threading.Thread):
         for margin_id in to_check:
             margin_func = self.margins[margin_id]
             new_margin_name, new_margin_rules = got_margins[margin_id]
-            if new_margin_rules != margin_func.rules:
+            if new_margin_rules != margin_func.rules or new_margin_name != margin_func.name:
                 margin_func.rules = new_margin_rules
-                logger.info(f'Margin changed on {new_margin_name}')
-            if new_margin_name != margin_func.name:
                 margin_func.name = new_margin_name
+                logger.debug(f'Margin changed on {new_margin_name}')
+                for group in self.seats_groups:
+                    group.stop_by_margin(margin_id)
         for margin_id in to_add:
             margin_name, margin_rules = got_margins[margin_id]
             margin = MarginRules(margin_id, margin_name, margin_rules)
             self.margins[margin_id] = margin
-            # logger.info(f'Added margin {margin_name}')
         for margin_id in to_del:
             margin = self.margins[margin_id]
             logger.info(f'Deleting margin {margin.name}')
             for group in self.seats_groups:
-                group.stop_by_margin(margin)
+                group.stop_by_margin(margin_id)
             del self.margins[margin_id]
 
     def _predefined_parsers(self, conn):
@@ -164,7 +161,8 @@ class Controller(threading.Thread):
                 indicators.append(indicator)
                 predefined_connections.append(connection)
 
-        for connection in cross_subject_object(subjects, self.parsed_events, self.venues):
+        labels = (self._table_sites, self.parsing_types,) if self._first else None
+        for connection in cross_subject_object(subjects, self.parsed_events, self.venues, labels=labels):
             if connection['indicator'] in indicators:
                 message = f"{connection['event_name']} {connection['date']} route conflict.\n" \
                           f"This parser is already assigned by AI. Leaving predefined state.\n" \
@@ -394,6 +392,7 @@ class Controller(threading.Thread):
                                 tries=1, raise_exc=False)
             delay = self.pending_delay if time.time() > self.fast_time else fast_delay
             time.sleep(delay)
+            self._first = False
 
 
 def load_parsers(path):

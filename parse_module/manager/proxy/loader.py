@@ -76,7 +76,7 @@ class Proxies:
 class ManualProxies(Proxies):
     def __init__(self, path):
         super().__init__()
-        provision.multi_try(self._load_proxies, args=(path,), name='Proxy')
+        provision.multi_try(self._load_proxies, args=(path,), name='Controller')
         self.add_route()
 
     def _load_proxies(self, path):

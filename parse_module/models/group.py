@@ -1,16 +1,10 @@
-import json
 import threading
-import datetime as dt
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
-from loguru import logger
-from urllib3.util import parse_url
-
-from .margin import MarginRules
 from .router import SchemeRouter
 from ..utils.date import Date
-from ..connection import db_manager
 from ..utils import utils, provision
+from ..utils.logger import logger
 
 
 class SeatsParserGroup:
@@ -24,12 +18,9 @@ class SeatsParserGroup:
         self._router = SchemeRouter()
         self.start_lock = threading.Lock()
 
-    def bprint(self, mes, color=utils.Fore.GREEN):
-        with open('main.log', 'a+') as f:
-            row = {'name': self.name, 'mes': mes, 'color': color}
-            f.write(json.dumps(row) + '\n')
-        mes = f'Group ({self.name})| {utils.colorize(mes, color)}\n'
-        print(mes, end='')
+    def bprint(self, mes, color=utils.Fore.LIGHTGREEN_EX):
+        name = f'SeatsGroup ({self.name})'
+        logger.bprint_compatible(mes, name, color)
 
     def _add_data_from_db(self, event_data):
         matching_events = [parsed_data for parsed_data in self.controller.parsed_events
@@ -66,15 +57,19 @@ class SeatsParserGroup:
                             f'    Database date: {parsed_data["date"]}', color=utils.Fore.YELLOW)
 
     def stop_by_margin(self, margin):
-        provision.threading_try(self._stop_by_margin, name='MarginRoute', tries=1,
-                            args=(margin,), to_except=self.start_lock.release, raise_exc=False)
+        provision.threading_try(self._stop_by_margin, name='Controller', tries=1,
+                                args=(margin,), to_except=self.start_lock.release, raise_exc=False)
 
-    def _stop_by_margin(self, margin):
+    def _stop_by_margin(self, margin_id):
         self.start_lock.acquire()
         for parser in self.parsers:
             parser_margin = parser.scheme.restore_margin(parser.priority)
-            if parser_margin == margin:
+            logger.debug(parser_margin.id)
+            logger.debug(margin_id)
+            if parser_margin.id == margin_id:
+                logger.debug('stoppng')
                 parser.stop()
+            self.parsers.remove(parser)
         self.start_lock.release()
 
     def update(self, connections):
@@ -82,7 +77,8 @@ class SeatsParserGroup:
         Connection (parsing initial) keys format is:
         {priority, event_id, subject_date, url, margin_name, signature}
         """
-        provision.threading_try(self._update, name='GroupGlobal', args=(connections,),
+        name = f'SeatsGroup ({self.name})'
+        provision.threading_try(self._update, name=name, args=(connections,),
                                 to_except=self.start_lock.release, tries=1, raise_exc=False)
 
     def _update(self, connections):
@@ -137,19 +133,19 @@ class SeatsParserGroup:
         for event_data in prepared_data:
             provision.multi_try(self._start_parser, tries=3,
                                 args=(event_data,), raise_exc=False,
-                                name='Group', prefix=self.name)
+                                name='Controller')
         self.start_lock.release()
 
     def _start_parser(self, event_data):
         scheme = self._router.get_scheme(event_data['event_id'], event_data['scheme_id'])
         if scheme is provision.TryError:
-            self.bprint(f'SEATS parser {self.parent_event} ({event_data["event_name"]}'
-                        f' {event_data["date"]}) has not started: scheme error', color=utils.Fore.RED)
+            self.error(f'SEATS parser {self.parent_event} ({event_data["event_name"]}'
+                       f' {event_data["date"]}) has not started: scheme error')
             return
-        event_data['scheme'] = scheme
         margin_rules = self.controller.margins[event_data['margin']]
-        event_data['margin'] = margin_rules
         scheme.bind(event_data['priority'], margin_rules)
+        event_data['scheme'] = scheme
+        event_data['margin'] = margin_rules
         extra = event_data.pop('extra')
         event_data.update(extra)
 
@@ -167,6 +163,10 @@ class SeatsParserGroup:
                 return True
         else:
             return False
+
+    def error(self, message):
+        name = f'SeatsGroup ({self.name})'
+        logger.error(message, name=name)
 
 
 def crop_url(url):

@@ -4,11 +4,9 @@ from typing import Iterable, Any
 
 from colorama import Fore, Back
 
-from parse_module.utils.types import HashDict
-
 
 def green(mes: str):
-    return Fore.GREEN + Back.RESET + str(mes) + default_fore + default_back
+    return Fore.LIGHTGREEN_EX + Back.RESET + str(mes) + default_fore + default_back
 
 
 def red(mes: str):
@@ -36,13 +34,11 @@ def colorize(mes: str,
 def lprint(mes: str,
            console_print=True,
            prefix=True,
-           encoding=None,
+           encoding='utf-8',
            color=None,
            filename='log.txt',
            end='\n',
            name=''):
-    if color:
-        mes = colorize(mes, color)
     if prefix and name:
         mes = name + '| ' + mes
     lmes = time.asctime() + ' ' + mes + end if prefix else mes + end
@@ -51,6 +47,8 @@ def lprint(mes: str,
             logs.write(lmes)
     except:
         print(colorize('Log file is used by another app', Fore.RED))
+    if color:
+        mes = colorize(mes, color)
     if console_print:
         print(mes, end=end)
 
@@ -129,18 +127,18 @@ def reg_changes(item: Any,
         return False
 
 
-def groupby(iterable, key=None):
-    groups = groupdict(iterable, key=key)
+def groupby(iterable, key=None, dict_cls=dict):
+    groups = groupdict(iterable, key=key, dict_cls=dict_cls)
     group_list = list(groups.items())
     group_list.sort(key=lambda row: row[0])
     for key, elements in group_list:
         yield key, elements
 
 
-def groupdict(iterable, key=None, hash_=False):
+def groupdict(iterable, key=None, dict_cls=dict):
     if key is None:
         key = lambda x: x
-    groups = HashDict()
+    groups = dict_cls()
     for elem in iterable:
         group_key = key(elem)
         if group_key not in groups:

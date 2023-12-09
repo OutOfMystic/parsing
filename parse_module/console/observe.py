@@ -376,7 +376,7 @@ def handle_parsers(parsers, pred_evs, id_, ai_evs):
         sign = '+' if crop_url(url) in pred_evs else '-'
         url = f' ({sign}){url}'
         result += url
-        # color = utils.Fore.GREEN if crop_url(url) in pred_evs else utils.Fore.RED
+        # color = utils.Fore.LIGHTGREEN_EX if crop_url(url) in pred_evs else utils.Fore.RED
         # formatted = utils.colorize(url, color)
     if id_ not in ai_evs:
         return result

@@ -1587,7 +1587,7 @@ class KassirParser(SeatsParser):
         for seat in seats:
             seat_polygon = soup.find('polygon', {'kh:id': str(seat['seat_id'])})
             if not seat_polygon:
-                self.lprint(f'error (seat_polygon.get("kh:rowNumber", " ") returned NoneType) '
+                self.error(f'error (seat_polygon.get("kh:rowNumber", " ") returned NoneType) '
                             f'{self.url} - {sector_id} - {seat}', console_print=False)
                 continue
 

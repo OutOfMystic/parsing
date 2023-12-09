@@ -185,7 +185,7 @@ class MkhtParser(LenkomParser):
                 try:
                     sec_name, sec_side = sector['name'].split()[:-1]
                 except:
-                    self.lprint(sector['name'].split()[:-1])
+                    self.debug(sector['name'].split()[:-1])
                     return
 
                 if 'лев' in sec_side.lower():

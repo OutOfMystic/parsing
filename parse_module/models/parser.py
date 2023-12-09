@@ -269,7 +269,7 @@ class SeatsParser(ParserBase, ABC):
                      'and must be removed')
         print_mes += format_sectors_block(extra_mes, extra, utils.Fore.RED)
         found_mes = 'Found sectors. They were registered correctly'
-        print_mes += format_sectors_block(found_mes, found, utils.Fore.GREEN)
+        print_mes += format_sectors_block(found_mes, found, utils.Fore.LIGHTGREEN_EX)
         print(print_mes, end='')
         input(utils.green('Press enter to continue...\n'))
 
@@ -307,7 +307,8 @@ class SeatsParser(ParserBase, ABC):
         if self.stop.alive:
             self.trigger_notifier()
             self.last_state = (self.parsed_sectors.copy(), self.parsed_dancefloors.copy(),)
-            self.scheme.release_sectors(self.parsed_sectors, self.parsed_dancefloors, self.priority)
+            self.scheme.release_sectors(self.parsed_sectors, self.parsed_dancefloors,
+                                        self.priority, self.name)
             self.parsed_sectors.clear()
             self.parsed_dancefloors.clear()
 

@@ -1,4 +1,3 @@
-import json
 import os
 import time
 import random
@@ -7,15 +6,13 @@ from abc import abstractmethod
 
 import requests
 import threading
-import traceback
 import statistics
-
-from loguru import logger
 
 from . import user_agent
 from ..utils import utils, parse_utils, provision
 from ..drivers.hrenium import HrenDriver
 from ..drivers.proxelenium import ProxyWebDriver
+from ..utils.logger import logger
 
 
 class BotCore(threading.Thread):
@@ -41,18 +38,9 @@ class BotCore(threading.Thread):
         proxy_str = f'with proxy {self.proxy}' if self.proxy else 'without proxy'
         return f'Bot "{self.name}" {proxy_str}'
 
-    def bprint(self, mes, color=utils.Fore.GREEN):
-        with open('main.log', 'a+') as f:
-            row = {'name': self.name, 'mes': mes, 'color': color}
-            f.write(json.dumps(row) + '\n')
-        mes = f'{self.name}| {utils.colorize(mes, color)}\n'
-        print(mes, end='')
-
-    def lprint(self, mes, **kwargs):
-        if self.name:
-            if 'color' not in kwargs:
-                kwargs['color'] = utils.Fore.GREEN
-        utils.lprint(mes, name=self.name, **kwargs)
+    def bprint(self, mes, color=utils.Fore.LIGHTGREEN_EX):
+        """DEPRECATED. USE self.info, self.warning, etc."""
+        logger.bprint_compatible(mes, self.name, color)
 
     def screen(self, text, addition=''):
         now = time.asctime()
@@ -116,17 +104,13 @@ class BotCore(threading.Thread):
             if (time.time() - self.error_timer) >= self.max_waste_time:
                 mes = ('--max_waste_time elapsed '
                        f'({self.max_waste_time} сек)--')
-                utils.lprint(mes, name=self.name, color=utils.Fore.RED)
+                self.error(mes)
                 self.error_timer = time.time()
                 self.slide_tab()
             self.except_on_main()
         except Exception as error:
             printing_error = str(error).split('\n')[0] if '\n' in str(error) else str(error)
-            utils.lprint('Except on exception: ' + str(error), name=self.name,
-                         console_print=False, color=utils.Fore.RED)
-            utils.lprint('Except on exception: ' + printing_error, name=self.name,
-                         color=utils.Fore.RED)
-            utils.lprint(traceback.format_exc(), name=self.name, color=utils.Fore.RED)
+            self.error('Except on exception: ' + str(error))
         time.sleep(1)
 
     def run(self):
@@ -141,8 +125,7 @@ class BotCore(threading.Thread):
             if self.step % self.step_counter == 0:
                 self.bprint('Проход номер ' + str(self.step))
             result = provision.multi_try(self.run_try, to_except=self.run_except,
-                                         name='Main', tries=self.max_tries,
-                                         prefix=self.name, raise_exc=False)
+                                         name=self.name, tries=self.max_tries, raise_exc=False)
             self.step += 1
             if result == provision.TryError and self._terminator.alive:
                 self.on_many_exceptions()
@@ -161,6 +144,10 @@ class BotCore(threading.Thread):
         self.bprint(f'Thread {self.name} '
                     f'{utils.red("termination")} '
                     f'{utils.green("started")}')
+
+    @staticmethod
+    def error(message):
+        logger.error(message, name='Controller')
 
 
 def download(url, filename=None, session=None, save=True, **kwargs):

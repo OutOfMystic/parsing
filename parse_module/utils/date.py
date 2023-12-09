@@ -227,6 +227,22 @@ class Month(Date):
         self.month = month_num_by_str[month.capitalize()]
 
 
+def readable_datetime(datetime):
+    year = datetime.year
+    month = datetime.month
+    day = datetime.day
+    hour = datetime.hour
+    minute = datetime.minute
+    second = datetime.second
+    msec = str(datetime.microsecond)[0]
+
+    month_str = month_list[month]
+    year = f'{year} ' if year != Date.this_year else ''
+    hour = str(hour).zfill(2)
+    minute = str(minute).zfill(2)
+    return f'{day} {month_str} {year}{hour}:{minute}:{second}.{msec}'
+
+
 def days_iterator(month):
     m = month.month
     y = month.year

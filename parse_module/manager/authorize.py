@@ -203,7 +203,7 @@ class AccountsQueue(threading.Thread):
             print('MAX THREADS COUNT: ' + str(self.max_sessions))
             rows = rows[:self.max_sessions]
 
-        usual_kwrags = {'name': 'AccountPut', 'raise_exc': False, 'tries': 1}
+        usual_kwrags = {'name': 'Accounts', 'raise_exc': False, 'tries': 1}
         aims = [[[self.put], dict(usual_kwrags, args=row), ', '.join(row)] for row in rows]
         results = provision.pool(provision.multi_try, aims, self.session_threads)
 
@@ -373,7 +373,7 @@ class AccountsQueue(threading.Thread):
                     time.sleep(1)
                 else:
                     args = (inspect, on_cancel, 'Sub', 1,)
-                    kwargs = {'args': [account]}
+                    kwargs = {'args': [account], 'name': 'Accounts'}
                     threading.Thread(target=provision.multi_try, args=args, kwargs=kwargs).start()
                     break
 

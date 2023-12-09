@@ -9,9 +9,9 @@ from queue import Queue
 from typing import Iterable
 
 import telebot
-from loguru import logger
 
-from parse_module.utils import utils, provision
+from parse_module.utils import provision
+from parse_module.utils.logger import logger
 
 
 class BotInstance:
@@ -69,9 +69,9 @@ class TeleCore(threading.Thread):
         return list(unique_ids)
 
     @staticmethod
-    def bprint(error_message, bot_name):
+    def error(error_message, bot_name):
         message = f'TELEGRAM MESSAGE ERROR on {bot_name}: {error_message}'
-        print(utils.red(message))
+        logger.error(message, name='Controller')
 
     def send_message(self, mes: str, tele_ids: Iterable[int], bot_name: str = None):
         tele_ids = list(tele_ids)
@@ -111,9 +111,9 @@ class TeleCore(threading.Thread):
                 bot.telebot.send_message(tele_id, mes, parse_mode="Markdown")
             except Exception as err:
                 if 'Forbidden: bot was blocked by the user' in str(err):
-                    self.bprint(f'{tele_id} blocked the bot', bot_name)
+                    self.error(f'{tele_id} blocked the bot', bot_name)
                 elif 'chat not found' in str(error):
-                    self.bprint(f'{tele_id} did not start chat with the bot', bot_name)
+                    self.error(f'{tele_id} did not start chat with the bot', bot_name)
                 else:
                     raise RuntimeError('TELEGRAM MESSAGE ERROR ' + str(err))
 
@@ -130,7 +130,7 @@ class TeleCore(threading.Thread):
             try:
                 data = json.dumps(to_send) + chr(2)
             except Exception as err:
-                self.bprint(f'Error serialising message to JSON ({err})', 'GLOBAL')
+                self.error(f'Error serialising message to JSON ({err})', 'GLOBAL')
                 return
             try:
                 self.send_to_server(data)
@@ -140,8 +140,8 @@ class TeleCore(threading.Thread):
                         self.send_telegram_manually(*one_message)
                     except Exception as err:
                         bot_name = one_message[2]
-                        self.bprint(f'Error on sending message to Telegram using two ways: {err}',
-                                    bot_name=bot_name)
+                        self.error(f'Error on sending message to Telegram using two ways: {err}',
+                                   bot_name=bot_name)
                     finally:
                         time.sleep(0.1)
 

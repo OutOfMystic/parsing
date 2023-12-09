@@ -17,7 +17,8 @@ class HrenDriver:
     
     cookies_on_tabs = []
 
-    def __init__(self, **options):
+    def __init__(self, from_thread='Main', **options):
+        self.from_thread = from_thread
         self._session = requests.Session()
         self.page_source = ''
         self.current_url = ''
@@ -36,22 +37,14 @@ class HrenDriver:
     def refresh(self):
         self.get(self.current_url)
         
-    def first_check(self, *args, **kwargs):
-        return self.expl_wait(*args)
-        
-    def expl_wait(self, *args, **kwargs): ###########
+    def expl_wait(self, by_what, obj, print_errors=True):
         def to_try():
-            if len(args) == 1:
-                conds = [self.elems.find_elements(*pair) for pair in args]
-                if not any(conds):
-                    raise RuntimeError('Ни один объект не был обнаружен')
-            else:
-                if not self.find_elements(*args):
-                    raise RuntimeError('Element timeout exception')
-        obj = 'ожидания' if len(args) == 1 else args[1]
-        print_errors = self.options['print_errors'] if 'print_errors' in kwargs else True
-        provision.multi_try(to_try, provision.fpass, 'Wait', 2, True, error_descr=obj,
-                            prefix=self.tab, print_errors=print_errors)
+            if not self.find_elements(by_what, obj):
+                raise RuntimeError('Element timeout exception')
+        provision.multi_try(to_try, name=self.from_thread,
+                            to_except=provision.fpass,
+                            tries=2, raise_exc=True,
+                            print_errors=print_errors)
             
     def find_element(self, by_what, obj):
         if by_what == 'xpath':

@@ -64,7 +64,7 @@ class WCSession(requests.Session):
         for from_min in range(from_mins, to_mins, 1440*PACK_SIZE):
             to_min = min(from_min + 1440*PACK_SIZE, to_mins)
             args = (from_min, to_min, temp_dir,)
-            provision.multi_try(self._screenshots_pack, name='WC', args=args)
+            provision.multi_try(self._screenshots_pack, name='WorkComposer', args=args)
         return temp_dir
 
     def _screenshots_pack(self, from_mins, to_mins, temp_dir):

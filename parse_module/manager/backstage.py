@@ -1,25 +1,47 @@
+import itertools
+import json
 import threading
 import time
+import traceback
+from collections import namedtuple
+from datetime import datetime
 from queue import Queue
 from typing import Callable
 
-from loguru import logger
+from colorama import Fore
 
 from ..utils import provision, utils
+
+
+class Task:
+    def __init__(self,
+                 function,
+                 args,
+                 kwargs,
+                 throttling=False,
+                 from_thread='Main'):
+        self.timestamp = datetime.now().isoformat()
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+        self.throttling = throttling
+        self.from_thread = from_thread
 
 
 class BackTasker(threading.Thread):
     def __init__(self):
         super().__init__()
+        self._lock = threading.Lock()
         self.tasks = Queue()
 
     def put(self, func_: Callable, *args, **kwargs):
         if args is None:
             args = tuple()
-        task = (func_, args, kwargs, False)
+        task = Task(func_, args, kwargs)
         self.tasks.put(task)
 
-    def put_throttle(self, func_: Callable, first_arg, *args, from_iterable=True, **kwargs):
+    def put_throttle(self, func_: Callable, first_arg, *args,
+                     from_iterable=True, from_thread='Main', **kwargs):
         """
         If from_iterable is True, you can put ``dict`` or ``list``.
         Otherwise, you can put an only item
@@ -32,41 +54,57 @@ class BackTasker(threading.Thread):
         if not from_iterable:
             first_arg = [first_arg]
         args.insert(0, first_arg)
-        task = (func_, args, kwargs, True)
-        self.tasks.put(task)
+        task = Task(func_, args, kwargs, throttling=True, from_thread=from_thread)
+        try:
+            self._lock.acquire()
+            self.tasks.put(task)
+        finally:
+            self._lock.release()
 
     def _get(self):
         try:
-            function, args, kwargs, throttling = self.tasks.get()
-            if throttling:
-                args = self._get_same_tasks(function, args)
-            provision.multi_try(function, name='Backstage', args=args,
-                                kwargs=kwargs, tries=1, raise_exc=False)
+            task = self.tasks.get()
+            args = task.args
+            if task.throttling:
+                args = self._get_same_tasks(task.function, task.args, task.timestamp)
+            provision.multi_try(task.function, name=task.from_thread, args=args,
+                                kwargs=task.kwargs, tries=1, raise_exc=False)
         except Exception as err:
             print(utils.red(f'Error getting task from the backstage: {err}'))
 
-    def _get_same_tasks(self, function_to_find, args_original):
+    def _get_same_tasks(self, function_to_find, args_original, timestamp_original):
         first_arg = args_original[0]
         dict_ = isinstance(first_arg, dict)
         to_put_back = []
-        args_collected = first_arg
+        args_collected = [(first_arg, timestamp_original,)]
 
-        while not self.tasks.empty():
-            function, args, kwargs, throttling = self.tasks.get()
-            if throttling and function == function_to_find:
-                first_arg = args[0]
-                if dict_:
-                    args_collected.update(first_arg)
+        try:
+            self._lock.acquire()
+            while not self.tasks.empty():
+                task = self.tasks.get()
+                if task.throttling and task.function == function_to_find:
+                    first_arg_and_timestamp = (task.args[0], task.timestamp,)
+                    args_collected.append(first_arg_and_timestamp)
                 else:
-                    args_collected.extend(first_arg)
-            else:
-                wrong_choice = (function, args, kwargs, throttling)
-                to_put_back.append(wrong_choice)
+                    to_put_back.append(task)
+        finally:
+            self._lock.release()
 
+        to_put_back.sort(key=lambda item: item.timestamp)
         for task in to_put_back:
             self.tasks.put(task)
 
-        return args_collected, *args_original[1:]
+        args_collected.sort(key=lambda item: item[1])
+        if dict_:
+            ordered_args = {}
+            for args_, timestamp in args_collected:
+                ordered_args.update(args_)
+        else:
+            ordered_args = []
+            for args_, timestamp in args_collected:
+                ordered_args.extend(args_)
+
+        return ordered_args, *args_original[1:]
 
     def run(self):
         while True:

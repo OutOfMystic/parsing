@@ -1,22 +1,18 @@
 import datetime
 import itertools
-import json
-import os
 import time
-from pprint import pprint
-
-from loguru import logger
 
 from parse_module.connection import db_manager
 from parse_module.models.ai_nlp.solve import solver, cache_dict
 from parse_module.utils import utils
 from parse_module.utils.date import Date
+from parse_module.utils.logger import logger
 
 
-def cross_subject_object(subjects, objects, venues):
+def cross_subject_object(subjects, objects, venues, labels=None):
     start_time = time.time()
 
-    for pairs, submatrix_shapes, priority, margin, _, _ in make_matrix(subjects, objects, venues):
+    for pairs, submatrix_shapes, priority, margin, _, _ in make_matrix(subjects, objects, venues, labels=labels):
         names_from_pairs = [(subject['event_name'], object_['event_name'],) for subject, object_ in pairs]
         assignments = solve_pairs(names_from_pairs, submatrix_shapes, originals=pairs)
         connections = [build_connection(subj, obj_, priority, margin) for subj, obj_ in assignments]
@@ -71,11 +67,14 @@ def build_connection(subject, object_, priority, margin):
     return connection
 
 
-def make_matrix(subjects, objects, venues):
+def make_matrix(subjects, objects, venues, labels=None):
     if not objects:
         return
-    start_time = time.time()
     types_on_site = db_manager.get_site_parsers()
+    if labels:
+        site_labels, parsers_labels = labels
+    else:
+        site_labels, parsers_labels = {}, {}
 
     for subject in subjects:
         transform_date(subject, hrsdelta=3)
@@ -99,8 +98,12 @@ def make_matrix(subjects, objects, venues):
         for priority, type_id in enumerate(types):
             objects_on_type = [object_ for object_ in objects if object_['type_id'] == type_id]
             if not objects_on_type:
-                print(utils.yellow(f'No events were parsed by event '
-                                   f'parsers (type {type_id}, site {site_id})'))
+                if labels:
+                    site_name = site_labels.get(site_id, site_id)
+                    type_name = parsers_labels.get(type_id, type_id)
+                    message = (f'Event parser doesn\'t seem correct '
+                               f'(TYPE "{type_name}", SITE "{site_name}")')
+                    logger.warning(message, name='Controller')
                 continue
             object_gen = utils.groupby(objects_on_type, lambda o: o['venue'])
             objects_list = list(object_gen)
