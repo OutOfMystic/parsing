@@ -38,7 +38,7 @@ class Vakhtakassa(SeatsParser):
                     break
 
             if second_param_for_href is None:
-                self.bprint(f'Не найдено id {url}')
+                self.warning(f'Не найдено id {url}')
                 return None
 
             href = f'https://widget-api.vakhtakassa.com/api/widget/{first_param_for_href}/ticket?lang=ru&currency=RUB&event={second_param_for_href}&is_landing=true'
@@ -62,7 +62,7 @@ class Vakhtakassa(SeatsParser):
         int_month = month_num_by_str.get(month)
         href = self.get_href(self.url, f'2023-{int_month}-{day}', f'{time}:00')
         if href is None:
-            self.bprint(f'Парсер vakhtakassa: c url {self.url} не вернул ссылку')
+            self.error(f'Парсер vakhtakassa: c url {self.url} не вернул ссылку')
             return None
 
         json_data = self.request_parser(url=href)

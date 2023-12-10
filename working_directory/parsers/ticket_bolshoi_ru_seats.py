@@ -54,7 +54,7 @@ class BolshoiQueue(authorize.AccountsQueue):
         except:
             tickets_in_cart = None
             if 'Unauthorized' in r.text:
-                print('Unauthorized, retrying')
+                self.debug('Unauthorized, retrying')
                 self.login(account)
                 return self.first_check(account)
             else:
@@ -83,7 +83,7 @@ class BolshoiQueue(authorize.AccountsQueue):
             'x-csrf-token': account.csrf_token
         }
         r = account.delete(url, headers=headers, verify=False)
-        print('deleting on', account.login)
+        self.debug('deleting on', account.login)
 
     def is_logined(self, account):
         try:
@@ -119,7 +119,7 @@ class BolshoiQueue(authorize.AccountsQueue):
             account.csrf_token
         except:
             account.csrf_token = self.get_csrf(account)
-        solved_captcha = captcha.recaptcha_v2(
+        solved_captcha = captcha.non_selenium_recaptcha(
             self.sitekey,
             'https://ticket.bolshoi.ru/login',
             print_logs=False)
@@ -166,7 +166,7 @@ class BolshoiQueue(authorize.AccountsQueue):
             if err_counter == MAX_TRIES:
                 raise RuntimeError(r.text)
             else:
-                print('Login error: ' + r.text)
+                logger.error('Login error: ' + r.text, name='ticket_bolshoi_ru_seats')
                 account.session = requests.Session()
                 self.login(account, err_counter=err_counter)
 
@@ -256,8 +256,7 @@ class BolshoiQueue(authorize.AccountsQueue):
                             headers=headers,
                             verify=False)
         except Exception as error:
-            print(error)
-            raise RuntimeError(f'No CSRF on ip ' + str(account.proxy))
+            raise RuntimeError(f'No CSRF on ip ' + str(account.proxy) + ' ' + str(error))
 
         return r.json()['_csrf']
 
@@ -274,13 +273,14 @@ class BtParser(SeatsParser):
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
+        self.account = None
         self.delay = 900
         self.driver_source = None
         self.event_id = None
         self._lock = threading.Lock()
-        self.account = self.get_account()
 
     def before_body(self):
+        self.account = self.get_account()
         self.session = ProxySession(self)
         self.event_id = self.url.split('/')[-1]
 

@@ -1,9 +1,11 @@
 from typing import NamedTuple, Optional, Union
+from datetime import datetime, timedelta
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
+from parse_module.utils.date import month_list
 
 
 class OutputEvent(NamedTuple):
@@ -71,8 +73,17 @@ class VDNHRu(EventParser):
         date = soup.find('div', class_='detail-table__left')
         if date is None:
             return None
-        day, month = date.text.strip().split()
-        month = month[:3].title()
+        elif date.text == 'Завтра':
+            date_tomorrow = datetime.now() + timedelta(days=1)
+            day = date_tomorrow.day
+            month = month_list[date_tomorrow.month]
+        elif date.text == 'Сегодня':
+            date_today = datetime.now()
+            day = date_today.day
+            month = month_list[date_today.month]
+        else:
+            day, month = date.text.strip().split()
+            month = month[:3].title()
         time = soup.find('div', class_='detail-table__right').text.strip()
         normal_date = f'{day} {month} {time}'
         return normal_date
@@ -123,3 +134,10 @@ class VDNHRu(EventParser):
     def body(self) -> None:
         for event in self._parse_events():
             self.register_event(event.title, event.href, date=event.date)
+        events = [
+            ['Теона Контридзе', 'https://vdnh.ru/widget/#/?zone=real&frontendId=2045&token=8aa5d7484641e8706fa5&id=32873&cityId=2&lng=ru&agr=https://vdnh.ru/agreement', '25 Авг 2023 20:00'],
+            ['Нюша', 'https://vdnh.ru/widget/#/?zone=real&frontendId=2045&token=8aa5d7484641e8706fa5&id=32890&cityId=2&lng=ru&agr=https://vdnh.ru/agreement', '7 Сен 2023 20:00'],
+            ['Нурлан Сабуров', 'https://vdnh.ru/widget/#/?zone=real&frontendId=2045&token=8aa5d7484641e8706fa5&id=33075&cityId=2&lng=ru&agr=https://vdnh.ru/agreement', '13 Авг 2023 19:00']
+        ]
+        for event in events:
+            self.register_event(event[0], event[1], date=event[2])

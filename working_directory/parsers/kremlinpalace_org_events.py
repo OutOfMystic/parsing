@@ -37,7 +37,8 @@ class KremlInPalace(EventParser):
                 normal_date = day + ' ' + month + ' ' + year + ' ' + time.text
 
                 href = item.find('a', class_='button').get('href')
-                if href is None or href == '' or href == '#ticketOnlyOffice':
+                if (href is None or href == '' or href == '#ticketOnlyOffice' 
+                        or'icetickets' in href):
                     continue
 
                 a_events.append([title, href, normal_date])
@@ -99,7 +100,6 @@ class KremlInPalace(EventParser):
         r = self.session.get(self.url, headers=headers)
 
         return BeautifulSoup(r.text, 'lxml')
-
 
     def _get_js_code_and__js_p__from_main_site(self) -> tuple[str, str, str]:
         headers = {

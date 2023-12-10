@@ -1,4 +1,6 @@
 from typing import Optional, Union
+from time import sleep
+import re
 import json
 
 from bs4 import BeautifulSoup
@@ -7,11 +9,14 @@ from requests.exceptions import ProxyError, ReadTimeout
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split, lrsplit, decode_unicode_escape
+from parse_module.utils import utils
 
 
 class KassirParser(SeatsParser):
     event = 'kassir.ru'
-    url_filter = lambda event: 'kassir.ru' in event and 'crocus2' not in event and 'frame' not in event
+    url_filter = lambda event: 'kassir.ru' in event and 'crocus2' not in event and 'frame' not in event \
+                               and 'schematr' not in event \
+                               and 'vtb-arena-tsentralnyiy-stadion-dinamo/rusalochka' not in event
     proxy_check_url = 'https://kassir.ru/'
 
     def __init__(self, *args, **extra):
@@ -25,12 +30,27 @@ class KassirParser(SeatsParser):
         self.url_spb_or_msk = double_split(self.url, 'https://', '/')
         self.count_error = 0
         self.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
+        self.headers = {
+            "accept": "*/*",
+            'accept-encoding': 'gzip, deflate, br',
+            'accept-language': 'ru,en;q=0.9',
+            'Connection': 'keep-alive',
+            'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-site',
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            'user-agent': self.user_agent
+        }
 
     def before_body(self):
         self.session = ProxySession(self)
 
-    def reformat(self, a_sectors, place_name):
-        megasport_tancpol_fanzone_reformat_dict = {  # Для схемы Танцпол и Фанзона
+    @staticmethod
+    def reformat_megasport(a_sectors):
+        megasport_reformat_dict = {  # Для схемы Танцпол и Фанзона как минимум
             'Ложа 39 (на 13 персон)': 'Ложа 39',
             'Ложа 38 (на 13 персон)': 'Ложа 38',
             'Ложа 25 (на 14 персон)': 'Ложа 25',
@@ -58,64 +78,13 @@ class KassirParser(SeatsParser):
             'Ложа 3 (на 14 персон)': 'Ложа 3',
             'Ложа 2 (на 13 персон)': 'Ложа 2',
             'Ложа 1 (на 13 персон)': 'Ложа 1',
-            'Ложа 39': 'Ложа 39',
-            'Ложа 38': 'Ложа 38',
-            'Ложа 25': 'Ложа 25',
-            'Ложа 24': 'Ложа 24',
-            'Ложа 23': 'Ложа 23',
-            'Ложа 22': 'Ложа 22',
-            'Ложа 21': 'Ложа 21',
-            'Ложа 20': 'Ложа 20',
-            'Ложа 19': 'Ложа 19',
-            'Ложа 18': 'Ложа 18',
-            'Ложа 17': 'Ложа 17',
-            'Ложа 16': 'Ложа 16',
-            'Ложа 15': 'Ложа 15',
-            'Ложа 14': 'Ложа 14',
-            'Ложа 13': 'Ложа 13',
-            'Ложа 12': 'Ложа 12',
-            'Ложа 11': 'Ложа 11',
-            'Ложа 10': 'Ложа 10',
-            'Ложа 9': 'Ложа 9',
-            'Ложа 8': 'Ложа 8',
-            'Ложа 7': 'Ложа 7',
-            'Ложа 6': 'Ложа 6',
-            'Ложа 5': 'Ложа 5',
-            'Ложа 4': 'Ложа 4',
-            'Ложа 3': 'Ложа 3',
-            'Ложа 2': 'Ложа 2',
-            'Ложа 1': 'Ложа 1',
             'VIP 3': 'VIP 3',
             'Ложа VIP 3': 'VIP 3',
             'VIP 2': 'VIP 2',
             'VIP 1': 'VIP 1',
-            'Сектор A24': 'Сектор A24',
-            'Сектор A23  ': 'Сектор A23',
-            'Сектор A22': 'Сектор A22',
             'Сектор A22 (1)': 'Сектор A22',
             'Сектор A21': 'Сектор A21',
             'Сектор A4  ': 'Сектор A4',
-            'Сектор A3': 'Сектор A3',
-            'Сектор A2': 'Сектор A2',
-            'Сектор A1': 'Сектор A1',
-            'Сектор A0': 'Сектор A0',
-            'Сектор B24': 'Сектор B24',
-            'Сектор B23': 'Сектор B23',
-            'Сектор B22': 'Сектор B22',
-            'Сектор B21': 'Сектор B21',
-            'Сектор B4': 'Сектор B4',
-            'Сектор B3': 'Сектор B3',
-            'Сектор B2': 'Сектор B2',
-            'Сектор B1': 'Сектор B1',
-            'Сектор C24': 'Сектор C24',
-            'Сектор C23': 'Сектор C23',
-            'Сектор C22': 'Сектор C22',
-            'Сектор C21': 'Сектор C21',
-            'Сектор C4': 'Сектор C4',
-            'Сектор C3': 'Сектор C3',
-            'Сектор C2': 'Сектор C2',
-            'Сектор C1': 'Сектор C1',
-            'Сектор C0': 'Сектор C0',
             'VIP C0': 'Сектор C0',
             'A24': 'Сектор A24',
             'A23 ': 'Сектор A23',
@@ -150,217 +119,67 @@ class KassirParser(SeatsParser):
             'Фан-зона': 'Фан-зона',
             'Танцевальный партер': 'Танцпол',
             'Танцпартер': 'Танцпол',
-        }
-
-        megasport_only_tancpol_reformat_dict = {  # Для схемы где только Танцпол
-            'Ложа №39 (на 13 персон)': 'Ложа 39',
-            'Ложа №38 (на 13 персон)': 'Ложа 38',
-            'Ложа №25 (на 14 персон)': 'Ложа 25',
-            'Ложа №24 (на 13 персон)': 'Ложа 24',
-            'Ложа №23 (на 16 персон)': 'Ложа 23',
-            'Ложа №22 (на 16 персон)': 'Ложа 22',
-            'Ложа №21 (на 16 персон)': 'Ложа 21',
-            'Ложа №20 (на 32 персон': 'Ложа 20',
-            'Ложа №19 (на 16 персон)': 'Ложа 19',
-            'Ложа №18 (на 16 персон)': 'Ложа 18',
-            'Ложа №17 (на 13 персон)': 'Ложа 17',
-            'Ложа №16 (на 13 персон)': 'Ложа 16',
-            'Ложа №15 (на 14 персон)': 'Ложа 15',
-            'Ложа №14 (на 14 персон)': 'Ложа 14',
-            'Ложа №13 (на 15 персон)': 'Ложа 13',
-            'Ложа №12 (на 15 персон)': 'Ложа 12',
-            'Ложа №11 (на 17 персон)': 'Ложа 11',
-            'Ложа №10 (на 17 персон)': 'Ложа 10',
-            'Ложа №9 (на 17 персон)': 'Ложа 9',
-            'Ложа №8 (на 17 персон)': 'Ложа 8',
-            'Ложа №7 (на 17 персон)': 'Ложа 7',
-            'Ложа №6 (на 17 персон)': 'Ложа 6',
-            'Ложа №5 (на 15 персон)': 'Ложа 5',
-            'Ложа №4 (на 15 персон)': 'Ложа 4',
-            'Ложа №3 (на 14 персон)': 'Ложа 3',
-            'Ложа №2 (на 13 персон)': 'Ложа 2',
-            'Ложа №1 (на 13 персон)': 'Ложа 1',
-            'Ложа №39': 'Ложа 39',
-            'Ложа №38': 'Ложа 38',
-            'Ложа №25': 'Ложа 25',
-            'Ложа №24': 'Ложа 24',
-            'Ложа №23': 'Ложа 23',
-            'Ложа №22': 'Ложа 22',
-            'Ложа №21': 'Ложа 21',
-            'Ложа №20': 'Ложа 20',
-            'Ложа №19': 'Ложа 19',
-            'Ложа №18': 'Ложа 18',
-            'Ложа №17': 'Ложа 17',
-            'Ложа №16': 'Ложа 16',
-            'Ложа №15': 'Ложа 15',
-            'Ложа №14': 'Ложа 14',
-            'Ложа №13': 'Ложа 13',
-            'Ложа №12': 'Ложа 12',
-            'Ложа №11': 'Ложа 11',
-            'Ложа №10': 'Ложа 10',
-            'Ложа №9': 'Ложа 9',
-            'Ложа №8': 'Ложа 8',
-            'Ложа №7': 'Ложа 7',
-            'Ложа №6': 'Ложа 6',
-            'Ложа №5': 'Ложа 5',
-            'Ложа №4': 'Ложа 4',
-            'Ложа №3': 'Ложа 3',
-            'Ложа №2': 'Ложа 2',
-            'Ложа №1': 'Ложа 1',
-            'VIP 3': 'VIP 3',
-            'VIP 2': 'VIP 2',
-            'VIP 1': 'VIP 1',
-            'Сектор А24': 'Сектор A24',
-            'Сектор А23': 'Сектор A23',
-            'Сектор А22': 'Сектор A22',
-            'Сектор А21': 'Сектор A21',
-            'Сектор А4': 'Сектор A4',
-            'Сектор А3': 'Сектор A3',
-            'Сектор А2': 'Сектор A2',
-            'Сектор А1': 'Сектор A1',
-            'Сектор А0': 'Сектор A0',
-            'Сектор В24': 'Сектор B24',
-            'Сектор В23': 'Сектор B23',
-            'Сектор В22': 'Сектор B22',
-            'Сектор В21': 'Сектор B21',
-            'Сектор В4': 'Сектор B4',
-            'Сектор В3': 'Сектор B3',
-            'Сектор В2': 'Сектор B2',
-            'Сектор В1': 'Сектор B1',
-            'Сектор С24': 'Сектор C24',
-            'Сектор С23': 'Сектор C23',
-            'Сектор С22': 'Сектор C22',
-            'Сектор С21': 'Сектор C21',
-            'Сектор С4': 'Сектор C4',
-            'Сектор С3': 'Сектор C3',
-            'Сектор С2': 'Сектор C2',
-            'Сектор С1': 'Сектор C1',
-            'Сектор С0': 'Сектор C0',
+            'Ложа 39 (на 13 персон)': 'Ложа 39',
+            'Ложа 38 (на 13 персон)': 'Ложа 38',
+            'Ложа 25 (на 14 персон)': 'Ложа 25',
+            'Ложа 24 (на 13 персон)': 'Ложа 24',
+            'Ложа 23 (на 16 персон)': 'Ложа 23',
+            'Ложа 22 (на 16 персон)': 'Ложа 22',
+            'Ложа 21 (на 16 персон)': 'Ложа 21',
+            'Ложа 20 (на 32 персон': 'Ложа 20',
+            'Ложа 19 (на 16 персон)': 'Ложа 19',
+            'Ложа 18 (на 16 персон)': 'Ложа 18',
+            'Ложа 17 (на 13 персон)': 'Ложа 17',
+            'Ложа 16 (на 13 персон)': 'Ложа 16',
+            'Ложа 15 (на 14 персон)': 'Ложа 15',
+            'Ложа 14 (на 14 персон)': 'Ложа 14',
+            'Ложа 13 (на 15 персон)': 'Ложа 13',
+            'Ложа 12 (на 15 персон)': 'Ложа 12',
+            'Ложа 11 (на 17 персон)': 'Ложа 11',
+            'Ложа 10 (на 17 персон)': 'Ложа 10',
+            'Ложа 9 (на 17 персон)': 'Ложа 9',
+            'Ложа 8 (на 17 персон)': 'Ложа 8',
+            'Ложа 7 (на 17 персон)': 'Ложа 7',
+            'Ложа 6 (на 17 персон)': 'Ложа 6',
+            'Ложа 5 (на 15 персон)': 'Ложа 5',
+            'Ложа 4 (на 15 персон)': 'Ложа 4',
+            'Ложа 3 (на 14 персон)': 'Ложа 3',
+            'Ложа 2 (на 13 персон)': 'Ложа 2',
+            'Ложа 1 (на 13 персон)': 'Ложа 1',
+            'VIP C0': 'Сектор C0',
+            'A24': 'Сектор A24',
+            'A23 ': 'Сектор A23',
+            'A23': 'Сектор A23',
+            'A22': 'Сектор A22',
+            'A21': 'Сектор A21',
+            'A4  ': 'Сектор A4',
+            'A4': 'Сектор A4',
+            'A3': 'Сектор A3',
+            'А3': 'Сектор A3',
+            'A2': 'Сектор A2',
+            'A1': 'Сектор A1',
+            'A0': 'Сектор A0',
+            'B24': 'Сектор B24',
+            'B23': 'Сектор B23',
+            'B22': 'Сектор B22',
+            'B21': 'Сектор B21',
+            'B4': 'Сектор B4',
+            'B3': 'Сектор B3',
+            'B2': 'Сектор B2',
+            'B1': 'Сектор B1',
+            'C24': 'Сектор C24',
+            'C23': 'Сектор C23',
+            'C22': 'Сектор C22',
+            'C21': 'Сектор C21',
+            'C4': 'Сектор C4',
+            'C3': 'Сектор C3',
+            'C2': 'Сектор C2',
+            'С2': 'Сектор C2',
+            'C1': 'Сектор C1',
+            'C0': 'Сектор C0',
+            'Фан-зона': 'Фан-зона',
             'Танцевальный партер': 'Танцпол',
-        }
-
-        megasport_hokkey_full_reformat_dict = {  # Для схемы Хоккей Полная
-            'Ложа 39': 'Ложа 39',
-            'Ложа 38': 'Ложа 38',
-            'Ложа 37': 'Ложа 37',
-            'Ложа 36': 'Ложа 36',
-            'Ложа 35': 'Ложа 35',
-            'Ложа 34': 'Ложа 34',
-            'Ложа 33': 'Ложа 33',
-            'Ложа 32': 'Ложа 32',
-            'Ложа 31': 'Ложа 31',
-            'Ложа 30': 'Ложа 30',
-            'Ложа 29': 'Ложа 29',
-            'Ложа 28': 'Ложа 28',
-            'Ложа 27': 'Ложа 27',
-            'Ложа 26': 'Ложа 26',
-            'Ложа 25': 'Ложа 25',
-            'Ложа 24': 'Ложа 24',
-            'Ложа 23': 'Ложа 23',
-            'Ложа 22': 'Ложа 22',
-            'Ложа 21': 'Ложа 21',
-            'Ложа 20': 'Ложа 20',
-            'Ложа 19': 'Ложа 19',
-            'Ложа 18': 'Ложа 18',
-            'Ложа 17': 'Ложа 17',
-            'Ложа 16': 'Ложа 16',
-            'Ложа 15': 'Ложа 15',
-            'Ложа 14': 'Ложа 14',
-            'Ложа 13': 'Ложа 13',
-            'Ложа 12': 'Ложа 12',
-            'Ложа 11': 'Ложа 11',
-            'Ложа 10': 'Ложа 10',
-            'Ложа 9': 'Ложа 9',
-            'Ложа 8': 'Ложа 8',
-            'Ложа 7': 'Ложа 7',
-            'Ложа 6': 'Ложа 6',
-            'Ложа 5': 'Ложа 5',
-            'Ложа 4': 'Ложа 4',
-            'Ложа 3': 'Ложа 3',
-            'Ложа 2': 'Ложа 2',
-            'Ложа 1': 'Ложа 1',
-            'VIP 3': 'VIP 3',
-            'VIP 2': 'VIP 2',
-            'VIP 1': 'VIP 1',
-            'Сектор A24': 'Сектор A24',
-            'Сектор A23': 'Сектор A23',
-            'Сектор A22': 'Сектор A22',
-            'Сектор A21': 'Сектор A21',
-            'Сектор A4': 'Сектор A4',
-            'Сектор A3': 'Сектор A3',
-            'Сектор A2': 'Сектор A2',
-            'Сектор A1': 'Сектор A1',
-            'Сектор A0': 'Сектор A0',
-            'Сектор B24': 'Сектор B24',
-            'Сектор B23': 'Сектор B23',
-            'Сектор B22': 'Сектор B22',
-            'Сектор B21': 'Сектор B21',
-            'Сектор B4': 'Сектор B4',
-            'Сектор B3': 'Сектор B3',
-            'Сектор B2': 'Сектор B2',
-            'Сектор B1': 'Сектор B1',
-            'Сектор C24': 'Сектор C24',
-            'Сектор C23': 'Сектор C23',
-            'Сектор C22': 'Сектор C22',
-            'Сектор C21': 'Сектор C21',
-            'Сектор C4': 'Сектор C4',
-            'Сектор C3': 'Сектор C3',
-            'Сектор C2': 'Сектор C2',
-            'Сектор C1': 'Сектор C1',
-            'Сектор C0': 'Сектор C0',
-            'Сектор D24': 'Сектор D24',
-            'Сектор D23': 'Сектор D23',
-            'Сектор D22': 'Сектор D22',
-            'Сектор D21': 'Сектор D21',
-            'Сектор D4': 'Сектор D4',
-            'Сектор D3': 'Сектор D3',
-            'Сектор D2': 'Сектор D2',
-            'Сектор D1': 'Сектор D1',
-            'Сектор D0': 'Сектор D0',
-        }
-
-        megasport_basketball_full_reformat_dict = {  # Для схемы Баскетбол Полная
-            'Ложа 39': 'Ложа 39',
-            'Ложа 38': 'Ложа 38',
-            'Ложа 37': 'Ложа 37',
-            'Ложа 36': 'Ложа 36',
-            'Ложа 35': 'Ложа 35',
-            'Ложа 34': 'Ложа 34',
-            'Ложа 33': 'Ложа 33',
-            'Ложа 32': 'Ложа 32',
-            'Ложа 31': 'Ложа 31',
-            'Ложа 30': 'Ложа 30',
-            'Ложа 29': 'Ложа 29',
-            'Ложа 28': 'Ложа 28',
-            'Ложа 27': 'Ложа 27',
-            'Ложа 26': 'Ложа 26',
-            'Ложа 25': 'Ложа 25',
-            'Ложа 24': 'Ложа 24',
-            'Ложа 23': 'Ложа 23',
-            'Ложа 22': 'Ложа 22',
-            'Ложа 21': 'Ложа 21',
-            'Ложа 19': 'Ложа 19',
-            'Ложа 18': 'Ложа 18',
-            'Ложа 17': 'Ложа 17',
-            'Ложа 16': 'Ложа 16',
-            'Ложа 15': 'Ложа 15',
-            'Ложа 14': 'Ложа 14',
-            'Ложа 13': 'Ложа 13',
-            'Ложа 12': 'Ложа 12',
-            'Ложа 11': 'Ложа 11',
-            'Ложа 10': 'Ложа 10',
-            'Ложа 9': 'Ложа 9',
-            'Ложа 8': 'Ложа 8',
-            'Ложа 7': 'Ложа 7',
-            'Ложа 6': 'Ложа 6',
-            'Ложа 5': 'Ложа 5',
-            'Ложа 4': 'Ложа 4',
-            'Ложа 3': 'Ложа 3',
-            'Ложа 2': 'Ложа 2',
-            'Ложа 1': 'Ложа 1',
-            'VIP 3': 'VIP 3',
-            'VIP 2': 'VIP 2',
-            'VIP 1': 'VIP 1',
+            'Танцпартер': 'Танцпол',
             'Сектор A24 Синий пандус': 'Сектор A24',
             'Сектор A23 Синий пандус': 'Сектор A23',
             'Сектор A22 Синий пандус': 'Сектор A22',
@@ -379,6 +198,8 @@ class KassirParser(SeatsParser):
             'Сектор B4 Красный пандус': 'Сектор B4',
             'B4 (Фан-сектор) Красный пандус': 'Сектор B4',
             'Сектор B3 Красный пандус': 'Сектор B3',
+            'Фан-сектор B3 (хозяева)': 'Сектор B3',
+            'Фан-сектор B2 (хозяева)': 'Сектор B2',
             'Сектор B2 Синий пандус': 'Сектор B2',
             'Сектор B1 Синий пандус': 'Сектор B1',
             'Сектор C24 Красный пандус': 'Сектор C24',
@@ -398,6 +219,8 @@ class KassirParser(SeatsParser):
             'Сектор D21 Красный пандус': 'Сектор D21',
             'Сектор D4 Синий пандус': 'Сектор D4',
             'Сектор D3 Синий пандус': 'Сектор D3',
+            'Фан-сектор D3 (гости)': 'Сектор D3',
+            'Фан-сектор D2 (гости)': 'Сектор D2',
             'Сектор D2 Красный пандус': 'Сектор D2',
             'Сектор D1 Красный пандус': 'Сектор D1',
             'АП': 'Партер АП',
@@ -405,10 +228,39 @@ class KassirParser(SeatsParser):
             'Hollywood': 'Партер Hollywood',
             'Сектор D0': 'Партер D0',
             'Сектор B0': 'Партер B0',
+            'Партер VIP 1': 'VIP-партер 1',
+            'Партер VIP 2': 'VIP-партер 2',
+            'Партер VIP 3': 'VIP-партер 3',
+            'Партер VIP 4': 'VIP-партер 4',
+            'Партер VIP 5': 'VIP-партер 5',
+            'Партер VIP 6': 'VIP-партер 6',
+            'Партер VIP 7': 'VIP-партер 7',
+            'Партер VIP 8': 'VIP-партер 8',
+            'Партер VIP 9': 'VIP-партер 9',
+            'Партер VIP 10': 'VIP-партер 10',
+            'С0': 'Сектор C0',
+            'D0': 'Сектор D1',
+            'D1': 'Сектор D1',
+            'D2': 'Сектор D2',
+            'D4': 'Сектор D4',
+            'D3': 'Сектор D3',
+            'D21': 'Сектор D21',
+            'D22': 'Сектор D22',
+            'D24': 'Сектор D24',
+            'D23': 'Сектор D23',
         }
+        a_sectors_new = {}
+        for sector, tickets in a_sectors.items():
+            if megasport_reformat_dict.get(sector):
+                a_sectors_new.setdefault(megasport_reformat_dict.get(sector), {}).update(tickets)
+            else:
+                a_sectors_new.setdefault(sector, {}).update(tickets)
+        return a_sectors_new
 
-        megasport_ice_full_reformat_dict = {}
 
+
+    @staticmethod
+    def reformat_vtb_for_dynamo(a_sectors):
         vtb_hockey_reformat_dict = {
             'Ресторан Platinum': 'Трибуна Юрзинова. Ресторан Platinum',
             'Press 3': 'Трибуна Давыдова. Press 3',
@@ -532,8 +384,36 @@ class KassirParser(SeatsParser):
             'Сектор A102': 'Трибуна Давыдова. Сектор A102',
             'Сектор A101': 'Трибуна Давыдова. Сектор A101',
         }
+        a_sectors_new = {}
+        for sector, tickets in a_sectors.items():
+            if 'Сектор Сектор' in sector:
+                sector = sector.split()[-1]
+                sector = f"Сектор {sector.split('Сектор')[-1]}"
+            if vtb_hockey_reformat_dict.get(sector):
+                a_sectors_new.setdefault(vtb_hockey_reformat_dict.get(sector), {}).update(tickets)
+            else:
+                a_sectors_new.setdefault(sector, {}).update(tickets)
+        return a_sectors_new
 
-        vtb_common_reformat_dict = {
+    @staticmethod
+    def reformat_vtb_arena_fotball(a_sectors):
+        a_sectors_new = {}
+        for sector, tickets in a_sectors.items():
+            sector = ''.join(sector.split(' ', 1))
+            vip_box = ['A5','C2','C3','A12','A11','A4','C11','C13','A6','C8','A7','A1','C5','A3',
+                       'C7','A2','C6','A10','C14','C1','A8','C9','C4','C12']
+            if sector in vip_box:
+                sector = f"VIP {sector}"
+            elif 'Gastrobar' in sector:
+                sector = 'Сектор C205'
+            else:
+                sector = f"Сектор {sector}"
+            a_sectors_new.setdefault(sector, {}).update(tickets)
+        return a_sectors_new
+
+    @staticmethod
+    def reformat_vtb_arena(a_sectors):
+        vtb_reformat_dict = {
             'Press 3': 'Press 3',
             'Press 2': 'Press 2',
             'Press 1': 'Press 1',
@@ -657,6 +537,8 @@ class KassirParser(SeatsParser):
             'Сектор A102': 'Сектор A102',
             'Сектор A101': 'Сектор A101',
             'Партер, левая сторона': 'Партер, левая сторона',
+            'A101 VIP пакет (фирменная футболка и ранний вход на чек)': 'Сектор A101',
+            'VIP Партер - Левая сторона': 'Партер, левая сторона',
             'Партер, правая сторона': 'Партер, правая сторона',
             'Фан зона': 'Фан-зона',
             'ФАНЗОНА': 'Фан-зона',
@@ -667,6 +549,79 @@ class KassirParser(SeatsParser):
             'Ложа A5 (6 персон)': 'Ложа A5',
             'Ложа C6 (на 12 персон)': 'VIP C6 (целиком)',
             'Ложа С1 (на 13 персон)': 'VIP С1 (целиком)',
+            'Ложа А10 (на 13 персон)': 'VIP A10 (целиком)',
+            'B 312': 'Сектор B312',
+            'B 311': 'Сектор B311',
+            'B 310': 'Сектор B310',
+            'B 309': 'Сектор B309',
+            'B 308': 'Сектор B308',
+            'B 307': 'Сектор B307',
+            'B 306': 'Сектор B306',
+            'B 305': 'Сектор B305',
+            'B 304': 'Сектор B304',
+            'B 303': 'Сектор B303',
+            'B 302': 'Сектор B302',
+            'B 301': 'Сектор B301',
+            'B 213': 'Сектор B213',
+            'B 212': 'Сектор B212',
+            'B 211': 'Сектор B211',
+            'B 210': 'Сектор B210',
+            'B 209': 'Сектор B209',
+            'B 208': 'Сектор B208',
+            'B 207': 'Сектор B207',
+            'B 206': 'Сектор B206',
+            'B 205': 'Сектор B205',
+            'B 204': 'Сектор B204',
+            'B 203': 'Сектор B203',
+            'B203 (ограниченная видимость)': 'Сектор B203',
+            'B 202': 'Сектор B202',
+            'B 201': 'Сектор B201',
+            'B 110': 'Сектор B110',
+            'B 109': 'Сектор B109',
+            'B 108': 'Сектор B108',
+            'B 107': 'Сектор B107',
+            'B 106': 'Сектор B106',
+            'B 105': 'Сектор B105',
+            'B 104': 'Сектор B104',
+            'B 103': 'Сектор B103',
+            'B103 (ограниченная видимость)': 'Сектор B103',
+            'B 102': 'Сектор B102',
+            'B 101': 'Сектор B101',
+            'A 312': 'Сектор A312',
+            'A 311': 'Сектор A311',
+            'A 310': 'Сектор A310',
+            'A 309': 'Сектор A309',
+            'A 308': 'Сектор A308',
+            'A 307': 'Сектор A307',
+            'A 306': 'Сектор A306',
+            'A 305': 'Сектор A305',
+            'A 304': 'Сектор A304',
+            'A 303': 'Сектор A303',
+            'A 302': 'Сектор A302',
+            'A 301': 'Сектор A301',
+            'A 213': 'Сектор A213',
+            'A 212': 'Сектор A212',
+            'A 211': 'Сектор A211',
+            'A 210': 'Сектор A210',
+            'A 209': 'Сектор A209',
+            'A 208': 'Сектор A208',
+            'A 207': 'Сектор A207',
+            'A 206': 'Сектор A206',
+            'A 205': 'Сектор A205',
+            'A 204': 'Сектор A204',
+            'A 203': 'Сектор A203',
+            'A 202': 'Сектор A202',
+            'A 201': 'Сектор A201',
+            'A 110': 'Сектор A110',
+            'A 109': 'Сектор A109',
+            'A 108': 'Сектор A108',
+            'A 107': 'Сектор A107',
+            'A 106': 'Сектор A106',
+            'A 105': 'Сектор A105',
+            'A 104': 'Сектор A104',
+            'A 103': 'Сектор A103',
+            'A 102': 'Сектор A102',
+            'A 101': 'Сектор A101',
             'B312': 'Сектор B312',
             'B311': 'Сектор B311',
             'B310': 'Сектор B310',
@@ -690,7 +645,6 @@ class KassirParser(SeatsParser):
             'B205': 'Сектор B205',
             'B204': 'Сектор B204',
             'B203': 'Сектор B203',
-            'B203 (ограниченная видимость)': 'Сектор B203',
             'B202': 'Сектор B202',
             'B201': 'Сектор B201',
             'B110': 'Сектор B110',
@@ -701,7 +655,6 @@ class KassirParser(SeatsParser):
             'B105': 'Сектор B105',
             'B104': 'Сектор B104',
             'B103': 'Сектор B103',
-            'B103 (ограниченная видимость)': 'Сектор B103',
             'B102': 'Сектор B102',
             'B101': 'Сектор B101',
             'A312': 'Сектор A312',
@@ -739,8 +692,20 @@ class KassirParser(SeatsParser):
             'A103': 'Сектор A103',
             'A102': 'Сектор A102',
             'A101': 'Сектор A101',
+            '':'', #! Внимание! это начинаются билеты на футбольную арену! 
         }
+        a_sectors_new = {}
+        for sector, tickets in a_sectors.items():
+            if 'Трибуна' in sector: #Трибуна А-303
+                sector = sector.split()[-1] #А-303
+                sector = sector.replace('-', '').replace('А', 'A')
+            if vtb_reformat_dict.get(sector):
+                a_sectors_new.setdefault(vtb_reformat_dict.get(sector), {}).update(tickets)
+            else:
+                a_sectors_new.setdefault(sector, {}).update(tickets)
+        return a_sectors_new
 
+    def reformat(self, a_sectors, place_name):
         vk_stadium_common_reformat_dict = {
             'Танцпол': 'Танцпол',
             'Танцевальный партер': 'Танцпол',
@@ -1353,17 +1318,27 @@ class KassirParser(SeatsParser):
         }
 
         scheme_id_to_dict = {
-            '5c': megasport_tancpol_fanzone_reformat_dict,
-            'dd': megasport_tancpol_fanzone_reformat_dict,
-            'c4': megasport_tancpol_fanzone_reformat_dict,
-            'c5': megasport_tancpol_fanzone_reformat_dict,
-            '64': megasport_only_tancpol_reformat_dict,
-            '36': megasport_hokkey_full_reformat_dict,
-            'd8': megasport_hokkey_full_reformat_dict,
-            'da': megasport_basketball_full_reformat_dict,
-            '90': megasport_ice_full_reformat_dict,
-
+            # '5c': megasport_tancpol_fanzone_reformat_dict,
+            # 'dd': megasport_tancpol_fanzone_reformat_dict,
+            # 'c4': megasport_tancpol_fanzone_reformat_dict,
+            # 'c5': megasport_tancpol_fanzone_reformat_dict,
+            # '64': megasport_only_tancpol_reformat_dict,
+            # '36': megasport_hokkey_full_reformat_dict,
+            # 'd8': megasport_hokkey_full_reformat_dict,
+            # 'da': megasport_basketball_full_reformat_dict,
+            # '90': megasport_ice_full_reformat_dict,
             'b0': {},  # Для футбольной схемы, такой схемы у нас пока нет
+        }
+
+        teatr_sovremennik_main_scheme = {
+            'Ложа бельэтажа правая': 'Правая ложа бельэтажа',
+            'Ложа бельэтажа левая': 'Левая ложа бельэтажа',
+        }
+        
+        teatr_sovremennik_another_scheme = {
+            'Партер C': 'Сектор C',
+            'Партер B': 'Сектор B',
+            'Партер A': 'Сектор A'
         }
 
         ref_dict = {}
@@ -1371,11 +1346,6 @@ class KassirParser(SeatsParser):
             ref_dict = scheme_id_to_dict.get(self.scheme_identifier, {})
         elif 'Лужники' in self.venue:
             ref_dict = luzhniki_tanc_fan_2
-        elif 'ВТБ Арена' in self.venue:
-            if 'Хоккей' in self.breadcrumb:
-                ref_dict = vtb_hockey_reformat_dict
-            else:
-                ref_dict = vtb_common_reformat_dict
         elif 'VK Stadium' in self.venue:
             ref_dict = vk_stadium_common_reformat_dict
         elif 'ЦСКА Арена' in self.venue:
@@ -1396,6 +1366,11 @@ class KassirParser(SeatsParser):
         if 'Театр Сатиры' in self.venue or 'театр сатиры' in place_name:
             if 'основная' in self.place_name:
                 ref_dict = satire_main_reformat_dict
+        elif 'современник' in place_name:
+            if 'основная' in place_name:
+                ref_dict = teatr_sovremennik_main_scheme
+            elif 'другая' in place_name:
+                ref_dict = teatr_sovremennik_another_scheme
 
         reformatted_sector_tickets = {}
         for i, sector in enumerate(a_sectors):
@@ -1467,9 +1442,8 @@ class KassirParser(SeatsParser):
             if count_error == 20:
                 raise ProxyError(error)
             self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
-            # print(f'{self.proxy.args = }, {count_error = }, {url = }, {self.session.cookies = }')
             self.session = ProxySession(self)
-            return self.requests_to_kassir(url, headers, count_error=count_error+1)
+            return self.requests_to_kassir(url, headers, count_error=count_error + 1)
 
     def get_event_data(self):
         headers = {
@@ -1532,7 +1506,7 @@ class KassirParser(SeatsParser):
             event_info_raw = decode_unicode_escape(event_info_raw)
             event_info = json.loads(event_info_raw)
         except Exception as e:
-            self.bprint(f'error parsing event_data on kassir ({e}): {self.url = }')
+            self.error(f'error parsing event_data on kassir ({e}): {self.url = }')
 
         event_id = event_info['event_id']
         sectors_partial_info = [
@@ -1588,7 +1562,7 @@ class KassirParser(SeatsParser):
             seat_polygon = soup.find('polygon', {'kh:id': str(seat['seat_id'])})
             if not seat_polygon:
                 self.error(f'error (seat_polygon.get("kh:rowNumber", " ") returned NoneType) '
-                            f'{self.url} - {sector_id} - {seat}', console_print=False)
+                           f'{self.url} - {sector_id} - {seat}')
                 continue
 
             row = seat_polygon.get('kh:rowNumber', '')
@@ -1648,7 +1622,7 @@ class KassirParser(SeatsParser):
         return BeautifulSoup(r.text, 'lxml')
 
     def _get_data_from_js_script(
-        self, script_with_data: str
+            self, script_with_data: str
     ) -> Optional[Union[tuple[dict[str, str], dict[str, int]], None]]:
         str_js_code = script_with_data[script_with_data.index('(') + 1:-1]
 
@@ -1680,7 +1654,7 @@ class KassirParser(SeatsParser):
             else:
                 value_dict.append(elem)
         if len(key_dict) != len(value_dict):
-            self.bprint('--- error kassir sochi processing data is failed ---')
+            self.error('--- error kassir sochi processing data is failed ---')
             return None
         values_data = {key_dict[index]: value_dict[index] for index in range(len(key_dict))}
 
@@ -1750,50 +1724,116 @@ class KassirParser(SeatsParser):
                 sector_name = 'Бенуар'
         return sector_name, row
 
+    def load_all_info(self, to_api):
+        headers = {
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
+                      'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'accept-encoding': 'gzip, deflate, br',
+            'accept-language': 'ru,en;q=0.9',
+            'cache-control': 'no-cache',
+            'pragma': 'no-cache',
+            'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"',
+            'sec-fetch-dest': 'document',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'none',
+            'sec-fetch-user': '?1',
+            'upgrade-insecure-requests': '1',
+            'user-agent': self.user_agent
+        }
+        r = self.session.get(url=to_api, headers=headers)
+
+        sectors = r.json().get('orderKit')['sectors']
+        avalible_sectors = [(i.get('id'), i.get('name').split(',')[-1].strip().capitalize()) for i in sectors if
+                            not i.get('isDisabled')]
+
+        tarif_groups = r.json().get('orderKit')['tariffGroups']
+        tarif_prices = {i.get('id'): i.get('tariffs')[0].get('price') for i in tarif_groups}
+
+        return avalible_sectors, tarif_prices
+
+    def get_all_seats(self, avalible_sectors, tarif_prices):
+        dict_with_all_seats = {}
+        for sector in avalible_sectors:
+            dict_with_all_seats.setdefault(sector[1], {})
+            headers = {
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
+                          'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'accept-encoding': 'gzip, deflate, br',
+                'accept-language': 'ru,en;q=0.9',
+                'cache-control': 'no-cache',
+                'pragma': 'no-cache',
+                'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"',
+                'sec-fetch-dest': 'document',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-site': 'none',
+                'sec-fetch-user': '?1',
+                'upgrade-insecure-requests': '1',
+                'user-agent': self.user_agent
+            }
+            url_load_cheme = f'https://api.kassir.ru/api/orders/sectors/scheme/{self.event_id}/{sector[0]}?domain=sochi.kassir.ru'
+            r = self.session.get(url=url_load_cheme, headers=headers)
+            s = BeautifulSoup(r.text, 'lxml-xml')
+
+            polygon = [i for i in s.find_all('polygon') if 'kh:tariff-group-id' in i.attrs]
+            for i in polygon:
+                row = i.get('kh:rowNumber')
+                price = int(tarif_prices.get(int(i.get('kh:tariff-group-id'))))
+                place = i.find_next('text').text
+                place_to_write = {(row, place): price}
+                dict_with_all_seats.get(sector[1], {}).update(place_to_write)
+
+        return dict_with_all_seats
+
     def main_body(self):
         if 'sochi' in self.url:
-            soup = self._get_soup_from_sochi_url()
-
-            event_id = soup.select('link[rel="canonical"]')[0].get('href')
-            event_id = event_id.split('#')[-1]
-
-            all_scripts = soup.find('body').find_all('script')
-            for script in all_scripts:
-                if 'window.__NUXT__=' in script.text:
-                    script_with_data = script.text
-                    break
-            else:
-                self.bprint('--- error not found script with data for sear parser with "sochi" in url ---')
-                return
-
-            data_or_error = self._get_data_from_js_script(script_with_data)
-            if data_or_error is None:
-                return
-
-            all_sectors = {}
-            sectors_data, price_data = data_or_error
-            for sector_id, sector_name in sectors_data.items():
-                old_name = sector_name
-                tickets = {}
-                svg_sector = self._request_to_svg_sector(event_id, sector_id)
-                all_place = svg_sector.select('polygon[kh\:tariff-group-id]')
-                for place in all_place:
-                    place_row = place.get('kh:rowNumber')
-                    place_seat = place.get('kh:number')
-                    place_price_zone = place.get('kh:tariff-group-id')
-                    place_price = price_data[place_price_zone]
-                    sector_name, place_row = self._reformat_sochi(old_name, place_row)
-
-                    tickets[(place_row, place_seat)] = int(place_price)
-                try:
-                    old_tickets = all_sectors[sector_name]
-                    all_sectors[sector_name] = old_tickets | tickets
-                except KeyError:
-                    all_sectors[sector_name] = tickets
-
-            for sector_name, tickets in all_sectors.items():
+            self.event_id = self.url.split('#')[-1]
+            to_api = f'https://api.kassir.ru/api/event-page-kit/{self.event_id}?domain=sochi.kassir.ru'
+            avalible_sectors, tarif_prices = self.load_all_info(to_api)
+            all_seats = self.get_all_seats(avalible_sectors, tarif_prices)
+            for sector_name, tickets in all_seats.items():
                 self.register_sector(sector_name, tickets)
             return
+            # soup = self._get_soup_from_sochi_url()
+            #
+            # event_id = soup.select('link[rel="canonical"]')[0].get('href')
+            # event_id = event_id.split('#')[-1]
+            #
+            # all_scripts = soup.find('body').find_all('script')
+            # for script in all_scripts:
+            #     if 'window.__NUXT__=' in script.text:
+            #         script_with_data = script.text
+            #         break
+            # else:
+            #     return
+            #
+            # data_or_error = self._get_data_from_js_script(script_with_data)
+            # if data_or_error is None:
+            #     return
+            #
+            # all_sectors = {}
+            # sectors_data, price_data = data_or_error
+            # for sector_id, sector_name in sectors_data.items():
+            #     old_name = sector_name
+            #     tickets = {}
+            #     svg_sector = self._request_to_svg_sector(event_id, sector_id)
+            #     all_place = svg_sector.select('polygon[kh\:tariff-group-id]')
+            #     for place in all_place:
+            #         place_row = place.get('kh:rowNumber')
+            #         place_seat = place.get('kh:number')
+            #         place_price_zone = place.get('kh:tariff-group-id')
+            #         place_price = price_data[place_price_zone]
+            #         sector_name, place_row = self._reformat_sochi(old_name, place_row)
+            #
+            #         tickets[(place_row, place_seat)] = int(place_price)
+            #     try:
+            #         old_tickets = all_sectors[sector_name]
+            #         all_sectors[sector_name] = old_tickets | tickets
+            #     except KeyError:
+            #         all_sectors[sector_name] = tickets
         event_id, sectors_partial_info, place_name = self.get_event_data()
 
         secs_with_plus = []
@@ -1806,25 +1846,21 @@ class KassirParser(SeatsParser):
 
             if 'sell_entirely' in sector_part_info:
                 if sector_part_info['sell_entirely']:  # Продаются целиком
-                    # print(sector_id, sector_part_info['name'], self.url)
                     secs_sold_entirely.append(sector_part_info)
                     continue
 
-            if sector_part_info['unlimited']:
-                continue
-                """ Фанзона, Танцевальный партер """
-                soup_dance_floor_sector = self.get_soup_dance_floor_sector(sector_id, event_id)
-                price = int(soup_dance_floor_sector.select('input[name*="[price]"]')[0].get('value'))
-                amount = int(soup_dance_floor_sector.select('input[name*="[count]"]')[0].get('value'))
-                self.register_dancefloor(sector_name, price, amount)
+            # if sector_part_info['unlimited']:
+            #     """ Фанзона, Танцевальный партер """
+            #     soup_dance_floor_sector = self.get_soup_dance_floor_sector(sector_id, event_id)
+            #     price = int(soup_dance_floor_sector.select('input[name*="[price]"]')[0].get('value'))
+            #     amount = int(soup_dance_floor_sector.select('input[name*="[count]"]')[0].get('value'))
+            #     self.register_dancefloor(sector_name, price, amount)
 
-            # if sector_part_info['unlimited']:  # С плюсом
-            #     # print(sector_id, sector_part_info['name'], self.url)
-            #     secs_with_plus.append(sector_part_info)
-            #     continue
+            if sector_part_info['unlimited']:  # С плюсом
+                secs_with_plus.append(sector_part_info)
+                continue
 
             if 'персон' in sector_part_info['name']:  # Схема с одним местом
-                # print('----', sector_id, sector_part_info['name'], self.url)
                 secs_with_one_place.append(sector_part_info)
                 pass
 
@@ -1845,7 +1881,7 @@ class KassirParser(SeatsParser):
 
                 seats = self.get_seats_info(sector_id, event_id, seats)
             except Exception as e:
-                self.bprint(f'error parsing seats on kassir ({e}): {sector_name = }, {self.url = }')
+                self.error(f'error parsing seats on kassir ({e}): {sector_name = }, {self.url = }')
                 seats = {}
 
             for ticket in seats:
@@ -1881,12 +1917,261 @@ class KassirParser(SeatsParser):
         for sector in a_sectors:
             self.register_sector(sector['name'], sector['tickets'])
 
-    def body(self):
+    @staticmethod
+    def reformat_zimnii_sochi(a_sectors):
+        new_a_sector = {}
+        for sector, tickets in a_sectors.items():
+            if re.search(r'бенуар', sector, re.IGNORECASE):
+                reformat_row = re.search(r'\d+', sector)
+                if reformat_row:
+                    new_row = reformat_row.group(0)
+                new_tickets = {(new_row,row_place[1]):price for row_place, price in tickets.items()}
+                new_a_sector.setdefault('Бенуар', {}).update(new_tickets)
+            elif re.search(r'бельэтаж', sector, re.IGNORECASE):
+                reformat_row = re.search(r'\d+', sector)
+                if reformat_row:
+                    new_row = reformat_row.group(0)
+                new_tickets = {(new_row,row_place[1]):price for row_place, price in tickets.items()}
+                new_a_sector.setdefault('Бельэтаж', {}).update(new_tickets)
+            else:
+                new_a_sector.setdefault(sector, {}).update(tickets)
+        return new_a_sector
+    
+    @staticmethod
+    def reformat_g_drive(a_sectrors):
+        res_sectors = {}
+        for sector, tickets in a_sectrors.items():
+            if re.search(r'^\d+$', sector): #103
+                sector = f'Сектор {sector}'
+            res_sectors.setdefault(sector, {}).update(tickets)
+        return res_sectors
+            
+
+    def new_reformat(self, a_sectors, venue):
+        reformat_box = {
+            'Кремлёвский дворец': {
+                'Сектор VIP - A': 'VIP A',
+                'Сектор VIP - B': 'VIP B',
+                'Сектор VIP - C': 'VIP C',
+                'Амфитеатр-середина': 'Амфитеатр, середина',
+                'Амфитеатр середина': 'Амфитеатр, середина',
+                'Амфитеатр левая сторона': 'Амфитеатр, левая сторона',
+                'Амфитеатр правая сторона': 'Амфитеатр, правая сторона',
+                'Балкон-середина': 'Балкон, середина',
+                'Балкон середина': 'Балкон, середина',
+                'Балкон левая сторона': 'Балкон, левая сторона',
+                'Балкон правая сторона': 'Балкон, правая сторона',
+                'Балкон левая сторона откидные места': 'Балкон, левая сторона (откидные)',
+                'Балкон лев.ст. откидное': 'Балкон, левая сторона (откидные)',
+                'Балкон прав.ст. откидное': 'Балкон, правая сторона (откидные)',
+                'Балкон правая сторона откидные места': 'Балкон, правая сторона (откидные)',
+                'Ложа балкона правая сторона': 'Ложа балкона, правая сторона',
+                'Ложа балкона правая': 'Ложа балкона, правая сторона',
+                'Ложа балкона левая': 'Ложа балкона, левая сторона',
+                'Ложа балкона левая сторона': 'Ложа балкона, левая сторона',
+                'Партер середина': 'Партер, середина',
+                'Партер правая сторона': 'Партер, правая сторона',
+                'Партер левая сторона': 'Партер, левая сторона',
+                'Малый зал ГКД': 'Партер',
+            },
+            'Театр «Современник»': {
+                'Партер A': 'Сектор A',
+                'Партер B': 'Сектор B',
+                'Партер C': 'Сектор C',
+                'Ложа бельэтажа правая': 'Правая ложа бельэтажа',
+                'Ложа бельэтажа левая': 'Левая ложа бельэтажа',
+            },
+            'Театр Сатиры': {
+                'Партер правая сторона': 'Партер',
+                'Партер левая сторона': 'Партер',
+                'Амфитеатр правая сторона': 'Амфитеатр',
+                'Амфитеатр левая сторона': 'Амфитеатр',
+                'Правая Ложа': 'Ложа',
+                'Правая ложа': 'Ложа',
+                'Левая ложа': 'Ложа',
+                'Левая Ложа': 'Ложа',
+            },
+            'Казанский цирк':{
+                'Сектор П5, правая сторона': 'Правая сторона. Сектор 5',
+                'Сектор П4, правая сторона': 'Правая сторона. Сектор 4',
+                'Сектор П3, правая сторона': 'Правая сторона. Сектор 3',
+                'Сектор П2, правая сторона': 'Правая сторона. Сектор 2',
+                'Сектор П1, правая сторона': 'Правая сторона. Сектор 1',
+                'Сектор Л5, левая сторона': 'Левая сторона. Сектор 5',
+                'Сектор Л4, левая сторона': 'Левая сторона. Сектор 4',
+                'Сектор Л3, левая сторона': 'Левая сторона. Сектор 3',
+                'Сектор Л2, левая сторона': 'Левая сторона. Сектор 2',
+                'Сектор Л1, левая сторона': 'Левая сторона. Сектор 1',
+                'VIP': 'VIP'
+            },
+            'Театр Маяковского': {
+                'Партер левая сторона': 'Партер',
+                'Партер правая сторона': 'Партер',
+                'Бельэтаж правая сторона': 'Бельэтаж, правая сторона',
+                'Бельэтаж середина': 'Бельэтаж, середина',
+                'Бельэтаж середина неудобные места':'Бельэтаж, середина',
+                'Бельэтаж левая сторона': 'Бельэтаж, левая сторона',
+                'Бенуар Ложа №1': 'Ложи бенуара',
+                'Бенуар Ложа №2': 'Ложи бенуара',
+                'Бенуар Ложа №3': 'Ложи бенуара',
+                'Бенуар Ложа №4': 'Ложи бенуара',
+                'Бенуар Ложа №5': 'Ложи бенуара',
+                'Бенуар Ложа №6': 'Ложи бенуара',
+                'Бенуар Ложа №7': 'Ложи бенуара',
+                'Бенуар Ложа №8': 'Ложи бенуара',
+                'Бенуар Ложа №9': 'Ложи бенуара',
+                'Бенуар Ложа №10': 'Ложи бенуара',
+                'Бенуар Ложа №11': 'Ложи бенуара',
+                'Бенуар Ложа №12': 'Ложи бенуара',
+                'Балкон 1 яруса лев. ст.': 'Балкон 1 го яруса, левая сторона',
+                'Балкон 1 яруса середина': 'Балкон 1 го яруса, середина',
+                'Балкон 1 яруса пр. ст.': 'Балкон 1 го яруса, правая сторона',
+                'Балкон 2 яруса пр. ст.': 'Балкон 2 го яруса, правая сторона',
+                'Балкон 2 яруса лев. ст.': 'Балкон 2 го яруса, левая сторона',
+                'Балкон 2 яруса середина': 'Балкон 2 го яруса, середина',
+                'Балкон 2 яруса середина неудобные': 'Балкон 2 го яруса, середина',
+                'Балкон 1 яруса лев. ст. неудобные': 'Балкон 1 го яруса, левая сторона',
+                'Балкон 1 яруса пр. ст. неудобные': 'Балкон 1 го яруса, правая сторона',
+                'Бельэтаж правая сторона неудобные': 'Бельэтаж, правая сторона',
+                'Бельэтаж левая сторона неудобные': 'Бельэтаж, левая сторона',
+                'Бельэтаж середина неудобные места': 'Бельэтаж, середина',
+                'Амфитеатр неудобные места': 'Амфитеатр',
+                'Бенуар Ложа №5 неудобные места': 'Ложи бенуара',
+                'Бенуар Ложа №6 неудобные места': 'Ложи бенуара',
+                'Бенуар Ложа №7 неудобные места': 'Ложи бенуара',
+                'Бенуар Ложа №8 неудобные места': 'Ложи бенуара',
+                'Партер середина': 'Партер',
+            }
+        }
+        name = reformat_box.get(venue)
+        if name:
+            a_sectors_new = {}
+            for sector, tickets in a_sectors.items():
+                if name.get(sector):
+                    a_sectors_new.setdefault(name.get(sector), {}).update(tickets)
+                else:
+                    a_sectors_new.setdefault(sector, {}).update(tickets)
+
+            return a_sectors_new 
+        else: 
+            return a_sectors
+
+    def new_get_sectors(self, url):
+        self.new_headers = {
+            "accept": "*/*",
+            'accept-encoding': 'gzip, deflate, br',
+            'accept-language': 'ru,en;q=0.9',
+            'Connection': 'keep-alive',
+            'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-site',
+            "Referer": f"https://{self.domain}/",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            'user-agent': self.user_agent
+        }
+        response = self.session.get(url, headers=self.new_headers)
+
+        count = 10
+        while (not response.ok or response.text == '[]') and count > 0 :
+            self.debug(url)
+            self.debug(response.text)
+            self.warning(f'{count} {self.proxy.args}, {url}, {self.session.cookies} this IP is block')
+            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.session = ProxySession(self)
+            sleep(5)
+            response = self.session.get(url, headers=self.new_headers)
+            count -= 1
+
+        # with open('TEST2.json', 'w', encoding='utf-8') as file:
+        #     json.dump(response.json(), file, indent=4, ensure_ascii=False) 
+
+        sectors = response.json().get('orderKit').get('sectors')
+        avalible_sectors = [(i.get('id'),i.get('name')) for i in sectors if not i.get('isDisabled')
+                            and i.get("saleMode")!="ALL_SEATS_ONLY"] 
+        tarif_groups = response.json().get('orderKit').get('tariffGroups')
+        tarif_prices = {i.get('id'):i.get('tariffs')[0].get('price') for i in tarif_groups}
+
+        #venue name
         try:
-            self.main_body()
-            self.count_error = 0
-        except Exception as error:
-            if self.count_error == 10:
-                raise Exception(error)
-            self.count_error += 1
-            raise ProxyError(error)
+            new_venue = response.json().get("event")
+            self.new_venue = new_venue.get('venueName').strip()
+        except Exception:
+            self.new_venue = ''
+
+        res = {}
+        for sector in avalible_sectors:
+            res.setdefault(sector[1], {})
+            url_load_cheme = f'https://api.kassir.ru/api/orders/sectors/scheme/{self.id}/{sector[0]}?domain={self.domain}'
+            r = self.session.get(url=url_load_cheme, headers=self.new_headers)
+            s = BeautifulSoup(r.text, 'lxml-xml')
+
+            polygon =  [i for i in s.find_all('polygon') if 'kh:tariff-group-id' in i.attrs]
+            for i in polygon:
+                row = i.get('kh:rowNumber')
+                price = int(tarif_prices.get(int(i.get('kh:tariff-group-id'))))
+                place = i.find_next('text').text
+                place_to_write = {(row,str(place)):price}
+                res.get(sector[1],{}).update(place_to_write)
+
+        return res
+    
+
+    def body(self):
+        list_to_reformat = ['Кремлёвский дворец', 'Театр «Современник»',
+                            'Театр Сатиры', 'Казанский цирк', 'Театр Маяковского'] #venue will need to reformat 
+        
+        if 'widget.kassir.ru' in self.url:
+            self.id = self.url.split('=')[-1].strip()
+            self.domain = re.search(r'(?<=domain\=)[\w\.]+(?=&)', self.url)[0].strip()
+            self.url_all_events = self.url
+            KEY = re.search(r'(?<=key\=)[\w\-]+', self.url)[0].strip()
+            url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?widgetKey={KEY}&domain={self.domain}'
+        else:
+            url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?domain={self.domain}'
+
+        try:
+            self.session.get(url=self.url_all_events, headers=self.headers)
+        except Exception as ex:
+            self.error(f'Cannot load {self.url_all_events} {ex}')
+        else:
+            self.debug(f'{self.url_all_events} load succes', color=utils.Fore.GREEN)
+
+        a_sectors = self.new_get_sectors(url)
+        
+        if self.venue in list_to_reformat:
+            a_sectors = self.new_reformat(a_sectors, self.venue)
+        elif self.venue == 'Зимний театр':
+            a_sectors = self.reformat_zimnii_sochi(a_sectors)
+        elif (('втб арена' in self.venue.lower() 
+                and 'динамо' not in self.name.lower() 
+                and 'малая арена' in self.new_venue.lower()) 
+                                or
+                         ('втб арена' in self.venue.lower() 
+                          and 'widget' in self.url and 'динамо' not in self.name.lower())):
+            #ВТБ Арена – Центральный стадион «Динамо» (Малая арена)
+            a_sectors = self.reformat_vtb_arena(a_sectors)
+        elif (('втб арена' in self.venue.lower()
+               and 'динамо' in self.name.lower() 
+               and 'малая арена' in self.new_venue.lower())
+                                 or 
+                    ('втб арена' in self.venue.lower() 
+                     and 'widget' in self.url and 'динамо' in self.name.lower() )):
+            #ВТБ Арена – Центральный стадион «Динамо» (Малая арена)
+            #  Cектора переименованы под хоккей ['Трибуна Давыдова. Сектор B312', ..]
+            a_sectors = self.reformat_vtb_for_dynamo(a_sectors)
+        elif 'втб арена' in self.venue.lower()  and 'малая арена' not in self.new_venue.lower():
+            #ВТБ Арена – Центральный стадион «Динамо» -> футбольная арена
+            a_sectors = self.reformat_vtb_arena_fotball(a_sectors)
+        elif self.venue == 'Дворец Спорта «Мегаспорт»':
+            a_sectors = self.reformat_megasport(a_sectors)
+        elif self.venue == 'G-Drive Арена':
+            a_sectors = self.reformat_g_drive(a_sectors)
+
+        
+
+        for sector, tickets in a_sectors.items():
+            self.register_sector(sector.strip(), tickets)
+        #self.check_sectors()

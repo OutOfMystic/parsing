@@ -39,6 +39,7 @@ class BarvikhaConcertHall(SeatsParser):
             'Vip Ложа 2': 'VIP-ложа №2',
             'Vip Ложа 1': 'VIP-ложа №1',
             'Super VIP ложа': 'Super VIP-ложа',
+            'VIP ЛОЖА': 'Супер VIP ложа',
             'Правительственная ложа 2 (столы)': 'Правительственная ложа 2',
             'Правительственная ложа 1 (столы)': 'Правительственная ложа 1',
             'Директорская ложа 2 (столы)': 'Директорская ложа 2',
@@ -63,6 +64,7 @@ class BarvikhaConcertHall(SeatsParser):
             'Vip Ложа 2': 'Левая сторона',
             'Vip Ложа 1': 'Левая сторона',
             'Super VIP ложа': 'VIP ложа',
+            'VIP ЛОЖА': 'VIP ложа',
             'Правительственная ложа № 2': 'Правительственная ложа',
             'Правительственная ложа № 1': 'Правительственная ложа',
             'Директорская ложа 2': 'Директорская ложа',
@@ -70,13 +72,86 @@ class BarvikhaConcertHall(SeatsParser):
             'ПАРТЕР': 'Партер',
         }
 
-        ref_dict = {}
-        if 'https://barvikha-concert-hall-data.storage.yandexcloud.net/media/schemes/63972601ca8b3156393981.svg' in self.svg_width_scene:
+        scheme_width_112_table = {
+            'Ложа Бенуара № 2 ПС': 'Ложа бенуара 2, правая сторона',
+            'Ложа Бенуара № 1 ПС': 'Ложа бенуара 1, правая сторона',
+            'Ложа Бенуара № 2 ЛС': 'Ложа бенуара 2, левая сторона',
+            'Ложа Бенуара № 1 ЛС': 'Ложа бенуара 1, левая сторона',
+            'Ложа Бенуара 2 ЛС (столы)': 'Ложа бенуара 2, левая сторон',
+            'Ложа Бенуара 1 ЛС (столы)': 'Ложа бенуара 1, левая сторона',
+            'Ложа Бенуара 2 ПС (столы)': 'Ложа бенуара 2, правая сторона',
+            'Ложа Бенуара 1 ПС (столы)': 'Ложа бенуара 1, правая сторона',
+            'Vip Ложа №12': 'VIP ложа 12',
+            'Vip Ложа №11': 'VIP ложа 11',
+            'Vip Ложа №10': 'VIP ложа 10',
+            'Vip Ложа №9': 'VIP ложа 9',
+            'Vip Ложа №8': 'VIP ложа 8',
+            'Vip Ложа №7': 'VIP ложа 7',
+            'Vip Ложа №6': 'VIP ложа 6',
+            'Vip Ложа №5': 'VIP ложа 5',
+            'Vip Ложа №4': 'VIP ложа 4',
+            'Vip Ложа №3': 'VIP ложа 3',
+            'Vip Ложа №2': 'VIP ложа 2',
+            'Vip Ложа №1': 'VIP ложа 1',
+            'VIP ЛОЖА': 'Супер VIP ложа',
+            'Правительственная ложа 2 (столы)': 'Правительственная ложа 2',
+            'Правительственная ложа 1 (столы)': 'Правительственная ложа 1',
+            'Директорская ложа 2 (столы)': 'Директорская ложа 2',
+            'Директорская ложа 1 (столы)': 'Директорская ложа 1',
+            'ПАРТЕР (столы)': 'Партер столы',
+        }
+
+        scheme_width_91_table_8table_in_row = {
+            'Ложа Бенуара № 2 ПС': 'Ложа бенуара 2, правая сторона',
+            'Ложа Бенуара № 1 ПС': 'Ложа бенуара 1, правая сторона',
+            'Ложа Бенуара № 2 ЛС': 'Ложа бенуара 2, левая сторона',
+            'Ложа Бенуара № 1 ЛС': 'Ложа бенуара 1, левая сторона',
+            'Ложа Бенуара 2 ЛС (столы)': 'Ложа бенуара 2, левая сторон',
+            'Ложа Бенуара 1 ЛС (столы)': 'Ложа бенуара 1, левая сторона',
+            'Ложа Бенуара 2 ПС (столы)': 'Ложа бенуара 2, правая сторона',
+            'Ложа Бенуара 1 ПС (столы)': 'Ложа бенуара 1, правая сторона',
+            'Vip Ложа 12': 'VIP-ложа №12',
+            'Vip Ложа 11': 'VIP-ложа №11',
+            'Vip Ложа 10': 'VIP-ложа №10',
+            'Vip Ложа 9': 'VIP-ложа №9',
+            'Vip Ложа 8': 'VIP-ложа №8',
+            'Vip Ложа 7': 'VIP-ложа №7',
+            'Vip Ложа 6': 'VIP-ложа №6',
+            'Vip Ложа 5': 'VIP-ложа №5',
+            'Vip Ложа 4': 'VIP-ложа №4',
+            'Vip Ложа 3': 'VIP-ложа №3',
+            'Vip Ложа 2': 'VIP-ложа №2',
+            'Vip Ложа 1': 'VIP-ложа №1',
+            'VIP ЛОЖА': 'Super VIP-ложа',
+            'Правительственная ложа 2 (столы)': 'Правительственная ложа 2',
+            'Правительственная ложа 1 (столы)': 'Правительственная ложа 1',
+            'Директорская ложа 2 (столы)': 'Директорская ложа 2',
+            'Директорская ложа 1 (столы)': 'Директорская ложа 1',
+            'ПАРТЕР (столы)': 'Столы',
+        }
+
+        ref_dict = scheme_width_59_table
+        if '63972601ca8b3156393981.svg' in self.svg_width_scene:
             ref_dict = scheme_width_59_table
-        elif 'https://barvikha-concert-hall-data.storage.yandexcloud.net/media/schemes/60a3c47765f7f268580790.svg' in self.svg_width_scene:
+        elif ('60a3c47765f7f268580790.svg' in self.svg_width_scene or
+              '60a3c47765f7f268580790.svg' in self.svg_width_scene):
             ref_dict = scheme_without_table
-        elif 'https://barvikha-concert-hall-data.storage.yandexcloud.net/media/schemes/61519c4b27146906666725.svg' in self.svg_width_scene:
+        elif '61519c4b27146906666725.svg' in self.svg_width_scene:
             ref_dict = scheme_width_59_table
+        elif '5fb3a3e778fc7478762967' in self.svg_width_scene:
+            ref_dict = scheme_width_91_table_8table_in_row
+        elif ('6543e79ddd645518651977.svg' in self.svg_width_scene or
+              '64ec7d6b276c4254026456.svg' in self.svg_width_scene or 
+              '654e1c8a9c5d8241852356.svg' in self.svg_width_scene or
+              '655c8c67337c0493794593.svg' in self.svg_width_scene ):
+            ref_dict = scheme_width_59_table
+        elif ('655f466a54b6c198617702.svg' in self.svg_width_scene or
+              '655f466a54b6c198617702.svg' in self.svg_width_scene  or 
+              '6570705d1564f798193247.svg' in self.svg_width_scene ):
+            ref_dict = scheme_width_112_table
+        elif '653a27c848451187877444' in self.svg_width_scene:
+            ref_dict = scheme_width_59_table
+            ref_dict['VIP ЛОЖА'] = 'Super VIP-ложа'
 
         for sector in a_sectors:
             sector['name'] = ref_dict.get(sector['name'], sector['name'])

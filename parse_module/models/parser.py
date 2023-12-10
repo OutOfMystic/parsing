@@ -134,7 +134,7 @@ class SeatsParser(ParserBase, ABC):
                  url, date, venue, signature, scheme,
                  priority, parent, **extra):
         super().__init__(controller)
-        self.db_event_id = event_id
+        self.event_id = event_id
         self.event_name = event_name
         self.url = url
         self.date = date

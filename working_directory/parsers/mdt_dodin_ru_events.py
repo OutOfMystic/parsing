@@ -68,8 +68,13 @@ class MdtDodin(EventParser):
         time = event.find('div', class_='time').text
         normal_date = f'{day} {month} {year} {time}'
 
-        href = event.select('li.performance-afisha__buy a')[0].get('href')
+        href = event.select('li.performance-afisha__buy a')
+        if len(href) == 0:
+            return None
+        href = href[0].get('href')
         id_event = href.split('/')[-1]
+        if not id_event.isnumeric():
+            return None
         href = f'https://mdt-dodin.ru/buy-tickets/0/#/event/{id_event}'
 
         return OutputEvent(title=title, href=href, date=normal_date, id_event=id_event)

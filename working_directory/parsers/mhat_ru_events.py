@@ -34,7 +34,6 @@ class Parser(EventParser):
             'user-agent': self.user_agent
         }
         r = self.session.get(self.url + month_params, headers=headers, verify=False)
-
         return r.text
 
     def get_months_params(self, months_container):
@@ -44,9 +43,12 @@ class Parser(EventParser):
 
     def get_events(self, events_container, month, year):
         a_events = []
-        prof_events_info = double_split(str(events_container),
-                                        '<script type="text/javascript">(function() { var init = function()',
-                                        '</script>')
+        try:
+            prof_events_info = double_split(str(events_container),
+                                            '<script type="text/javascript">(function() { var init = function()',
+                                            '</script>')
+        except IndexError:
+            return a_events
 
         day = '0'
         for event in events_container.find_all('div', class_='event'):
@@ -100,5 +102,5 @@ class Parser(EventParser):
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2], scene=event[3],
-                                company_id=event[4], event_id=event[5], show_id=event[6])
+                                company_id=event[4], event_id=event[5], show_id=event[6], venue='МХТ имени Чехова')
 

@@ -169,6 +169,13 @@ class Luzhniki(SeatsParser):
             self.register_sector(sector['name'], sector['tickets'])
 
     def body(self):
+        skip_url = [
+            'https://msk.kassir.ru/koncert/ok-lujniki/leningrad_2023-09-16',
+            'https://msk.kassir.ru/frame/entry/index?key=55be3cc8-8788-f514-a5c0-a4e3cb622598&type=E&id=1982322',
+            'https://msk.kassir.ru/frame/entry/index?key=55be3cc8-8788-f514-a5c0-a4e3cb622598&type=E&id=1739738',
+        ]
+        if self.url in skip_url:
+            return
         try:
             self.main_body()
             self.count_error = 0

@@ -22,6 +22,9 @@ class Lenkom(EventParser):
         a_event = []
 
         for event in data:
+            free_place = int(event.get('count'))
+            if free_place <= 0:
+                continue
             title = event.get('name')
 
             date_and_time = event.get('date')
@@ -31,10 +34,10 @@ class Lenkom(EventParser):
 
             normal_date = day + ' ' + month_list[int(month)] + ' ' + year + ' ' + time
 
-            data_to_parser_seat = event.get('id')
-            href = f'https://tickets.afisha.ru/wl/54/api/events/info?lang=ru&{data_to_parser_seat}'
+            event_id = event.get('id')
+            href = f'https://tickets.afisha.ru/wl/54/api/events/info?lang=ru'
 
-            a_event.append([title, href, normal_date])
+            a_event.append([title, href, normal_date, event_id])
 
         return a_event
 
@@ -61,7 +64,7 @@ class Lenkom(EventParser):
             return r.json()
         except json.JSONDecodeError as e:
             if self.count_request == 10:
-                raise json.JSONDecodeError(f'Возникла ошибка {e}')
+                raise Exception(f'Возникла ошибка {e}')
             self.count_request += 1
             return self.request_parser()
 
@@ -76,4 +79,4 @@ class Lenkom(EventParser):
         a_events = self.get_events()
 
         for event in a_events:
-            self.register_event(event[0], event[1], date=event[2])
+            self.register_event(event[0], event[1], date=event[2], event_id=event[3])

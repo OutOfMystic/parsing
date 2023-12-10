@@ -1,29 +1,29 @@
+import json
 import secrets
 import string
-from bs4 import BeautifulSoup
+import requests
+from bs4 import BeautifulSoup, PageElement
+from loguru import logger
 
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
 from parse_module.manager.proxy.instances import ProxySession
+import re
 
 
 class Parser(EventParser):
-    proxy_check_url = 'https://www.tickets-star.com/'
 
     def __init__(self, controller):
         super().__init__(controller)
         self.delay = 3600
         self.driver_source = None
         self.our_urls = {
-            'https://www.tickets-star.com/cat/176/CategoryId/2/': '*',
-            'https://www.tickets-star.com/cirk/': '*',
-            # 'https://www.tickets-star.com/cat/229/StageId/63/': '*',  # Цирк вернадского
-            'https://www.tickets-star.com/cat/229/StageId/55/': '*',  # Цирк на цветном
-            'https://www.tickets-star.com/cat/229/PlaceId/338/': '*',  # ЦСКА АРЕНА
-            'https://www.tickets-star.com/cat/229/StageId/205397/': '*',  # Арена 2000 (Локомотив)
-            'https://www.tickets-star.com/megasport/': '*',
-            'https://www.tickets-star.com/crocus/': '*',
-            'https://www.tickets-star.com/mht-chekhova/': '*'
+            'https://www.tickets-star.com/cat/176/CategoryId/2/': '*', #theatre_all
+            #'https://www.tickets-star.com/cirk/': '*',
+            'https://www.tickets-star.com/cat/229/StageId/63/': '*',  # Цирк вернадского
+            'https://www.tickets-star.com/cirk-na-cvetnom/': '*', # Никулина цирк на цветном
+            #'https://www.tickets-star.com/cat/229/StageId/55/': '*',  # Цирк на цветном
+            'https://www.tickets-star.com/cat/229/PlaceId/36/': '*', #armii teatr
         }
 
     def before_body(self):
@@ -130,10 +130,7 @@ class Parser(EventParser):
         if len(day) == 1:
             day = '0' + day
 
-        if 'мая' in month:
-            month = 'Май'
-        else:
-            month = month[:3].capitalize()
+        month = month[:3].capitalize()
 
         date_f = f'{day} {month} {y} {t}'
         return date_f
@@ -182,5 +179,44 @@ class Parser(EventParser):
 
         a_events = list(set(a_events))
 
+        skip_events = [
+            'https://www.tickets-star.com/cat/245/EventId/242282923/',
+            'https://www.tickets-star.com/cat/245/EventId/243579549/',
+            'https://www.tickets-star.com/cat/245/EventId/243579548/',
+            'https://www.tickets-star.com/cat/245/EventId/242282923/',
+            'https://www.tickets-star.com/cat/245/EventId/243579547/',
+            'https://www.tickets-star.com/cat/245/EventId/240344845/',
+            'https://www.tickets-star.com/cat/245/EventId/245265248/',
+            'https://www.tickets-star.com/cat/245/EventId/245265253/',
+            'https://www.tickets-star.com/cat/245/EventId/245265259/',
+            'https://www.tickets-star.com/cat/245/EventId/245265264/',
+            'https://www.tickets-star.com/cat/245/EventId/245363653/',
+            'https://www.tickets-star.com/cat/245/EventId/240344845/',
+            'https://www.tickets-star.com/cat/245/EventId/240344847/',
+            'https://www.tickets-star.com/cat/245/EventId/240344849/',
+            'https://www.tickets-star.com/cat/245/EventId/240344850/',
+            'https://www.tickets-star.com/cat/245/EventId/249417912/',
+            'https://www.tickets-star.com/cat/245/EventId/249417909/',
+            'https://www.tickets-star.com/cat/245/EventId/249417911/',
+            'https://www.tickets-star.com/cat/245/EventId/249417910/',
+        ]
+
         for event in a_events:
+            if event[1] in skip_events:
+                continue
+            # if 'Цирк на Вернадского' in event[3]: #Вернадский цирк отсеиваем
+            #     if  any([i in event[2] for i in [ 
+            #         '09 Дек 2023 14:30', '08 Дек',
+            #         '16 Дек 2023 10:00', '16 Дек 2023 13:00', '16 Дек 2023 16:00', '16 Дек 2023 19:00',
+            #         '17 Дек 2023 10:00', '17 Дек 2023 13:00', '17 Дек 2023 16:00', '17 Дек 2023 19:00',
+            #             '02 Янв 2024 10:00', '02 Янв 2024 13:00', '02 Янв 2024 16:00', '02 Янв 2024 19:00',
+            #             '03 Янв 2024 10:00', '03 Янв 2024 13:00', '03 Янв 2024 16:00', '03 Янв 2024 19:00',
+            #     ]]):
+            #         continue
+            # elif 'Цирк на Цветном бульваре' in event[4]:
+            #     if any([i in event[2] for i in [ 
+            #             '09 Дек 2023 19:00', 
+            #             '13 Янв 2024 14:30', '13 Янв 2024 18:00', '20 Янв', '21 Янв'
+            #             ]]):
+            #         continue
             self.register_event(event[0], event[1], date=event[2], scene=event[3], venue=event[4])

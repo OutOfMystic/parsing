@@ -1,18 +1,25 @@
+import json
+from time import sleep
+
 from bs4 import BeautifulSoup
+from telebot import TeleBot
 
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
+from parse_module.utils import utils
 
 
 class TNA(EventParser):
     def __init__(self, controller):
         super().__init__(controller)
-        self.delay = 3600
+        self.delay = 3200
         self.driver_source = None
         self.urls = [
             'https://tna-tickets.ru/sport/akbars/',
             'https://tna-tickets.ru/',
         ]
+        self.BOT_TOKEN = '6002068146:AAHx8JmyW3QhhFK5hhdFIvTXs3XFlsWNraw'
+        self.telegram_bot = TeleBot(self.BOT_TOKEN)
 
     def before_body(self):
         self.session = ProxySession(self)
@@ -110,9 +117,33 @@ class TNA(EventParser):
 
         return a_events
 
+    def check_new_events(self, a_events):
+        events_new = { f"{i[0]} {i[2]}": i[1] for i in a_events}
+        chat_id = '-1001823568418'
+        flag = 0
+
+        with open('files/events/akbars_events.json', 'r', encoding='utf-8') as file:
+            events_old = json.load(file)
+            for name, url in events_new.items():
+                if name not in events_old:
+                    flag = 1
+                    message = f'New event \n{name}\n {url}'
+                    self.telegram_bot.send_message(chat_id, message, parse_mode='HTML')
+        if flag:
+            with open('files/events/akbars_events.json', 'w',encoding='utf-8') as file2:
+                json.dump(events_new, file2, indent=4, ensure_ascii=False)
+        
+
     def body(self):
         for url in self.urls:
             a_events = self.get_events(url)
+            
+            if url == 'https://tna-tickets.ru/sport/akbars/':
+                try:
+                    self.check_new_events(a_events)
+                except Exception as ex:
+                    self.error(ex, 'Exception in tickets_tna_ru_events, problems with TG bot')
+                    
 
             for event in a_events:
                 self.register_event(event[0], event[1], date=event[2])

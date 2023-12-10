@@ -5,7 +5,7 @@ from parse_module.manager.controller import Controller
 from parse_module.connection import db_manager
 from parse_module.manager.proxy.loader import parse_domain
 
-DEBUG = True
+DEBUG = False
 DEBUG_DATA = 20207
 
 """print(parse_domain('https://msk.kassir.ru/'))"""

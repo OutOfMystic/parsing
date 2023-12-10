@@ -13,6 +13,7 @@ class OutputEvent(NamedTuple):
     href: str
     date: str
     event_id: str
+    venue: str
 
 
 class HelikonRu(EventParser):
@@ -38,7 +39,9 @@ class HelikonRu(EventParser):
     def _filters_events(self, all_events: list[OutputEvent]) -> OutputEvent:
         all_events_id = [event.href.split('/')[-1] for event in all_events]
         data_about_all_event_id = self._requests_to_data_about_all_event_id(all_events_id)
-        sold_out = [str(event['id']) for event in data_about_all_event_id.values() if event['salesAvailable'] is False]
+        sold_out = [str(event['id']) 
+                        for event in data_about_all_event_id .values() 
+                                if event and event['salesAvailable'] is False]
         for event in all_events:
             if event.event_id not in sold_out:
                 yield event
@@ -72,7 +75,8 @@ class HelikonRu(EventParser):
         event_id = href_and_event_id[0].get('data-hwm-event-id')
         href = href_and_event_id[0].get('href')
 
-        return OutputEvent(title=title, href=href, date=normal_date, event_id=event_id)
+        return OutputEvent(title=title, href=href, date=normal_date,
+                            event_id=event_id, venue='Геликон-опера')
 
     def _get_events_from_soup(self, soup: BeautifulSoup) -> ResultSet[Tag]:
         events = soup.select('table.sticky-enabled tbody tr')
@@ -128,4 +132,5 @@ class HelikonRu(EventParser):
 
     def body(self) -> None:
         for event in self._parse_events():
-            self.register_event(event.title, event.href, date=event.date)
+            self.register_event(event.title, event.href,
+                                 date=event.date, venue=event.venue)

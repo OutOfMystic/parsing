@@ -44,6 +44,14 @@ class Redkassa(SeatsParser):
                 ref_dict = luzhniki
             else:
                 ref_dict = vtb_arena
+        if 'Сочи Парк Арена' in self.venue:
+            ref_dict = {
+                'VIP СЕКТОР A (с ограниченной видимостью)': 'VIP-сектор A (ограниченная видимость)',
+                'VIP СЕКТОР C (с ограниченной видимостью)': 'VIP-сектор C (ограниченная видимость)',
+                'VIP СЕКТОР C': 'VIP-сектор C',
+                'VIP СЕКТОР A': 'VIP-сектор A',
+                'VIP СЕКТОР B': 'VIP-сектор B'
+                }
 
         for sector in a_sectors:
             if "втб арена" in self.venue.lower():
@@ -59,6 +67,8 @@ class Redkassa(SeatsParser):
             elif 'Лужники' in self.venue:
                 if 'Сектор' in sector['name']:
                     sector['name'] = sector['name'][:8] + ' ' + sector['name'][8:]
+                else:
+                    sector['name'] = 'Сектор ' + sector['name'].replace(' (VIP)', '')
             else:
                 sector['name'] = ref_dict.get(sector['name'], sector['name'])
 
@@ -67,7 +77,13 @@ class Redkassa(SeatsParser):
 
         seance_id = self.get_seance_id()
         json_data = self.request_ro_json_data(seance_id)
-        json_data = json_data.get('entrances')[0]
+        if json_data is None:
+            return []
+        json_data = json_data.get('entrances')
+        if len(json_data) > 0:
+            json_data = json_data[0]
+        else:
+            return []
 
         all_sector_with_data = {}
         all_sectors = json_data.get('sectors')
@@ -77,8 +93,12 @@ class Redkassa(SeatsParser):
             all_seats_in_sector = {}
             fan_zone_and_dance_floor = sector.get('sectorSeats')
             if len(fan_zone_and_dance_floor) != 0:
-                price = fan_zone_and_dance_floor[0].get('price')
-                all_seats_in_sector[('1', '1')] = int(price)
+                continue
+                """ Фанзона, Танцевальный партер """
+                for zone in fan_zone_and_dance_floor:
+                    price = zone['price']
+                    amount = zone['freeSeatsCount']
+                    self.register_dancefloor(sector_name, price, amount)
 
             all_rows = sector.get('rows')
             for row in all_rows:
@@ -124,6 +144,8 @@ class Redkassa(SeatsParser):
             "rowId": None
         }
         r = self.session.post(url, headers=headers, json=data)
+        if r.status_code != 200:
+            return None
         return r.json()
 
     def get_seance_id(self):
@@ -155,3 +177,4 @@ class Redkassa(SeatsParser):
 
         for sector in a_sectors:
             self.register_sector(sector['name'], sector['tickets'])
+        #self.check_sectors()

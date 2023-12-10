@@ -1,11 +1,14 @@
 import json
-import time
+import locale
+from datetime import datetime
+from urllib.parse import urlparse
+
 from bs4 import BeautifulSoup
 
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
-from parse_module.utils.date import month_list
 from parse_module.manager.proxy.instances import ProxySession
+from parse_module.utils import utils
 
 
 class KassirParser(EventParser):
@@ -15,271 +18,170 @@ class KassirParser(EventParser):
         super().__init__(controller)
         self.delay = 3600
         self.driver_source = None
-        self.our_urls = {
-            # 'https://msk.kassir.ru/bilety-v-teatr': '*',
-            # 'https://msk.kassir.ru/bilety-na-sportivnye-meropriyatiya': '*',
-            'https://msk.kassir.ru/sportivnye-kompleksy/dvorets-sporta-megasport': '*',
-            'https://msk.kassir.ru/sportivnye-kompleksy/vtb-arena-tsentralnyiy-stadion-dinamo': '*',
-            'https://msk.kassir.ru/kluby/adrenaline-stadium': '*',
-            'https://msk.kassir.ru/sportivnye-kompleksy/cska-arena': '*',
-            'https://msk.kassir.ru/sportivnye-kompleksy/ok-lujniki': '*',
-            # 'https://msk.kassir.ru/teatry/vahtangova': '*',
-            # 'https://msk.kassir.ru/teatry/mht-chehova': '*',
-            # 'https://msk.kassir.ru/teatry/teatr-satiryi': '*',
-            # 'https://msk.kassir.ru/teatry/operetty': '*',
-            'https://spb.kassir.ru/sportivnye-kompleksy/sk-yubileynyiy-2': '*',
-            'https://spb.kassir.ru/koncertnye-zaly/ledovyiy-dvorets-2': '*',
-            'https://msk.kassir.ru/koncertnye-zaly/gosudarstvennyj-kremlevskij-dvorec': '*',
-            'https://sochi.kassir.ru/teatry/zimniy-teatr': '*',
-            'https://msk.kassir.ru/koncertnye-zaly/zelenyiy-teatr-vdnh': '*',
+        self.new_urls = {
+             #'https://msk.kassir.ru/koncertnye-zaly/zelenyiy-teatr-vdnh': '*', #Зелёный театр
+             'https://msk.kassir.ru/teatry/mdm': '*', # Московский дворец молодёжи
+             #'https://msk.kassir.ru/drugoe/krasnaya-ploschad': '*', #Красная площадь
+             #'https://msk.kassir.ru/teatry/rossijskoj-armii': '*', # Театр Армии
+             'https://sochi.kassir.ru/teatry/zimniy-teatr': '', # Зимний театр Сочи
+             'https://msk.kassir.ru/teatry/teatr-sovremennik': '*', # Театр Современник
+             'https://msk.kassir.ru/koncertnye-zaly/gosudarstvennyj-kremlevskij-dvorec': '*', #Kreml dvorec
+             'https://msk.kassir.ru/teatry/teatr-satiryi': '*', # teatr satiry
+             'https://kzn.kassir.ru/cirki/tsirk-2': '*',  # kazanskii cirk
+             'https://msk.kassir.ru/teatry/operetty': '*', #mosoperetta 
+             'https://msk.kassir.ru/sportivnye-kompleksy/vtb-arena-tsentralnyiy-stadion-dinamo': '*', # Dinamo MSK stadium
+             'https://msk.kassir.ru/sportivnye-kompleksy/dvorets-sporta-megasport': '*', # megasport
+             #'https://sochi.kassir.ru/koncertnye-zaly/kontsertnyiy-zal-festivalnyiy': '*', #fistivalnii sochi
+             #'https://msk.kassir.ru/teatry/ermolovoj': '*', # ermolovoi theatre
+             'https://msk.kassir.ru/teatry/teatr-im-vlmayakovskogo': '*', #Majakousogo theatre moscow
+             'https://omsk.kassir.ru/sportivnye-kompleksy/g-drive-arena': '*',# G-Drive Арена omsk
+             'https://kzn.kassir.ru/koncertnye-zaly/dvorets-sportakazan': '*',#Дворец спорта Казань
+             'https://msk.kassir.ru/sportivnye-kompleksy/cska-arena': 'cska', #cska arena
         }
 
     def before_body(self):
         self.session = ProxySession(self)
 
-    def parse_events(self, soup):
-        a_events = []
-        all_events_container = soup.find_all('div', class_='js-pager-container')
 
-        if all_events_container:
-            events_containers = all_events_container.find_all('div', class_='tiles-container')
-        else:
-            events_containers = soup.find_all('div', class_='tiles-container')
+    @staticmethod
+    def format_date(date):
+        return datetime.fromisoformat(date)
 
-        for container in events_containers:
-            events = container.find_all('div', class_='action-tile') + container.find_all('div', class_='event-tile')
-            events += container.find_all('div', class_=['event', 'js-ec-tile'])
-            for event in events:
-                if 'Нет свободных мест' in event.text:
-                    continue
-
-                event_info = event.find('a', class_='image').get('data-ec-item')
-                title = event.find('div', class_='title').find('a').get('title')
-                href = event.find('a', class_='btn').get('href').replace('---', '-')
-
-                try:
-                    venue = double_split(event_info, '"venueName":"', '","').strip()
-                except IndexError:
-                    continue
-                venue = venue.split(' - ')[0]
-                if 'МХТ' in venue:
-                    venue = 'Театр Чехова'
-
-                dates = []
-                event_date = ''
-                if 'date' in event_info:
-                    if '"date":{' in event_info:
-                        event_info_date_str = double_split(event_info, '"date":', '},') + '}'
-                    else:
-                        event_info_date_str = double_split(event_info, '"date":', '",') + '"'
-
-                    event_info_date = json.loads(event_info_date_str)
-                    if 'start_min' in event_info_date:
-                        event_date = self.format_date(event_info_date['start_min'])
-                    else:
-                        event_date = self.format_date(event_info_date)
-
-                afisha_event_info = {
-                    'title': title,
-                    'href': href,
-                    'date': event_date,
-                    'venue': venue,
-                }
-
-                all_event_dates = self.get_all_event_dates(afisha_event_info)
-                if not all_event_dates:  # request to the event probably returned 404 doesn't exist
-                    self.warning(f'[kassir_warning]: events_parser couldnt parse event from event response - '
-                                f'{afisha_event_info}', console_print=False)
-                    continue
-                else:
-                    dates += all_event_dates
-
-                for date in dates:
-                    a_events.append((date['title'], date['href'], date['date'], date['venue']))
-
-        return a_events
-
-    def get_all_event_dates(self, afisha_event_info):
-        url = afisha_event_info['href']
-        headers = {
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
-                      'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    @staticmethod
+    def reformat_date(date):
+        date_to_write = date.strftime("%d ") + \
+                        date.strftime("%b ").capitalize() + \
+                            date.strftime("%Y %H:%M")
+        return date_to_write
+    
+    def new_get_events(self, url):
+        self.new_headers = {
+            "accept": "*/*",
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
-            'cache-control': 'no-cache',
-            'pragma': 'no-cache',
+            'Connection': 'keep-alive',
             'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'none',
-            'sec-fetch-user': '?1',
-            'upgrade-insecure-requests': '1',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-site',
+            "Referer": "https://msk.kassir.ru/",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        url_to_pars = urlparse(url)
+        slug = url_to_pars.path #/koncertnye-zaly/zelenyiy-teatr-vdnh
+        self.domain = url_to_pars.netloc #msk.kassir.ru
+        url_to_api = f'https://api.kassir.ru/api/page-kit?slug={slug}&domain={self.domain}'
 
-        if 'Страница не найдена' in r.text:
-            return []
+        get_events = self.session.get(url_to_api, headers=self.new_headers)
 
-        soup = BeautifulSoup(r.text, 'lxml')
-        events_table = soup.find('div', class_='events-table')
-        date_dropdown = soup.find('div', class_='date-dropdown')
-        card_data = soup.find_all('li', class_='event-date-selector-tab')
+        count = 5
+        while not get_events.ok and count > 0:
+            self.error(f'{self.proxy.args}, {self.session.cookies} kassir events')
+            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.session = ProxySession(self)
+            get_events = self.session.get(url_to_api, headers=self.new_headers)
+            count -= 1
 
-        if events_table:
-            return self.get_table_event_dates(events_table)
-        elif date_dropdown:
-            return self.get_dropdown_event_dates(date_dropdown, afisha_event_info)
-        elif len(card_data) > 0:
-            output_data = []
-            for card in card_data:
-                data_in_span = card.find_all('span', class_='inline-flex')
-                event_date = data_in_span[0].text.split()
-                event_date[1] = event_date[1][:3].title()
-                time = data_in_span[-1].text
-                normal_date = ' '.join(event_date) + ' ' + time
-
-                href = afisha_event_info['href'].split('.ru/')[0]
-                link = card.find('a').get('href')
-                href = href + '.ru' + link
-                output_data.append(
-                    {
-                        'title': afisha_event_info['title'],
-                        'href': href,
-                        'date': normal_date,
-                        'venue': afisha_event_info['venue']
-                    }
-                )
-            return output_data
-        else:
-            if '"dateFrom":"' in r.text:
-                event_date = double_split(r.text, '"dateFrom":"', '"')
-                afisha_event_info['date'] = self.format_date(event_date)
-
-            return [afisha_event_info]
-
-    def get_table_event_dates(self, events_table):
-        event_rows = events_table.find_all('tr')
-
-        date_events = []
-        for row in event_rows:
-            title = row.find('td', class_='col-title').text
-            href = row.find('a', class_='btn').get('href').replace('---', '-')
-            year = href.split('_')[-1].split('-')[0]
-            date = row.find('td', class_='col-date').text
-            date = self.format_str_date(date.replace('\n', ' ').replace('  ', ''), year)
-
-            venue = row.find('td', class_='col-place').text.strip()
-            venue = venue.split(' - ')[0]
-            if 'МХТ' in venue:
-                venue = 'Театр Чехова'
-
-            date_events.append({
-                'title': title,
-                'href': href,
-                'date': date,
-                'venue': venue,
-            })
-
-        return date_events
-
-    def get_dropdown_event_dates(self, date_dropdown, afisha_event_info):
-        if afisha_event_info['date']:
-            year = afisha_event_info['date'].split()[-2]
-        else:
-            year = None
-
-        dropdown_dates = [
-            {
-                'id': option['value'].strip(),
-                'date': self.format_str_date(option.text.strip(), year)
-            } for option in date_dropdown.find_all('option')
-        ]
-
-        date_events = []
-        for dr_date in dropdown_dates:
-            date_events.append({
-                'title': afisha_event_info['title'],
-                'date': dr_date['date'],
-                'href': f'{afisha_event_info["href"]}#{dr_date["id"]}',
-                'venue': afisha_event_info['venue'],
-            })
-
-        return date_events
-
-    def format_date(self, date):
-        y_m_d, time = date.split()
-        y, m, d = y_m_d.split('-')
-        month = month_list[int(m)]
-        time = time[:-3]
-        date = f'{d} {month} {y} {time}'
-        return date
-
-    def format_str_date(self, str_date, y=None):
-        str_date_spl = str_date.split()
-
-        if len(str_date_spl) == 4:
-            d, m, wd, t = str_date_spl
-        else:
-            d, m, t = str_date_spl
-
-        m = m[:3].capitalize()
-
-        if not y:
-            y = calculate_year(m)
-
-        date = f'{d} {m} {y} {t}'
-
-        return date
-
-    def get_events(self, url):
         a_events = []
+        # with open('TEST1.json', 'w', encoding='utf-8') as file:
+        #     json.dump(get_events.json(), file, indent=4, ensure_ascii=False) 
+        total_count = get_events.json()['kit']['searchResult']["pagination"]["totalCount"]
+        self.new_venue_id = get_events.json()['kit']["venue"]['id']
+        
+        self.venue_name = get_events.json()['kit']["venue"]['name']
+        if self.venue_name in self.venue_to_replace:
+            self.venue_name = self.venue_to_replace.get(self.venue_name)
 
-        c = 90
-        p = 1
-        while True:
-            page_url = f'{url}?c={c}&p={p}'
-            headers = {
-                'accept': 'application/json, text/javascript, */*; q=0.01',
-                'accept-encoding': 'gzip, deflate, br',
-                'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-                'sec-ch-ua': '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
-                'sec-ch-ua-mobile': '?0',
-                'sec-ch-ua-platform': '"Windows"',
-                'sec-fetch-dest': 'empty',
-                'sec-fetch-mode': 'cors',
-                'sec-fetch-site': 'same-origin',
-                'user-agent': self.user_agent,
-                'x-requested-with': 'XMLHttpRequest'
-            }
-            if p:
-                headers.update({'referer': url})
-            r = self.session.get(page_url, headers=headers)
+        events = [i for i in get_events.json()['kit']['searchResult']['items']]
+        a_events.extend(events)
 
-            if '{"html":"' in r.text:
-                to_soup = r.json()['html']
-            else:
-                to_soup = r.text
-
-            soup = BeautifulSoup(to_soup, 'lxml')
-            a_events += self.parse_events(soup)
-
-            if 'Загрузить ещё' not in r.text and '"more_results":"' not in r.text:
-                break
-            else:
-                p += 1
+        page = 2
+        while len(a_events) < total_count:
+            pagination_url = f'https://api.kassir.ru/api/search?currentPage={page}'\
+                                f'&pageSize=30&venueId={self.new_venue_id}&domain={self.domain}'
+            response = self.session.get(pagination_url, headers=self.new_headers)
+            events = [i for i in response.json()['items']]
+            a_events.extend(events)
 
         return a_events
+    
+
+    def new_get_all_dates_from_event(self, url):
+        r = self.session.get(url, headers=self.new_headers)
+        # with open('TEST2.json', 'w', encoding='utf-8') as file:
+        #     json.dump(r.json(), file, indent=4, ensure_ascii=False) 
+        if r.json()['kit'].get("eventBuckets"):
+            box = r.json()['kit']["eventBuckets"][0]['events']
+        elif r.json()['kit'].get("events"):
+            box = r.json()['kit']["events"]
+        ids = [i.get('id') for i in box]
+        dates = [self.format_date(i["beginsAt"]) for i in box]
+        dates = [self.reformat_date(i) for i in dates]
+
+        return zip(ids,dates)
+
+    def new_reformat_events(self, a_events):
+        events_to_write = []
+        for event in a_events:
+            title = event["object"]["title"].replace("'", "")
+            self.id = event["object"]['id']
+            url_all_events = f'https://{self.domain}/{event["object"]["urlSlug"]}'
+            
+            if event["object"].get('beginsAt') is not None: # only 1 event
+                url_to_write = f'https://api.kassir.ru/api/event-page-kit/{self.id}?domain={self.domain}'
+                date_start = self.format_date(event["object"].get("beginsAt"))
+                date = self.reformat_date(date_start)
+                events_to_write.append((title, url_to_write, date,
+                                         self.venue_name, self.id, self.domain, url_all_events))
+
+            elif event["object"].get("dateRange"): # more then 1 event
+                slug = event["object"]["urlSlug"]
+                url = f'https://api.kassir.ru/api/page-kit?slug={slug}&domain={self.domain}'
+                try:
+                    all_dates =  self.new_get_all_dates_from_event(url)
+                    for id, date in all_dates:
+                        url_to_write = f'https://{self.domain}/{slug}#{id}'
+                        events_to_write.append((title, url_to_write, date,
+                                                 self.venue_name, id, self.domain, url_all_events))
+                except Exception as ex:
+                    self.error(f'{ex} troubles bro.')
+                    raise
+        return events_to_write
 
     def body(self):
+        #('Ледовое шоу Евгения Плющенко «Русалочка»', 'https://schematr.kassir.ru/widget/?key=3a78a0c2-f33b-b849-851e-c1ba595f54bd&eventId=2012603', '28 Дек 2023 19:00', 'ВТБ Арена'),
+        self.venue_to_replace = {
+            'Красная площадь': 'Кремлёвский дворец',
+            'Государственный Кремлевский Дворец (ГКД)': 'Кремлёвский дворец',
+            'ЦИРК': 'Казанский цирк',
+            'Московский театр оперетты': 'Театр Оперетты',
+            'Концертный зал Фестивальный': '(КЗ) "Фестивальный"',
+            'Театр им. Вл.Маяковского': 'Театр Маяковского',
+            'Дворец спорта': 'Дворец спорта «ДС-Казань»'
+        }
+
         a_events = []
-        for url in self.our_urls:
-            a_events += self.get_events(url)
+        for url, venue_id in self.new_urls.items():
+            try:
+                events = self.new_get_events(url)
+                all_dates = self.new_reformat_events(events)
+                a_events.extend(all_dates)
+            except Exception as ex:
+                self.error(f'{ex}, {url} cannot load!')
+                raise
 
         a_events = list(set(a_events))
         for event in a_events:
-            if event[2] == '':
+            if event[2] == '' or 'абонемент' in event[0].lower() or '—' in event[2]:
                 continue
-            self.register_event(event[0], event[1], date=event[2], venue=event[3])
+            elif 'ЦСКА Арена' in event[3]:
+                if 'новогодняя история игрушек' not in event[0].lower():
+                    continue
+            try:
+                self.register_event(event[0], event[1], date=event[2],
+                                     venue=event[3], id=event[4], domain=event[5], url_all_events=event[6])
+            except ValueError:
+                continue

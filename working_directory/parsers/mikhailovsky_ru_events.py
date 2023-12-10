@@ -50,7 +50,7 @@ class Mikhailovsky(EventParser):
                         month_now = month_list[(month_now+1) % len(month_list)][:3] or 'Янв'
                     day_old = day_now
                 except Exception as ex:
-                    print(ex, month_now, month_list, day_now, day_old)
+                    self.debug(ex, month_now, month_list, day_now, day_old)
 
                 output_data = self._parse_data_from_event(event, month_now)
                 if output_data is not None:
@@ -65,11 +65,18 @@ class Mikhailovsky(EventParser):
                 events, next_href = self._get_events_from_soup(soup)
 
     def _parse_data_from_event(self, event: BeautifulSoup, month_now: str) -> Optional[Union[OutputEvent, None]]:
+        month_current = datetime.now().month
+        month_event = month_list.index(month_now)
+
+        year = datetime.now().year
+        if month_event < month_current:
+            year += 1
+
         title = event.select('div.detail a')[0].text
 
         day = event.find('div', class_='day').text
         time = event.select('div.time span')[0].text
-        normal_date = f'{day} {month_now} {time}'
+        normal_date = f'{day} {month_now} {year} {time}'
 
         href = event.select('div.ticket a')
         if len(href) == 0:
@@ -139,5 +146,4 @@ class Mikhailovsky(EventParser):
 
     def body(self) -> None:
         for event in self._parse_events():
-            #print(event)
             self.register_event(event.title, event.href, date=event.date)

@@ -13,13 +13,13 @@ class OutputData(NamedTuple):
 
 class AlexandrinskyRu(SeatsParser):
     event = 'alexandrinsky.ru'
-    url_filter = lambda url: 'www.afisha.ru' in url
+    url_filter = lambda url: 'afisha.ru/wl/402' in url
 
     def __init__(self, *args, **extra) -> None:
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-
+        
     def before_body(self):
         self.session = ProxySession(self)
 
@@ -65,7 +65,7 @@ class AlexandrinskyRu(SeatsParser):
     def _get_output_data(self, all_place: list[dict]) -> OutputData:
         sectors_data = {}
         for place in all_place:
-            if place['active'] is False:
+            if place['active'] is False or 'Сцена' in place['sector']['name']:
                 continue
             sector_name = place['sector']['name']
             place_row = place['row']

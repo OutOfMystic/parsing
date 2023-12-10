@@ -1,6 +1,7 @@
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.provision import multi_try
+from parse_module.utils import utils
 
 
 class ProfticketParser(SeatsParser):
@@ -136,17 +137,12 @@ class ProfticketParser(SeatsParser):
         }
         r = self.session.get(url, headers=headers)
 
-        # try:
-        #     return r.json()['response']['show']['id']
-        # except json.JSONDecodeError:
-        #     print(f'{r.text = }')
         try:
             global_show_id = r.json()['response']['show']['id']
         except KeyError:
-            self.bprint(f'error spa.proftickets.ru: {url = }, {r.text = }')
+            self.error(f'error spa.proftickets.ru: {url}, {r.text}', color=utils.Fore.YELLOW)
             return None
 
-        # print(global_show_id)
         place_name = r.json()['response']['show']['location_name'].lower()
 
         return global_show_id, place_name
@@ -179,7 +175,7 @@ class ProfticketParser(SeatsParser):
             data = r.json()['response']['items']
         except KeyError:
             data = []
-            print(f'{url = }, {r.text = }')
+            self.warning(f'{url}, {r.text}')
 
         return data
 
@@ -188,7 +184,7 @@ class ProfticketParser(SeatsParser):
         if data_or_none is None:
             return
         global_show_id, place_name = data_or_none
-        seat_data = multi_try(self.get_tickets, name='get_tickets_spa_proficket', args=(global_show_id,))
+        seat_data = multi_try(self.get_tickets, name=self.name, args=(global_show_id,))
 
         a_sectors = []
         for ticket in seat_data:
@@ -213,8 +209,10 @@ class ProfticketParser(SeatsParser):
                 })
 
         self.reformat(a_sectors, place_name)
-
-        for sector in a_sectors:
-            if sector['name'] == 'Ложа дирекции 3':
-                continue
-            self.register_sector(sector['name'], sector['tickets'])
+        if len(a_sectors) == 0:
+            return False
+        else:
+            for sector in a_sectors:
+                if sector['name'] == 'Ложа дирекции 3':
+                    continue
+                self.register_sector(sector['name'], sector['tickets'])

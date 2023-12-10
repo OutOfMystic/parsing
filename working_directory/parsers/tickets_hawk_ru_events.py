@@ -76,7 +76,7 @@ class XKAvangarg(EventParser):
             "isSeason": 0,
             "withoutActionType": 93
         }
-        r = self.session.post(self.url, headers=headers, json=data)
+        r = self.session.post(self.url, headers=headers, json=data, verify=False)
 
         a_events = self.parse_events(r.json())
 
@@ -89,4 +89,4 @@ class XKAvangarg(EventParser):
             return
 
         for event in a_events:
-            self.register_event(event[0], event[1], date=event[2])
+            self.register_event(event[0], event[1], date=event[2], venue='G-Drive Арена')

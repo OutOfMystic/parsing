@@ -25,8 +25,8 @@ class Parser(EventParser):
         a_events = []
         for date_dict in events_data:
             for event in date_dict['events']:
-                if not event['has_free_places']:
-                    continue
+                # if not event['has_free_places']:
+                #     continue
 
                 title = event['show_name']
                 day, month, year = event['date_parts']['date'].split()

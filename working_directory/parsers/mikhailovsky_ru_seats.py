@@ -17,7 +17,7 @@ class Mikhailovsky(SeatsParser):
 
     def __init__(self, *args, **extra) -> None:
         super().__init__(*args, **extra)
-        self.delay = 120
+        self.delay = 1200
         self.driver_source = None
 
     def before_body(self):

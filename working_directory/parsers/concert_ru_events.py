@@ -16,11 +16,12 @@ class Concert(EventParser):
     def before_body(self):
         self.session = ProxySession(self)
         self.our_places_data = [
-            'https://www.concert.ru/teatry/',
-            'https://www.concert.ru/kontserty/',
-            'https://www.concert.ru/sport/',
-            'https://www.concert.ru/detyam/',
-            'https://www.concert.ru/raznoe/'
+            'https://www.concert.ru/shou/',
+            # 'https://www.concert.ru/teatry/',
+            # 'https://www.concert.ru/kontserty/',
+            # 'https://www.concert.ru/sport/',
+            # 'https://www.concert.ru/detyam/',
+            # 'https://www.concert.ru/raznoe/'
         ]
 
     def parse_page(self, soup):
@@ -95,6 +96,8 @@ class Concert(EventParser):
             for events in self.parse_events(url):
                 for event in events:
                     if event not in a_events:
+                        if 'Красная площадь' == event[3]:
+                            event[3] = 'Кремлевский дворец'
                         self.register_event(event[0], event[1], date=event[2], venue=event[3])
                         a_events.append(event)
 

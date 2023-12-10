@@ -1,3 +1,6 @@
+from requests.exceptions import ProxyError, JSONDecodeError
+import re
+
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
@@ -12,9 +15,10 @@ class CrocusHall(SeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-        self.widget_key = double_split(self.url, '?key=', '&eventId=')
-        self.event_id = self.url[self.url.index('&eventId=')+len('&eventId='):]
+        self.widget_key = re.search(r'(?<=key\=)[\w\-]*', self.url)[0]
+        self.event_id = re.search(r'(?<=eventId\=)\d+', self.url)[0]
         self.get_configuration_id = None
+        self.count_error = 0
 
     def before_body(self):
         self.session = ProxySession(self)
@@ -152,6 +156,16 @@ class CrocusHall(SeatsParser):
                 '477': 'Балкон 3',
                 # '1': 'Балкон 2',
                 '2388': 'Балкон 1',
+                '1181': 'Бельэтаж 5',
+                '834': 'Бельэтаж 4',
+                '518': 'Бельэтаж 3',
+                '1011': 'Бельэтаж 2',
+                '1377': 'Бельэтаж 1',
+                '3482': 'Балкон 5',
+                '2986': 'Балкон 4',
+                '2129': 'Балкон 3',
+                '1653': 'Балкон 2',
+                '4040': 'Балкон 1',
             },
             '3166df32-f9f2-e729-a9de-db7b70d39c68': {
                 '5641': 'Балкон 1',
@@ -178,7 +192,7 @@ class CrocusHall(SeatsParser):
             }
         }
         if 'Диваны на 6 персон' == sector_name:
-            sector_name = 'Диваны на 6 персон 2'
+            sector_name = 'Диваны на 6 персон'
         elif 'Стол на 4 персоны' == sector_name:
             sector_name = 'Столы на 4 персоны'
         else:
@@ -200,8 +214,6 @@ class CrocusHall(SeatsParser):
 
     def parse_seats(self, json_data):
         total_sector = []
-
-        json_data = json_data.get('data')
 
         sector_dance_floor = {}
         sectors_data = []
@@ -225,14 +237,17 @@ class CrocusHall(SeatsParser):
             tariff_price = tariff.get('price')
             tariffs_data[tariff_id] = (tariff_price, tariff_available_seats,)
 
-        # for sector_name, data in sector_dance_floor.items():
-        #     """ Фанзона, Танцевальный партер """
-        #     tariff_id, amount = data
-        #     price = tariffs_data[tariff_id]
-        #     self.register_dancefloor(sector_name, price, amount)
+        for sector_name, data in sector_dance_floor.items():
+            continue
+            """ Фанзона, Танцевальный партер """
+            tariff_id, amount = data
+            price = tariffs_data[tariff_id]
+            self.register_dancefloor(sector_name, price, amount)
 
         url = f'https://crocus2.kassir.ru/api/v1/halls/configurations/{self.get_configuration_id}?language=ru&phpEventId={self.event_id}'
         get_all_seats = self.request_parser(url)
+        if get_all_seats is None:
+            return []
 
         all_id_seat = {}
         all_seats_in_sector = get_all_seats.get('data').get('sectors')
@@ -297,11 +312,20 @@ class CrocusHall(SeatsParser):
             'x-widget-key': self.widget_key
         }
         r = self.session.get(url, headers=headers)
-        return r.json()
+        if r.status_code == 500:
+            return None
+        try:
+            return r.json()
+        except JSONDecodeError:
+            message = f"<b>crocus_seats json_error {r.status_code} {self.url = }</b>"
+            self.send_message_to_telegram(message)
+            return None
 
     def get_seats(self):
         url = f'https://crocus2.kassir.ru/api/v1/events/{self.event_id}?language=ru'
         get_configuration_id = self.request_parser(url)
+        if get_configuration_id is None:
+            return []
         self.get_configuration_id = get_configuration_id.get('meta')
         if self.get_configuration_id is None:
             return []
@@ -309,6 +333,17 @@ class CrocusHall(SeatsParser):
 
         url = f'https://crocus2.kassir.ru/api/v1/events/{self.event_id}/seats?language=ru&phpEventId={self.event_id}'
         json_data = self.request_parser(url)
+        if json_data is None:
+            return []
+
+        json_data = json_data.get('data')
+        if json_data is None and self.count_error < 10:
+            self.count_error += 1
+            raise ProxyError('crocus_seats error: json_data is None')
+        elif json_data is None and self.count_error == 10:
+            self.count_error = 0
+            raise Exception('crocus_seats error: json_data is None')
+        self.count_error = 0
 
         all_sectors = self.parse_seats(json_data)
 

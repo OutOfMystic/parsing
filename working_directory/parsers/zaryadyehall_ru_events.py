@@ -54,6 +54,7 @@ class ZaryadyeHall(EventParser):
 
     def _parse_data_from_event(self, event: Tag) -> Optional[Union[OutputEvent, None]]:
         title = event.find('a', class_='zh-c-item__name').text.strip().replace("'", '"')
+        title = title.replace('\r', '').replace('\n', '')
 
         day, month = event.find('div', class_='zh-c-item__date').text.split('/')
         month = month_list[int(month)]
@@ -70,7 +71,7 @@ class ZaryadyeHall(EventParser):
         href = href[0].get('onclick')
         try:
             href = double_split(href, "openNewWin('", "')")
-        except IndexError:
+        except (IndexError, AttributeError):
             return None
 
         return OutputEvent(title=title, href=href, date=normal_date)

@@ -6,12 +6,14 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
+from parse_module.utils import utils
 
 
 class OutputEvent(NamedTuple):
     title: str
     href: str
     date: str
+    venue: str
 
 
 class CskaBasket(EventParser):
@@ -32,40 +34,44 @@ class CskaBasket(EventParser):
 
         return self._parse_events_from_soup(events)
 
-    def _parse_events_from_soup(self, events: ResultSet[Tag]) -> OutputEvent:
-        datetime_now = datetime.datetime.now()
-        month = datetime_now.month
-        month = month_list[month]
-        year = datetime_now.year
-        for event in events:
-            if 'events-main__month' in event.get('class'):
-                month, year = event.text.split()
-                month = month.title()[:3]
-            else:
-                output_data = self._parse_data_from_event(event, month, year)
-                if output_data is not None:
-                    yield output_data
-
-    def _parse_data_from_event(self, event: Tag, month: str, year: str) -> Optional[Union[OutputEvent, None]]:
-        title = event.select('div.teams__item div.teams__name')
-        title = title[0].text + ' - ' + title[1].text
-
-        date = event.find('div', class_='event-item__date').text.strip().split()
-        day = date[0]
-        time = date[-2]
-        normal_date = f'{day} {month} {year} {time}'
-
-        href = event.find('a', class_='event-item__btn')
-        if href is None:
+    @staticmethod
+    def work_with_event(month, year, event):
+        if not event.find(class_='event-item__place'): #скорее всего это абонемент
             return None
-        href = href.get('href')
-        href = 'https://tickets.cskabasket.ru/ru' + href
+        venue = event.find(class_='event-item__place').text or 'Мегаспорт'
 
-        return OutputEvent(title=title, href=href, date=normal_date)
+        day, str_day ,time = map(str.strip ,event.find(class_='event-item__date').text.split('/'))
+        time = time.split()[0]
+        full_data = f'{day} {month} {year} {time}' #"03 Сен 2023 19:00"
+
+        teams = event.find(class_='teams__wrapper')
+        title = ' - '.join(map(str.strip, [i.text for i in teams.find_all(class_='teams__item')]))
+        
+        href = event.find(class_='event-item__btn').get('href')
+        href = f"https://tickets.cskabasket.ru/ru{href}"
+        return OutputEvent(title=title, href=href, date=full_data, venue=venue)
+
+    def _parse_events_from_soup(self, events):
+        a_events = []
+        months = events.find_all(class_='events-main__month')
+        for month_year in months:
+            month, year = month_year.text.split()
+            month = month[:3].capitalize()
+            event = month_year.find_next()
+            while event.get('class') and 'event-item' in event.get('class'):
+                try:
+                    output_event = self.work_with_event(month, year, event)
+                except Exception as ex:
+                    self.warning(f'{ex}')
+                else:
+                    if output_event:
+                        a_events.append(output_event)
+                event = event.find_next_sibling()
+        return a_events
 
     def _get_events_from_soup(self, soup: BeautifulSoup) -> ResultSet[Tag]:
-        events = soup.select('div.events-main__list')
-        return events
+        events_box = soup.select_one('div.events-main__list')
+        return events_box
 
     def _requests_to_events(self, url: str) -> BeautifulSoup:
         headers = {
@@ -89,5 +95,6 @@ class CskaBasket(EventParser):
         return BeautifulSoup(r.text, 'lxml')
 
     def body(self) -> None:
-        for event in self._parse_events():
-            self.register_event(event.title, event.href, date=event.date)
+        a_events = self._parse_events()
+        for event in a_events:
+            self.register_event(event.title, event.href, date=event.date, venue=event.venue)

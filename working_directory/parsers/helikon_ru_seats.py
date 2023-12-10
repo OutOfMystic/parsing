@@ -1,11 +1,9 @@
 import json
 from typing import NamedTuple
 
-from bs4 import BeautifulSoup, ResultSet, Tag
-
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
-from parse_module.utils.parse_utils import double_split
+
 
 class OutputData(NamedTuple):
     sector_name: str
@@ -14,7 +12,7 @@ class OutputData(NamedTuple):
 
 class HelikonRu(SeatsParser):
     event = 'www.helikon.ru'
-    url_filter = lambda url: 'www.helikon.ru' in url
+    url_filter = lambda url: 'helikon.ru' in url
 
     def __init__(self, *args, **extra) -> None:
         super().__init__(*args, **extra)
@@ -30,6 +28,10 @@ class HelikonRu(SeatsParser):
             sector_name = sector_name.replace('№', '')
         elif 'Партер' in sector_name:
             sector_name = 'Партер'
+        elif 'Амфитеатр' in sector_name and 'равая' in sector_name:
+            sector_name = 'Амфитеатр, правая сторона'
+        elif 'Амфитеатр' in sector_name and 'евая' in sector_name:
+            sector_name = 'Амфитеатр, левая сторона'
 
         return sector_name
 
@@ -85,7 +87,7 @@ class HelikonRu(SeatsParser):
             'sec-fetch-site': 'cross-site',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = self.session.get(self.url, headers=headers, verify=False)
         return r.json()
 
     def body(self) -> None:

@@ -12,12 +12,13 @@ class OutputData(NamedTuple):
 
 class CircusSochiRu(SeatsParser):
     event = 'circus-sochi.ru'
-    url_filter = lambda url: 'ticket-place.ru' in url
+    url_filter = lambda url: 'ticket-place.ru' in url and '|sochi' in url
 
     def __init__(self, *args, **extra) -> None:
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
+        self.url = self.url[:self.url.index('|')]
 
     def before_body(self):
         self.session = ProxySession(self)
@@ -81,4 +82,6 @@ class CircusSochiRu(SeatsParser):
 
     def body(self) -> None:
         for sector in self._parse_seats():
+            if 'Ложа' in sector.sector_name:
+                continue
             self.register_sector(sector.sector_name, sector.tickets)

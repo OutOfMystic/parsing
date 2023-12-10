@@ -14,12 +14,13 @@ class OutputData(NamedTuple):
 
 class CircusSpbRu(SeatsParser):
     event = 'circus.spb.ru'
-    url_filter = lambda url: 'ticket-place.ru' in url
+    url_filter = lambda url: 'ticket-place.ru' in url and '|spb' in url
 
     def __init__(self, *args, **extra) -> None:
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
+        self.url = self.url[:self.url.index('|')]
 
     def before_body(self):
         self.session = ProxySession(self)

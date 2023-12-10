@@ -29,7 +29,7 @@ class Controller(threading.Thread):
     def __init__(self,
                  parsers_path,
                  config_path,
-                 pending_delay=30,
+                 pending_delay=20,
                  debug_url=None,
                  debug_event_id=None,
                  release=False):
@@ -99,7 +99,7 @@ class Controller(threading.Thread):
 
     def _init_seats_parsers(self, parser_class, parser_name):
         group = SeatsParserGroup(self, parser_class)
-        self.bprint(f'seats group {parser_name}.{parser_class.__name__} has started')
+        self.bprint(f'seats GROUP {parser_name}.{parser_class.__name__} has started')
         self.seats_groups.append(group)
 
     def update_margins_from_database(self):
@@ -226,7 +226,7 @@ class Controller(threading.Thread):
         while pending:
             if time.time() - lock_time > self.pending_delay:
                 message = f'Seats groups\' lockers ({pending}/{first_pending}) are still being released...'
-                self.bprint(message, color=utils.Fore.YELLOW)
+                self.bprint(message, color=utils.Fore.LIGHTGREEN_EX)
             time.sleep(5)
             lockers_states = [group.start_lock.locked() for group in self.seats_groups]
             pending = lockers_states.count(True)
@@ -289,8 +289,8 @@ class Controller(threading.Thread):
                 setattr(notifier, attribute, value)
 
         # SEATS PARSERS TO LOAD
-        seats_parsers_to_add = {parser.db_event_id: parser for parser in all_seats_parsers
-                                if parser.db_event_id in to_add}
+        seats_parsers_to_add = {parser.event_id: parser for parser in all_seats_parsers
+                                if parser.event_id in to_add}
         for event_id, seats_parser in seats_parsers_to_add.items():
             notifier_data = seats_to_load_names[event_id]
             notifier = from_parsing.SeatsNotifier(self, seats_parser, name=seats_parser.name,
@@ -306,7 +306,7 @@ class Controller(threading.Thread):
         event_ids = set()
         for group in self.seats_groups:
             for parser in group:
-                event_ids.add(parser.db_event_id)
+                event_ids.add(parser.event_id)
         _, _, new_to_reset = differences(self._events_were_reset, event_ids)
         db_manager.reset_tickets(new_to_reset)
         self._events_were_reset = list(event_ids)

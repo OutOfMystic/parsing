@@ -39,7 +39,7 @@ class CircusSochiRu(EventParser):
 
     def _parse_data_from_event(self, event: Tag) -> Optional[Union[list[OutputEvent], None]]:
         output_list = []
-        title = 'Песчаная сказка'
+        title = 'Девочка и слон'
 
         day = event.find('p', class_='day').text
         month = event.find('p', class_='month').text[:3]
@@ -52,7 +52,7 @@ class CircusSochiRu(EventParser):
             normal_date = f'{day} {month} {time}'
 
             id_event = time_in_day.get('data-tp-event')
-            href = f'https://ticket-place.ru/widget/{id_event}/data'
+            href = f'https://ticket-place.ru/widget/{id_event}/data' + '|sochi'
             output_list.append(OutputEvent(title=title, href=href, date=normal_date))
         return output_list
 

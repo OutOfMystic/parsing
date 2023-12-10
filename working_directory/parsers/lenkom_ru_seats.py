@@ -1,19 +1,18 @@
-import json
 import random
+
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 
 
 class Lenkom(SeatsParser):
     event = 'tickets.afisha.ru'
-    url_filter = lambda url: 'tickets.afisha.ru' in url
+    url_filter = lambda url: 'wl/54' in url and 'tickets.afisha.ru' in url
     proxy_check_url = 'https://tickets.afisha.ru/'
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-        self.count_request = 0
 
     def before_body(self):
         self.session = ProxySession(self)
@@ -54,7 +53,7 @@ class Lenkom(SeatsParser):
 
         return total_sector
 
-    def request_parser(self, url, data):
+    def request_parser(self, data):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -73,28 +72,25 @@ class Lenkom(SeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.post(url, headers=headers, data=data)
-        try:
-            return r.json()
-        except json.JSONDecodeError as e:
-            if self.count_request == 10:
-                raise json.JSONDecodeError(f'Возникла ошибка {e}')
-            self.count_request += 1
-            return self.request_parser(url, data)
+        r = self.session.post(self.url, headers=headers, data=data)
+        if r.status_code == 499:
+            return None
+        elif r.status_code != 200:
+            message = f"<b>lenkom_seats response.status_code {r.status_code}\n{self.event_id = }</b>"
+            self.send_message_to_telegram(message)
+        return r.json()
 
     def get_seats(self):
-        split_url = self.url.split('&')
-        url = split_url[0]
-        data_to_parser_seat = split_url[1]
         data = {
-            "event_id": data_to_parser_seat,
+            "event_id": self.event_id,
             "user_token": f"167644{random.randint(1000000, 9999999)}-{random.randint(100000, 999999)}"
             # "user_token": "1676449721616-847937"
         }
 
-        r = self.request_parser(url=url, data=data)
-
-        a_events = self.parse_seats(r)
+        json_data = self.request_parser(data=data)
+        if json_data is None:
+            return []
+        a_events = self.parse_seats(json_data)
 
         return a_events
 

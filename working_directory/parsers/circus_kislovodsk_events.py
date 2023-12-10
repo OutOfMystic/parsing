@@ -2,7 +2,6 @@ import locale
 from datetime import datetime
 
 from bs4 import BeautifulSoup
-from loguru import logger
 
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
@@ -23,7 +22,6 @@ class CircusKislovodsk(EventParser):
             "sec-fetch-dest": "empty",
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-origin",
-            "Referer": "https://ticket-place.ru/widget/1013",
             "Referrer-Policy": "strict-origin-when-cross-origin",
             "user-agent": self.user_agent
         }
@@ -33,11 +31,14 @@ class CircusKislovodsk(EventParser):
 
     @staticmethod
     def reformat_date(date):
+        #date=2024-01-07 16:00:00
         date = datetime.fromisoformat(date)
         locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
-        date_to_write = date.strftime("%d ") + \
-            date.strftime("%b ").capitalize() + \
-            date.strftime("%H:%M")
+        date_to_write = (date.strftime("%d ") + 
+            date.strftime("%b ").capitalize() + 
+            date.strftime("%Y ") + 
+            date.strftime("%H:%M"))
+        #date_to_write=08 Янв 2024 12:00
         return date_to_write
 
     def find_all_events(self, page):
@@ -61,6 +62,7 @@ class CircusKislovodsk(EventParser):
 
     def load_all_dates(self, id):
         a_events = []
+        
         url = f'https://ticket-place.ru/widget/{id}/similar'
         all_events_json = self.session.get(url, headers=self.headers)
 
@@ -83,14 +85,12 @@ class CircusKislovodsk(EventParser):
 
         count = 10
         while len(a_events) < len(events_ids) and count > 1:
-            id = events_ids[len(a_events)]
+            id = events_ids[len(a_events)-1]
             to_a_events = self.load_all_dates(id)
             a_events.update(to_a_events)
             count -= 1
-
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2], venue='Кисловодский цирк')
-        logger.debug('bodied')
 
             
 

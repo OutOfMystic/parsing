@@ -21,6 +21,38 @@ class NationsParser(SeatsParser):
         for sector in a_sectors:
             sector['name'] = sector['name'].replace(' (неудобное место)', '').capitalize()
 
+    def _reformat(self, sector_name: str, place_row: str) -> tuple[str, str]:
+        if 'Партер' in sector_name:
+            sector_name = 'Партер'
+        elif 'Места за креслами' in sector_name:
+            sector_name = 'Места за креслами'
+        elif 'Ложи бельэтажа' in sector_name:
+            place_row = sector_name.split('№')[1].split()[0]
+            place_row = 'Ложа ' + place_row
+            sector_name = 'Бельэтаж'
+        elif '1 яруса' in sector_name:
+            place_row = sector_name.split('№')[1].split()[0]
+            place_row = 'Ложа ' + place_row
+            sector_name = '1 ярус'
+        elif '2 яруса' in sector_name:
+            place_row = sector_name.split('№')[1].split()[0]
+            place_row = 'Ложа ' + place_row
+            sector_name = '2 ярус'
+        elif '3 яруса' in sector_name:
+            place_row = sector_name.split('№')[1].split()[0]
+            place_row = 'Ложа ' + place_row
+            sector_name = '3 ярус'
+        elif '4 яруса' in sector_name:
+            place_row = sector_name.split('№')[1].split()[0]
+            place_row = 'Ложа ' + place_row
+            sector_name = '4 ярус'
+        elif 'БАЛКОН 3 ЯРУСА' in sector_name:
+            sector_name = 'Балкон 3го яруса'
+        elif 'Царская ложа' == sector_name:
+            place_row = '1'
+
+        return sector_name, place_row
+
     def get_tickets(self):
         url = ("https://theatreofnations.ru/api/places/?nombilkn="
                f"{self.event_id}&cmd=get_hall_and_places&early_access=")
@@ -52,10 +84,11 @@ class NationsParser(SeatsParser):
             row = seat['row']
             seat_num = seat['seat']
             price = seat['Price'].split('.')[0]
+            sector, row = self._reformat(sector, str(row))
             formatted = {
                 'name': sector,
                 'seat': str(seat_num),
-                'row': str(row),
+                'row': row,
                 'price': int(price),
             }
             a_sectors.append(formatted)

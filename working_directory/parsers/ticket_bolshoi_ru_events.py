@@ -37,8 +37,8 @@ class Parser(EventParser):
             'user-agent': self.user_agent
         }
         r = self.session.get(url, headers=headers)
-        print(r.text)
-        print(r.cookies.get_dict())
+        self.debug(r.text)
+        self.debug(r.cookies.get_dict())
 
     def main_page_request(self):
         headers = {
@@ -56,9 +56,8 @@ class Parser(EventParser):
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/109.0'
         }
         r = self.session.get(self.url, headers=headers)
-        print(r.text)
-        print(r.cookies)
-        input()
+        self.debug(r.text)
+        self.debug(r.cookies)
 
     def get_csrf(self):
         url = 'https://ticket.bolshoi.ru/api/csrfToken'
@@ -78,7 +77,7 @@ class Parser(EventParser):
             'user-agent': self.user_agent
         }
         r = self.session.get(url, headers=headers)
-        print(r.text)
+        self.debug(r.text)
 
         return r.json()['_csrf']
 
@@ -100,8 +99,8 @@ class Parser(EventParser):
             'X-CSRF-Token': self.csrf
         }
         r = self.session.get('https://ticket.bolshoi.ru/api/v1/client/shows', headers=headers)
-        print(self.csrf)
-        print(r.text)
+        self.debug(self.csrf)
+        self.debug(r.text)
         a_events = []
         for event in r.json():
             if not event['freeSeats']:
@@ -120,5 +119,5 @@ class Parser(EventParser):
         a_events = self.get_events()
 
         for event in a_events:
-            print(event)
+            self.debug(event)
             self.register_event(event[0], event[1], date=event[2], scene=event[3])

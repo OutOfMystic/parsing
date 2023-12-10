@@ -18,28 +18,32 @@ class Cska(EventParser):
     def parse_events(self, soup):
         a_events = []
 
-        for event_card in soup.find_all('li', class_='tickets__item')[1:]:
-            href = event_card.find('a', class_='ticket__buy')
-            if href:
-                date_and_time = event_card.find('div', class_='ticket__date').text.strip().split(' / ')
-                month = month_list[int(event_card.get('id')[4:6])]
-                date = date_and_time[0] + ' ' + month + ' ' + event_card.get('id')[:4] + ' ' + date_and_time[2]
+        for event_card in soup.find_all('li', class_='tickets__item'):
+            try:
+                href = event_card.find('a', class_='ticket__buy')
+                if href:
+                    date_and_time = event_card.find('div', class_='ticket__date').text.strip().split(' / ')
 
-                title = event_card.find_all('span', class_='ticket__team-name')
-                first_command = title[0].text.strip()
-                second_command = title[1].text.strip()
-                if first_command and second_command:
-                    title = first_command + ' - ' + second_command
-                elif not second_command:
-                    title = first_command
-                elif not first_command:
-                    title = second_command
+                    month = month_list[int(event_card.get('id')[4:6])]
+                    date = date_and_time[0].split()[0] + ' ' + month + ' ' + event_card.get('id')[:4] + ' ' + date_and_time[2]
 
-                href = self.url + href.get('href')
+                    title = event_card.find_all('span', class_='ticket__team-name')
+                    first_command = title[0].text.strip()
+                    second_command = title[1].text.strip()
+                    if first_command and second_command:
+                        title = first_command + ' - ' + second_command
+                    elif not second_command:
+                        title = first_command
+                    elif not first_command:
+                        title = second_command
 
-                venue = event_card.find('div', class_='ticket__adress').text.strip().split(',')[0]
+                    href = self.url + href.get('href')
 
-                a_events.append([title, href, date, venue])
+                    venue = event_card.find('div', class_='ticket__adress').text.strip().split(',')[0] + ' (ХКСКА)'
+
+                    a_events.append([title, href, date, venue])
+            except:
+                continue
 
         return a_events
 

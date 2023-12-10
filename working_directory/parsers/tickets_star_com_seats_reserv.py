@@ -129,7 +129,6 @@ class Parser(SeatsParser):
         place1 = soup.find_all('div', class_='place1')
         for place in place1:
             t = place.get('title').translate({ord(i): None for i in '<strong><br/>'})
-            # print(t)
             sector = t.split('ряд')[0].strip()
             row = (' '.join(re.findall(r'ряд([^<>]+),', t))).strip()
             seat = (' '.join(re.findall(r'место([^<>]+) Стоимость', t))).strip()
@@ -188,19 +187,19 @@ class Parser(SeatsParser):
                 try:
                     row = int(row)
                 except ValueError:
-                    print(f'row-->{row}<--')
+                    self.debug(f'row-->{row}<--')
                     pass
 
                 try:
                     seat = int(seat)
                 except ValueError:
-                    print(f'seat-->{seat}<--')
+                    self.debug(f'seat-->{seat}<--')
                     pass
 
                 try:
                     price = int(price)
                 except ValueError:
-                    print(f'price-->{price}<--')
+                    self.debug(f'price-->{price}<--')
                     pass
 
                 if each_sector == section:

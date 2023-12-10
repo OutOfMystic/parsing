@@ -35,7 +35,10 @@ class Gorkovo(EventParser):
             all_event_in_soup_from_request = soup_from_request.find_all('div', class_='day-items')
             all_event_in_month.extend(all_event_in_soup_from_request)
             if data_json.get('next') != 'false':
-                month_first_date_in_ajax = self.get_day_and_month(all_event_in_soup_from_request[0]).split()[1]
+                try:
+                    month_first_date_in_ajax = self.get_day_and_month(all_event_in_soup_from_request[0]).split()[1]
+                except IndexError:
+                    return all_event_in_month
                 month_last_date_in_ajax = self.get_day_and_month(all_event_in_soup_from_request[-1]).split()[1]
                 if month_first_date_in_ajax == origin_month_for_request and month_last_date_in_ajax == origin_month_for_request:
                     page += 1

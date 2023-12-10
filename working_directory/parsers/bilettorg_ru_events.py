@@ -1,6 +1,9 @@
 from bs4 import BeautifulSoup
+from datetime import datetime
+
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
+from parse_module.utils.date import month_list
 from parse_module.manager.proxy.instances import ProxySession
 
 
@@ -11,24 +14,48 @@ class Bilettorg(EventParser):
         super().__init__(controller)
         self.delay = 3600
         self.driver_source = None
-        self.url = 'https://www.bilettorg.ru/anonces/106/'
+        self.urls = {
+            #'https://www.bilettorg.ru/anonces/106/': '*', # Большой театр
+            'https://www.bilettorg.ru/anonces/31/': '*', # Театр Ленком
+            'https://www.bilettorg.ru/anonces/132/': '*', #Никулина цирк
+            'https://www.bilettorg.ru/anonces/133/': '*', #Вернадский цирк
+            'https://www.bilettorg.ru/anonces/9/': '*', # Вахтангова
+            #'https://www.bilettorg.ru/anonces/113/': '*' #Kreml
+            'https://www.bilettorg.ru/anonces/43/': '*', #mhat chehkova
+            'https://www.bilettorg.ru/anonces/114/': '*',#stanislavskii
+            'https://www.bilettorg.ru/anonces/39/': '*', #ramt
+            'https://www.bilettorg.ru/anonces/187/': '*', #ugolock durova
+            'https://www.bilettorg.ru/anonces/33/': '*', #maly
+            
+        }
 
     def before_body(self):
         self.session = ProxySession(self)
 
-    def parse_events(self):
+    def parse_events(self, soup):
         a_events = []
 
-        soup = self.get_all_events()
-
         all_events = soup.select('li.wow.fadeIn')
+        venue = soup.find('h1', class_='title__headline').text.split(',')[0].strip()
+        if venue in self.reformat_venue:
+            venue = self.reformat_venue.get(venue)
+
         for event in all_events:
             title = event.find('a', class_='title').text.strip()
 
-            date = event.find('p', class_='date1').text.strip().split()
-            date[1] = date[1].title()[:3]
+            date, month = event.find('p', class_='date1').text.strip().split()
+            month = month.title()[:3]
+            if month == 'Мая':
+                month = 'Май'
             time = event.find('p', class_='date2').text.strip().split()[1]
-            normal_date = ' '.join(date) + ' ' + time
+            month_current = datetime.now().month
+            month_event = month_list.index(month)
+
+            year = datetime.now().year
+            if month_event < month_current:
+                year += 1
+
+            normal_date = f'{int(date):02d} {month} {year} {time}'
 
             scene = event.find_all('p')[2].text
 
@@ -39,11 +66,10 @@ class Bilettorg(EventParser):
             href = double_split(href, "='", "';")
             href = f'https://www.bilettorg.ru{href}'
 
-            a_events.append([title, href, normal_date, scene])
-
+            a_events.append([title, href, normal_date, scene, venue])
         return a_events
 
-    def get_all_events(self):
+    def get_all_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -61,11 +87,29 @@ class Bilettorg(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     def body(self):
-        a_events = self.parse_events()
+        
+        self.reformat_venue = {
+            'Главный театр России': 'Большой театр'
+        }
 
-        for event in a_events:
-            self.register_event(event[0], event[1], date=event[2], scene=event[3])
+        for url in self.urls:
+            soup = self.get_all_events(url)
+            a_events = self.parse_events(soup)
+
+            for event in a_events:
+                if 'цирк Юрия Никулина' in event[4]:
+                    if any(
+                        [i in event[2] for i in [
+                            '10 Дек 2023 18:00', '09 Дек 2023 18:00'
+                        ]]
+                    ):
+                        continue
+                    
+                self.register_event(event[0], event[1], date=event[2], 
+                                    scene=event[3], venue=event[4])
+            
+

@@ -80,14 +80,35 @@ def threading_try(to_try,
 
 
 def multi_try(to_try: Callable,
-              name='Main',
               to_except: Callable = None,
               tries=3,
+              raise_exc=True,
+              name='Main',
               args: Iterable = None,
               kwargs: dict = None,
-              raise_exc=True,
               print_errors=True,
               multiplier=1.14):
+    """
+    Try to execute smth ``tries`` times.
+    If all attempts are unsuccessful and ``raise_exc``
+    is True, raise an exception. ``to_except`` is called
+    every time attempt was not succeeded.
+
+    Args:
+        to_try: main function
+        name: name to identify logs
+        to_except: called if attempt was not succeeded
+        tries: number of attempts to execute ``to_try``
+        args: arguments sent to ``to_try``
+        kwargs: keyword arguments sent to ``to_try``
+        raise_exc: raise exception or not after all
+        print_errors: log errors on each try
+        multiplier: wait ratio, increase up to 1.5
+
+    Returns: value from a last successful attempt.
+    If all attempts fail, exception is raised or
+    provision.TryError is returned.
+    """
     if kwargs is None:
         kwargs = {}
     if args is None:

@@ -1,13 +1,16 @@
 import json
+from time import sleep
 
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
+from parse_module.utils import utils
 
 
 class StanmusParser(SeatsParser):
     event = 'stanmus.ru'
     url_filter = lambda url: 'stanmus.ru' in url
+    proxy_check_url = 'https://stanmus.ru/shows/'
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -60,7 +63,18 @@ class StanmusParser(SeatsParser):
         }
         r = self.session.get(self.url, headers=headers)
 
-        seat_data = json.loads(double_split(r.text, 'window.seatData = ', '};') + '}')
+        count = 10
+        if r.status_code != 200 and count > 0:
+            self.error(f'Status code: {r.status_code} Cannot load {self.url} Sleep..')
+            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.session = ProxySession(self)
+            sleep(60)
+            count -= 1
+            r = self.session.get(self.url, headers=headers)
+        try:
+            seat_data = json.loads(double_split(r.text, 'window.seatData = ', '};') + '}')
+        except Exception as ex:
+            self.error(f'Status code:{r.status_code} Cannot load {r.text} {ex}')
 
         a_sectors = []
         for ticket in seat_data['rows']:

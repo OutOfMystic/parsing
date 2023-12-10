@@ -34,7 +34,6 @@ class CskaHockeyParser(EventParser):
 
             venue = event_card.find('div', class_='matches-content-wrap-place').text.strip()
             if 'МСК "ЦСКА АРЕНА"' in venue:
-                print('cska - ', title)
                 venue = 'цска аренна'
 
             a_events.append([title, href, date, venue])

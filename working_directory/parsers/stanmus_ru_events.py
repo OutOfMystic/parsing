@@ -97,5 +97,5 @@ class Parser(EventParser):
             a_events += month_events
 
         for event in a_events:
-            self.register_event(event[0], event[1], date=event[2], scene=event[3])
+            self.register_event(event[0], event[1], date=event[2], scene=event[3], venue='Театр Станиславского')
 

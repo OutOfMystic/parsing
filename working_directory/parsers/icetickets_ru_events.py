@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
+from parse_module.utils import utils
 
 
 class Icetickets(EventParser):
@@ -15,13 +16,14 @@ class Icetickets(EventParser):
         self.session = ProxySession(self)
 
         self.our_places_data = [
-            'https://icetickets.ru/vid-meropriyatiya/shou',
+            #'https://icetickets.ru/vid-meropriyatiya/shou',
             'https://icetickets.ru/vid-meropriyatiya/kreml',
-            'https://icetickets.ru/vid-meropriyatiya/balet',
-            'https://icetickets.ru/vid-meropriyatiya/myuzikly',
-            'https://icetickets.ru/vid-meropriyatiya/kontserty',
-            'https://icetickets.ru/vid-meropriyatiya/detyam',
-            'https://icetickets.ru/vid-meropriyatiya/spektakli'
+            #'https://icetickets.ru/vid-meropriyatiya/balet',
+            #'https://icetickets.ru/vid-meropriyatiya/myuzikly',
+            #'https://icetickets.ru/vid-meropriyatiya/kontserty',
+            #'https://icetickets.ru/vid-meropriyatiya/detyam',
+            #'https://icetickets.ru/vid-meropriyatiya/spektakli',
+            'https://icetickets.ru/place/zal-tserkovnykh-soborov-khrama-khrista-spasitelya-zal-tserkovnykh-soborov--000000578'
         ]
 
     def parse_events(self, url):
@@ -45,29 +47,35 @@ class Icetickets(EventParser):
                 else:
                     break
 
+        
         for event in all_events:
             title_and_href = event.select('.event-card__title a')[0]
             title = title_and_href.text.strip()
-
+    
             venue = event.select('.event-card__param.event-card__param--place a')[0].text.strip()
+            if 'кремль' in venue.lower() or 'ГКД' in venue:
+                venue = 'Кремлёвский дворец'
 
             href = title_and_href.get('href')
             href = 'https://icetickets.ru' + href
-            soup = self.get_events(href)
-            all_href_and_date = soup.find('select', class_='select-date-select')
-            for href_and_date in all_href_and_date:
-                date = href_and_date.text.strip().split()
-                if len(date) < 3:
-                    continue
-                date[1] = date[1][:3].title()
-                normal_date = ' '.join(date[:3]) + ' ' + date[-2]
+            try:
+                soup = self.get_events(href)
+                all_href_and_date = soup.find('select', class_='select-date-select')
+                all_option = all_href_and_date.find_all('option', value=True)
+                for href_and_date in all_option:
+                    date = href_and_date.text.strip().split() #['2', 'декабря', '2023', 'Суббота,', '18:00', 'Купить']
+                    if len(date) < 3:
+                        continue
+                    normal_date = f"{date[0]} {date[1].capitalize()[:3]} {date[2]} {date[-2]}"
+            
+                    href = href_and_date.get('value').strip('~')
+                    href = f'https://icetickets.ru/event_tickets/?guid={href}'
+                    if len(href) > 100:
+                        continue
 
-                href = href_and_date.get('value')
-                href = f'https://icetickets.ru/event_tickets/?guid={href[:-1]}'
-                if len(href) > 100:
-                    continue
-
-                a_events.append([title, href, normal_date, venue])
+                    a_events.append([title, href, normal_date, venue])
+            except Exception as ex:
+                self.error(f' {title} NOT OUR PROBLEM! Maybe this url is 304 redirect! {self.url} {ex}')
 
         return a_events
 

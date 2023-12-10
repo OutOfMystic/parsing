@@ -3,6 +3,7 @@ import time
 import random
 import weakref
 from abc import abstractmethod
+from typing import Callable, Iterable
 
 import requests
 import threading
@@ -38,8 +39,9 @@ class BotCore(threading.Thread):
         proxy_str = f'with proxy {self.proxy}' if self.proxy else 'without proxy'
         return f'Bot "{self.name}" {proxy_str}'
 
-    def bprint(self, mes, color=utils.Fore.LIGHTGREEN_EX):
+    def bprint(self, *messages, color=utils.Fore.LIGHTGREEN_EX):
         """DEPRECATED. USE self.info, self.warning, etc."""
+        mes = ' '.join(str(arg) for arg in messages)
         logger.bprint_compatible(mes, self.name, color)
 
     def screen(self, text, addition=''):
@@ -58,6 +60,45 @@ class BotCore(threading.Thread):
             os.mkdir(pre_path)
         with open(filename, 'w+', encoding='utf-8') as f:
             f.write(text)
+
+    def multi_try(self,
+                  to_try: Callable,
+                  to_except: Callable = None,
+                  tries=3,
+                  raise_exc=True,
+                  args: Iterable = None,
+                  kwargs: dict = None,
+                  print_errors=True,
+                  multiplier=1.14):
+        """
+        Try to execute smth ``tries`` times.
+        If all attempts are unsuccessful and ``raise_exc``
+        is True, raise an exception. ``to_except`` is called
+        every time attempt was not succeeded.
+
+        Args:
+            to_try: main function
+            to_except: called if attempt was not succeeded
+            tries: number of attempts to execute ``to_try``
+            args: arguments sent to ``to_try``
+            kwargs: keyword arguments sent to ``to_try``
+            raise_exc: raise exception or not after all
+            print_errors: log errors on each try
+            multiplier: wait ratio, increase up to 1.5
+
+        Returns: value from a last successful attempt.
+        If all attempts fail, exception is raised or
+        provision.TryError is returned.
+        """
+        return provision.multi_try(to_try,
+                                   name=self.name,
+                                   to_except=to_except,
+                                   tries=tries,
+                                   args=args,
+                                   kwargs=kwargs,
+                                   raise_exc=raise_exc,
+                                   print_errors=print_errors,
+                                   multiplier=multiplier)
 
     def slide_tab(self):
         self.bprint('Max waste time elapsed, but nothing '
@@ -146,8 +187,34 @@ class BotCore(threading.Thread):
                     f'{utils.green("started")}')
 
     @staticmethod
-    def error(message):
-        logger.error(message, name='Controller')
+    def debug(*messages, **parameters):
+        message = ' '.join(str(arg) for arg in messages)
+        logger.debug(message, name='Controller', **parameters)
+
+    @staticmethod
+    def info(*messages, **parameters):
+        message = ' '.join(str(arg) for arg in messages)
+        logger.info(message, name='Controller', **parameters)
+
+    @staticmethod
+    def warning(*messages, **parameters):
+        message = ' '.join(str(arg) for arg in messages)
+        logger.warning(message, name='Controller', **parameters)
+
+    @staticmethod
+    def error(*messages, **parameters):
+        message = ' '.join(str(arg) for arg in messages)
+        logger.error(message, name='Controller', **parameters)
+
+    @staticmethod
+    def critical(*messages, **parameters):
+        message = ' '.join(str(arg) for arg in messages)
+        logger.critical(message, name='Controller', **parameters)
+
+    @staticmethod
+    def success(*messages, **parameters):
+        message = ' '.join(str(arg) for arg in messages)
+        logger.success(message, name='Controller', **parameters)
 
 
 def download(url, filename=None, session=None, save=True, **kwargs):

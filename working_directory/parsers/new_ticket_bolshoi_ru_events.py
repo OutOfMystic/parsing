@@ -43,7 +43,7 @@ class BolshoiParser(EventParser):
 
             venue = 'Большой театр'
 
-            a_events.append([title, href, date, venue, scene])
+            a_events.append((title, href, date, venue, scene))
 
         return a_events
 

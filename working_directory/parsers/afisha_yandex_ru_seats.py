@@ -1,17 +1,25 @@
+import json
 import time
+import re
+import base64
 
-from requests.exceptions import ProxyError
+from requests.exceptions import ProxyError, JSONDecodeError, ContentDecodingError
+
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains
+from PIL import Image, ImageOps
 
-from parse_module.utils.captcha import image
+from parse_module.utils.captcha import afisha_recaptcha
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
+from parse_module.utils import utils
 from parse_module.drivers.proxelenium import ProxyWebDriver
+from parse_module.utils.captcha import yandex_afisha_coordinates_captha
 
 
 class YandexAfishaParser(SeatsParser):
@@ -23,16 +31,77 @@ class YandexAfishaParser(SeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
+        self.count_error = 0
+        self.req_number = 0
+        self.headers = {
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'accept-encoding': 'gzip, deflate, br',
+            'accept-language': 'ru-RU,ru;q=0.9',
+            'connection': 'keep-alive',
+            'host': 'widget.afisha.yandex.ru',
+            'sec-ch-ua': '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"',
+            'sec-fetch-dest': 'document',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'none',
+            'sec-fetch-user': '?1',
+            'upgrade-insecure-requests': '1',
+            'user-agent': self.user_agent
+        }
 
     def before_body(self):
         self.session = ProxySession(self)
 
     def reformat(self, sectors):
-        if 'ВТБ Арена' in self.venue:
+        if 'ВТБ Арена' == self.venue and 'Динамо' in self.event_name : #Если матчи ХК Динамо
+            tribune_1 = 'Трибуна Давыдова. '
+            tribune_2 = 'Трибуна Васильева. '
+            tribune_3 = 'Трибуна Юрзинова. '
+            tribune_4 = 'Трибуна Мальцева. '
+
             for sector in sectors:
-                if 'Сектор C204' == sector['name']:
-                    ...
-                    # sector['name'] = 'Сектор C204 GOLD'
+                sector_name = sector.get('name').strip()
+                if 'A305' in sector_name:
+                    sector['name'] = "Трибуна Васильева. Сектор A305"
+                if 'Ресторан' in sector_name:
+                    sector['name'] = tribune_3 + sector_name
+                if 'Press' in sector_name or 'VVIP' in sector_name:
+                    sector['name'] = tribune_1 + sector_name
+                if 'Сектор' in sector_name:
+                    try:
+                        number_sector = int(sector_name.split('.')[0][-3:])
+                    except ValueError:
+                        continue
+                    # if sector_name[-4] == 'A' and 100 < number_sector <= 110:
+                    #     sector['name'] = tribune_1 + sector_name
+                    #     continue
+                    if 300 < number_sector <= 303 or 200 < number_sector <= 203 or 100 < number_sector <= 103:
+                        tribune = tribune_1 if 'A' in sector_name else tribune_3
+                        sector['name'] = tribune + sector_name
+                    elif 304 <= number_sector <= 309 or 204 <= number_sector <= 211 or 104 <= number_sector <= 108:
+                        tribune = tribune_2 if 'A' in sector_name else tribune_4
+                        sector['name'] = tribune + sector_name
+                    elif 310 <= number_sector < 315 or 212 <= number_sector < 215 or 109 <= number_sector < 115:
+                        tribune = tribune_3 if 'A' in sector_name else tribune_1
+                        sector['name'] = tribune + sector_name
+                if 'Ложа' in sector_name:
+                    number_sector = int(sector_name[-2:])
+                    if sector_name[-4] == 'A':
+                        if 1 < number_sector <= 4:
+                            sector['name'] = tribune_1 + sector_name
+                        elif 5 <= number_sector <= 17:
+                            sector['name'] = tribune_2 + sector_name
+                        elif 18 <= number_sector < 2:
+                            sector['name'] = tribune_3 + sector_name
+                    else:
+                        if 1 < number_sector <= 5:
+                            sector['name'] = tribune_3 + sector_name
+                        elif 6 <= number_sector <= 18:
+                            sector['name'] = tribune_4 + sector_name
+                        elif 19 <= number_sector < 2:
+                            sector['name'] = tribune_1 + sector_name
+
         elif self.venue == 'БКЗ «Октябрьский»':
             for sector in sectors:
                 if '(ограниченная видимость)' in sector['name']:
@@ -70,6 +139,51 @@ class YandexAfishaParser(SeatsParser):
                         sector['name'] = 'GOLD 7'
                     elif 'VIP-ложа Gold 8' in sector['name']:
                         sector['name'] = 'GOLD 8'
+        elif self.venue == 'Большая спортивная арена «Лужники»':
+            for sector in sectors:
+                if '(ограниченная видимость)' in sector['name']:
+                    sector['name'] = sector['name'].replace(' (ограниченная видимость)', '')
+                elif sector['name'] in ['Сектор C142', 'Ложа VVIP', 'Сектор A103']:
+                    sector['name'] = sector['name'] + ' Нету на схеме'
+        elif self.venue == 'Театр сатиры':
+            for sector in sectors:
+                if 'Партер' in sector['name']:
+                    sector['name'] = 'Партер'
+                elif 'ложа' in sector['name']:
+                    sector['name'] = 'Ложа'
+                elif 'Амфитеатр' in sector['name']:
+                    sector['name'] = 'Амфитеатр'
+        elif self.venue == 'Зимний театр':
+            to_del = []
+            to_add = {}
+            for index_sector, sector in enumerate(sectors):
+                if 'Бенуар' in sector['name'] or 'Бельэтаж' in sector['name']:
+                    to_del.append(index_sector)
+                    number_lozha = sector['name'].split()[-1]
+                    new_sector_name = sector['name'].split(',')[0]
+                    new_sector_tickets = {
+                        (number_lozha, place[1],): price
+                        for place, price in sector['tickets'].items()
+                    }
+                    try:
+                        old_new_sector_tickets = to_add[new_sector_name]
+                        to_add[new_sector_name] = old_new_sector_tickets | new_sector_tickets
+                    except KeyError:
+                        to_add[new_sector_name] = new_sector_tickets
+
+            to_del = sorted(to_del)[::-1]
+            for sector_index in to_del:
+                sectors.pop(sector_index)
+            for sector_name, sector_tickets in to_add.items():
+                new_sector = {
+                    'name': sector_name,
+                    'tickets': sector_tickets
+                }
+                sectors.append(new_sector)
+        elif self.venue == 'Мегаспорт':
+            for sector in sectors:
+                if re.compile(r'Фан[- ]сектор').search(sector['name']) and ('(гости)' in sector['name'] or '(хозяева)' in sector['name']):
+                    sector['name'] = 'Сектор ' + sector['name'].split()[1]
 
     def reformat_sectors_mikhailovsky(self, row, seat, sector_name, price):
         if 'ярус' in sector_name:
@@ -627,6 +741,11 @@ class YandexAfishaParser(SeatsParser):
         return self.handle_smart_captcha(r.url, old_url, old_headers)
 
     def handle_smart_captcha(self, url, old_url, old_headers):
+        while True:
+            r = self.selenium_smart_captha(url)
+            if not ('captcha' in r.url and len(r.url) > 200):
+                break
+        return r
         r = self.selenium_smart_captha(url)
         # r = self.session.get(old_url, headers=old_headers)
         return r
@@ -644,27 +763,24 @@ class YandexAfishaParser(SeatsParser):
             driver.get(url=r.url)
             r = self.solve_smart_captcha_image(driver)
         except TimeoutException as e:
-            self.bprint('Яндекс капча не пройдена: что-то не работает')
             raise ProxyError(e)
+        except Exception as e:
+            raise Exception(str(e))
         finally:
             driver.quit()
         return r
 
     def solve_smart_captcha_checkbox(self, driver):
-        body = WebDriverWait(driver, 3).until(
+        body = WebDriverWait(driver, 6).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "body"))
         ).get_attribute('innerHTML')
 
         href = double_split(body, 'formAction:"', '"')
         r_data = driver.find_element(By.CSS_SELECTOR, 'input[name=rdata]').get_attribute('value')
-        aes_key = driver.find_element(By.CSS_SELECTOR, 'input[name=aesKey]').get_attribute('value')
-        sign_key = driver.find_element(By.CSS_SELECTOR, 'input[name=signKey]').get_attribute('value')
         pdata = driver.find_element(By.CSS_SELECTOR, 'input[name=pdata]').get_attribute('value')
 
         data = {
             'rdata': r_data,
-            'aesKey': aes_key,
-            'signKey': sign_key,
             'pdata': pdata
         }
         headers = {
@@ -693,10 +809,15 @@ class YandexAfishaParser(SeatsParser):
         return r
 
     def solve_smart_captcha_image(self, driver):
-        img_captha = WebDriverWait(driver, 3).until(
+        img_captha = WebDriverWait(driver, 4).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.AdvancedCaptcha-View img"))
         )
         img_captha_href = img_captha.get_attribute('src')
+
+        img_captha_order = driver.find_element(By.CSS_SELECTOR, value='div.AdvancedCaptcha-SilhouetteTask canvas')
+        img_captha_order.screenshot('afisha_catcha_order.png')
+
+        textinstructions = driver.find_element(By.CSS_SELECTOR, value='span.Text').text
 
         r = self.session.get(img_captha_href, stream=True)
         if r.status_code == 200:
@@ -704,23 +825,52 @@ class YandexAfishaParser(SeatsParser):
                 for chunk in r:
                     f.write(chunk)
 
-        with open('afisha_catcha.png', 'rb') as img:
-            word_from_img = image(file=img)
+
+        with Image.open('afisha_catcha.png') as img:
+            image_with_elements = img.convert('RGB')
+            image_with_elements.save('afisha_catcha.jpg')
+        with open('afisha_catcha.jpg', 'rb') as img:
+            image_with_elements = base64.b64encode(img.read())
+        with Image.open('afisha_catcha_order.png') as img:
+            w, h = img.size
+            area = (0, 0, w-399, 0)
+            image_with_order = ImageOps.crop(img, area)
+            image_with_order = image_with_order.convert('RGB')
+            image_with_order.save('afisha_catcha_order.jpg')
+        with open('afisha_catcha_order.jpg', 'rb') as img:
+            image_with_order = base64.b64encode(img.read())
+
+        coordinates = yandex_afisha_coordinates_captha(image_with_elements, image_with_order, textinstructions)
+        self.debug(coordinates)
+       
+        for coordinate in coordinates:
+            actions = ActionChains(driver)
+            img_captha = driver.find_element(By.CSS_SELECTOR, "div.AdvancedCaptcha-View img")
+            x_offset = float(coordinate['x'])
+            y_offset = float(coordinate['y'])
+            # Получаем координаты верхнего левого угла элемента
+            element_location = img_captha.location
+            # Вычисляем смещение, чтобы переместиться в верхний левый угол
+            xoffset = element_location['x']
+            yoffset = element_location['y']
+            actions.move_by_offset(xoffset, yoffset)
+            actions.pause(1)
+            actions.move_by_offset(x_offset, y_offset)
+            actions.click().perform()
+            actions.pause(1)
+            actions.reset_actions()
 
         body = driver.find_element(By.CSS_SELECTOR, 'body').get_attribute('innerHTML')
         href = double_split(body, 'formAction:"', '"')
         r_data = driver.find_element(By.CSS_SELECTOR, 'input[name=rdata]').get_attribute('value')
-        aes_key = driver.find_element(By.CSS_SELECTOR, 'input[name=aesKey]').get_attribute('value')
-        sign_key = driver.find_element(By.CSS_SELECTOR, 'input[name=signKey]').get_attribute('value')
         pdata = driver.find_element(By.CSS_SELECTOR, 'input[name=pdata]').get_attribute('value')
+        rep = driver.find_element(By.CSS_SELECTOR, 'input[name=rep]').get_attribute('value')
 
         data = {
-            'rep': word_from_img,
+            'rep': rep,
             'rdata': r_data,
-            'aesKey': aes_key,
-            'signKey': sign_key,
             'pdata': pdata
-        }
+            }
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -742,12 +892,17 @@ class YandexAfishaParser(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        url = f'https://afisha.yandex.ru{href}&rep={word_from_img}'
+        url = f'https://afisha.yandex.ru{href}&rep={rep}'
         r = self.session.post(url, timeout=10, headers=headers, data=data)
+
+        if not '<div class="CheckboxCaptcha' in r.text:
+            self.success(f'Yandex captcha success solved bro!',color=utils.Fore.GREEN)
+        else:
+            self.warning(f'Yandex captcha DIDNT solved!!!',color=utils.Fore.RED)
         return r
 
-    def hallplan_request(self, event_params, count_req):
-        url = f'https://widget.afisha.yandex.ru/api/tickets/v1/sessions/{event_params["session_id"]}/hallplan/async?clientKey={event_params["client_key"]}&req_number={count_req}'
+    def hallplan_request(self, event_params, default_headers):
+        url = f'https://widget.afisha.yandex.ru/api/tickets/v1/sessions/{self.session_key}/hallplan/async?clientKey={event_params["client_key"]}&req_number={self.req_number}'
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -764,19 +919,29 @@ class YandexAfishaParser(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        if not default_headers:
+            default_headers = {}
+        headers.update(default_headers)
+        try:
+            r = self.session.get(url, headers=headers)
+        except ContentDecodingError as ex:
+            self.error(f"{url} {ex} failed to decode it! wrong sessinon_id or client_key")
+            raise
         r = self.check_captcha(r, url, headers)
 
         if 'result' not in r.text:
-            self.bprint(f'[req_err] request doesnt contain result: {r.text[:400]}')
-            return None
+            self.info(f'[req_err] request doesnt contain result: {r.text[:400]}')
+            return None, r
         if r.json()['status'] != 'success':
-            self.bprint(f'[req_err] request status != success: {r.text[:400]}')
-            return None
+            self.info(f'[req_err] request status != success: {r.text[:400]}')
+            return None, r
+        if r.json()['result']['saleStatus'] in ['not-available', 'closed', 'no-seats']:
+            return r.json()['result']['saleStatus'], r
         if 'hallplan' not in r.json()['result']:
-            return None
+            return None, r
 
-        return r.json()['result']['hallplan']['levels']
+        return r.json()['result']['hallplan']['levels'], r
+
 
     def get_regular_seats(self, a_sectors, r_sector, r_sector_name):
         for ticket in r_sector['seats']:
@@ -790,7 +955,7 @@ class YandexAfishaParser(SeatsParser):
             if 'Крокус Сити Холл' == self.venue:
                 r_sector_name, row = self.reformat_sectors_crocus(row, seat, r_sector, r_sector_name)
 
-            if 'Михайловский театр' == self.venue:
+            if 'Михайловский театр' == self.venue and 'Ложи бенуара' not in self.scheme.sector_names():
                 row, seat, r_sector_name, price = self.reformat_sectors_mikhailovsky(row, seat, r_sector_name, price)
 
             for sector in a_sectors:
@@ -802,6 +967,7 @@ class YandexAfishaParser(SeatsParser):
                     'name': r_sector_name,
                     'tickets': {(row, seat): price}
                 })
+
 
     def get_admission_seats(self, a_sectors, r_sector, r_sector_name):
         if self.is_special_case():
@@ -851,24 +1017,126 @@ class YandexAfishaParser(SeatsParser):
     def get_sector_max_seat_count(self):
         if 'Барвиха' in self.venue:
             return 4
-
         return 4
+    
+    def load_default_headers(self):
+        r = self.session.get(url=self.url, headers=self.headers)
+        box = double_split(r.text, 'defaultHeaders":', '}')
+        box = json.loads( box + '}')
+        return box
+
+
+    def check_availible_seats_and_session_key(self, default_headers, event_params):
+        headers2 = {
+            "accept": "*/*",
+            "accept-language": "en-US,en;q=0.9,ru;q=0.8",
+            "content-type": "application/json; charset=UTF-8",
+            'sec-ch-ua': '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
+            "sec-ch-ua-mobile": "?0",
+            'sec-ch-ua-platform': '"Windows"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "timeout": "5000",
+            "Referer": self.url.strip(),
+            "Referrer-Policy": "no-referrer-when-downgrade",
+            'user-agent': self.user_agent
+        }
+        headers2.update(default_headers)
+
+        url2 = f'https://widget.afisha.yandex.ru/api/tickets/v1/sessions/{event_params["session_id"]}?clientKey={event_params["client_key"]}&req_number={self.req_number}'
+        r2 = self.session.get(url=url2, headers=headers2)
+        self.req_number += 1
+        
+        try:
+            self.session_key = r2.json()["result"]["session"]["key"]
+        except:
+            self.session_key = event_params["session_id"]
+
+        if r2.json()["result"]["session"]["saleStatus"] in ['not-available', 'closed', 'no-seats']:
+            return False
+        return True
+
 
     def body(self):
         skip_events = [
             'https://widget.afisha.yandex.ru/w/sessions/MTE2NXwzODkxMzJ8Mjc4ODgzfDE2ODI2MTMwMDAwMDA%3D?widgetName=w2&lang=ru',  # ЦСКА — Ак Барс 27.04
         ]
-
         if self.url in skip_events:
             return None
+        
+        try:
+            default_headers = self.load_default_headers()
+        except Exception as ex:
+            default_headers = {}
+            self.error(f' cannot load Default_headers {self.url} {ex} continue')
 
-        count_requests = 0
-        r_sectors = None
         event_params = eval(self.event_params)
-        while count_requests < 50 and r_sectors is None:
-            r_sectors = self.hallplan_request(event_params, count_requests)
-            count_requests += 1
-            time.sleep(2)
+        
+        try:
+            if_seats = self.check_availible_seats_and_session_key(default_headers, event_params)
+        except Exception as ex:
+            self.error(f' Seats not found {self.url} Trouble to find tickets in this event')
+        else:
+            if not if_seats:
+                self.debug(f' Skip, no tickets {self.url} Empty_seats ')
+                return
+            else:
+                self.debug(f' Find tickets {self.url} seats_find')
+
+        r_sectors = None
+        r = None
+
+        while self.req_number < 50 and r_sectors is None:
+            try:
+                time.sleep(0.5)
+                r_sectors, r = self.hallplan_request(event_params, default_headers)
+            except Exception as ex:
+                self.error(f'Catch: {ex} \nurl:{self.url}')
+            finally:
+                self.req_number += 1
+        if r_sectors == 'no-seats' or r_sectors == 'not-available' or r_sectors == 'closed':
+            self.warning(f'NO tickets {self.url} Yandex afisha this\
+                         event dont have any tickets')
+            return
+        
+        self.debug(f'Make requests {self.req_number}')
+
+        if r is None:
+            self.warning(f'try {self.req_number} requests without sucess')
+            self.warning(f'Changing proxy... load 40..sec')
+            self.req_number = 0
+            self.default_headers = {}
+            time.sleep(40)
+            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.session = ProxySession(self)
+            
+            while self.req_number < 50 and r_sectors is None:
+                r_sectors, r = self.hallplan_request(event_params, default_headers)
+                self.req_number += 1
+                time.sleep(0.5)
+                if r_sectors == 'no-seats' or r_sectors == 'not-available' or r_sectors == 'closed':
+                    self.warning(f'NO tickets {self.url} Yandex afisha this \
+                                event dont have any tickets')
+                    return
+
+            self.debug(f'Make NEW requests {self.req_number}')
+
+        if r_sectors is None:
+            files = []
+            with open('file_to_send_telegram.json', 'w', encoding='utf-8') as file:
+                try:
+                    json.dump(r.json(), file, indent=4)
+                    files.append('file_to_send_telegram.json')
+                except (JSONDecodeError, AttributeError):
+                    ...
+            with open('file_to_send_telegram_text.html', 'w', encoding='utf-8') as file:
+                file.write(r.text)
+                files.append('file_to_send_telegram_text.html')
+            message = f"<b>r_sector is None response {r.json()['result']['saleStatus'] =} count request {self.req_number} {self.url = }</b>"
+            self.send_message_to_telegram(message, files)
+            self.warning(f'NO tickets {self.url} Yandex afisha this event dont have any tickets', color=utils.Fore.YELLOW)
+            return 
 
         a_sectors = []
         for r_sector in r_sectors:
@@ -884,3 +1152,4 @@ class YandexAfishaParser(SeatsParser):
 
         for sector in a_sectors:
             self.register_sector(sector['name'], sector['tickets'])
+        #self.check_sectors()

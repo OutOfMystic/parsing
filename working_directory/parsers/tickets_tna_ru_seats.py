@@ -1,3 +1,4 @@
+import re
 from bs4 import BeautifulSoup
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
@@ -5,6 +6,7 @@ from parse_module.utils.parse_utils import double_split
 
 
 class TNA(SeatsParser):
+    proxy_check_url = 'https://tna-tickets.ru/'
     event = 'tna-tickets.ru'
     url_filter = lambda url: 'tna-tickets.ru' in url
 
@@ -28,53 +30,59 @@ class TNA(SeatsParser):
         event_id = self.url.split('=')[-1]
         # access_token = 'f82ClAPmEt2QvK66XPzZgzbAMfh1WlR_'
         script_with_token = soup.select('body script')[0].text
-        access_token = double_split(script_with_token, 'API_ACCESS_TOKEN:"', '"}')
+        try:
+            access_token = re.search(r'(?<=\")(\w+)(?=\")', script_with_token).group(0)
+        except IndexError:
+            access_token = 'f82ClAPmEt2QvK66XPzZgzbAMfh1WlR_'
         url_to_data = f'https://api.tna-tickets.ru/api/v1/booking/{event_id}/sectors?access-token={access_token}'
         json_data = self.get_price_list_or_seats_or_sectors(url_to_data)
 
         all_sectors = json_data.get('result')
         for sector in all_sectors:
-            sector_name = sector.get('name')
-            sector_id = sector.get('sector_id')
+            try:
+                sector_name = sector.get('name')
+                sector_id = sector.get('sector_id')
 
-            url = f'https://api.tna-tickets.ru/api/v1/booking/{event_id}/seats-price?access-token={access_token}&sector_id={sector_id}'
-            get_price_list = self.get_price_list_or_seats_or_sectors(url)
+                url = f'https://api.tna-tickets.ru/api/v1/booking/{event_id}/seats-price?access-token={access_token}&sector_id={sector_id}'
+                get_price_list = self.get_price_list_or_seats_or_sectors(url)
 
-            price_data = {}
+                price_data = {}
 
-            price_list = get_price_list.get('result')
-            for price in price_list:
-                price_count = int(price.get('price').split('.')[0])
-                price_id = str(price.get('zone_id'))
-                price_data[price_id] = price_count
+                price_list = get_price_list.get('result')
+                for price in price_list:
+                    price_count = int(price.get('price').split('.')[0])
+                    price_id = str(price.get('zone_id'))
+                    price_data[price_id] = price_count
 
 
-            url = f'https://api.tna-tickets.ru/api/v1/booking/{event_id}/seats?access-token={access_token}&sector_id={sector_id}'
-            get_seats_list = self.get_price_list_or_seats_or_sectors(url)
+                url = f'https://api.tna-tickets.ru/api/v1/booking/{event_id}/seats?access-token={access_token}&sector_id={sector_id}'
+                get_seats_list = self.get_price_list_or_seats_or_sectors(url)
 
-            total_seats_row_prices = {}
+                total_seats_row_prices = {}
 
-            all_seats_in_sector = get_seats_list.get('result')
-            for seat_in_sector in all_seats_in_sector:
-                try:
-                    sector_row_seat = seat_in_sector.get('name')
-                    sector_and_row_seat = sector_row_seat.split(' Ряд ')
-                    row, seat = sector_and_row_seat[-1].split(' Место ')
-                except ValueError:  # Фан-зона
-                    continue
+                all_seats_in_sector = get_seats_list.get('result')
+                for seat_in_sector in all_seats_in_sector:
+                    try:
+                        sector_row_seat = seat_in_sector.get('name')
+                        sector_and_row_seat = sector_row_seat.split(' Ряд ')
+                        row, seat = sector_and_row_seat[-1].split(' Место ')
+                    except ValueError:  # Фан-зона
+                        continue
 
-                price = seat_in_sector.get('zone_id')
-                price = price_data.get(price)
+                    price = seat_in_sector.get('zone_id')
+                    price = price_data.get(price)
 
-                if price is not None:
-                    total_seats_row_prices[(row, seat)] = price
+                    if price is not None:
+                        total_seats_row_prices[(row, seat)] = price
 
-            total_sector.append(
-                {
-                    "name": sector_name,
-                    "tickets": total_seats_row_prices
-                }
-            )
+                total_sector.append(
+                    {
+                        "name": sector_name,
+                        "tickets": total_seats_row_prices
+                    }
+                )
+            except Exception as ex:
+                self.warning(f'{ex}, {get_seats_list}')
 
         return total_sector
 

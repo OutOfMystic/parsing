@@ -1,3 +1,6 @@
+from datetime import datetime
+import re
+
 from bs4 import BeautifulSoup
 
 from parse_module.models.parser import EventParser
@@ -23,27 +26,55 @@ class VtbArena(EventParser):
         for event in all_events:
             title = event.find('a', class_='card-c__title').text.strip()
 
-            date = event.find('div', class_='card-c__date').text.strip()
+            #03 ноября - 06 ноября or 02 ноября 2023 20:45
+            date = event.find('div', class_='card-c__date')
+            find_many_dates = date.text.strip().split()
             # date = double_split(str(date), '>', '<').strip()
-            date = date.split()
-            month = date[1][:3].title()
-            if month == 'Мая':
-                month = 'Май'
-            date = date[0] + ' ' + month + ' ' + date[2] + ' ' + date[5]
-
             href = event.find('a', class_='card-c__label')
             if not href:
                 continue
             href = href.get('href')
-
-            a_events.append([title, href, date])
+            if '-' in find_many_dates or len(find_many_dates) < 5:
+                box = self.get_all_event_dates(href, title)
+                a_events.extend(box)
+            else:
+                try:
+                    _date = date.get('content')
+                    datetime_object = datetime.strptime(_date, '%Y-%m-%dT%H:%M')
+                except:
+                    _date = date.text.strip().split()
+                    month = _date[1][:3].title()
+                    if month == 'Мая':
+                        month = 'Май'
+                    datetime_object = f"{_date[0]} {month} {_date[2]} {_date[-1]}"
+                if not href:
+                    continue
+                
+                a_events.append([title, href, datetime_object])
 
         return a_events
 
-    def get_all_event_dates(self, event_url):
-        pass
+    def get_all_event_dates(self, event_url, title):
+        if 'http' not in event_url:
+            event_url = f'https://vtb-arena.com{event_url}'
+        a1_events = []
+        soup = self.get_events(event_url)
+        box_main = soup.find_all(class_=re.compile(r'time-block__main'))
+        for event in box_main:
+            trs = event.find_all('tr', class_=False)
+            day = event.find(class_='time-block__day').text.strip()
+            month, year = event.find(class_='time-block__month').text.strip().split()
+            month = month[:3].capitalize()
+            if month.lower == 'мая':
+                month = 'Май'
+            for date in trs:
+                href = date.find(class_='btn').get('href')
+                time = date.find(attrs={'data-label':"Время"}).text.strip()
+                date_to_write = f"{day} {month} {year} {time}"
+                a1_events.append((title, href, date_to_write))
+        return a1_events
 
-    def get_events(self):
+    def get_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -60,15 +91,13 @@ class VtbArena(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = self.session.get(url, headers=headers)
         soup = BeautifulSoup(r.text, 'lxml')
-
-        a_events = self.parse_events(soup)
-
-        return a_events
+        return soup
 
     def body(self):
-        a_events = self.get_events()
+        soup = self.get_events(self.url)
+        a_events = self.parse_events(soup)
 
         for event in a_events:
-            self.register_event(event[0], event[1], date=event[2])
+            self.register_event(event[0], event[1], date=event[2], venue='ВТБ Арена')

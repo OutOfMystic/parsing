@@ -142,13 +142,10 @@ class Mmdm(EventParser):
         }
         url = f'https://www.mmdm.ru/events_ajax/?p_number={count_request_to_axaj}'
         r = self.session.get(url, headers=headers)
-        # if count_error_bypassing > 0:
-        #     self.bprint(f'--------- event_parser status after bypassing {r.status_code} {count_error_bypassing = } --------------')
 
         if r.status_code == 200:
             return r.json()
         elif r.status_code == 403:
-            # self.bprint(f'--------- event_parser {r.status_code = } {count_error_bypassing = } --------------')
             self.bypassing_protection(count_error_bypassing)
             return self._requests_to_axaj_events(count_request_to_axaj, count_error_bypassing=count_error_bypassing+1)
         else:
@@ -176,13 +173,10 @@ class Mmdm(EventParser):
             'user-agent': self.user_agent,
         }
         r = self.session.get(self.url, headers=headers)
-        # if count_error_bypassing > 0:
-        #     self.bprint(f'--------- event_parser status after bypassing {r.status_code} {count_error_bypassing = } --------------')
 
         if r.status_code == 200:
             return BeautifulSoup(r.text, 'lxml')
         elif r.status_code == 403:
-            # self.bprint(f'--------- event_parser {r.status_code = } {count_error_bypassing = } --------------')
             self.bypassing_protection(count_error_bypassing)
             return self._requests_to_events(count_error_bypassing=count_error_bypassing+1)
         else:
@@ -201,7 +195,7 @@ class Mmdm(EventParser):
 
         if requests_to_js_1_status != 200 or requests_to_js_2_status != 200 or requests_to_image_1_status != 200 or \
                 requests_to_image_2_status != 200 or requests_to_send_data_status != 200:
-            self.bprint('---------- event_parser bypassing protection ddos-guard is failed ----------')
+            self.error('---------- event_parser bypassing protection ddos-guard is failed ----------')
 
     def requests_to_js_ddos_guard(self, delay_to_requests: int) -> tuple[int, int]:
         headers = {

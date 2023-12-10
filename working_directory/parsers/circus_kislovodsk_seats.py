@@ -1,7 +1,6 @@
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 
-
 class CircusKislovodsk(SeatsParser):
     event = 'circus-kislovodsk.ru'
     url_filter = lambda url: 'ticket-place.ru' in url and '|kislovodsk' in url
@@ -20,7 +19,6 @@ class CircusKislovodsk(SeatsParser):
             "sec-fetch-dest": "empty",
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-origin",
-            "Referer": "https://ticket-place.ru/widget/1013",
             "Referrer-Policy": "strict-origin-when-cross-origin",
             "user-agent": self.user_agent
         }

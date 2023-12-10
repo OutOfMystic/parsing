@@ -1,3 +1,5 @@
+from requests.exceptions import ProxyError
+
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils import parse_utils
@@ -35,8 +37,8 @@ class Parser(EventParser):
             'user-agent': self.user_agent
         }
         r = self.session.get(self.url, headers=headers)
-        if 'div class="events_groups_list"' not in r.text or r.status_code != 200:
-            raise RuntimeError('Ne progruzilas, ip changed')
+        if r.status_code != 200:
+            raise ProxyError('Ne progruzilas, ip changed')
         url = 'https://theatreofnations.ru/events_ajax/?hall=&performance=&date_start=&date_end=&early_access=&only_active_events=&search_premiere=&search_child='
         r = self.session.get(url, headers=headers)
         months = []
@@ -54,7 +56,8 @@ class Parser(EventParser):
 
     def get_events(self, months):
         headers = {
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
+                      'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
             'cache-control': 'no-cache',

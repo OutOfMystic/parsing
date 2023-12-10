@@ -111,7 +111,16 @@ class OperettaParser(EventParser):
 
             data.update(month_data)
 
-        r = self.session.post(url, headers=headers, data=data)
+        r = self.session.post(url, headers=headers, data=data, verify=False)
+
+        count = 5
+        while not r.ok and count > 0:
+            self.debug(f'{self.proxy.args = }, {self.session.cookies = } kassir events')
+            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.session = ProxySession(self)
+            r = self.session.post(url, headers=headers, data=data, verify=False)
+            count -= 1
+
         soup = BeautifulSoup(r.text, 'lxml')
 
         a_events = self.parse_events(soup)

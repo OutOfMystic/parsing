@@ -35,13 +35,15 @@ class BdtSpb(EventParser):
                     href = event.find('a', class_='tl_afisha')
                     if href is None:
                         continue
-                    href = href.get('href')
+                    href = href.get('href') + 'to_parser'
 
                     title = event.find('a', class_='text-secondary')
                     if title is None:
                         title = event.select('span.text-secondary a span')
                         if len(title) == 0:
                             title = event.select('span.text-secondary span b')
+                            if len(title) == 0:
+                                title = event.select('span.text-secondary p span')
                         title = title[0]
                     title = title.text.strip()
 

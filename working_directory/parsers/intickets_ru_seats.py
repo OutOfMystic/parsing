@@ -8,7 +8,7 @@ import codecs
 
 class InticketsParser(SeatsParser):
     event = 'intickets.ru'
-    url_filter = lambda url: 'intickets.ru' in url
+    url_filter = lambda url: 'intickets.ru' in url and 'pre8136' not in url
     proxy_check_url = 'https://iframeab-pre4073.intickets.ru/'
 
     def __init__(self, *args, **extra):
@@ -42,7 +42,7 @@ class InticketsParser(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = self.session.get(self.url, headers=headers, verify=False)
 
         if 'Билетов больше нет' in r.text:
             return False

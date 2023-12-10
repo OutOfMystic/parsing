@@ -5,6 +5,7 @@ from parse_module.utils.parse_utils import double_split
 
 
 class Icetickets(SeatsParser):
+    proxy_check_url = 'https://icetickets.ru//'
     event = 'icetickets.ru'
     url_filter = lambda url: 'icetickets.ru' in url
 
@@ -31,9 +32,12 @@ class Icetickets(SeatsParser):
             'Партер середина': 'Партер, середина',
             'Партер левая сторона': 'Партер, левая сторона',
             'Партер правая сторона': 'Партер, правая сторона',
+            'Малый зал ГКД': 'Партер',
+            '6-й этаж': 'Партер'
         }
-        ref_dict = {}
-        if 'кремль большой зал' in self.venue.lower():
+        ref_dict = {'Малый зал ГКД': 'Партер',
+                    '6-й этаж': 'Партер'}
+        if 'кремлёвский дворец' in self.venue.lower():
             ref_dict = kreml_reformat_dict
 
         for sector in a_sectors:
@@ -111,7 +115,7 @@ class Icetickets(SeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.post(url, data=data, headers=headers)
+        r = self.session.post(url, data=data, headers=headers, verify=False)
         return BeautifulSoup(r.text, 'lxml')
 
     def second_requests_parser(self, url):
@@ -129,7 +133,7 @@ class Icetickets(SeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers)
+        r = self.session.get(url, headers=headers, verify=False)
         return BeautifulSoup(r.text, 'lxml')
 
     def request_parser(self, url):
@@ -138,7 +142,6 @@ class Icetickets(SeatsParser):
             'accept-encoding': 'gzip, deflate, utf-8',
             'accept-language': 'ru,en;q=0.9',
             'cache-control': 'max-age=0',
-            'referer': 'https://icetickets.ru/meropriyatie/ledovoe-shou-ili-averbukha-000024128',
             'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "Yandex";v="23"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
@@ -149,7 +152,7 @@ class Icetickets(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = self.session.get(url, headers=headers, verify=False)
         return BeautifulSoup(r.text, 'lxml')
 
     def get_seats(self):

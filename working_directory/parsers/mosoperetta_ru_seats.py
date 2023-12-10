@@ -61,7 +61,16 @@ class OperettaParser(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = self.session.get(self.url, headers=headers, verify=False)
+
+        count = 8
+        while not r.ok and count > 0:
+            self.debug(f'{self.proxy.args = }, {self.session.cookies = } mosoperetta 505 bad gateway')
+            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.session = ProxySession(self)
+            r = self.session.get(self.url, headers=headers, verify=False)
+            count -= 1
+
         sitekey = double_split(r.text, 'data-sitekey="', '"')
 
         tries = 0
@@ -97,11 +106,11 @@ class OperettaParser(SeatsParser):
             'smart-token': token,
         }
 
-        r = self.session.post(self.url, headers=headers, data=data)
+        r = self.session.post(self.url, headers=headers, data=data, verify=False)
         try:
             svg_url = double_split(r.text, "url_svg = '", "'")
         except:
-            print(r.status_code)
+            self.error('svg_url cannot be got {r.status_code}')
         seats_url = 'https://mosoperetta.ru' + double_split(r.text, "var checkTSR = '", "'")
 
         return seats_url
@@ -124,7 +133,7 @@ class OperettaParser(SeatsParser):
             'x-requested-with': 'XMLHttpRequest'
         }
         url = seats_url
-        r = self.session.get(url, headers=headers)
+        r = self.session.get(url, headers=headers, verify=False)
         if not r.json().get('FreePlacesQty'):
             return []
 

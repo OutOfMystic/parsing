@@ -25,6 +25,8 @@ class XKMetalurg(EventParser):
             href = f'https://tickets.metallurg.ru/webapi/sectors/{str(id_to_href)}/available/list'
 
             time = event.get('time')
+            if time is None:
+                continue
             time = time.split(':')
             date = event.get('day')
             date = date.split('-')[::-1]

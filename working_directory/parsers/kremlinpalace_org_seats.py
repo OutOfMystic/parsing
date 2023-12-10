@@ -44,7 +44,9 @@ class KremlInPalace(SeatsParser):
             'Сектор А': 'Сектор А',
             'Сектор В': 'Сектор B',
             'Сектор С': 'Сектор C',
-            'Малый зал ГКД': 'Партер'
+            'Малый зал ГКД': 'Партер',
+            '6-й этаж': 'Партер'
+
         }
 
         for sector in a_sectors:
@@ -55,6 +57,8 @@ class KremlInPalace(SeatsParser):
 
         all_data = []
         all_place = json_data.get('data')
+        if all_place is None:
+            return []
         for place in all_place:
             color = place.get('color')
             sector_name = place.get('section_name')
@@ -242,11 +246,9 @@ class KremlInPalace(SeatsParser):
         return all_sectors
 
     def body(self):
-        # print('start_pars')
         for count_error in range(10):
             try:
                 all_sectors = self.get_seats()
-                # print('end_pars')
                 break
             except AttributeError as error:
                 if count_error == 9:
@@ -254,11 +256,10 @@ class KremlInPalace(SeatsParser):
                 if count_error >= 5:
                     self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
                     self.session = ProxySession(self)
-                # print('error', count_error)
                 continue
         else:
             all_sectors = {}
-            self.bprint('--- seats_parser kremlepalace bypassing protection is failed ---')
+            self.error('--- seats_parser kremlepalace bypassing protection is failed ---')
 
         self.reformat(all_sectors)
 

@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 from typing import NamedTuple
 
-from requests.exceptions import ProxyError
+from requests.exceptions import ProxyError, JSONDecodeError
 
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
@@ -70,6 +70,8 @@ class Mmdm(SeatsParser):
                 sector_name = sector_name.replace('с ограниченным обзором', '(с ограниченным обзором)')
         elif 'камерный' in self.scene.lower():
             sector_name = sector_name.replace(' неудобные места', '')
+            if sector_name == 'Партер с ограниченным обзором':
+                sector_name = 'Партер (с ограниченным обзором)'
 
         return sector_name
 
@@ -134,13 +136,13 @@ class Mmdm(SeatsParser):
         id_event = self.url.split('/')[-2]
         url = f'https://www.mmdm.ru/api/places/?nombilkn={id_event}&cmd=get_hall_and_places'
         r = self.session.get(url, headers=headers)
-        # if count_error_bypassing > 0:
-        #     self.bprint(f'--------- seats_parser status after bypassing {r.status_code} {count_error_bypassing = } --------------')
 
         if r.status_code == 200:
-            return r.json()
+            try:
+                return r.json()
+            except JSONDecodeError:
+                return self._request_to_json_data(count_error_bypassing=count_error_bypassing+1)
         elif r.status_code == 403:
-            # self.bprint(f'--------- seats_parser {r.status_code = } {count_error_bypassing = } --------------')
             self.bypassing_protection(count_error_bypassing)
             return self._request_to_json_data(count_error_bypassing=count_error_bypassing+1)
         else:
@@ -159,7 +161,7 @@ class Mmdm(SeatsParser):
 
         if requests_to_js_1_status != 200 or requests_to_js_2_status != 200 or requests_to_image_1_status != 200 or \
                 requests_to_image_2_status != 200 or requests_to_send_data_status != 200:
-            self.bprint('---------- seats_parser bypassing protection ddos-guard is failed ----------')
+            self.error('---------- seats_parser bypassing protection ddos-guard is failed ----------')
 
     def requests_to_js_ddos_guard(self, delay_to_requests: int) -> tuple[int, int]:
         headers = {
@@ -271,5 +273,11 @@ class Mmdm(SeatsParser):
         return requests_to_send_data_status
 
     def body(self) -> None:
+        skip_urls = [
+            'https://www.mmdm.ru/reserve-ticket/7003/',
+            # 'https://www.mmdm.ru/reserve-ticket/7322/',
+        ]
+        if self.url in skip_urls:
+            return
         for sector in self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

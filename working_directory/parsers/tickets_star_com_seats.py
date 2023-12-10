@@ -5,10 +5,9 @@ from bs4 import BeautifulSoup
 import re
 
 
-class Parser(SeatsParser):
+class StarParser(SeatsParser):
     event = 'tickets-star.com'
     url_filter = lambda event: 'tickets-star.com' in event
-    proxy_check_url = 'https://www.tickets-star.com/'
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -94,10 +93,6 @@ class Parser(SeatsParser):
                 # Старая Сцена, Зеленый Зал (2 ряда)
                 if 'партер' in sector_name_l:
                     f_sector_name = sector_name.replace(' правый', '').replace(' левый', '')
-                if 'ложа балкона левая' in sector_name_l:
-                    f_sector_name = 'Правая ложа балкона'
-                if 'ложа балкона правая' in sector_name_l:
-                    f_sector_name = 'Левая ложа балкона'
 
                 return f_sector_name
 
@@ -110,7 +105,12 @@ class Parser(SeatsParser):
                 if 'ложа' in sector_name_l:
                     if 'бенуара' in sector_name_l:
                         lozha_num = sector_name.split()[-1]
-                        f_sector_name = f'Ложа {lozha_num}'
+
+                        uncomfy = ''
+                        if lozha_num in ['1', '2', '13', '14']:
+                            uncomfy = ' (неудобные места)'
+
+                        f_sector_name = f'Ложа {lozha_num}{uncomfy}'
 
                 return f_sector_name
 
@@ -158,19 +158,6 @@ class Parser(SeatsParser):
 
                 # Малая сцена (XXX)
                 # TODO не все сектора проверены ввиду отсутствия билетов на сайте (Галерея)
-
-                return f_sector_name
-
-        elif 'мхат' in theatre:
-            def get_f_name(sector, sector_name, sector_seats, scene):
-                f_sector_name = sector_name
-                sector_name_l = sector_name.lower()
-
-                # Основная сцена
-                if 'бельэтаж середина' in sector_name_l:
-                    f_sector_name = 'Бельэтаж'
-                if 'vip' in str(sector.get('seats')).lower():
-                    f_sector_name = 'VIP-партер'
 
                 return f_sector_name
 
@@ -250,7 +237,7 @@ class Parser(SeatsParser):
                 sector_name_l = sector_name.lower()
 
                 # Основная сцена
-                if sector_name_l == 'правая ложа' or sector_name_l == 'левая ложа':
+                if sector_name_l == 'правая ложа':
                     f_sector_name = 'Ложа'
 
                 return f_sector_name
@@ -303,10 +290,6 @@ class Parser(SeatsParser):
                         f_sector_name = 'Бенуар, правая сторона Ложа 1'
                     elif 'ложа бенуара, лс' in sector_name_l:
                         f_sector_name = 'Бенуар,  левая сторона Ложа 1'
-                    elif 'левая ложа 1-го яруса' in sector_name_l:
-                        f_sector_name = 'Первый ярус, левая сторона Ложа 1'
-                    elif 'правая ложа 1-го яруса' in sector_name_l:
-                        f_sector_name = 'Первый ярус, правая сторона Ложа 1'
 
                     return f_sector_name, to_append
 
@@ -359,56 +342,6 @@ class Parser(SeatsParser):
                     return f_sector_name, to_append
 
                 add_sec = True
-
-        elif 'зарядье' in theatre:
-            def get_f_name(sector, sector_name, sector_seats, scene):
-                f_sector_name = sector_name.replace('-', '')
-                sector_name_l = sector_name.lower()
-
-                if 'бельэтаж левая сторона' in sector_name_l:
-                    f_sector_name = 'Бельэтаж, левая сторона'
-                elif 'бельэтаж правая сторона' in sector_name_l:
-                    f_sector_name = 'Бельэтаж, правая сторона'
-                elif 'бельэтаж сцена левая сторона' in sector_name_l:
-                    f_sector_name = 'Бельэтаж сцена, левая сторона'
-                elif 'бельэтаж сцена правая сторона' in sector_name_l:
-                    f_sector_name = 'Бельэтаж сцена, правая сторона'
-                elif 'балкон 1 ярус середина' in sector_name_l:
-                    f_sector_name = 'Балкон 1-го яруса, середина'
-                elif 'балкон 1 ярус левая сторона' in sector_name_l:
-                    f_sector_name = 'Балкон 1-го яруса, левая сторона'
-                elif 'балкон 1 ярус правая сторона' in sector_name_l:
-                    f_sector_name = 'Балкон 1-го яруса, правая сторона'
-                elif 'балкон 2 ярус правая сторона' in sector_name_l:
-                    f_sector_name = 'Балкон 1-го яруса, правая сторона'
-                elif 'балкон 2 ярус правая сторона' in sector_name_l:
-                    f_sector_name = 'Балкон 1-го яруса, правая сторона'
-                elif 'балкон 2 ярус правая сторона' in sector_name_l:
-                    f_sector_name = 'Балкон 1-го яруса, правая сторона'
-
-                return f_sector_name
-
-        elif 'мегаспорт' in theatre:
-            def get_f_name(sector, sector_name, sector_seats, scene):
-                f_sector_name = sector_name.replace('-', '')
-                sector_name_l = sector_name.lower()
-
-                if 'трибуна' in sector_name_l:
-                    f_sector_name = f_sector_name.replace('трибуна', 'Сектор').replace('Трибуна', 'Сектор')
-                if 'фанзона' in sector_name_l:
-                    f_sector_name = 'Фан-зона'
-                if 'танцевальный партер' in sector_name_l:
-                    f_sector_name = 'Танцпол'
-
-                return f_sector_name
-
-        elif 'цска арена' in theatre:
-            # only capitalize needed
-            pass
-
-        elif 'крокус' in theatre:
-            # only capitalize needed
-            pass
 
         self.get_f_sectors(a_sectors, get_f_name, add_sec)
 
@@ -592,17 +525,11 @@ class Parser(SeatsParser):
 
         return range_
 
-    def reformat_table_in_crocus_hall(self, sector, row):
-        new_row = sector.split()[-1]
-        sector = f'Grand партер (ряд {row})'
-        return sector, new_row
-
     def place_map(self, soup):
         s = []
         place1 = soup.find_all('div', class_='place1')
         for place in place1:
             t = place.get('title').translate({ord(i): None for i in '<strong><br/>'})
-            # print(t)
             sector = t.split('ряд')[0].strip()
             row = (' '.join(re.findall(r'ряд([^<>]+),', t))).strip()
 
@@ -613,14 +540,7 @@ class Parser(SeatsParser):
             seat = (' '.join(re.findall(r'место([^<>]+) Стоимость', t))).strip()
             price = (' '.join(re.findall(r'Стоимость:([^<>]+) руб.', t))).strip()
 
-            if 'танцпол' in sector or 'фан-зона' in sector:
-                continue
-                self.register_dancefloor(sector, price)
-            else:
-                if 'Крокус Сити Холл' in self.venue:
-                    if 'Стол' in sector:
-                        sector, row = self.reformat_table_in_crocus_hall(sector, row)
-                s.append([sector, row, seat, price])
+            s.append([sector, row, seat, price])
         return s
 
     def place_btn(self, soup):
@@ -637,541 +557,9 @@ class Parser(SeatsParser):
             for diaposon in places.split(', '):
                 for seat in self.get_range(diaposon):
                     seat = str(seat)
-                    if 'танцпол' in sector or 'фан-зона' in sector:
-                        continue
-                        self.register_dancefloor(sector, price)
-                    if 'Крокус Сити Холл' == self.venue:
-                        sector, row = self.reformat_sectors_crocus(row, seat, sector)
-                        if 'Стол' in sector:
-                            sector, row = self.reformat_table_in_crocus_hall(sector, row)
                     seats.append([sector, row, seat, price])
 
         return seats
-
-    def reformat_sectors_crocus(self, row, seat, r_sector_name):
-        r_sector_name = r_sector_name.title()
-        if 'Крокус Сити Холл-Без Амфитиатра' in self.scheme.name:
-            if 'Vip-партер' == r_sector_name:
-                if row == '12':
-                    if int(seat) <= 17:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 53:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-                if row == '11':
-                    if int(seat) <= 17:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 53:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-                elif row == '10':
-                    if int(seat) <= 16:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 58:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-                elif row == '9':
-                    if int(seat) <= 15:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 57:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-                if row == '8':
-                    if int(seat) <= 15:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 57:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-                elif row == '7':
-                    if int(seat) <= 13:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 41:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-                elif row == '6':
-                    if int(seat) <= 13:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 41:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-                elif row == '5':
-                    if int(seat) <= 11:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 35:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-                elif row == '4':
-                    if int(seat) <= 11:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 35:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-                elif row == '3':
-                    if int(seat) <= 11:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 35:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-                elif row == '2':
-                    if int(seat) <= 9:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 29:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-                elif row == '1':
-                    if int(seat) <= 8:
-                        r_sector_name = 'VIP партер 1'
-                    elif int(seat) <= 26:
-                        r_sector_name = 'VIP партер 2'
-                    else:
-                        r_sector_name = 'VIP партер 3'
-        if ('Крокус Сити Холл-Столы' in self.scheme.name and 'в 4 ряда' not in self.scheme.name)\
-                or 'Крокус Сити Холл-Без Амфитиатра' in self.scheme.name:
-            if 'Партер' == r_sector_name:
-                if row == '8':
-                    if int(seat) <= 25:
-                        r_sector_name = 'Партер 1'
-                    elif int(seat) <= 61:
-                        r_sector_name = 'Партер 2'
-                    else:
-                        r_sector_name = 'Партер 3'
-                elif row == '7':
-                    if int(seat) <= 23:
-                        r_sector_name = 'Партер 1'
-                    elif int(seat) <= 60:
-                        r_sector_name = 'Партер 2'
-                    else:
-                        r_sector_name = 'Партер 3'
-                elif row == '6':
-                    if int(seat) <= 23:
-                        r_sector_name = 'Партер 1'
-                    elif int(seat) <= 57:
-                        r_sector_name = 'Партер 2'
-                    else:
-                        r_sector_name = 'Партер 3'
-                elif row == '5':
-                    if int(seat) <= 22:
-                        r_sector_name = 'Партер 1'
-                    elif int(seat) <= 56:
-                        r_sector_name = 'Партер 2'
-                    else:
-                        r_sector_name = 'Партер 3'
-                elif row == '4':
-                    if int(seat) <= 22:
-                        r_sector_name = 'Партер 1'
-                    elif int(seat) <= 66:
-                        r_sector_name = 'Партер 2'
-                    else:
-                        r_sector_name = 'Партер 3'
-                elif row == '3':
-                    if int(seat) <= 21:
-                        r_sector_name = 'Партер 1'
-                    elif int(seat) <= 65:
-                        r_sector_name = 'Партер 2'
-                    else:
-                        r_sector_name = 'Партер 3'
-                elif row == '2':
-                    if int(seat) <= 19:
-                        r_sector_name = 'Партер 1'
-                    elif int(seat) <= 63:
-                        r_sector_name = 'Партер 2'
-                    else:
-                        r_sector_name = 'Партер 3'
-                elif row == '1':
-                    if int(seat) <= 18:
-                        r_sector_name = 'Партер 1'
-                    elif int(seat) <= 60:
-                        r_sector_name = 'Партер 2'
-                    else:
-                        r_sector_name = 'Партер 3'
-            if 'Амфитеатр' == r_sector_name or 'Партер' == r_sector_name:
-                if (row == '6' and not 'Крокус Сити Холл-Без Амфитиатра' in self.scheme.name) or row == '14':
-                    if row == '6':
-                        row = '14'
-                    if int(seat) <= 17:
-                        r_sector_name = 'Партер 4'
-                    elif int(seat) <= 33:
-                        r_sector_name = 'Партер 5'
-                    elif int(seat) <= 50:
-                        r_sector_name = 'Партер 7'
-                    else:
-                        r_sector_name = 'Партер 8'
-                elif (row == '5' and not 'Крокус Сити Холл-Без Амфитиатра' in self.scheme.name) or row == '13':
-                    if row == '5':
-                        row = '13'
-                    if int(seat) <= 17:
-                        r_sector_name = 'Партер 4'
-                    elif int(seat) <= 33:
-                        r_sector_name = 'Партер 5'
-                    elif int(seat) <= 65:
-                        r_sector_name = 'Партер 6'
-                    elif int(seat) <= 81:
-                        r_sector_name = 'Партер 7'
-                    else:
-                        r_sector_name = 'Партер 8'
-                elif (row == '4' and not 'Крокус Сити Холл-Без Амфитиатра' in self.scheme.name) or row == '12':
-                    if row == '4':
-                        row = '12'
-                    if int(seat) <= 16:
-                        r_sector_name = 'Партер 4'
-                    elif int(seat) <= 32:
-                        r_sector_name = 'Партер 5'
-                    elif int(seat) <= 64:
-                        r_sector_name = 'Партер 6'
-                    elif int(seat) <= 80:
-                        r_sector_name = 'Партер 7'
-                    else:
-                        r_sector_name = 'Партер 8'
-                elif (row == '3' and not 'Крокус Сити Холл-Без Амфитиатра' in self.scheme.name) or row == '11':
-                    if row == '3':
-                        row = '11'
-                    if int(seat) <= 16:
-                        r_sector_name = 'Партер 4'
-                    elif int(seat) <= 31:
-                        r_sector_name = 'Партер 5'
-                    elif int(seat) <= 62:
-                        r_sector_name = 'Партер 6'
-                    elif int(seat) <= 77:
-                        r_sector_name = 'Партер 7'
-                    else:
-                        r_sector_name = 'Партер 8'
-                elif (row == '2' and not 'Крокус Сити Холл-Без Амфитиатра' in self.scheme.name) or row == '10':
-                    if row == '2':
-                        row = '10'
-                    if int(seat) <= 15:
-                        r_sector_name = 'Партер 4'
-                    elif int(seat) <= 30:
-                        r_sector_name = 'Партер 5'
-                    elif int(seat) <= 60:
-                        r_sector_name = 'Партер 6'
-                    elif int(seat) <= 75:
-                        r_sector_name = 'Партер 7'
-                    else:
-                        r_sector_name = 'Партер 8'
-                elif (row == '1' and not 'Крокус Сити Холл-Без Амфитиатра' in self.scheme.name) or row == '9':
-                    if row == '1':
-                        row = '9'
-                    if int(seat) <= 10:
-                        r_sector_name = 'Партер 4'
-                    elif int(seat) <= 24:
-                        r_sector_name = 'Партер 5'
-                    elif int(seat) <= 44:
-                        r_sector_name = 'Партер 6'
-                    elif int(seat) <= 58:
-                        r_sector_name = 'Партер 7'
-                    else:
-                        r_sector_name = 'Партер 8'
-        if 'Бельэтаж' == r_sector_name:
-            if row == '8':
-                if int(seat) <= 27:
-                    r_sector_name = 'Бельэтаж 1'
-                elif int(seat) <= 50:
-                    r_sector_name = 'Бельэтаж 2'
-                elif int(seat) <= 93:
-                    r_sector_name = 'Бельэтаж 3'
-                elif int(seat) <= 117:
-                    r_sector_name = 'Бельэтаж 4'
-                else:
-                    r_sector_name = 'Бельэтаж 5'
-            elif row == '7':
-                if int(seat) <= 27:
-                    r_sector_name = 'Бельэтаж 1'
-                elif int(seat) <= 49:
-                    r_sector_name = 'Бельэтаж 2'
-                elif int(seat) <= 90:
-                    r_sector_name = 'Бельэтаж 3'
-                elif int(seat) <= 113:
-                    r_sector_name = 'Бельэтаж 4'
-                else:
-                    r_sector_name = 'Бельэтаж 5'
-            elif row == '6':
-                if int(seat) <= 27:
-                    r_sector_name = 'Бельэтаж 1'
-                elif int(seat) <= 48:
-                    r_sector_name = 'Бельэтаж 2'
-                elif int(seat) <= 89:
-                    r_sector_name = 'Бельэтаж 3'
-                elif int(seat) <= 112:
-                    r_sector_name = 'Бельэтаж 4'
-                else:
-                    r_sector_name = 'Бельэтаж 5'
-            elif row == '5':
-                if int(seat) <= 25:
-                    r_sector_name = 'Бельэтаж 1'
-                elif int(seat) <= 48:
-                    r_sector_name = 'Бельэтаж 2'
-                elif int(seat) <= 86:
-                    r_sector_name = 'Бельэтаж 3'
-                elif int(seat) <= 108:
-                    r_sector_name = 'Бельэтаж 4'
-                else:
-                    r_sector_name = 'Бельэтаж 5'
-            elif row == '4':
-                if int(seat) <= 25:
-                    r_sector_name = 'Бельэтаж 1'
-                elif int(seat) <= 46:
-                    r_sector_name = 'Бельэтаж 2'
-                elif int(seat) <= 85:
-                    r_sector_name = 'Бельэтаж 3'
-                elif int(seat) <= 107:
-                    r_sector_name = 'Бельэтаж 4'
-                else:
-                    r_sector_name = 'Бельэтаж 5'
-            elif row == '3':
-                if int(seat) <= 24:
-                    r_sector_name = 'Бельэтаж 1'
-                elif int(seat) <= 44:
-                    r_sector_name = 'Бельэтаж 2'
-                elif int(seat) <= 83:
-                    r_sector_name = 'Бельэтаж 3'
-                elif int(seat) <= 104:
-                    r_sector_name = 'Бельэтаж 4'
-                else:
-                    r_sector_name = 'Бельэтаж 5'
-            elif row == '2':
-                if int(seat) <= 24:
-                    r_sector_name = 'Бельэтаж 1'
-                elif int(seat) <= 44:
-                    r_sector_name = 'Бельэтаж 2'
-                elif int(seat) <= 81:
-                    r_sector_name = 'Бельэтаж 3'
-                elif int(seat) <= 102:
-                    r_sector_name = 'Бельэтаж 4'
-                else:
-                    r_sector_name = 'Бельэтаж 5'
-            elif row == '1':
-                if int(seat) <= 23:
-                    r_sector_name = 'Бельэтаж 1'
-                elif int(seat) <= 42:
-                    r_sector_name = 'Бельэтаж 2'
-                elif int(seat) <= 70:
-                    r_sector_name = 'Бельэтаж 3'
-                elif int(seat) <= 98:
-                    r_sector_name = 'Бельэтаж 4'
-                else:
-                    r_sector_name = 'Бельэтаж 5'
-        elif 'Балкон' == r_sector_name:
-            if row == '17':
-                if int(seat) <= 38:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 69:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 129:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 162:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '16':
-                if int(seat) <= 38:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 71:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 130:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 164:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '15':
-                if int(seat) <= 3:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 70:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 129:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 163:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '14':
-                if int(seat) <= 37:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 69:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 127:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 161:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '13':
-                if int(seat) <= 37:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 69:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 126:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 159:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '12':
-                if int(seat) <= 36:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 68:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 122:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 154:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '11':
-                if int(seat) <= 36:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 67:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 122:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 154:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '10':
-                if int(seat) <= 35:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 65:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 120:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 151:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '9':
-                if int(seat) <= 34:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 63:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 116:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 147:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            if row == '8':
-                if int(seat) <= 34:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 63:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 116:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 147:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '7':
-                if int(seat) <= 33:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 61:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 112:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 141:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '6':
-                if int(seat) <= 29:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 54:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 97:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 123:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '5':
-                if int(seat) <= 29:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 53:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 96:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 121:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '4':
-                if int(seat) <= 25:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 51:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 92:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 116:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '3':
-                if int(seat) <= 28:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 51:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 92:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 116:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '2':
-                if int(seat) <= 28:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 49:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 88:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 111:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-            elif row == '1':
-                if int(seat) <= 24:
-                    r_sector_name = 'Балкон 1'
-                elif int(seat) <= 43:
-                    r_sector_name = 'Балкон 2'
-                elif int(seat) <= 76:
-                    r_sector_name = 'Балкон 3'
-                elif int(seat) <= 97:
-                    r_sector_name = 'Балкон 4'
-                else:
-                    r_sector_name = 'Балкон 5'
-        if 'vip партер' == r_sector_name.lower() or 'vip-партер' == r_sector_name.lower():
-            r_sector_name = 'VIP партер'
-        return r_sector_name, row
-
-    def reformat_row_MXAT(self, all_sector):
-        total_sector = []
-        sector_parter = {'name': 'Партер', 'seats': {}}
-        for sector in all_sector:
-            sector_name = sector.get('name')
-            if sector_name == 'VIP-партер':
-                sector_seats = sector.get('seats')
-                sector = {'name': sector_name, 'seats': {}}
-                for row_and_seat, price in sector_seats.items():
-                    row, seat = row_and_seat
-                    if 'vip' not in row.lower():
-                        sector_parter['seats'][(row, seat)] = price
-                        continue
-                    row = row.lower().split('v')[0]
-                    sector['seats'][(row, seat)] = price
-            total_sector.append(sector)
-        if sector_parter.get('seats'):
-            total_sector.append(sector_parter)
-        return total_sector
 
     def get_places(self):
         resp = self.session.get(self.url, headers={'user-agent': 'Custom'})
@@ -1188,17 +576,25 @@ class Parser(SeatsParser):
 
     def body(self):
         skip_events = [
-            'https://www.tickets-star.com/cat/245/EventId/249417912/',  # Акварель 11.03 14:30
-            'https://www.tickets-star.com/cat/245/EventId/249417909/',  # Акварель 11.03 18:00
-            'https://www.tickets-star.com/cat/245/EventId/249417911/',  # Акварель 12.03 14:30
-            'https://www.tickets-star.com/cat/245/EventId/249417910/',  # Акварель 12.03 18:00
-            'https://www.tickets-star.com/cat/245/EventId/250021315/',  # Акварель 19.03 14:30
-            'https://www.tickets-star.com/cat/245/EventId/252042851/',  # Акварель 19.03 18:00
-            'https://www.tickets-star.com/cat/245/EventId/250541551/',  # Акварель 25.03 14:30
-            'https://www.tickets-star.com/cat/245/EventId/250541552/',  # Акварель 25.03 18:00
-            'https://www.tickets-star.com/cat/245/EventId/250541550/',  # Акварель 26.03 14:30
-            'https://www.tickets-star.com/cat/245/EventId/250541553/',  # Акварель 26.03 18:00
-            'https://www.tickets-star.com/cat/245/EventId/260783064/',  # Хоккей. ЦСКА (Москва) - Ак Барс (Казань) 27.04
+            'https://www.tickets-star.com/cat/245/EventId/242282923/',
+            'https://www.tickets-star.com/cat/245/EventId/243579549/',
+            'https://www.tickets-star.com/cat/245/EventId/243579548/',
+            'https://www.tickets-star.com/cat/245/EventId/242282923/',
+            'https://www.tickets-star.com/cat/245/EventId/243579547/',
+            'https://www.tickets-star.com/cat/245/EventId/240344845/',
+            'https://www.tickets-star.com/cat/245/EventId/245265248/',
+            'https://www.tickets-star.com/cat/245/EventId/245265253/',
+            'https://www.tickets-star.com/cat/245/EventId/245265259/',
+            'https://www.tickets-star.com/cat/245/EventId/245265264/',
+            'https://www.tickets-star.com/cat/245/EventId/245363653/',
+            'https://www.tickets-star.com/cat/245/EventId/240344845/',
+            'https://www.tickets-star.com/cat/245/EventId/240344847/',
+            'https://www.tickets-star.com/cat/245/EventId/240344849/',
+            'https://www.tickets-star.com/cat/245/EventId/240344850/',
+            'https://www.tickets-star.com/cat/245/EventId/249417912/',
+            'https://www.tickets-star.com/cat/245/EventId/249417909/',
+            'https://www.tickets-star.com/cat/245/EventId/249417911/',
+            'https://www.tickets-star.com/cat/245/EventId/249417910/',
         ]
 
         if self.url in skip_events:
@@ -1206,9 +602,6 @@ class Parser(SeatsParser):
 
         sector = []
         places, theatre = self.get_places()
-
-        if 'вернадского' in theatre:
-            return None
 
         for place in places:
             if place[0] not in sector:
@@ -1228,19 +621,19 @@ class Parser(SeatsParser):
                 try:
                     row = str(row)
                 except ValueError:
-                    print(f'row-->{row}<--')
+                    self.debug(f'row-->{row}<--')
                     pass
 
                 try:
                     seat = str(seat)
                 except ValueError:
-                    print(f'seat-->{seat}<--')
+                    self.debug(f'seat-->{seat}<--')
                     pass
 
                 try:
                     price = int(price)
                 except ValueError:
-                    print(f'price-->{price}<--')
+                    self.debug(f'price-->{price}<--')
                     pass
 
                 if each_sector == section:
@@ -1248,11 +641,8 @@ class Parser(SeatsParser):
 
             a_sectors.append({'name': each_sector, 'seats': seats})
 
-        if 'Крокус Сити Холл' != self.venue:
-            self.reformat(a_sectors, theatre)
-
-        if 'мхат' in theatre:
-            a_sectors = self.reformat_row_MXAT(a_sectors)
+        self.reformat(a_sectors, theatre)
 
         for sector in a_sectors:
             self.register_sector(sector['name'], sector['seats'])
+

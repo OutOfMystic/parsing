@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 
@@ -11,48 +12,60 @@ class Parser(EventParser):
         self.delay = 1800
         self.driver_source = None
         self.url = 'https://www.ticketland.ru/teatry/'
-
-    def before_body(self):
-        self.session = ProxySession(self)
-
         self.our_places_data = {
             'https://sochi.ticketland.ru/teatry/': [
                 'zimniy-teatr-sochi',
             ],
             'https://spb.ticketland.ru/teatry/': [
-                'aleksandrinskiy-teatr',
-                'bdt-imtovstonogova',
+                 'aleksandrinskiy-teatr',
+                 'bdt-imtovstonogova',
+                 #'kamennoostrovskiy-teatr',
+                 'mikhaylovskiy-teatr',
             ],
             'https://www.ticketland.ru/teatry/': [
-                'teatr-lenkom',
+                #'teatr-lenkom',
                 'mkht-im-chekhova',
-                'mkhat-im-m-gorkogo',
+                #'mkhat-im-m-gorkogo',
                 'malyy-teatr',
                 'teatr-imeni-evgeniya-vakhtangova',
                 'simonovskaya-scena-teatra-imeni-evgeniya-vakhtangova',
-                'teatr-satiry',
-                'teatr-operetty',
+                #'teatr-satiry',
+                #'teatr-operetty',
                 'masterskaya-p-fomenko',
-                'gosudarstvennyy-teatr-naciy',
+                #'gosudarstvennyy-teatr-naciy',
                 'teatr-ugolok-dedushki-durova',
-                'moskovskiy-teatr-sovremennik',
+                #'moskovskiy-teatr-sovremennik',
+                #'teatr-rossiyskoy-armii',
+                #'teatr-im-vl-mayakovskogo',
+                #'teatr-im-nvgogolya',
+                #'teatr-im-ermolovoy',
+                'ramt'
             ],
             'https://www.ticketland.ru/cirki/': [
-                'bolshoy-moskovskiy-cirk',
+                #'bolshoy-moskovskiy-cirk',
             ],
             'https://www.ticketland.ru/drugoe/': [
-                'mts-live-kholl-moskva',
+                #'mts-live-kholl-moskva',
             ],
             'https://www.ticketland.ru/koncertnye-zaly/': [
                 'gosudarstvennyy-kremlevskiy-dvorec',
             ],
+            'https://www.ticketland.ru/vystavochnye-centry/': [
+              #  'vdnh',
+            ],
         }
 
-    def get_events(self, link, places_url):
-        l = 0
+    def before_body(self):
+        self.session = ProxySession(self)
+
+    def get_events(self, link, places_url, venue):
+        number_page = 0
         achtung = None
         while achtung == None:
-            add_link = link + f'LoadBuildingPopularJS/?page={l}&dateStart=0&dateEnd=0&dateRangeCode=default'
+            if 'bdt-imtovstonogova' in link:
+                add_link = link + f'LoadBuildingCrossPopularJS/?page={number_page}&dateStart=0&dateEnd=0&dateRangeCode=default'
+            else:
+                add_link = link + f'LoadBuildingPopularJS/?page={number_page}&dateStart=0&dateEnd=0&dateRangeCode=default'
             headers = {
                 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                           'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -83,11 +96,11 @@ class Parser(EventParser):
             for card in cards:
                 href = card.find('a', class_='card__image-link').get('href')
                 link_ = link.split('w')[0] + places_url.split('/')[2] + href
-                for event in self.get_cards(link_):
+                for event in self.get_cards(link_, venue):
                     yield event
-            l += 1
+            number_page += 1
 
-    def get_cards(self, url):
+    def get_cards(self, url, venue):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -109,13 +122,13 @@ class Parser(EventParser):
         if 'spb' in url:
             headers['host'] = 'spb.ticketland.ru'
             old_url = 'spb'
-            url = url.split('/')[-2]
-            url = 'https://spb.ticketland.ru/teatry/aleksandrinskiy-teatr/' + url
+            url = '/'.join(url.split('/')[-3:])
+            url = 'https://spb.ticketland.ru/teatry/' + url
         elif 'sochi' in url:
             headers['host'] = 'sochi.ticketland.ru'
             old_url = 'sochi'
-            url = url.split('/')[-2]
-            url = 'https://sochi.ticketland.ru/teatry/zimniy-teatr-sochi/' + url
+            url = '/'.join(url.split('/')[-3:])
+            url = 'https://sochi.ticketland.ru/teatry/' + url
 
         r = self.session.get(url, headers=headers)
         # time.sleep(1)
@@ -127,7 +140,11 @@ class Parser(EventParser):
         list_btn = []
         for card in cards:
             dm, year = card.find_all(class_='show-card__dm')
-            event_name = card.find('meta')['content']
+            event_name = card.find('meta')['content'].replace("'", '"')
+            if venue == 'Михайловский театр':
+                scene = card.find('span', class_='show-card__hall').text.strip()
+                if not self.filter_events_from_mikhailovsky(event_name, scene):
+                    continue
             day, month = dm.get_text().strip().split(' ')
             year = year.get_text().strip()
             month = month[:3].capitalize()
@@ -232,6 +249,23 @@ class Parser(EventParser):
             else:
                 pagecount = 1
             for link, venue in self.get_links_teatrs(pagecount, places_url, our_places).items():
-                for event in self.get_events(link, places_url):
+                for event in self.get_events(link, places_url, venue):
+                    if 'gosudarstvennyy-kremlevskiy-dvorec' in our_places:
+                        venue = 'Кремлёвский Дворец'
+                        if 'kremlevskiy-dvorec/novogodnee-predstavlenie' not in event[1]:
+                            continue
+                    if len(event[1]) >= 200 or len(event[0]) >= 200:
+                        self.error(event, venue, 'too long!!!!!!!!!!!!')
+                        continue
                     self.register_event(event[0], event[1], date=event[2], venue=venue)
                 # self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+
+    def filter_events_from_mikhailovsky(self, title, scene):
+        skip_event = [
+            ['Лебединое озеро', 'Главный зал'],
+            ['Щелкунчик', 'Главный зал'],
+            ['Жизель', 'Главный зал'],
+        ]
+        if [title, scene] not in skip_event:
+            return True
+        return False

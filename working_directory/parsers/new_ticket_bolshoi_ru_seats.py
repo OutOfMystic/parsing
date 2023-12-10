@@ -222,11 +222,21 @@ class BolshoiParser(SeatsParser):
     def get_json(self):
         queue_big_theatre.put((self.proxy, self.url))
 
+        start_time = time.time()
         ready_json = False
         while ready_json is False:
             ready_json = result_json.get(self.url, False)
+            if time.time() - start_time > 1200:
+                ready_json = None
+                break
             if ready_json is False:
                 time.sleep(5)
+            elif isinstance(ready_json, str):
+                message = f'<b>ticket_bolshoi_ru_seats error is {ready_json}</b>'
+                self.send_message_to_telegram(message)
+                ready_json = None
+                del result_json[self.url]
+                break
             else:
                 del result_json[self.url]
 
@@ -285,8 +295,9 @@ class BolshoiParser(SeatsParser):
         return total_sector
 
     def body(self):
+        if 'https://ticket.bolshoi.ru/show/5101' == self.url and 'война и мир' in self.name.lower():
+            return
         if not hasattr(self, 'scene'):
-            # self.bprint((self.event_name, self.date, self.url))
             return
 
         a_sectors = self.parse_seats()

@@ -61,10 +61,10 @@ class ZaryadyeHall(SeatsParser):
 
     def _get_output_data(self, places: dict[str, list]) -> OutputData:
         sectors_data = {}
-        for place in places['simple_sectors']:
+        for place in places.get('simple_sectors', []):
             pass  # Билеты на экскурсии и т.п. в виде карточек похожи на танцольные
 
-        for place in places['places']:
+        for place in places.get('places', []):
             place_price = place.get('price')
             if place_price == 0:
                 continue
@@ -92,8 +92,8 @@ class ZaryadyeHall(SeatsParser):
 
     def _get_place_from_json(self, json_data: json) -> dict[str, list]:
         places = {
-            'simple_sectors': json_data['simple_sectors'],
-            'places': json_data['places']
+            'simple_sectors': json_data.get('simple_sectors', []),
+            'places': json_data.get('places', [])
         }
         return places
 

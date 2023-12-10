@@ -15,13 +15,14 @@ class OutputData(NamedTuple):
 
 class BdtSpb(SeatsParser):
     event: str = 'bdt.spb.ru'
-    url_filter: str = lambda url: 'spb.ticketland.ru' in url and not 'aleksandrinskiy-teatr' in url
+    url_filter: str = lambda url: 'spb.ticketland.ru' in url and 'bdt-imtovstonogova' in url and 'to_parser' in url
     proxy_check_url: str = 'https://spb.ticketland.ru/'
 
     def __init__(self, *args: list, **extra: dict) -> None:
         super().__init__(*args, **extra)
         self.delay: int = 1200
         self.driver_source: None = None
+        self.url = self.url.replace('to_parser', '')
 
     def before_body(self) -> None:
         self.session: ProxySession = ProxySession(self)
@@ -33,41 +34,63 @@ class BdtSpb(SeatsParser):
             301, 302, 323
         ]
         if 'Партер' in sector_name and int(seat) in if_seat_in_parter:
-            sector_name: str = 'Партер'
-            # sector_name: str = 'Партер (неудобные места)'
+            sector_name = 'Партер'
         elif 'Партер' in sector_name and 'Гардероб' in sector_name:
-            sector_name: str = 'Партер'
+            sector_name = 'Партер'
         elif 'Балкон' in sector_name:
             if '3го яруса' in sector_name or '3-го яруса' in sector_name:
-                sector_name: str = 'Балкон третьего яруса'
+                sector_name = 'Балкон третьего яруса'
+            elif 'бельэтаж' in sector_name.lower():
+                sector_name = 'Балкон бельэтажа'
         elif 'Партер-трибуна' in sector_name:
-            sector_name: str = 'Кресла партера'
+            sector_name = 'Кресла партера'
         elif 'Галерея 3го яр.' in sector_name or 'Галерея 3-го яруса' in sector_name:
-            row: str = ''
+            row = ''
             if 'правая' in sector_name or 'пр. ст.' in sector_name:
-                sector_name: str = 'Галерея третьего яруса. Правая сторона'
+                sector_name = 'Галерея третьего яруса. Правая сторона'
             else:
-                sector_name: str = 'Галерея третьего яруса. Левая сторона'
+                sector_name = 'Галерея третьего яруса. Левая сторона'
         elif 'Места за креслами' in sector_name:
-            sector_name: str = 'Места за креслами'
+            sector_name = 'Места за креслами'
         elif 'Партер' in sector_name:
-            sector_name: str = 'Кресла партера'
-        elif 'Ложа' in sector_name:
-            number_lozha: str = sector_name.split()[1].replace('№', '')
-            if 'бельэтажа' in sector_name:
-                new_sector_name: str = 'Бельэтаж'
-            elif 'бенуар' in sector_name:
-                new_sector_name: str = 'Бенуар'
-            elif '2-го яруса' in sector_name:
-                new_sector_name: str = 'Второй ярус'
+            sector_name = 'Кресла партера'
+        elif 'Ложи' in sector_name or 'ложа' in sector_name.lower():
+            if '№' in sector_name:
+                number_lozha = sector_name.split()[1].replace('№', '')
+                if not number_lozha.isnumeric():
+                    index_number = sector_name.index('№') + 1
+                    number_lozha = sector_name[index_number:index_number + 1]
+                    if not number_lozha.isnumeric():
+                        number_lozha = sector_name[index_number]
+            elif sector_name.split()[1] in ['А', 'Б', 'В', 'Г']:
+                number_lozha = sector_name.split()[1]
             else:
-                new_sector_name: str = sector_name
-            if 'правая' in sector_name:
-                sector_name: str = f'{new_sector_name}. Правая сторона, ложа ' + number_lozha
+                number_lozha = sector_name.split()[-1]
+            if 'бельэтаж' in sector_name.lower():
+                new_sector_name = 'Бельэтаж'
+            elif 'бенуар' in sector_name.lower():
+                new_sector_name = 'Бенуар'
+            elif '2-го яруса' in sector_name.lower():
+                new_sector_name = 'Второй ярус'
             else:
-                sector_name: str = f'{new_sector_name}. Левая сторона, ложа ' + number_lozha
-        elif 'Бельэтаж' in sector_name:
-            sector_name: str = 'Балкон бельэтажа'
+                new_sector_name = sector_name
+            try:
+                if 'правая' in sector_name:
+                    sector_name = f'{new_sector_name}. Правая сторона, ложа ' + number_lozha
+                elif (('Бельэтаж' == new_sector_name or 'Второй ярус' == new_sector_name) and int(number_lozha) < 10) or \
+                        ('Бенуар' == new_sector_name and int(number_lozha) < 7):
+                    sector_name = f'{new_sector_name}. Правая сторона, ложа ' + number_lozha
+                else:
+                    sector_name = f'{new_sector_name}. Левая сторона, ложа ' + number_lozha
+            except ValueError:
+                if 'правая' in sector_name:
+                    sector_name = f'{new_sector_name}. Правая сторона, ложа ' + number_lozha
+                else:
+                    sector_name = f'{new_sector_name}. Левая сторона, ложа ' + number_lozha
+        elif 'Бельэтаж' in sector_name or 'бельэтаж' in sector_name:
+            sector_name = 'Балкон бельэтажа'
+        elif sector_name == 'Свободная рассадка':
+            sector_name = None
 
         return sector_name, row
 
@@ -103,6 +126,8 @@ class BdtSpb(SeatsParser):
             place_price: int = place.get('price')
 
             place_sector, place_row = self._reformat(place_sector, place_row, place_seat)
+            if place_sector is None:
+                continue
 
             if all_seats_in_sectors.get(place_sector):
                 old_data: dict[tuple[str, str], int] = all_seats_in_sectors[place_sector]

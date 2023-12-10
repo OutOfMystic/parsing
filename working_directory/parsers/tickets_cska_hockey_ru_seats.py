@@ -1,8 +1,11 @@
+import json
+import time
+
+from bs4 import BeautifulSoup
+
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
-from bs4 import BeautifulSoup
-import time
 
 
 class CskaHockeyParser(SeatsParser):
@@ -156,7 +159,7 @@ class CskaHockeyParser(SeatsParser):
         ]
         url = 'https://cska-hockey.queue.infomatika.ru/api/users/' + id_queue
         while True:
-            r = self.session.get(url, data=params, headers=headers)
+            r = self.session.get(url, data=params, headers=headers, verify=False)
             get_data = r.json()
             expired_at = get_data.get('expired_at')
             if expired_at is None:
@@ -226,11 +229,16 @@ class CskaHockeyParser(SeatsParser):
 
         self.csrf = double_split(r.text, '<meta name="csrf-token" content="', '"')
         event_id = self.url.split('=')[-1]
-        sectors = [sector for sector in soup.find_all('g', {'view_id': True}) if sector.get('free') != '0']
-        sectors_info = {sector.get('view_id'): {
-            'name': sector.get('sector_name'), 'price': sector.get('price')
-        } for sector in sectors}
+    
+        g = [sector for sector in soup.find_all('g', {'view_id': True}) if sector.get('free') != '0']
+        sectors_info = {}
 
+        for sector in g:
+            sectors_info.update({
+                    sector.get('view_id'):{
+                        'name': sector.get('sector_name'), 'price': sector.get('price_max', 0)
+                    }
+                })
         return event_id, sectors_info
 
     def get_all_sector_seats(self, event_id, sector_id):
@@ -258,7 +266,7 @@ class CskaHockeyParser(SeatsParser):
             'view_id': sector_id,
             '_csrf-frontend': self.csrf,
         }
-        r = self.session.post(url, headers=headers, data=data)
+        r = self.session.post(url, headers=headers, data=data, verify=False)
 
         all_seats = {}
         for seat_zone, seats in r.json()['places'].items():
@@ -266,8 +274,11 @@ class CskaHockeyParser(SeatsParser):
                 seat_id_f = seat_id + '[end]'
                 row = double_split(seat_id_f, 'r', 'p')
                 place = double_split(seat_id_f, 'p', '[end]')
-                price = [zone['price'] for zone in r.json()['zones'] if str(zone['zone']) == seat_zone][0]
-
+                try:
+                    price = [zone['price'] for zone in r.json()['zones'] if str(zone['zone']) == seat_zone][0]
+                except IndexError:
+                    continue
+               
                 all_seats[seat_id] = {
                     'row': row,
                     'place': place,
@@ -282,7 +293,6 @@ class CskaHockeyParser(SeatsParser):
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru-RU,ru;q=0.9',
-            'content-length': '148',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'origin': 'https://tickets.cska-hockey.ru',
             'referer': self.url,
@@ -302,7 +312,7 @@ class CskaHockeyParser(SeatsParser):
             'clear_cache': 'false',
             '_csrf-frontend': self.csrf,
         }
-        r = self.session.post(url, headers=headers, data=data)
+        r = self.session.post(url, headers=headers, data=data, verify=False)
         type_ = r.json()['places']['type']
 
         all_seats = self.get_all_sector_seats(event_id, sector_id)
@@ -342,4 +352,4 @@ class CskaHockeyParser(SeatsParser):
 
         for sector in a_sectors:
             self.register_sector(sector['name'], sector['tickets'])
-
+        #self.check_sectors()

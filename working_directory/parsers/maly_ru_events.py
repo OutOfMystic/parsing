@@ -47,8 +47,8 @@ class Parser(EventParser):
 
         for date_events_block in events_container.find_all('div', class_='poster-tables__item'):
             day_month = date_events_block.find('div', class_='dayname').text.strip()
-            day, month = day_month.split()
-            day_month_f = day + ' ' + month[:3].capitalize()
+            day, month, year = day_month.split() 
+            day_month_f = f"{day} {month[:3].capitalize()}" #"03 Сен" 
 
             for event_tr in date_events_block.find('table', class_='poster-details').find_all('tr'):
                 buy_btn = event_tr.find('a', class_='poster-details__buy')
@@ -68,6 +68,7 @@ class Parser(EventParser):
         return a_events
 
     def body(self):
+        not_events_to_skip = 0
         a_events = []
         month_params = ''
         while True:
@@ -78,9 +79,11 @@ class Parser(EventParser):
 
             if events:
                 a_events += events
-            else:
+            elif not_events_to_skip == 4:
                 break
+            else:
+                not_events_to_skip += 1
 
         for event in a_events:
-            self.register_event(event[0], event[1], date=event[2], scene=event[3])
-
+            self.register_event(event[0], event[1], date=event[2],
+                                 scene=event[3], venue='Малый театр')

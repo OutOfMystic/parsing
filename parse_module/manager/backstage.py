@@ -1,16 +1,10 @@
-import itertools
-import json
 import threading
-import time
-import traceback
-from collections import namedtuple
 from datetime import datetime
 from queue import Queue
 from typing import Callable
 
-from colorama import Fore
-
 from ..utils import provision, utils
+from ..utils.logger import logger
 
 
 class Task:
@@ -67,8 +61,10 @@ class BackTasker(threading.Thread):
             args = task.args
             if task.throttling:
                 args = self._get_same_tasks(task.function, task.args, task.timestamp)
+            logger.debug(task.function, args, name=task.from_thread)
             provision.multi_try(task.function, name=task.from_thread, args=args,
                                 kwargs=task.kwargs, tries=1, raise_exc=False)
+            logger.debug('finished', task.function, name=task.from_thread)
         except Exception as err:
             print(utils.red(f'Error getting task from the backstage: {err}'))
 
@@ -95,14 +91,15 @@ class BackTasker(threading.Thread):
             self.tasks.put(task)
 
         args_collected.sort(key=lambda item: item[1])
+        logger.debug(function_to_find.__name__, [len(args) for args, _ in args_collected])
         if dict_:
             ordered_args = {}
-            for args_, timestamp in args_collected:
-                ordered_args.update(args_)
+            for args, timestamp in args_collected:
+                ordered_args.update(args)
         else:
             ordered_args = []
-            for args_, timestamp in args_collected:
-                ordered_args.extend(args_)
+            for args, timestamp in args_collected:
+                ordered_args.extend(args)
 
         return ordered_args, *args_original[1:]
 

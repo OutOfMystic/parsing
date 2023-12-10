@@ -117,7 +117,7 @@ class XKAvangarg(SeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = self.session.get(url, headers=headers, verify=False)
         return r.json()
 
     def request_parser(self, url, data):
@@ -139,7 +139,7 @@ class XKAvangarg(SeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.post(url, headers=headers, json=data)
+        r = self.session.post(url, headers=headers, json=data, verify=False)
         return r.json()
 
     def get_seats(self):

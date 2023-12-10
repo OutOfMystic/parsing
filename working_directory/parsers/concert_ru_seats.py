@@ -5,8 +5,8 @@ from parse_module.utils.parse_utils import double_split
 
 
 class Concert(SeatsParser):
-    proxy_check_url = 'https://www.concert.ru'
     event = 'www.concert.ru'
+    url_filter = lambda url: 'www.concert.ru' in url
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -31,6 +31,9 @@ class Concert(SeatsParser):
             'Партер середина': 'Партер, середина',
             'Партер левая сторона': 'Партер, левая сторона',
             'Партер правая сторона': 'Партер, правая сторона',
+            'Сектор VIP - A': 'VIP A',
+            'Сектор VIP - B': 'VIP B',
+            'Сектор VIP - C': 'VIP C',
         }
         crocus_sity_hall_reformat_dict = {
             '': '',
@@ -64,7 +67,7 @@ class Concert(SeatsParser):
         }
 
         ref_dict = {}
-        if 'государственный кремлевский дворец' in self.venue.lower():
+        if 'кремлевский дворец' in self.venue.lower():
             ref_dict = kreml_reformat_dict
         elif 'крокус сити холл' in self.venue.lower():
             ref_dict = crocus_sity_hall_reformat_dict
@@ -90,7 +93,7 @@ class Concert(SeatsParser):
         all_sector = {}
         all_row = soup.select('tr[id^="ticketGroup"]')
         for row in all_row:
-            sector_name = row.find('div', class_='ticketsTable__type').text.strip()
+            sector_name = row.find('div', class_='ticketsTable__type').text.strip().replace(' / -', '')
             row_number = row.find('div', class_='ticketsTable__row').text.strip().split()[0]
             price = row.find('div', class_='ticketsTable__price').text.strip()
             price = int(price.replace('руб.', '').replace(' ', ''))
