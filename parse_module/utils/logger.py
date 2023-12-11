@@ -95,8 +95,8 @@ class Logger(threading.Thread):
         if call_stack:
             call_stack = ' | ' + call_stack
 
-        if level == 'INFO' or name != 'Controller':
-            return
+        # if level == 'INFO' or name != 'Controller':
+        #     return
         if level == 'CRITICAL':
             mes = (f'{fore_back}{dt_str} | {Fore.LIGHTWHITE_EX}{Back.RED}{level}{fore_back}{default_back} '
                    f'| {Fore.LIGHTCYAN_EX}{name}{fore_back}{call_stack} - '
