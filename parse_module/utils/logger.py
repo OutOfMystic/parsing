@@ -22,7 +22,12 @@ class Logger(threading.Thread):
         super().__init__()
 
         if ignore_files is None:
-            ignore_files = ['manager.core.debug', 'utils.provision.multi_try']
+            ignore_files = ['manager.core.debug',
+                            'manager.core.error',
+                            'manager.core.critical',
+                            'utils.provision.multi_try',
+                            'utils.logger.error',
+                            'utils.logger.critical']
         self.release = release
         self.log_path = log_path
         self.ignore_files = ignore_files
@@ -39,7 +44,9 @@ class Logger(threading.Thread):
         now = datetime.now()
 
         if 'traceback' in kwargs:
-            call_stack = parse_traceback(kwargs['traceback'], drop_path_level=self.drop_path_level)
+            call_stack = parse_traceback(kwargs['traceback'],
+                                         ignore_files=self.ignore_files,
+                                         drop_path_level=self.drop_path_level)
             call_stack = Fore.RED + call_stack
         elif level == 'DEBUG':
             call_stack = get_current_stack(self.ignore_files, drop_path_level=self.drop_path_level)
@@ -80,14 +87,16 @@ class Logger(threading.Thread):
 
         fore_back = default_fore
         fore_front = COLORS.get(level, Fore.LIGHTGREEN_EX)
-        if level == 'DEBUG':
-            if message.count('\n') > 3:
-                parts = message.split('\n')
-                message = '\n'.join(parts)
+        if level != 'DEBUG':
+            if message.count('\n') > 2:
+                parts = message.split('\n')[:2]
+                message = '\n'.join(parts) + '...'
         dt_str = readable_datetime(timestamp).rjust(16, ' ')
         if call_stack:
             call_stack = ' | ' + call_stack
 
+        if level == 'INFO' or name != 'Controller':
+            return
         if level == 'CRITICAL':
             mes = (f'{fore_back}{dt_str} | {Fore.LIGHTWHITE_EX}{Back.RED}{level}{fore_back}{default_back} '
                    f'| {Fore.LIGHTCYAN_EX}{name}{fore_back}{call_stack} - '
@@ -181,8 +190,10 @@ def parse_traceback(traceback_string, ignore_files=None, drop_path_level=0):
     if not matches:
         return get_current_stack(ignore_files=ignore_files, drop_path_level=drop_path_level)
     file_path, line_number, func_name = not_mult_matches[-1]
-    file_path = file_path.split('parsing', 1)[-1][1:]
-    file_path_formatted = file_path.replace('\\', '.').replace('/', '.')
+    file_path = file_path.split('parsing', 1)[-1]
+    file_path_prep= file_path.replace('\\', '.').replace('/', '.')
+    file_parts = file_path_prep.split('.')[1 + drop_path_level:]
+    file_path_formatted = '.'.join(file_parts)
     return f'(Traceback) {file_path_formatted}.{func_name}:{line_number}'
 
 

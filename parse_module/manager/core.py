@@ -194,7 +194,7 @@ class BotCore(threading.Thread):
             if not self._terminator.alive:
                 self._process_termination()
                 break
-            if self.step % self.step_counter == 0:
+            if self.step % self.step_counter == 0 and self.step:
                 self.bprint('Проход номер ' + str(self.step))
             result = provision.multi_try(self.run_try, to_except=self.run_except,
                                          name=self.name, tries=self.max_tries, raise_exc=False)
@@ -217,35 +217,29 @@ class BotCore(threading.Thread):
                     f'{utils.red("termination")} '
                     f'{utils.green("started")}')
 
-    @staticmethod
-    def debug(*messages, **parameters):
+    def debug(self, *messages, **parameters):
         message = ' '.join(str(arg) for arg in messages)
-        logger.debug(message, name='Controller', **parameters)
+        logger.debug(message, name=self.name, **parameters)
 
-    @staticmethod
-    def info(*messages, **parameters):
+    def info(self, *messages, **parameters):
         message = ' '.join(str(arg) for arg in messages)
-        logger.info(message, name='Controller', **parameters)
+        logger.info(message, name=self.name, **parameters)
 
-    @staticmethod
-    def warning(*messages, **parameters):
+    def warning(self, *messages, **parameters):
         message = ' '.join(str(arg) for arg in messages)
-        logger.warning(message, name='Controller', **parameters)
+        logger.warning(message, name=self.name, **parameters)
 
-    @staticmethod
-    def error(*messages, **parameters):
+    def error(self, *messages, **parameters):
         message = ' '.join(str(arg) for arg in messages)
-        logger.error(message, name='Controller', **parameters)
+        logger.error(message, name=self.name, **parameters)
 
-    @staticmethod
-    def critical(*messages, **parameters):
+    def critical(self, *messages, **parameters):
         message = ' '.join(str(arg) for arg in messages)
-        logger.critical(message, name='Controller', **parameters)
+        logger.critical(message, name=self.name, **parameters)
 
-    @staticmethod
-    def success(*messages, **parameters):
+    def success(self, *messages, **parameters):
         message = ' '.join(str(arg) for arg in messages)
-        logger.success(message, name='Controller', **parameters)
+        logger.success(message, name=self.name, **parameters)
 
 
 def download(url, filename=None, session=None, save=True, **kwargs):
