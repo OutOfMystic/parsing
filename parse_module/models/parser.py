@@ -45,8 +45,9 @@ class ParserBase(core.BotCore, ABC):
 
 class EventParser(ParserBase, ABC):
 
-    def __init__(self, controller):
+    def __init__(self, controller, name):
         super().__init__(controller)
+        self.name = f'EventParser ({name})'
         self.events = {}
         self._new_condition = {}
         self.stop = weakref.finalize(self, self._finalize_parser)

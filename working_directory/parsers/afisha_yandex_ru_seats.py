@@ -896,9 +896,9 @@ class YandexAfishaParser(SeatsParser):
         r = self.session.post(url, timeout=10, headers=headers, data=data)
 
         if not '<div class="CheckboxCaptcha' in r.text:
-            self.success(f'Yandex captcha success solved bro!',color=utils.Fore.GREEN)
+            self.info(f'Yandex captcha success solved bro!')
         else:
-            self.warning(f'Yandex captcha DIDNT solved!!!',color=utils.Fore.RED)
+            self.warning(f'Yandex captcha DIDNT solved!!!')
         return r
 
     def hallplan_request(self, event_params, default_headers):
@@ -1135,7 +1135,7 @@ class YandexAfishaParser(SeatsParser):
                 files.append('file_to_send_telegram_text.html')
             message = f"<b>r_sector is None response {r.json()['result']['saleStatus'] =} count request {self.req_number} {self.url = }</b>"
             self.send_message_to_telegram(message, files)
-            self.warning(f'NO tickets {self.url} Yandex afisha this event dont have any tickets', color=utils.Fore.YELLOW)
+            self.warning(f'NO tickets {self.url} Yandex afisha this event dont have any tickets')
             return 
 
         a_sectors = []

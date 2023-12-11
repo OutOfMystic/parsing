@@ -53,24 +53,37 @@ def threading_try(to_try,
                   to_except=None,
                   tries=3,
                   args=None,
-                  raise_exc=True,
+                  kwargs=None,
                   print_errors=True,
                   multiplier=1.14):
     """
-    The same as multi_try, but executes to_try code
+    The same as multi_try, but executes ``to_try`` code
     into a new thread. After the new thread is started,
     function return thread object but doesn't return a
-    result as multi_try
+    result as ``multi_try``
 
     If you still want the result, you can send a mutable
     object as argument and handle it
+
+    Args:
+        to_try: main function
+        name: name to identify logs
+        to_except: called if attempt was not succeeded
+        tries: number of attempts to execute ``to_try``
+        args: arguments sent to ``to_try``
+        kwargs: keyword arguments sent to ``to_try``
+        print_errors: log errors on each try
+        multiplier: wait ratio, increase up to 1.5
+
+    Returns: created ``threading.Thread`` object
     """
     kwargs = {
         'name': name,
         'to_except': to_except,
         'tries': tries,
         'args': args,
-        'raise_exc': raise_exc,
+        'kwargs': kwargs,
+        'raise_exc': False,
         'print_errors': print_errors,
         'multiplier': multiplier
     }

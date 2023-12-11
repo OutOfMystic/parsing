@@ -492,9 +492,9 @@ class YandexAfishaParser(EventParser):
         r = self.session.post(url, timeout=10, headers=headers, data=data)
 
         if not '<div class="CheckboxCaptcha' in r.text:
-            self.debug(f'Yandex captcha success solved bro!',color=utils.Fore.GREEN)
+            self.debug(f'Yandex captcha success solved bro!')
         else:
-            self.error(f'Yandex captcha DIDNT solved!!!',color=utils.Fore.RED)
+            self.error(f'Yandex captcha DIDNT solved!!!')
             
         
         return r

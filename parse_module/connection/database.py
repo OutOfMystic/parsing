@@ -6,9 +6,9 @@ import time
 from collections import defaultdict
 
 import psycopg2
-from loguru import logger
 
 from ..manager.backstage import tasker
+from ..utils.logger import logger
 from ..utils.provision import multi_try
 from ..utils import utils, provision, date
 
@@ -50,13 +50,13 @@ class DBConnection:
         tasker.put(self.connect_db)
 
     def save_mode_on(self):
-        logger.warning('DATABASE SAVE MODE TURNED ON')
+        logger.warning('DATABASE SAVE MODE TURNED ON', name='Controller')
         self._save_mode = True
         if os.path.exists('selects.pkl'):
             with open('selects.pkl', 'rb') as fp:
                 saved_selects = pickle.load(fp)
             if date.Day(saved_selects['date']) != date.Day(date.now()):
-                logger.info('Pickled selects are outdated, skipping')
+                logger.info('Pickled selects are outdated, skipping', name='Controller')
                 return
             self._saved_selects = saved_selects
 
@@ -142,10 +142,10 @@ class ParsingDB(DBConnection):
 
     @locker
     def get_scheme(self, tasks):
-        dicted_tasks = {}
+        dicted_tasks = defaultdict(list)
         event_lockers = []
         for scheme_id, callback, event_locker in tasks:
-            dicted_tasks[scheme_id] = callback
+            dicted_tasks[scheme_id].append(callback)
             event_lockers.append(event_locker)
 
         scheme_ids = ', '.join(str(scheme_id) for scheme_id in dicted_tasks)
@@ -153,8 +153,16 @@ class ParsingDB(DBConnection):
                      f"WHERE id IN ({scheme_ids})")
 
         for name, json_, scheme_id in self.fetchall():
-            dicted_tasks[scheme_id].append(name)
-            dicted_tasks[scheme_id].append(json_)
+            callbacks = dicted_tasks[scheme_id]
+            callbacks[0].append(name)
+            callbacks[0].append(json_)
+            for callback in callbacks[1:]:
+                callback.append(None)
+                callback.append(None)
+        for scheme_id, callback in dicted_tasks.items():
+            if not callback:
+                logger.error(f'PARSER STARTED INCORRECTLY. SCHEME {scheme_id} DATA WAS LOST', name='Controller')
+
         for event_locker in event_lockers:
             event_locker.set()
 

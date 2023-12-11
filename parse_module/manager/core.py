@@ -61,6 +61,37 @@ class BotCore(threading.Thread):
         with open(filename, 'w+', encoding='utf-8') as f:
             f.write(text)
 
+    def threading_try(self,
+                      to_try: Callable,
+                      to_except: Callable = None,
+                      tries=3,
+                      raise_exc=True,
+                      args: Iterable = None,
+                      kwargs: dict = None,
+                      print_errors=True,
+                      multiplier=1.14):
+        """
+        The same as multi_try, but executes to_try code
+        into a new thread. After the new thread is started,
+        function return thread object but doesn't return a
+        result as multi_try
+
+        If you still want the result, you can send a mutable
+        object as argument and handle it
+        """
+        kwargs = {
+            'to_except': to_except,
+            'tries': tries,
+            'args': args,
+            'kwargs': kwargs,
+            'raise_exc': raise_exc,
+            'print_errors': print_errors,
+            'multiplier': multiplier
+        }
+        thread = threading.Thread(target=self.multi_try, args=(to_try,), kwargs=kwargs)
+        thread.start()
+        return thread
+
     def multi_try(self,
                   to_try: Callable,
                   to_except: Callable = None,

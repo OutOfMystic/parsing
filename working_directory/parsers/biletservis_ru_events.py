@@ -197,8 +197,8 @@ class BuletServis(EventParser):
 
         extra_data = {}
         for url in urls:
-            new_data = provision.multi_try(self.get_extra_data, name='ExtraData', tries=1,
-                                 raise_exc=False, args=(url,))
+            new_data = self.multi_try(self.get_extra_data, tries=1,
+                                      raise_exc=False, args=(url,))
             if new_data == provision.TryError:
                 continue
             extra_data.update(new_data)

@@ -13,7 +13,6 @@ from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.date import month_list
-from parse_module.utils.provision import threading_try
 
 
 class TicketData(NamedTuple):
@@ -557,8 +556,10 @@ class BdtSpbBot(EventParser):
         this_index = 0
         while True:
             ticket_to_new_threading_basket = free_tickets[this_index:self.max_ticket_in_basket+this_index]
-            threading_try(self._buy_tickets,
-                          args=(ticket_to_new_threading_basket, event_date, self.session), raise_exc=False, tries=1)
+            self.threading_try(self._buy_tickets,
+                               args=(ticket_to_new_threading_basket, event_date, self.session),
+                               raise_exc=False,
+                               tries=1)
             self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
             self.before_body()
 
@@ -572,11 +573,11 @@ class BdtSpbBot(EventParser):
         self._set_tickets_in_basket(free_tickets, event_date)
 
     def body(self) -> None:
-        threading_try(self._delete_tickets_in_skip_ticket_dict, raise_exc=False, tries=3)
+        self.threading_try(self._delete_tickets_in_skip_ticket_dict, raise_exc=False, tries=3)
         while True:
             self._find_main_event()
             for url, event_date in self.urls:
-                threading_try(self.threading_body, args=(url, event_date), raise_exc=False, tries=1)
+                self.threading_try(self.threading_body, args=(url, event_date), raise_exc=False, tries=1)
             time.sleep(60)
 
     def _output_data(self, ticket_in_basket: list[TicketData], json_data_order: json, event_date: str) -> None:

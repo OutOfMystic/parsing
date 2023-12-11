@@ -23,8 +23,7 @@ class LenkomParser(SeatsParser):
         self.count_error = 0
 
     def get_tl_csrf_and_data(self):
-        result = provision.multi_try(self._get_tl_csrf_and_data,
-                                     name='CSRF', tries=5, raise_exc=False)
+        result = self.multi_try(self._get_tl_csrf_and_data, tries=5, raise_exc=False)
         if result == provision.TryError:
             result = None
         return result
@@ -47,8 +46,7 @@ class LenkomParser(SeatsParser):
             'user-agent': self.user_agent
         }
         # r = self.session.get(self.url, headers=headers)
-        r_text, r_json = provision.multi_try(self.request_to_ticketland,
-                                 name='request_to_ticketland_parser_seats', tries=5, args=[self.url, headers])
+        r_text, r_json = self.multi_try(self.request_to_ticketland, tries=5, args=[self.url, headers])
         if r_text is None and r_json is None or 'CDbException' in r_text: 
             self.count_error += 1
             if self.count_error == 50:
@@ -135,8 +133,7 @@ class LenkomParser(SeatsParser):
             'x-requested-with': 'XMLHttpRequest'
         }
         # r = self.session.get(url, headers=headers)
-        r_text, r_json = provision.multi_try(self.request_to_ticketland,
-                                 name='request_to_ticketland_parser_seats', tries=5, args=[url, headers])
+        r_text, r_json = self.multi_try(self.request_to_ticketland, tries=5, args=[url, headers])
         if r_text is None and r_json is None or 'CDbException' in r_text or 'Технические работы' in r_text:
             self.count_error += 1
             if self.count_error == 50:

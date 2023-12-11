@@ -14,7 +14,7 @@ class OutputData(NamedTuple):
 
 
 class WwwMosconsvRu(SeatsParser):
-    event = 'www.mosconsv.ru'
+    event = 'mosconsv.ru'
     url_filter = lambda url: 'api.zapomni.systems' in url
 
     def __init__(self, *args, **extra) -> None:

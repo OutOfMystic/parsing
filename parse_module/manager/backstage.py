@@ -61,12 +61,10 @@ class BackTasker(threading.Thread):
             args = task.args
             if task.throttling:
                 args = self._get_same_tasks(task.function, task.args, task.timestamp)
-            logger.debug(task.function, args, name=task.from_thread)
             provision.multi_try(task.function, name=task.from_thread, args=args,
                                 kwargs=task.kwargs, tries=1, raise_exc=False)
-            logger.debug('finished', task.function, name=task.from_thread)
         except Exception as err:
-            print(utils.red(f'Error getting task from the backstage: {err}'))
+            logger.error(f'Error getting task from the backstage: {err}', name='Controller')
 
     def _get_same_tasks(self, function_to_find, args_original, timestamp_original):
         first_arg = args_original[0]
@@ -91,7 +89,6 @@ class BackTasker(threading.Thread):
             self.tasks.put(task)
 
         args_collected.sort(key=lambda item: item[1])
-        logger.debug(function_to_find.__name__, [len(args) for args, _ in args_collected])
         if dict_:
             ordered_args = {}
             for args, timestamp in args_collected:

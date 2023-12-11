@@ -87,4 +87,4 @@ def get_json_from_selenium():
 
 
 for _ in range(1, OPEN_BROWSER+1):
-    start_thread = threading_try(get_json_from_selenium, raise_exc=False)
+    start_thread = threading_try(get_json_from_selenium)

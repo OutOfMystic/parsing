@@ -35,7 +35,6 @@ class Controller(threading.Thread):
                  release=False):
         super().__init__()
         self.parsed_events = None
-        self.schemes_on_event = {}
         self.parser_modules = load_parsers(parsers_path)
         self.pending_delay = pending_delay
         self._debug_url = debug_url
@@ -44,6 +43,7 @@ class Controller(threading.Thread):
         self.release = release
 
         self._prepare_workdir()
+        self.schemes_on_event = {}
         self.event_parsers = []
         self.seats_groups = []
         self.event_notifiers = []
@@ -51,7 +51,7 @@ class Controller(threading.Thread):
         self.margins = {}
         self._events_were_reset = []
         self._table_sites = TableDict(db_manager.get_site_names)
-        self._first = True
+        self._already_warned_on_collect = set()
 
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
         self.event_aliases = EventAliases(step=5)
@@ -72,6 +72,8 @@ class Controller(threading.Thread):
             os.mkdir('downloads')
 
     def _start_parser(self, parser_variable, parser_name):
+        if parser_name.startswith('www.'):
+            parser_name = parser_name.split('www.')[1]
         try:
             if parser_variable in (EventParser, SeatsParser):
                 return
@@ -91,15 +93,14 @@ class Controller(threading.Thread):
             self.parsing_types = db_manager.get_parsing_types()
             self.bprint(f'New type has been registered: {parser_name}')
 
-        parser = parser_class(self)
-        parser.name = parser_name
+        parser = parser_class(self, parser_name)
         parser.start()
         self.bprint(f'EVENT parser {parser_name} has started')
         self.event_parsers.append(parser)
 
     def _init_seats_parsers(self, parser_class, parser_name):
-        group = SeatsParserGroup(self, parser_class)
-        self.bprint(f'seats GROUP {parser_name}.{parser_class.__name__} has started')
+        group = SeatsParserGroup(self, parser_class, parser_name)
+        self.bprint(f'{group.name} has started')
         self.seats_groups.append(group)
 
     def update_margins_from_database(self):
@@ -161,7 +162,7 @@ class Controller(threading.Thread):
                 indicators.append(indicator)
                 predefined_connections.append(connection)
 
-        labels = (self._table_sites, self.parsing_types,) if self._first else None
+        labels = (self._table_sites, self.parsing_types, self._already_warned_on_collect,)
         for connection in cross_subject_object(subjects, self.parsed_events, self.venues, labels=labels):
             if connection['indicator'] in indicators:
                 message = f"{connection['event_name']} {connection['date']} route conflict.\n" \
@@ -392,7 +393,6 @@ class Controller(threading.Thread):
                                 tries=1, raise_exc=False)
             delay = self.pending_delay if time.time() > self.fast_time else fast_delay
             time.sleep(delay)
-            self._first = False
 
 
 def load_parsers(path):

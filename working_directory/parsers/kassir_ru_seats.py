@@ -2137,7 +2137,7 @@ class KassirParser(SeatsParser):
         except Exception as ex:
             self.error(f'Cannot load {self.url_all_events} {ex}')
         else:
-            self.debug(f'{self.url_all_events} load succes', color=utils.Fore.GREEN)
+            self.debug(f'{self.url_all_events} load succes')
 
         a_sectors = self.new_get_sectors(url)
         

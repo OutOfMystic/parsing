@@ -215,9 +215,9 @@ def afisha_recaptcha(file,
 
 
 def yandex_afisha_coordinates_captha(image_with_elements, imginstructions, textinstructions,
-                     print_logs=True, timeout=160,
-                     invisible=False, proxy=None,
-                     user_agent=None):
+                                     print_logs=True, timeout=160,
+                                     invisible=False, proxy=None,
+                                     user_agent=None):
     start_time = time.time()
     params = {
         'key': API_KEY,

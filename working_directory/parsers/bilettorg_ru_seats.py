@@ -6,7 +6,7 @@ from parse_module.utils.parse_utils import double_split
 
 class Bilettorg(SeatsParser):
     proxy_check_url = 'https://www.bilettorg.ru/'
-    event = 'www.bilettorg.ru'
+    event = 'bilettorg.ru'
     url_filter = lambda url: 'www.bilettorg.ru' in url
 
     def __init__(self, *args, **extra):

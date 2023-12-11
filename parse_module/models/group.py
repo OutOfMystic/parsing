@@ -8,19 +8,18 @@ from ..utils.logger import logger
 
 
 class SeatsParserGroup:
-    def __init__(self, controller, parser_class):
+    def __init__(self, controller, parser_class, module_name):
         self.controller = controller
         self.parent_event = parser_class.event
         self.parser_class = parser_class
-        self.name = f'{self.parser_class.event}.{self.parser_class.__name__}'
+        self.name = f'SeatsGroup ({module_name}.{self.parser_class.__name__})'
         self.url_filter = parser_class.url_filter
         self.parsers = []
         self._router = SchemeRouter()
         self.start_lock = threading.Lock()
 
     def bprint(self, mes, color=utils.Fore.LIGHTGREEN_EX):
-        name = f'SeatsGroup ({self.name})'
-        logger.bprint_compatible(mes, name, color)
+        logger.bprint_compatible(mes, self.name, color)
 
     def _add_data_from_db(self, event_data):
         matching_events = [parsed_data for parsed_data in self.controller.parsed_events
@@ -58,7 +57,7 @@ class SeatsParserGroup:
 
     def stop_by_margin(self, margin):
         provision.threading_try(self._stop_by_margin, name='Controller', tries=1,
-                                args=(margin,), to_except=self.start_lock.release, raise_exc=False)
+                                args=(margin,), to_except=self.start_lock.release)
 
     def _stop_by_margin(self, margin_id):
         self.start_lock.acquire()
@@ -77,9 +76,8 @@ class SeatsParserGroup:
         Connection (parsing initial) keys format is:
         {priority, event_id, subject_date, url, margin_name, signature}
         """
-        name = f'SeatsGroup ({self.name})'
-        provision.threading_try(self._update, name=name, args=(connections,),
-                                to_except=self.start_lock.release, tries=1, raise_exc=False)
+        provision.threading_try(self._update, name=self.name, args=(connections,),
+                                to_except=self.start_lock.release, tries=1)
 
     def _update(self, connections):
         self.start_lock.acquire()
@@ -165,8 +163,7 @@ class SeatsParserGroup:
             return False
 
     def error(self, message):
-        name = f'SeatsGroup ({self.name})'
-        logger.error(message, name=name)
+        logger.error(message, name=self.name)
 
 
 def crop_url(url):

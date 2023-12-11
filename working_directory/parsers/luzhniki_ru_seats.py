@@ -9,7 +9,7 @@ from parse_module.utils.parse_utils import double_split
 
 
 class Luzhniki(SeatsParser):
-    event = 'www.luzhniki.ru'
+    event = 'luzhniki.ru'
     url_filter = lambda url: 'msk.kassir.ru' in url and 'frame' in url
     proxy_check_url = 'https://msk.kassir.ru/'
 

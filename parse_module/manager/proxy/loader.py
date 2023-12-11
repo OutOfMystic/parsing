@@ -1,4 +1,5 @@
 import os.path
+import threading
 import time
 import json
 from urllib.parse import urlparse
@@ -9,6 +10,7 @@ from . import check
 from ...utils import provision
 from .instances import UniProxy
 from .. import backstage
+from ...utils.provision import threading_try
 
 
 class ProxyOnDomain:
@@ -54,7 +56,7 @@ class Proxies:
         if domain not in self.proxies_on_domain:
             self.proxies_on_domain[domain] = ProxyOnDomain(domain)
         callback = self.proxies_on_domain[domain]
-        backstage.tasker.put(check.check_proxies, self.all_proxies, url, callback)
+        threading_try(check.check_proxies, args=(self.all_proxies, url, callback,))
         
     def _get_proxies_on_domain(self, url):
         domain = parse_domain(url)

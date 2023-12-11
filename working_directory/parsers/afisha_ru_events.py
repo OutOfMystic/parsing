@@ -9,6 +9,7 @@ from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils import utils
 
+
 class AfishaEvents(EventParser):
     proxy_check_url = 'https://www.afisha.ru/'
 
@@ -107,7 +108,6 @@ class AfishaEvents(EventParser):
         if not XApplication:
             XApplication = reformat.get('InternalDesktop', 'ec16316b-67e3-4a32-9f05-6a00d1dc0a8b')
         return XApplication
-    
 
     def get_events_from_one_page(self, json_resp):
         a_events = [] 

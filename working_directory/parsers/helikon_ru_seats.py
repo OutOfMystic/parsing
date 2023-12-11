@@ -11,7 +11,7 @@ class OutputData(NamedTuple):
 
 
 class HelikonRu(SeatsParser):
-    event = 'www.helikon.ru'
+    event = 'helikon.ru'
     url_filter = lambda url: 'helikon.ru' in url
 
     def __init__(self, *args, **extra) -> None:

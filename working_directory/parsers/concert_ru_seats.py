@@ -5,7 +5,7 @@ from parse_module.utils.parse_utils import double_split
 
 
 class Concert(SeatsParser):
-    event = 'www.concert.ru'
+    event = 'concert.ru'
     url_filter = lambda url: 'www.concert.ru' in url
 
     def __init__(self, *args, **extra):

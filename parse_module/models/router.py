@@ -1,10 +1,19 @@
+import time
 from threading import Lock
-
-from loguru import logger
 
 from . import scheme
 from ..connection import db_manager
 from ..utils import provision
+from ..utils.logger import logger
+
+
+def wait_until(condition, timeout=60, step=0.1):
+    start_time = time.time()
+    while not condition():
+        if (time.time() - start_time) > timeout:
+            return False
+        time.sleep(step)
+    return True
 
 
 class SchemeRouter:
@@ -31,8 +40,13 @@ class SchemeRouter:
     def get_group_scheme(self, scheme_id):
         if scheme_id not in self.group_schemes:
             new_scheme = scheme.Scheme(scheme_id)
-            new_scheme.get_scheme()
-            self.group_schemes[scheme_id] = new_scheme
+            add_result = new_scheme.get_scheme()
+            if add_result is False:
+                if not wait_until(lambda: scheme_id in self.group_schemes):
+                    logger.critical(f'Scheme distributiom corrupted! {scheme_id}', name='Controller')
+                    self.group_schemes[scheme_id] = new_scheme
+            else:
+                self.group_schemes[scheme_id] = new_scheme
         return self.group_schemes[scheme_id]
 
     def _get_lock(self, event_id):

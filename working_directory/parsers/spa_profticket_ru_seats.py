@@ -140,7 +140,7 @@ class ProfticketParser(SeatsParser):
         try:
             global_show_id = r.json()['response']['show']['id']
         except KeyError:
-            self.error(f'error spa.proftickets.ru: {url}, {r.text}', color=utils.Fore.YELLOW)
+            self.error(f'error spa.proftickets.ru: {url}, {r.text}')
             return None
 
         place_name = r.json()['response']['show']['location_name'].lower()
@@ -184,7 +184,7 @@ class ProfticketParser(SeatsParser):
         if data_or_none is None:
             return
         global_show_id, place_name = data_or_none
-        seat_data = multi_try(self.get_tickets, name=self.name, args=(global_show_id,))
+        seat_data = self.multi_try(self.get_tickets, args=(global_show_id,))
 
         a_sectors = []
         for ticket in seat_data:

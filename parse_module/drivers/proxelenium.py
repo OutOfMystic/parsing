@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 import time
 from http.cookiejar import CookieJar, Cookie
 
@@ -19,6 +18,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from .hrenium import default_user_agent
 from ..utils import parse_utils
 from . import extension
+from ..utils.logger import logger
 
 
 class ProxyWebDriver(webdriver.Chrome):
@@ -32,7 +32,7 @@ class ProxyWebDriver(webdriver.Chrome):
         self.listen_request_headers = kwargs.get('listen_request_headers', False)
         self.headers_to_add = kwargs.get('headers_to_add', {})
         self.blocked_hosts = kwargs.get('blocked_hosts', default_blocked_hosts)
-        big_theatre_id = kwargs.get('id_profile', None)
+        id_profile = kwargs.get('id_profile', None)
 
         # Formatting scripts for an extension
         background_js = ''
@@ -65,9 +65,9 @@ class ProxyWebDriver(webdriver.Chrome):
 
         # Packing an extension
         if background_js:
-            if big_theatre_id:
+            if id_profile:
                 base_dir = Path(__file__).resolve().parent.joinpath('data_to_big_theatre')
-                ext_file = base_dir.joinpath(f'ext_{self.proxy.schema}{big_theatre_id}.zip')
+                ext_file = base_dir.joinpath(f'ext_{self.proxy.schema}{id_profile}.zip')
             else:
                 ext_file = f'ext_{self.proxy.schema}.zip'
             with zipfile.ZipFile(ext_file, 'w') as zp:
@@ -82,23 +82,21 @@ class ProxyWebDriver(webdriver.Chrome):
         if alternative_win_bin is not None:
             chrome_options.binary_location = alternative_win_bin
 
-        if big_theatre_id:
-            error = None
+        if id_profile:
+            error = True
             count_error = 0
-            while error is not False:
+            while error and count_error < 10:  # Ограничение количества попыток
                 try:
                     super().__init__(ChromeDriverManager().install(), chrome_options=chrome_options)
-                    if error is True and count_error >= 10:
-                        mes = f'error SessionNotCreatedException: id_profile №{kwargs.get("id_profile")} is complite'
-                        print(f'{utils.colorize(mes, utils.Fore.LIGHTGREEN_EX)}\n', end='')
-                    error = False
+                    error = False  # Успешная инициализация
                 except SessionNotCreatedException:
-                    error = True
-                    if count_error >= 10:
-                        mes = f'error SessionNotCreatedException: id_profile №{kwargs.get("id_profile")}'
-                        print(f'{utils.colorize(mes, utils.Fore.RED)}\n', end='')
                     count_error += 1
                     time.sleep(3)
+
+            if count_error >= 10:
+                mes = f'SessionNotCreatedException: id_profile №{kwargs.get("id_profile")}'
+                logger.error(mes, name='Controller')
+
         else:
             super().__init__(ChromeDriverManager().install(), chrome_options=chrome_options)
 

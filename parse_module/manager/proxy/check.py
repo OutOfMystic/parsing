@@ -1,12 +1,12 @@
 import requests
 import time
 
-from loguru import logger
 from requests.exceptions import ProxyError
 
 from ...utils import provision, utils
 from .instances import UniProxy
 from . import loader
+from ...utils.logger import logger
 
 CHECK_DELAY = 2 * 60 * 60
 
@@ -20,7 +20,7 @@ def check_task(proxy, url, method):
         if r.status_code == 403:
             raise ProxyError('403 Ban')
     except Exception as err:
-        print(f'Error checking proxy: {err}')
+        logger.info(f'Skipping proxy: {err}', name='Controller')
         return None
     else:
         return proxy

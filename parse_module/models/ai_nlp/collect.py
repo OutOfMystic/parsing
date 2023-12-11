@@ -72,9 +72,9 @@ def make_matrix(subjects, objects, venues, labels=None):
         return
     types_on_site = db_manager.get_site_parsers()
     if labels:
-        site_labels, parsers_labels = labels
+        site_labels, parsers_labels, already_warned = labels
     else:
-        site_labels, parsers_labels = {}, {}
+        site_labels, parsers_labels, already_warned = {}, {}, set()
 
     for subject in subjects:
         transform_date(subject, hrsdelta=3)
@@ -101,9 +101,12 @@ def make_matrix(subjects, objects, venues, labels=None):
                 if labels:
                     site_name = site_labels.get(site_id, site_id)
                     type_name = parsers_labels.get(type_id, type_id)
-                    message = (f'Event parser doesn\'t seem correct '
-                               f'(TYPE "{type_name}", SITE "{site_name}")')
-                    logger.warning(message, name='Controller')
+                    record_key = (site_name, type_name,)
+                    if record_key not in already_warned:
+                        already_warned.add(record_key)
+                        message = (f'Event parser doesn\'t seem correct '
+                                   f'(TYPE "{type_name}", SITE "{site_name}")')
+                        logger.warning(message, name='Controller')
                 continue
             object_gen = utils.groupby(objects_on_type, lambda o: o['venue'])
             objects_list = list(object_gen)

@@ -5,6 +5,7 @@ from ..connection import db_manager
 from ..manager.backstage import tasker
 from ..utils import utils, provision
 from ..utils.exceptions import InternalError, SchemeError, ParsingError
+from ..utils.logger import logger
 
 
 class Dancefloor:
@@ -26,11 +27,15 @@ class Scheme:
         callback = []
         event_locker = threading.Event()
         task = [self.scheme_id, callback, event_locker]
-        tasker.put_throttle(db_manager.get_scheme, task, from_iterable=False)
+        tasker.put_throttle(db_manager.get_scheme, task,
+                            from_iterable=False,
+                            from_thread='Controller')
         event_locker.wait(600)
         del event_locker
 
         name, scheme = callback
+        if name is None and scheme is None:
+            return False
         self.name = name.replace(' - ', '-') \
                         .replace('сцена', '') \
                         .replace('театр', '') \
@@ -54,6 +59,7 @@ class Scheme:
             else:
                 id_row_seat = (ticket_id, str(ticket[5]), str(ticket[6]))
                 self.sectors[sector_name][id_row_seat] = False
+        return True
 
     def sector_names(self):
         return list(self.sectors.keys())
@@ -163,7 +169,8 @@ class ParserScheme(Scheme):
         parsed_sectors.clear()
         margin_func = self._margins[cur_priority]
         if to_change:
-            tasker.put_throttle(db_manager.update_tickets, to_change, margin_func)
+            tasker.put_throttle(db_manager.update_tickets, to_change, margin_func,
+                                from_thread='Controller')
 
         # applying changes of tickets in local storage
         for scheme_name, parsed_name in sector_names:
@@ -201,7 +208,8 @@ class ParserScheme(Scheme):
         # sending changes to database
         parsed_dancefloors.clear()
         margin_func = self._margins[cur_priority]
-        tasker.put_throttle(db_manager.update_dancefloors, to_change, margin_func)
+        tasker.put_throttle(db_manager.update_dancefloors, to_change, margin_func,
+                            from_thread='Controller')
 
         # applying changes of tickets in local storage
         for dancefloor, price_amount in to_change.items():
@@ -216,7 +224,9 @@ class ParserScheme(Scheme):
         db_tickets = {}
         event_locker = threading.Event()
         task = [self.event_id, db_tickets, event_locker]
-        tasker.put_throttle(db_manager.get_all_tickets, task, from_iterable=False)
+        tasker.put_throttle(db_manager.get_all_tickets, task,
+                            from_iterable=False,
+                            from_thread='Controller')
         event_locker.wait(600)
         del event_locker
 
@@ -234,7 +244,8 @@ class ParserScheme(Scheme):
                     # new_sector[new_ticket] = False
                     new_sector[new_ticket] = db_tickets[new_id]
             if to_change:
-                tasker.put_throttle(db_manager.update_tickets, to_change, lambda price: price)
+                tasker.put_throttle(db_manager.update_tickets, to_change, lambda price: price,
+                                    from_thread='Controller')
             for sector_name, dancefloor in scheme.dancefloors.items():
                 ticket_id = dancefloor.ticket_id
                 new_id = ticket_id + first_id

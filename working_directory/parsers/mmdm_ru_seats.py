@@ -15,7 +15,7 @@ class OutputData(NamedTuple):
 
 
 class Mmdm(SeatsParser):
-    event = 'www.mmdm.ru'
+    event = 'mmdm.ru'
     url_filter = lambda url: 'www.mmdm.ru' in url
 
     def __init__(self, *args, **extra) -> None:
