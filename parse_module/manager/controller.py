@@ -306,7 +306,7 @@ class Controller(threading.Thread):
             return
         event_ids = set()
         for group in self.seats_groups:
-            for parser in group:
+            for parser in group.parsers:
                 event_ids.add(parser.event_id)
         _, _, new_to_reset = differences(self._events_were_reset, event_ids)
         db_manager.reset_tickets(new_to_reset)
