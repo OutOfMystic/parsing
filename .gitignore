@@ -172,6 +172,7 @@ working_directory/account_pickles/
 my_bots/
 all_tickets/
 *.pkl
+TEST*.json
 
 afisha_exporter/result.json
 
