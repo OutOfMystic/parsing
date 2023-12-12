@@ -137,8 +137,8 @@ class HockeySpartak(SeatsParser):
         }
         #ExampleUrl2 = 'https://hk-spartak.qtickets.ru/widget/seats?show_id=375268&widget_session=0000000000000000000000000000000000000000&salt=ca8120baca0962c1134829ed32577af9&cache_lock=on&hash=d3f3ab6c99215101748c464134055421'
         r2 = self.session.get(url, headers=headers, verify=False)
-        with open('TEST3.json', 'w', encoding='utf-8') as file:
-            json.dump(r2.json(), file, indent=4, ensure_ascii=False) 
+        # with open('TEST3.json', 'w', encoding='utf-8') as file:
+        #     json.dump(r2.json(), file, indent=4, ensure_ascii=False) 
         seats = r2.json()
         all_places_is_busy = set()
         places_is_busy = seats['ordered_seats']
