@@ -218,16 +218,14 @@ class Controller(threading.Thread):
         self._update_db_with_stored_urls(predefined_connections + ai_connections)
 
         # Waiting for seats lockers to be released
-        lockers_states = [group.start_lock.locked() for group in self.seats_groups]
-        first_pending = lockers_states.count(True)
-        pending = first_pending
-        while pending:
+        while any(group.start_lock.locked() for group in self.seats_groups):
             if time.time() - lock_time > self.pending_delay:
-                message = f'Seats groups\' lockers ({pending}/{first_pending}) are still being released...'
+                connected = len(self.all_connected_plain())
+                to_connect = len(plain_dict_values(all_connections))
+                message = f'Seats groups\' lockers are still being released ' \
+                          f'({connected}/{to_connect})...'
                 self.bprint(message, color=utils.Fore.LIGHTGREEN_EX)
             time.sleep(5)
-            lockers_states = [group.start_lock.locked() for group in self.seats_groups]
-            pending = lockers_states.count(True)
 
     def _load_notifiers(self):
         events_to_load, seats_to_load = db_manager.get_parser_notifiers()
@@ -299,7 +297,8 @@ class Controller(threading.Thread):
             self.seats_notifiers.append(notifier)
 
     def all_connected_plain(self):
-        itertools.chain.from_iterable(group.parsers for group in self.seats_groups)
+        chain = itertools.chain.from_iterable(group.parsers for group in self.seats_groups)
+        return list(chain)
 
     def _reset_tickets(self, subjects, all_connections):
         if not self.release or self.debug:
@@ -413,4 +412,5 @@ def is_package(pack):
 
 
 def plain_dict_values(dict_):
-    return itertools.chain.from_iterable(dict_.values())
+    chain = itertools.chain.from_iterable(dict_.values())
+    return list(chain)
