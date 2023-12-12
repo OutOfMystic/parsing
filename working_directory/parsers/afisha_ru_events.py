@@ -33,7 +33,8 @@ class AfishaEvents(EventParser):
             'https://www.afisha.ru/msk/theatre/moskovskiy-teatr-operetty-15877729/': '*', #operetta
             #'https://www.afisha.ru/msk/theatre/teatr-gogolya-15926286/': '*', #gogolia theatr
             #'https://www.afisha.ru/msk/concerthall/crocus-city-hall-5222/': '*', # крокус сити холл
-            'https://www.afisha.ru/msk/theatre/teatr-rossiyskoy-armii-15877731/': '*' ,#armii
+            'https://www.afisha.ru/msk/theatre/teatr-rossiyskoy-armii-15877731/': '*', #armii
+            'https://www.afisha.ru/msk/theatre/gubernskiy-teatr-15883628/': '*', #gubernskiy
         }
 
     def before_body(self):
