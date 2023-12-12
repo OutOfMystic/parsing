@@ -2126,18 +2126,17 @@ class KassirParser(SeatsParser):
         if 'widget.kassir.ru' in self.url:
             self.id = self.url.split('=')[-1].strip()
             self.domain = re.search(r'(?<=domain\=)[\w\.]+(?=&)', self.url)[0].strip()
-            self.url_all_events = self.url
             KEY = re.search(r'(?<=key\=)[\w\-]+', self.url)[0].strip()
             url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?widgetKey={KEY}&domain={self.domain}'
         else:
             url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?domain={self.domain}'
 
         try:
-            self.session.get(url=self.url_all_events, headers=self.headers)
+            self.session.get(url=self.url, headers=self.headers)
         except Exception as ex:
-            self.error(f'Cannot load {self.url_all_events} {ex}')
+            self.error(f'Cannot load {self.url} {ex}')
         else:
-            self.debug(f'{self.url_all_events} load succes')
+            self.debug(f'{self.url} load succes')
 
         a_sectors = self.new_get_sectors(url)
         
