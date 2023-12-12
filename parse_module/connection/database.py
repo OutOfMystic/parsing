@@ -224,7 +224,7 @@ class ParsingDB(DBConnection):
         self.execute(f"UPDATE public.tables_tickets "
                      f"SET status='not' "
                      f"WHERE status='available-pars' AND "
-                     f"event_id_id NOT IN ({event_ids})")
+                     f"event_id_id IN ({event_ids})")
         self.commit()
 
     @locker
