@@ -19,6 +19,7 @@ class Redkassa(EventParser):
         self.urls = [
             'https://redkassa.ru/venue/sochi_park',
             'https://redkassa.ru/venue/teatralniy_zal_mmdm',
+            'https://redkassa.ru/venue/gubernskiy_teatr'
         ]
         self.KASSA = 'https://redkassa.ru/'
         self.headers = {
