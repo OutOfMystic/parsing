@@ -33,7 +33,7 @@ class CircusSpbRu(EventParser):
         self.urls = {
             #'https://www.circus.spb.ru/': 'Страшная сила',
             'https://www.circus.spb.ru/novogodnee-predstavlenie.html': 'МАСКА',
-            'https://circus.spb.ru/balagan.html': 'Балаган',
+            #'https://circus.spb.ru/balagan.html': 'Балаган',
             #'https://bezgranits.circus.team/': 'Фестиваль циркового искусства «Без границ»',
             #'https://circus.spb.ru/bolshaja-otkrytaja-repetitsija-legendarnyh-bratev-zapashnyh-v-tsirke-na-fontanke-.html': 'БОЛЬШАЯ ОТКРЫТАЯ РЕПЕТИЦИЯ БРАТЬЕВ ЗАПАШНЫХ',
         }
