@@ -20,7 +20,7 @@ class KassirParser(EventParser):
         self.driver_source = None
         self.new_urls = {
              #'https://msk.kassir.ru/koncertnye-zaly/zelenyiy-teatr-vdnh': '*', #Зелёный театр
-             'https://msk.kassir.ru/teatry/mdm': '*', # Московский дворец молодёжи
+             #'https://msk.kassir.ru/teatry/mdm': '*', # Московский дворец молодёжи
              #'https://msk.kassir.ru/drugoe/krasnaya-ploschad': '*', #Красная площадь
              #'https://msk.kassir.ru/teatry/rossijskoj-armii': '*', # Театр Армии
              'https://sochi.kassir.ru/teatry/zimniy-teatr': '', # Зимний театр Сочи
