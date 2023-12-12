@@ -195,9 +195,6 @@ class Controller(threading.Thread):
             for group in self.seats_groups:
                 if group.url_filter(connection['url']):
                     all_connections[group].append(connection)
-        # this_group = list(all_connections.values())[0]
-        # print(len(this_group))
-        # utils.pp_dict(all_connections)
 
         if not self.debug:
             for group, connections in all_connections.items():
@@ -217,7 +214,7 @@ class Controller(threading.Thread):
 
         # Do some database work at the end of step
         lock_time = time.time()
-        self._reset_tickets()
+        self._reset_tickets(subjects, all_connections)
         self._update_db_with_stored_urls(predefined_connections + ai_connections)
 
         # Waiting for seats lockers to be released
@@ -240,13 +237,13 @@ class Controller(threading.Thread):
                                for notifier in self.event_notifiers}
         to_del, to_review, to_add = utils.differences(loaded_events_names, events_to_load_names)
 
-        # EVENTS PARSERS TO STOP
+        # EVENTS NOTIFIERS TO STOP
         for parsing_name in to_del:
             notifier = loaded_events_names[parsing_name]
             notifier.stop()
             self.event_notifiers.remove(notifier)
 
-        # EVENTS PARSERS TO REVIEW
+        # EVENTS NOTIFIERS TO REVIEW
         for parsing_name in to_review:
             notifier = loaded_events_names[parsing_name]
             notifier_data = events_to_load_names[parsing_name]
@@ -256,7 +253,7 @@ class Controller(threading.Thread):
             for attribute, value in notifier_data.items():
                 setattr(notifier, attribute, value)
 
-        # EVENTS PARSERS TO LOAD
+        # EVENTS NOTIFIERS TO LOAD
         event_parsers_to_add = {parser.name: parser for parser in self.event_parsers
                                 if parser.name in to_add}
         for parsing_name, event_parser in event_parsers_to_add.items():
@@ -273,13 +270,13 @@ class Controller(threading.Thread):
         all_seats_parsers = list(all_seats_parsers)
         to_del, to_review, to_add = utils.differences(loaded_seats_names, seats_to_load_names)
 
-        # SEATS PARSERS TO STOP
+        # SEATS NOTIFIERS TO STOP
         for event_id in to_del:
             notifier = loaded_seats_names[event_id]
             notifier.stop()
             self.seats_notifiers.remove(notifier)
 
-        # SEATS PARSERS TO REVIEW
+        # SEATS NOTIFIERS TO REVIEW
         for event_id in to_review:
             notifier = loaded_seats_names[event_id]
             notifier_data = seats_to_load_names[event_id]
@@ -289,7 +286,7 @@ class Controller(threading.Thread):
             for attribute, value in notifier_data.items():
                 setattr(notifier, attribute, value)
 
-        # SEATS PARSERS TO LOAD
+        # SEATS NOTIFIERS TO LOAD
         seats_parsers_to_add = {parser.event_id: parser for parser in all_seats_parsers
                                 if parser.event_id in to_add}
         for event_id, seats_parser in seats_parsers_to_add.items():
@@ -301,16 +298,20 @@ class Controller(threading.Thread):
                         f'was attached to the parser')
             self.seats_notifiers.append(notifier)
 
-    def _reset_tickets(self):
+    def all_connected_plain(self):
+        itertools.chain.from_iterable(group.parsers for group in self.seats_groups)
+
+    def _reset_tickets(self, subjects, all_connections):
         if not self.release or self.debug:
             return
-        event_ids = set()
-        for group in self.seats_groups:
-            for parser in group.parsers:
-                event_ids.add(parser.event_id)
-        _, _, new_to_reset = differences(self._events_were_reset, event_ids)
+        event_ids = set(connection['event_id'] for connection in plain_dict_values(all_connections))
+        all_event_ids = set(subject['event_id'] for subject in subjects)
+        events_to_reset = all_event_ids - event_ids
+
+        _, _, new_to_reset = differences(self._events_were_reset, events_to_reset)
+        logger.debug(f'{len(events_to_reset)} were reset')
         db_manager.reset_tickets(new_to_reset)
-        self._events_were_reset = list(event_ids)
+        self._events_were_reset = list(events_to_reset)
 
     def _load_parsers_with_config(self, config_path):
         if config_path is None:
@@ -409,3 +410,7 @@ def load_parsers(path):
 
 def is_package(pack):
     return not pack.startswith('__') and pack.endswith('.py')
+
+
+def plain_dict_values(dict_):
+    return itertools.chain.from_iterable(dict_.values())

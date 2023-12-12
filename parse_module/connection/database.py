@@ -26,7 +26,7 @@ def locker(func):
             return func(*args, **kwargs)
         except psycopg2.ProgrammingError as err:
             mes = f'Retrying {func.__name__}: {err}'
-            print(utils.yellow(mes))
+            logger.warning(mes, name='Controller')
             return wrapper(*args, **kwargs)
         except IndexError:
             print('Didn\'t get a full response!')
@@ -84,7 +84,7 @@ class DBConnection:
             function = getattr(self.cursor, func_name)
             return function(*args)
         except psycopg2.ProgrammingError as error:
-            print(utils.red(f'Unable to process command: {error}'))
+            logger.error(f'Unable to process command: {error}', name='Controller')
         except Exception as error:
             raise error
 
@@ -95,7 +95,7 @@ class DBConnection:
             function = getattr(self.connection, func_name)
             return function(*args)
         except psycopg2.ProgrammingError as error:
-            print(utils.red(f'Unable to process command: {error}'))
+            logger.error(f'Unable to process command: {error}', name='Controller')
         except Exception as error:
             raise error
 
@@ -107,7 +107,7 @@ class DBConnection:
     def select(self, request):
         if request in self._saved_selects:
             fetched = self._saved_selects[request]
-            print(f'LOADED request with len {len(str(fetched))} {request}')
+            logger.debug(f'LOADED request with len {len(str(fetched))} {request}')
         else:
             self.execute(request)
             fetched = self.fetchall()
@@ -172,7 +172,8 @@ class ParsingDB(DBConnection):
         records = self.fetchall()
         for id_, name, venue in records:
             if not venue:
-                print(utils.red(f'Empty venue name for scheme {name} ({id_})!!!'))
+                logger.error(utils.red(f'Empty venue name for scheme {name} ({id_})!!!'),
+                             name='Controller')
                 continue
         return {id_: venue for id_, _, venue in records}
 
