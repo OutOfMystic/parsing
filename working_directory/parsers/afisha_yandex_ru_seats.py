@@ -49,6 +49,7 @@ class YandexAfishaParser(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
+        self.session_key = None
 
     def before_body(self):
         self.session = ProxySession(self)
@@ -902,6 +903,8 @@ class YandexAfishaParser(SeatsParser):
         return r
 
     def hallplan_request(self, event_params, default_headers):
+        if not self.session_key:
+            self.session_key = event_params.get("session_id", '')
         url = f'https://widget.afisha.yandex.ru/api/tickets/v1/sessions/{self.session_key}/hallplan/async?clientKey={event_params["client_key"]}&req_number={self.req_number}'
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -1091,8 +1094,14 @@ class YandexAfishaParser(SeatsParser):
             try:
                 time.sleep(0.5)
                 r_sectors, r = self.hallplan_request(event_params, default_headers)
+            except ProxyError as ex:
+                self.error(f'Catch(change_proxy): {ex} \n url:{self.url}')
+                self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+                #self.session = ProxySession(self)
+                time.sleep(1)
             except Exception as ex:
                 self.error(f'Catch: {ex} \nurl:{self.url}')
+                time.sleep(1)
             finally:
                 self.req_number += 1
         if r_sectors == 'no-seats' or r_sectors == 'not-available' or r_sectors == 'closed':
@@ -1112,9 +1121,13 @@ class YandexAfishaParser(SeatsParser):
             self.session = ProxySession(self)
             
             while self.req_number < 50 and r_sectors is None:
-                r_sectors, r = self.hallplan_request(event_params, default_headers)
-                self.req_number += 1
                 time.sleep(0.5)
+                try:
+                    r_sectors, r = self.hallplan_request(event_params, default_headers)
+                except Exception as ex:
+                    self.error(f'Catch(2-nd while): {ex} \n url:{self.url}')
+                finally:
+                    self.req_number += 1
                 if r_sectors == 'no-seats' or r_sectors == 'not-available' or r_sectors == 'closed':
                     self.warning(f'NO tickets {self.url} Yandex afisha this \
                                 event dont have any tickets')
