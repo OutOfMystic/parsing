@@ -224,8 +224,8 @@ class Controller(threading.Thread):
                 to_connect = len(plain_dict_values(all_connections))
                 groups_locked = [group.name for group in self.seats_groups if group.start_lock.locked()]
                 groups_in_a_row = ', '.join(groups_locked) if len(groups_locked) <= 3 else len(groups_locked)
-                message = f'Seats groups\' lockers are still being released ' \
-                          f'{connected}/{to_connect} ({groups_in_a_row}) ...'
+                message = f'Seats groups\' ({groups_in_a_row}) lockers are still being released ' \
+                          f'Total loaded is {connected}  ...'
                 self.bprint(message, color=utils.Fore.LIGHTGREEN_EX)
             time.sleep(5)
 
