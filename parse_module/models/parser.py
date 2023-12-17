@@ -48,6 +48,7 @@ class EventParser(ParserBase, ABC):
     def __init__(self, controller, name):
         super().__init__(controller)
         self.name = f'EventParser ({name})'
+        self.db_name = name
         self.events = {}
         self._new_condition = {}
         self.stop = weakref.finalize(self, self._finalize_parser)
@@ -84,7 +85,7 @@ class EventParser(ParserBase, ABC):
             if venue is None:
                 venue = "null"
             listed_event = [
-                self.name, event_name,
+                self.db_name, event_name,
                 url, venue, columns, date
             ]
             listed_events.append(listed_event)
