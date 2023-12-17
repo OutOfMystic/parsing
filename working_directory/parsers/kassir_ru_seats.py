@@ -1432,490 +1432,43 @@ class KassirParser(SeatsParser):
         for sector_ind, tickets_f in reformatted_sector_tickets.items():
             a_sectors[sector_ind]['tickets'] = tickets_f
 
-    def requests_to_kassir(self, url, headers=None, method='get', count_error=0):
-        try:
-            if method == 'post':
-                return self.session.post(url, headers=headers, timeout=4)
-            else:
-                return self.session.get(url, headers=headers, timeout=4)
-        except ReadTimeout as error:
-            if count_error == 20:
-                raise ProxyError(error)
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
-            self.session = ProxySession(self)
-            return self.requests_to_kassir(url, headers, count_error=count_error + 1)
 
-    def get_event_data(self):
-        headers = {
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
-                      'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-            'cache-control': 'no-cache',
-            'pragma': 'no-cache',
-            'sec-ch-ua': '"Google Chrome";v="113", "Chromium";v="113", "Not-A.Brand";v="24"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'none',
-            'sec-fetch-user': '?1',
-            'upgrade-insecure-requests': '1',
-            'user-agent': self.user_agent
-        }
-        r = self.requests_to_kassir(self.url, headers)
-        soup = BeautifulSoup(r.text, 'lxml')
+    @staticmethod
+    def reformat_mossovet(a_sectrors):
+        res_sectors = {}
+        for sector, tickets in a_sectrors.items():
+            if 'Балкон, ложа' in sector:
+                number = sector.split()[-1]
+                sector = f'Балкон. Ложа №{number}'
 
-        place_name = soup.find('div', class_='place-name').text.strip().lower()
-        self.breadcrumb = soup.find('ul', class_='breadcrumb').text.strip()
-        self.place_name = place_name
-        scheme_tab = soup.find('div', class_='tab-scheme')
-        if scheme_tab:
-            scheme_img = scheme_tab.find('img', class_='img-responsive')
-            if scheme_img:
-                self.scheme_identifier = scheme_img.get('src').split('/')[-2]
+            elif 'Балкон, боковое левое' in sector:
+                sector = f'Балкон. Боковое левое (места с ограниченной видимостью)'
 
-        # event_id = double_split(r.text, '"eventId":', ',')
-        # sector_ids = lrsplit(r.text, 'data-sector-id="', '"')
+            elif 'Балкон, боковое правое' in sector:
+                sector = f'Балкон. Боковое правое (места с ограниченной видимостью)'
 
-        if '#' in self.url:
-            event_url, event_id = self.url.split('#')
-            url = f'{event_url}?hash=%23{event_id}&items%5B%5D=icons&items%5B%5D=title&' \
-                  f'items%5B%5D=festival_time_spending&items%5B%5D=place&items%5B%5D=price&items%5B%5D=credit' \
-                  f'&items%5B%5D=discountLabel&items%5B%5D=pushkinBadge&items%5B%5D=authRequired' \
-                  f'&items%5B%5D=tech_description&items%5B%5D=organizer&items%5B%5D=sector&items%5B%5D=schema'
-            headers = {
-                'Host': self.url_spb_or_msk,
-                'User-Agent': self.user_agent,
-                'Accept': 'application/json, text/javascript, */*; q=0.01',
-                'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'X-Requested-With': 'XMLHttpRequest',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Referer': event_url,
-                'Sec-Fetch-Dest': 'empty',
-                'Sec-Fetch-Mode': 'cors',
-                'Sec-Fetch-Site': 'same-origin',
-                'TE': 'trailers',
-            }
-            r = self.requests_to_kassir(url, headers)
+            elif 'Балкон, литер' in sector:
+                letter = sector.split()[-1]
+                sector = f'Балкон. Литер {letter}'
 
-        try:
-            event_info_raw = double_split(r.text, 'HallSchemeNew.Init(', ');')
-            event_info_raw = decode_unicode_escape(event_info_raw)
-            event_info = json.loads(event_info_raw)
-        except Exception as e:
-            self.error(f'error parsing event_data on kassir ({e}): {self.url = }')
+            elif 'Бельэтаж литер' in sector or 'Бельэтаж, литер' in sector:
+                letter = sector.split()[-1]
+                sector = f'Бельэтаж. Литер {letter}'
 
-        event_id = event_info['event_id']
-        sectors_partial_info = [
-            {
-                'id': sector_info['id'],
-                'name': sector_info['name'],
-                'unlimited': sector_info['unlimited'],
-            } for sector_info in event_info['sectors'].values()
-        ]
+            elif 'Балкон, литер' in sector:
+                letter = sector.split()[-1]
+                sector = f'Балкон. Литер {letter}'
 
-        return event_id, sectors_partial_info, place_name
+            elif 'Ложа амфитеатра' in sector:
+                number = sector.split()[-1]
+                sector = f'Амфитеатр. Ложа №{number}'
 
-    def get_sector_info(self, sector_id, event_id):
-        url = f'https://{self.url_spb_or_msk}/kassir/scheme/getSectorInfo?sectorId={sector_id}&eventId={event_id}'
-        headers = {
-            'accept': '*/*',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-            'referer': self.url,
-            'sec-ch-ua': '"Google Chrome";v="113", "Chromium";v="113", "Not-A.Brand";v="24"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': self.user_agent,
-            'x-requested-with': 'XMLHttpRequest'
-        }
-        r = self.requests_to_kassir(url, headers)
-        return r.json()
+            elif 'Ложа бельэтажа' in sector:
+                number = sector.split()[-1]
+                sector = f'Бельэтаж. Ложа №{number}'
 
-    def get_seats_info(self, sector_id, event_id, seats):
-        url = f'https://{self.url_spb_or_msk}/kassir/scheme/getScheme?sectorId={sector_id}&event_id={event_id}'
-        headers = {
-            'accept': '*/*',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-            'referer': self.url,
-            'sec-ch-ua': '"Google Chrome";v="113", "Chromium";v="113", "Not-A.Brand";v="24"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': self.user_agent,
-            'x-requested-with': 'XMLHttpRequest'
-        }
-        r = self.requests_to_kassir(url, headers)
-        soup = BeautifulSoup(r.text, 'xml')
-
-        found_seats = []
-        for seat in seats:
-            seat_polygon = soup.find('polygon', {'kh:id': str(seat['seat_id'])})
-            if not seat_polygon:
-                self.error(f'error (seat_polygon.get("kh:rowNumber", " ") returned NoneType) '
-                           f'{self.url} - {sector_id} - {seat}')
-                continue
-
-            row = seat_polygon.get('kh:rowNumber', '')
-            place = seat_polygon.get('kh:number', '')
-
-            found_seats.append({
-                'seat_id': seat['seat_id'],
-                'price': seat['price'],
-                'row': row,
-                'place': place,
-            })
-
-        return found_seats
-
-    def get_soup_dance_floor_sector(self, sector_id, event_id):
-        headers = {
-            'accept': '*/*',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-            'cache-control': 'no-cache',
-            'pragma': 'no-cache',
-            'referer': self.url,
-            'sec-ch-ua': '"Google Chrome";v="113", "Chromium";v="113", "Not-A.Brand";v="24"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': self.user_agent,
-            'x-requested-with': 'XMLHttpRequest'
-        }
-        url = f'https://{self.url_spb_or_msk}/kassir/scheme/' \
-              f'getUnlimitedSectorForm?eventId={event_id}&sectorId={sector_id}'
-        r = self.requests_to_kassir(url, headers, method='post')
-        return BeautifulSoup(r.text, 'lxml')
-
-    def _get_soup_from_sochi_url(self) -> BeautifulSoup:
-        headers = {
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
-                      'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-            'cache-control': 'no-cache',
-            'pragma': 'no-cache',
-            'referer': 'https://sochi.kassir.ru/teatry/zimniy-teatr',
-            'sec-ch-ua': '"Google Chrome";v="113", "Chromium";v="113", "Not-A.Brand";v="24"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'same-origin',
-            'sec-fetch-user': '?1',
-            'upgrade-insecure-requests': '1',
-            'user-agent': self.user_agent
-        }
-        r = self.requests_to_kassir(self.url, headers)
-        return BeautifulSoup(r.text, 'lxml')
-
-    def _get_data_from_js_script(
-            self, script_with_data: str
-    ) -> Optional[Union[tuple[dict[str, str], dict[str, int]], None]]:
-        str_js_code = script_with_data[script_with_data.index('(') + 1:-1]
-
-        index_first_elem = str_js_code.index('(') + 1
-        index_second_elem = str_js_code.index(')')
-        key_dict = str_js_code[index_first_elem:index_second_elem]
-        key_dict = key_dict.split(',')
-
-        str_js_code_split_data = str_js_code.split('}(')[-1][:-1]
-        str_js_code_split_data = str_js_code_split_data.replace('null', 'None').replace('false', 'False').replace(
-            'true', 'True')
-
-        index_skip = []
-        value_dict = []
-        list_data_js_code = str_js_code_split_data.split(',')
-        for index, elem in enumerate(list_data_js_code):
-            if index in index_skip:
-                continue
-            if 'void' in elem or 'Array' in elem:
-                value_dict.append(f'"{elem}"')
-            elif ('"' == elem[0] and '"' != elem[-1]) or (len(elem) == 1 and elem == '"'):
-                full_elem = elem
-                for index_to_skip_append, element_to_full_elem in enumerate(list_data_js_code[index + 1:]):
-                    full_elem += ', ' + element_to_full_elem
-                    index_skip.append(index + index_to_skip_append + 1)
-                    if '"' == element_to_full_elem[-1]:
-                        break
-                value_dict.append(full_elem)
-            else:
-                value_dict.append(elem)
-        if len(key_dict) != len(value_dict):
-            self.error('--- error kassir sochi processing data is failed ---')
-            return None
-        values_data = {key_dict[index]: value_dict[index] for index in range(len(key_dict))}
-
-        function_return = str_js_code.index('return ')
-        len_function_return = len('return ')
-        end_return = str_js_code.split('}(')[-1]
-        end_return = str_js_code.index(end_return) - 2
-        return_json = str_js_code[function_return + len_function_return:end_return]
-        return_json = return_json.replace('$', '1').replace('class', 'class_').replace('new Map([])', '1')
-        return_json = return_json.replace('as', 'as_')
-
-        class identdict(dict):
-            def __missing__(self, key):
-                return key
-
-        key_data = eval(return_json, identdict())
-
-        sectors_data = {}
-        all_sectors = key_data['pinia']['orderKit.store']['orderKit']['sectors']
-        for sector in all_sectors:
-            id_sector = sector['id']
-            name_sector = sector['name']
-            id_sector = values_data[id_sector]
-            if not isinstance(name_sector, str):
-                price = values_data[name_sector]
-            sectors_data[id_sector] = name_sector
-
-        price_data = {}
-        price_zones = key_data['pinia']['orderKit.store']['orderKit']['tariffGroups']
-        for price_zone in price_zones:
-            id_zone = price_zone['id']
-            price = price_zone['tariffs'][0]['price']
-            id_zone = values_data[id_zone]
-            if not isinstance(price, int):
-                price = values_data[price]
-            price_data[id_zone] = price
-        return sectors_data, price_data
-
-    def _request_to_svg_sector(self, event_id: str, sector_id: str) -> BeautifulSoup:
-        headers = {
-            'accept': '*/*',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-            'cache-control': 'no-cache',
-            'origin': 'https://sochi.kassir.ru',
-            'pragma': 'no-cache',
-            'referer': 'https://sochi.kassir.ru/',
-            'sec-ch-ua': '"Google Chrome";v="113", "Chromium";v="113", "Not-A.Brand";v="24"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-site',
-            'user-agent': self.user_agent
-        }
-        url = f'https://api.kassir.ru/api/orders/sectors/scheme/{event_id}/{sector_id}?domain=sochi.kassir.ru'
-        r = self.requests_to_kassir(url, headers)
-        return BeautifulSoup(r.text, 'xml')
-
-    def _reformat_sochi(self, sector_name: str, row: str) -> tuple[str, str]:
-        if 'зимний театр' in self.venue.lower():
-            if 'Ложа Бельэтажа' in sector_name:
-                row = sector_name.split('N')[-1]
-                sector_name = 'Бельэтаж'
-            elif 'Ложа Бенуара' in sector_name:
-                row = sector_name.split('N')[-1]
-                sector_name = 'Бенуар'
-        return sector_name, row
-
-    def load_all_info(self, to_api):
-        headers = {
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
-                      'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru,en;q=0.9',
-            'cache-control': 'no-cache',
-            'pragma': 'no-cache',
-            'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'none',
-            'sec-fetch-user': '?1',
-            'upgrade-insecure-requests': '1',
-            'user-agent': self.user_agent
-        }
-        r = self.session.get(url=to_api, headers=headers)
-
-        sectors = r.json().get('orderKit')['sectors']
-        avalible_sectors = [(i.get('id'), i.get('name').split(',')[-1].strip().capitalize()) for i in sectors if
-                            not i.get('isDisabled')]
-
-        tarif_groups = r.json().get('orderKit')['tariffGroups']
-        tarif_prices = {i.get('id'): i.get('tariffs')[0].get('price') for i in tarif_groups}
-
-        return avalible_sectors, tarif_prices
-
-    def get_all_seats(self, avalible_sectors, tarif_prices):
-        dict_with_all_seats = {}
-        for sector in avalible_sectors:
-            dict_with_all_seats.setdefault(sector[1], {})
-            headers = {
-                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
-                          'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                'accept-encoding': 'gzip, deflate, br',
-                'accept-language': 'ru,en;q=0.9',
-                'cache-control': 'no-cache',
-                'pragma': 'no-cache',
-                'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
-                'sec-ch-ua-mobile': '?0',
-                'sec-ch-ua-platform': '"Windows"',
-                'sec-fetch-dest': 'document',
-                'sec-fetch-mode': 'navigate',
-                'sec-fetch-site': 'none',
-                'sec-fetch-user': '?1',
-                'upgrade-insecure-requests': '1',
-                'user-agent': self.user_agent
-            }
-            url_load_cheme = f'https://api.kassir.ru/api/orders/sectors/scheme/{self.event_id}/{sector[0]}?domain=sochi.kassir.ru'
-            r = self.session.get(url=url_load_cheme, headers=headers)
-            s = BeautifulSoup(r.text, 'lxml-xml')
-
-            polygon = [i for i in s.find_all('polygon') if 'kh:tariff-group-id' in i.attrs]
-            for i in polygon:
-                row = i.get('kh:rowNumber')
-                price = int(tarif_prices.get(int(i.get('kh:tariff-group-id'))))
-                place = i.find_next('text').text
-                place_to_write = {(row, place): price}
-                dict_with_all_seats.get(sector[1], {}).update(place_to_write)
-
-        return dict_with_all_seats
-
-    def main_body(self):
-        if 'sochi' in self.url:
-            self.event_id = self.url.split('#')[-1]
-            to_api = f'https://api.kassir.ru/api/event-page-kit/{self.event_id}?domain=sochi.kassir.ru'
-            avalible_sectors, tarif_prices = self.load_all_info(to_api)
-            all_seats = self.get_all_seats(avalible_sectors, tarif_prices)
-            for sector_name, tickets in all_seats.items():
-                self.register_sector(sector_name, tickets)
-            return
-            # soup = self._get_soup_from_sochi_url()
-            #
-            # event_id = soup.select('link[rel="canonical"]')[0].get('href')
-            # event_id = event_id.split('#')[-1]
-            #
-            # all_scripts = soup.find('body').find_all('script')
-            # for script in all_scripts:
-            #     if 'window.__NUXT__=' in script.text:
-            #         script_with_data = script.text
-            #         break
-            # else:
-            #     return
-            #
-            # data_or_error = self._get_data_from_js_script(script_with_data)
-            # if data_or_error is None:
-            #     return
-            #
-            # all_sectors = {}
-            # sectors_data, price_data = data_or_error
-            # for sector_id, sector_name in sectors_data.items():
-            #     old_name = sector_name
-            #     tickets = {}
-            #     svg_sector = self._request_to_svg_sector(event_id, sector_id)
-            #     all_place = svg_sector.select('polygon[kh\:tariff-group-id]')
-            #     for place in all_place:
-            #         place_row = place.get('kh:rowNumber')
-            #         place_seat = place.get('kh:number')
-            #         place_price_zone = place.get('kh:tariff-group-id')
-            #         place_price = price_data[place_price_zone]
-            #         sector_name, place_row = self._reformat_sochi(old_name, place_row)
-            #
-            #         tickets[(place_row, place_seat)] = int(place_price)
-            #     try:
-            #         old_tickets = all_sectors[sector_name]
-            #         all_sectors[sector_name] = old_tickets | tickets
-            #     except KeyError:
-            #         all_sectors[sector_name] = tickets
-        event_id, sectors_partial_info, place_name = self.get_event_data()
-
-        secs_with_plus = []
-        secs_with_one_place = []
-        secs_sold_entirely = []
-        a_sectors = []
-        for sector_part_info in sectors_partial_info:
-            sector_id = sector_part_info['id']
-            sector_name = sector_part_info['name']
-
-            if 'sell_entirely' in sector_part_info:
-                if sector_part_info['sell_entirely']:  # Продаются целиком
-                    secs_sold_entirely.append(sector_part_info)
-                    continue
-
-            # if sector_part_info['unlimited']:
-            #     """ Фанзона, Танцевальный партер """
-            #     soup_dance_floor_sector = self.get_soup_dance_floor_sector(sector_id, event_id)
-            #     price = int(soup_dance_floor_sector.select('input[name*="[price]"]')[0].get('value'))
-            #     amount = int(soup_dance_floor_sector.select('input[name*="[count]"]')[0].get('value'))
-            #     self.register_dancefloor(sector_name, price, amount)
-
-            if sector_part_info['unlimited']:  # С плюсом
-                secs_with_plus.append(sector_part_info)
-                continue
-
-            if 'персон' in sector_part_info['name']:  # Схема с одним местом
-                secs_with_one_place.append(sector_part_info)
-                pass
-
-            sector_info = self.get_sector_info(sector_id, event_id)['sector']
-
-            try:
-                price_groups = {price_group_id: price_group_info['price'] for price_group_id, price_group_info in
-                                sector_info['price_groups'].items()}
-
-                seats = []
-                for seat_id, seat_info in sector_info['soes'].items():
-                    price = price_groups[str(seat_info['lastPriceGroupId'])]
-                    seat = {
-                        'seat_id': seat_id,
-                        'price': price
-                    }
-                    seats.append(seat)
-
-                seats = self.get_seats_info(sector_id, event_id, seats)
-            except Exception as e:
-                self.error(f'error parsing seats on kassir ({e}): {sector_name = }, {self.url = }')
-                seats = {}
-
-            for ticket in seats:
-                row = str(ticket['row'])
-                seat = str(ticket['place'])
-                price = int(float(ticket['price']))
-                for sector in a_sectors:
-                    if sector_name == sector['name']:
-                        sector['tickets'][row, seat] = price
-                        break
-                else:
-                    a_sectors.append({
-                        'name': sector_name,
-                        'tickets': {(row, seat): price}
-                    })
-
-        to_write = '\n\n-------\n' + self.url + '\n\n'
-        to_write += '\nПродаются целиком:\n'
-        for sec in secs_sold_entirely:
-            to_write += f"    {sec['name']} - {sec['id']}\n"
-        to_write += '\nС плюсом:\n'
-        for sec in secs_with_plus:
-            to_write += f"    {sec['name']} - {sec['id']}\n"
-        to_write += '\nС одним местом:\n'
-        for sec in secs_with_plus:
-            to_write += f"    {sec['name']} - {sec['id']}\n"
-
-        with open('мегаспорт_сектора_без_выбора_мест.txt', 'a', encoding='utf-8') as file:
-            file.write(to_write)
-
-        self.reformat(a_sectors, place_name)
-
-        for sector in a_sectors:
-            self.register_sector(sector['name'], sector['tickets'])
+            res_sectors.setdefault(sector, {}).update(tickets)
+        return res_sectors
 
     @staticmethod
     def reformat_zimnii_sochi(a_sectors):
@@ -2111,6 +1664,7 @@ class KassirParser(SeatsParser):
             polygon =  [i for i in s.find_all('polygon') if 'kh:tariff-group-id' in i.attrs]
             for i in polygon:
                 row = i.get('kh:rowNumber')
+                if not row: row = '1'
                 price = int(tarif_prices.get(int(i.get('kh:tariff-group-id'))))
                 place = i.find_next('text').text
                 place_to_write = {(row,str(place)):price}
@@ -2126,18 +1680,17 @@ class KassirParser(SeatsParser):
         if 'widget.kassir.ru' in self.url:
             self.id = self.url.split('=')[-1].strip()
             self.domain = re.search(r'(?<=domain\=)[\w\.]+(?=&)', self.url)[0].strip()
-            self.url_all_events = self.url
             KEY = re.search(r'(?<=key\=)[\w\-]+', self.url)[0].strip()
             url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?widgetKey={KEY}&domain={self.domain}'
         else:
             url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?domain={self.domain}'
 
         try:
-            self.session.get(url=self.url_all_events, headers=self.headers)
+            self.session.get(url=self.url, headers=self.headers)
         except Exception as ex:
-            self.error(f'Cannot load {self.url_all_events} {ex}')
+            self.error(f'Cannot load {self.url} {ex}')
         else:
-            self.debug(f'{self.url_all_events} load succes')
+            self.debug(f'{self.url} load succes')
 
         a_sectors = self.new_get_sectors(url)
         

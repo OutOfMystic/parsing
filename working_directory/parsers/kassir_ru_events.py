@@ -20,7 +20,7 @@ class KassirParser(EventParser):
         self.driver_source = None
         self.new_urls = {
              #'https://msk.kassir.ru/koncertnye-zaly/zelenyiy-teatr-vdnh': '*', #Зелёный театр
-             'https://msk.kassir.ru/teatry/mdm': '*', # Московский дворец молодёжи
+             #'https://msk.kassir.ru/teatry/mdm': '*', # Московский дворец молодёжи
              #'https://msk.kassir.ru/drugoe/krasnaya-ploschad': '*', #Красная площадь
              #'https://msk.kassir.ru/teatry/rossijskoj-armii': '*', # Театр Армии
              'https://sochi.kassir.ru/teatry/zimniy-teatr': '', # Зимний театр Сочи
@@ -33,10 +33,11 @@ class KassirParser(EventParser):
              'https://msk.kassir.ru/sportivnye-kompleksy/dvorets-sporta-megasport': '*', # megasport
              #'https://sochi.kassir.ru/koncertnye-zaly/kontsertnyiy-zal-festivalnyiy': '*', #fistivalnii sochi
              #'https://msk.kassir.ru/teatry/ermolovoj': '*', # ermolovoi theatre
-             'https://msk.kassir.ru/teatry/teatr-im-vlmayakovskogo': '*', #Majakousogo theatre moscow
+             #'https://msk.kassir.ru/teatry/teatr-im-vlmayakovskogo': '*', #Majakousogo theatre moscow
              'https://omsk.kassir.ru/sportivnye-kompleksy/g-drive-arena': '*',# G-Drive Арена omsk
              'https://kzn.kassir.ru/koncertnye-zaly/dvorets-sportakazan': '*',#Дворец спорта Казань
              'https://msk.kassir.ru/sportivnye-kompleksy/cska-arena': 'cska', #cska arena
+             'https://msk.kassir.ru/teatry/mossoveta': '*', #mossoveta
         }
 
     def before_body(self):
@@ -99,12 +100,15 @@ class KassirParser(EventParser):
         a_events.extend(events)
 
         page = 2
-        while len(a_events) < total_count:
+        len_a_events = len(a_events)
+        while len(a_events) < total_count and len_a_events > 0:
             pagination_url = f'https://api.kassir.ru/api/search?currentPage={page}'\
                                 f'&pageSize=30&venueId={self.new_venue_id}&domain={self.domain}'
             response = self.session.get(pagination_url, headers=self.new_headers)
             events = [i for i in response.json()['items']]
             a_events.extend(events)
+            page += 1
+            len_a_events = len(events)
 
         return a_events
     
@@ -173,7 +177,6 @@ class KassirParser(EventParser):
                 self.error(f'{ex}, {url} cannot load!')
                 raise
 
-        a_events = list(set(a_events))
         for event in a_events:
             if event[2] == '' or 'абонемент' in event[0].lower() or '—' in event[2]:
                 continue
@@ -183,5 +186,5 @@ class KassirParser(EventParser):
             try:
                 self.register_event(event[0], event[1], date=event[2],
                                      venue=event[3], id=event[4], domain=event[5], url_all_events=event[6])
-            except ValueError:
-                continue
+            except Exception as ex:
+                self.error(f'{ex}, {event} cannot save to DB!')

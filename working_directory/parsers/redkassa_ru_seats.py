@@ -17,6 +17,12 @@ class Redkassa(SeatsParser):
         self.session = ProxySession(self)
 
     def reformat(self, a_sectors):
+        gubernskii = {
+            'Балкон, Левая сторона': 'Балкон',
+            'Балкон, Правая сторона': 'Балкон',
+            'Партер, Левая сторона': 'Партер',
+            'Партер, Правая сторона': 'Партер'
+        }       
         vtb_arena = {
             'Танцевальный партер': 'Танцпол',
             'ТАНЦПОЛ': 'Танцпол',
@@ -37,6 +43,8 @@ class Redkassa(SeatsParser):
         luzhniki = {}
 
         ref_dict = {}
+        if 'губернский театр' in self.venue.lower():
+            ref_dict = gubernskii
         if "втб арена" in self.venue.lower():
             if self.scheme.name == 'ВТБ Арена-стадион им. Льва Яшина (Фан, Танцпол)':
                 ref_dict = vtb_arena_second
