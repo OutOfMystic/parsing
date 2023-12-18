@@ -114,7 +114,7 @@ class EventParser(ParserBase, ABC):
         super().run_try()
 
         if self.step == 0:
-            db_manager.delete_parsed_events(self.name)
+            db_manager.delete_parsed_events(self._db_name)
         self._change_events_state()
         self.last_state = self._new_condition.copy()
         self._new_condition.clear()
