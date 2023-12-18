@@ -139,10 +139,11 @@ class Logger(threading.Thread):
     def send_logs(self):
         logs = self._buffer
         self._buffer = []
-        jsoned = ''.join(json.dumps(log, ensure_ascii=False, separators=(',', ':')) + '\n'
-                         for log in logs)
+        # jsoned = ''.join(json.dumps(log, ensure_ascii=False, separators=(',', ':')) + '\n'
+        #                  for log in logs)
+        jsoned = '\n'.join(' - '.join(str(value) for value in log.values()) for log in logs)
         with open(self.log_path, 'a', encoding='utf-8') as fp:
-            fp.write(jsoned)
+            fp.write(jsoned + '\n')
         del logs
 
         logs = self._debug_buffer

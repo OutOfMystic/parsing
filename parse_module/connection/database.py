@@ -128,10 +128,10 @@ class DBConnection:
 
 class ParsingDB(DBConnection):
     def __init__(self):
-        super().__init__(host="80.76.42.37",
+        super().__init__(host="193.178.170.180",
                          port="5432",
                          user="django_project",
-                         password="C8iIb38QJjo",
+                         password="2QIzDNI5iHfW3Q",
                          database="crmdb")
 
     @locker
