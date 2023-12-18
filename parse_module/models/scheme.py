@@ -1,10 +1,9 @@
-import shelve
 import threading
 from threading import Lock
 
 from ..connection import db_manager
 from ..manager.backstage import tasker
-from ..utils import utils, provision
+from ..utils import utils, provision, shelve
 from ..utils.exceptions import InternalError, SchemeError, ParsingError
 from ..utils.logger import logger
 from ..utils.types import LocalCacheDict
