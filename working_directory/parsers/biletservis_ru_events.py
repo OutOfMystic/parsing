@@ -11,8 +11,8 @@ from parse_module.manager.proxy.instances import ProxySession
 
 
 class BuletServis(EventParser):
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.a_events = None
         self.delay = 3600
         self.driver_source = None

@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from PIL import Image, ImageOps
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils import utils
@@ -23,10 +24,10 @@ from parse_module.drivers.proxelenium import ProxyWebDriver
 
 
 class YandexAfishaParser(EventParser):
-    proxy_check_url = 'https://afisha.yandex.ru/'
+    proxy_check = SpecialConditions(url='https://afisha.yandex.ru/')
 
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 7200
         self.driver_source = None
         self.our_urls = {
@@ -854,7 +855,6 @@ class YandexAfishaParser(EventParser):
         return output_data
 
     def body(self):
-        self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
         self.before_body()
 
         for url, venue in self.special_url_with_one_person.items():

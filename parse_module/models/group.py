@@ -17,6 +17,7 @@ class SeatsParserGroup:
         self.parsers = []
         self._router = SchemeRouter()
         self.start_lock = threading.Lock()
+        self.going_to_start = 0
 
     def bprint(self, mes, color=utils.Fore.LIGHTGREEN_EX):
         logger.bprint_compatible(mes, self.name, color)
@@ -63,10 +64,7 @@ class SeatsParserGroup:
         self.start_lock.acquire()
         for parser in self.parsers:
             parser_margin = parser.scheme.restore_margin(parser.priority)
-            logger.debug(parser_margin.id)
-            logger.debug(margin_id)
             if parser_margin.id == margin_id:
-                logger.debug('stoppng')
                 parser.stop()
             self.parsers.remove(parser)
         self.start_lock.release()
@@ -128,14 +126,16 @@ class SeatsParserGroup:
             message = f'{len(prepared_data)} parsers will be launched'
             self.bprint(message)
 
+        self.going_to_start = len(prepared_data)
         for event_data in prepared_data:
             provision.multi_try(self._start_parser, tries=3,
                                 args=(event_data,), raise_exc=False,
                                 name='Controller')
+            self.going_to_start -= 1
         self.start_lock.release()
 
     def _start_parser(self, event_data):
-        scheme = self._router.get_scheme(event_data['event_id'], event_data['scheme_id'])
+        scheme = self._router.get_scheme(event_data['event_id'], event_data['scheme_id'], self.name)
         if scheme is provision.TryError:
             self.error(f'SEATS parser {self.parent_event} ({event_data["event_name"]}'
                        f' {event_data["date"]}) has not started: scheme error')

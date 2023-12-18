@@ -2,6 +2,7 @@ import json
 
 from bs4 import BeautifulSoup
 
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split, decode_unicode_escape
@@ -10,7 +11,7 @@ from parse_module.utils.parse_utils import double_split, decode_unicode_escape
 class BkzPars(SeatsParser):
     event = 'bileter.ru'
     url_filter = lambda url: 'bileter.ru' in url
-    proxy_check_url = 'https://www.bileter.ru/'
+    proxy_check = NormalConditions()
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)

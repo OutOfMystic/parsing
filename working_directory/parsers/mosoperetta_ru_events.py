@@ -8,8 +8,8 @@ from parse_module.manager.proxy.instances import ProxySession
 
 class OperettaParser(EventParser):
 
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.our_urls = {
@@ -116,7 +116,7 @@ class OperettaParser(EventParser):
         count = 5
         while not r.ok and count > 0:
             self.debug(f'{self.proxy.args = }, {self.session.cookies = } kassir events')
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = ProxySession(self)
             r = self.session.post(url, headers=headers, data=data, verify=False)
             count -= 1

@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from PIL import Image, ImageOps
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.utils.captcha import afisha_recaptcha
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
@@ -23,7 +24,7 @@ from parse_module.utils.captcha import yandex_afisha_coordinates_captha
 
 
 class YandexAfishaParser(SeatsParser):
-    proxy_check_url = 'https://afisha.yandex.ru/'
+    proxy_check = SpecialConditions(url='https://afisha.yandex.ru/')
     event = 'afisha.yandex.ru'
     url_filter = lambda url: 'afisha.yandex.ru' in url
 
@@ -1096,7 +1097,7 @@ class YandexAfishaParser(SeatsParser):
                 r_sectors, r = self.hallplan_request(event_params, default_headers)
             except ProxyError as ex:
                 self.error(f'Catch(change_proxy): {ex} \n url:{self.url}')
-                self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+                self.proxy = self.controller.proxy_hub.get(self.proxy_check)
                 #self.session = ProxySession(self)
                 time.sleep(1)
             except Exception as ex:
@@ -1117,7 +1118,7 @@ class YandexAfishaParser(SeatsParser):
             self.req_number = 0
             self.default_headers = {}
             time.sleep(40)
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = ProxySession(self)
             
             while self.req_number < 50 and r_sectors is None:

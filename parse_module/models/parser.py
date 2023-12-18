@@ -3,19 +3,17 @@ import weakref
 from abc import abstractmethod, ABC
 from urllib.parse import urlparse
 
-from loguru import logger
-from requests.exceptions import ProxyError
-
 from ..manager import core
 from ..connection import db_manager
+from ..manager.proxy import check
 from ..utils import utils
 from ..utils.date import Date
 from ..utils.exceptions import ParsingError
+from ..utils.logger import logger
 
 
 class ParserBase(core.BotCore, ABC):
-    proxy_check_url = 'http://httpbin.org/'
-    proxy_check_method = 'get'
+    proxy_check = check.NormalConditions()
 
     def __init__(self, controller):
         super().__init__()
@@ -25,9 +23,14 @@ class ParserBase(core.BotCore, ABC):
         self._notifier_event = None
         self._notifier_locker = None
 
+    def change_proxy(self, report=False):
+        if report:
+            self.controller.proxy_hub.report(self.proxy_check, self.proxy)
+        self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+
     def set_notifier(self, event: threading.Event, locker: threading.Event):
         if self._notifier_event:
-            self.bprint(f'Notifier for parser {self.name} has already been set. Refused.', color=utils.Fore.RED)
+            self.error(f'Notifier for parser {self.name} has already been set. Refused.')
         else:
             self._notifier_event = event
             self._notifier_locker = locker
@@ -42,13 +45,17 @@ class ParserBase(core.BotCore, ABC):
             self._notifier_event.set()
             self._notifier_locker.wait(timeout=10)
 
+    def run(self):
+        self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+        super().run()
+
 
 class EventParser(ParserBase, ABC):
 
     def __init__(self, controller, name):
         super().__init__(controller)
         self.name = f'EventParser ({name})'
-        self.db_name = name
+        self._db_name = name
         self.events = {}
         self._new_condition = {}
         self.stop = weakref.finalize(self, self._finalize_parser)
@@ -85,7 +92,7 @@ class EventParser(ParserBase, ABC):
             if venue is None:
                 venue = "null"
             listed_event = [
-                self.db_name, event_name,
+                self._db_name, event_name,
                 url, venue, columns, date
             ]
             listed_events.append(listed_event)
@@ -104,33 +111,19 @@ class EventParser(ParserBase, ABC):
         self._new_condition[aliased_name, url, formatted_date, cols_hash] = columns
 
     def run_try(self):
-        count_error = 0
-        while True:
-            try:
-                super().run_try() # TODO: убрать while
-                break
-            except ProxyError as error:
-                count_error += 1
-                if count_error == 50:
-                    raise ProxyError(error)
-                self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+        super().run_try()
 
         if self.step == 0:
-            db_manager.delete_parsed_events(self.name)
+            db_manager.delete_parsed_events(self._db_name)
         self._change_events_state()
         self.last_state = self._new_condition.copy()
         self._new_condition.clear()
         self.trigger_notifier()
 
-    def run(self):
-        self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
-        super().run()
-
 
 class SeatsParser(ParserBase, ABC):
     event = 'Parent Event'
     url_filter = lambda event: 'ticketland.ru' in event
-    proxy_check_url = 'http://httpbin.org/'
 
     def __init__(self, controller, event_id, event_name,
                  url, date, venue, signature, scheme,
@@ -157,42 +150,40 @@ class SeatsParser(ParserBase, ABC):
     def register_sector(self, sector_name, seats):
         """
         Registers sector ``sector_name`` during ``body``
-        execution. ``seats`` can be of two formats:
+        execution. ``seats`` should be formatted like:
          - ``{(row1, seat1): price1, (row2, seat2): price2, ...}``,
-         - ``[[row1, seat1], [row2, seat2], ...]``
-        It's desirable to use the first one
 
         :param sector_name: the same name as in database
         :param seats: list or dict of seats data
         """
-        assert isinstance(seats, (dict, list, tuple)), \
+        assert isinstance(seats, (dict, tuple)), \
             'Wrong seats data format, should be iterable'
         lower_sectors = (sector.lower() for sector in self.scheme.sectors)
         if sector_name.lower() not in lower_sectors:
-            mes = f"Sector '{sector_name}' wasn\'t found on the scheme, being ignored! " \
-                  f"{self.__class__.__name__} DEBUG_DATA = '{self.url}'"
+            mes = f"Sector '{sector_name}' wasn\'t found on the scheme, being ignored!\n" \
+                  f"Parser: {self.__class__.__name__}. URL: {self.url}"
             if hasattr(self, 'venue'):
                 mes += f' {self.venue}'
-            self.bprint(mes, color=utils.Fore.YELLOW)
+            self.warning(mes)
 
         if seats:
-            if isinstance(seats, dict):
-                row, seat = list(seats.keys())[0]
-                price = seats[row, seat]
-                assert isinstance(row, str), ('row is not a string, got '
-                                              f'{type(row).__name__} ({row}) instead')
-                assert isinstance(seat, str), ('seat is not a string, got '
-                                               f'{type(seat).__name__} ({seat}) instead')
-                assert isinstance(price, int), ('price is not an integer, got '
-                                                f'{type(price).__name__} ({price}) instead')
-            else:
+            # f isinstance(seats, dict):
+            row, seat = list(seats.keys())[0]
+            price = seats[row, seat]
+            assert isinstance(row, str), ('row is not a string, got '
+                                          f'{type(row).__name__} ({row}) instead')
+            assert isinstance(seat, str), ('seat is not a string, got '
+                                           f'{type(seat).__name__} ({seat}) instead')
+            assert isinstance(price, int), ('price is not an integer, got '
+                                            f'{type(price).__name__} ({price}) instead')
+            """else:
                 row, seat = seats[0]
                 assert isinstance(row, str), ('row is not a string, got '
                                               f'{type(row).__name__} ({row}) instead')
                 assert isinstance(seat, str), ('seat is not a string, got '
-                                               f'{type(seat).__name__} ({seat}) instead')
+                                               f'{type(seat).__name__} ({seat}) instead')"""
 
-        if sector_name in self.parsed_sectors:
+        """if sector_name in self.parsed_sectors:
             if isinstance(seats, tuple):
                 seats = list(seats)
             if isinstance(seats, list):
@@ -202,6 +193,11 @@ class SeatsParser(ParserBase, ABC):
         else:
             if isinstance(seats, tuple):
                 seats = list(seats)
+            self.parsed_sectors[sector_name] = seats"""
+
+        if sector_name in self.parsed_sectors:
+            self.parsed_sectors[sector_name].update(seats)
+        else:
             self.parsed_sectors[sector_name] = seats
 
     def register_dancefloor(self, sector_name, price, amount=1000):
@@ -295,16 +291,7 @@ class SeatsParser(ParserBase, ABC):
         if self.driver:
             self.driver.get(self.url)
 
-        count_error = 0
-        while True:
-            try:
-                self.body()
-                break
-            except ProxyError as error:
-                count_error += 1
-                if count_error == 50:
-                    raise ProxyError(error)
-                self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+        self.body()
 
         if self.stop.alive:
             self.trigger_notifier()
@@ -321,10 +308,6 @@ class SeatsParser(ParserBase, ABC):
     @abstractmethod
     def body(self):
         pass
-
-    def run(self):
-        self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
-        super().run()
 
 
 def format_sectors_block(mes, sectors, color):

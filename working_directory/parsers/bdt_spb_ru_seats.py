@@ -3,6 +3,8 @@ from typing import NamedTuple
 
 from requests import Response
 from bs4 import BeautifulSoup
+
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
@@ -16,7 +18,7 @@ class OutputData(NamedTuple):
 class BdtSpb(SeatsParser):
     event: str = 'bdt.spb.ru'
     url_filter: str = lambda url: 'spb.ticketland.ru' in url and 'bdt-imtovstonogova' in url and 'to_parser' in url
-    proxy_check_url: str = 'https://spb.ticketland.ru/'
+    proxy_check = SpecialConditions(url='https://spb.ticketland.ru/')
 
     def __init__(self, *args: list, **extra: dict) -> None:
         super().__init__(*args, **extra)

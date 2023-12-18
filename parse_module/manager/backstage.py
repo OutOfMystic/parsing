@@ -3,6 +3,7 @@ from datetime import datetime
 from queue import Queue
 from typing import Callable
 
+from ..console.base import print_cols
 from ..utils import provision, utils
 from ..utils.logger import logger
 
@@ -81,12 +82,12 @@ class BackTasker(threading.Thread):
                     args_collected.append(first_arg_and_timestamp)
                 else:
                     to_put_back.append(task)
+
+            to_put_back.sort(key=lambda item: item.timestamp)
+            for task in to_put_back:
+                self.tasks.put(task)
         finally:
             self._lock.release()
-
-        to_put_back.sort(key=lambda item: item.timestamp)
-        for task in to_put_back:
-            self.tasks.put(task)
 
         args_collected.sort(key=lambda item: item[1])
         if dict_:
@@ -99,6 +100,25 @@ class BackTasker(threading.Thread):
                 ordered_args.extend(args)
 
         return ordered_args, *args_original[1:]
+
+    def inspect_queue(self):
+        to_print = []
+        to_put_back = []
+
+        try:
+            self._lock.acquire()
+            while not self.tasks.empty():
+                task = self.tasks.get()
+                row = [str(task.timestamp), len(task.args), str(task.kwargs), str(task.throttling)]
+                to_print.append(row)
+                to_put_back.append(task)
+
+            to_put_back.sort(key=lambda item: item.timestamp)
+            for task in to_put_back:
+                self.tasks.put(task)
+        finally:
+            self._lock.release()
+        print_cols(to_print)
 
     def run(self):
         while True:

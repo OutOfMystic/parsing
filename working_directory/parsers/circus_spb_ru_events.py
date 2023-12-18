@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 
 from parse_module.drivers.proxelenium import ProxyWebDriver
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils import utils
@@ -25,9 +26,10 @@ class OutputEvent(NamedTuple):
 
 
 class CircusSpbRu(EventParser):
-    proxy_check_url = 'https://www.circus.spb.ru/'
-    def __init__(self, controller) -> None:
-        super().__init__(controller)
+    proxy_check = NormalConditions()
+
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 7600
         self.driver_source = None
         self.urls = {

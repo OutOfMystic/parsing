@@ -5,18 +5,19 @@ from bs4 import BeautifulSoup
 from telebot import TeleBot
 from telebot.apihelper import ApiTelegramException
 
-
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
+
 
 class Check_new_websites(EventParser):
     '''
         Check new domen from ip 179.43.166.54
     '''
-    proxy_check_url = 'https://tools.seo-auditor.com.ru/'
+    proxy_check = NormalConditions()
 
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 8600
         self.driver_source = None
         self.ip = '179.43.166.54'

@@ -1,3 +1,4 @@
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.provision import multi_try
@@ -7,7 +8,7 @@ from parse_module.utils import utils
 class ProfticketParser(SeatsParser):
     event = 'spa.profticket.ru'
     url_filter = lambda url: 'spa.profticket.ru' in url
-    proxy_check_url = 'https://spa.profticket.ru/'
+    proxy_check = SpecialConditions(url='https://spa.profticket.ru/')
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)

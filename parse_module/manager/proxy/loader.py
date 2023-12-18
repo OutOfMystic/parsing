@@ -1,38 +1,71 @@
-import os.path
-import threading
-import time
 import json
+import time
+import json as json_
+from typing import overload
 from urllib.parse import urlparse
 
-from loguru import logger
-
 from . import check
+from .check import SpecialConditions, NormalConditions
 from ...utils import provision
 from .instances import UniProxy
-from .. import backstage
+from ...utils.logger import logger
 from ...utils.provision import threading_try
 
 
-class ProxyOnDomain:
-    def __init__(self, domain):
-        self.domain = domain
+class ProxyOnCondition:
+    def __init__(self, proxy_hub, condition, from_data=None):
+        self.proxy_hub = proxy_hub
+        self.condition = condition
         self.proxies = []
+        self.last_update = 0
         self.plen = 0
         self.last_tab = 0
+        self.in_check = False
+        if from_data is not None:
+            if len(from_data["proxies"]) / len(self.proxy_hub.all_proxies) > 0.3:
+                self.proxies = [UniProxy(proxy) for proxy in from_data['proxies']]
+                self.plen = len(self.proxies)
+                self.last_update = from_data['timestamp']
+            else:
+                logger.warning(f'Refused loading proxies for {self.condition.url}. '
+                               f'Poor availability ({len(from_data["proxies"])})')
+        self.update()
 
-    def update(self, proxies):
+    def json(self):
+        str_proxies = [str(proxy) for proxy in self.proxies]
+        return {
+            "timestamp": self.last_update,
+            "proxies": str_proxies
+        }
+
+    def update(self):
+        if self.in_check:
+            return
+        lifetime = self.condition.lifetime if self.proxies else 180
+        if self.last_update < time.time() - lifetime:
+            self.in_check = True
+            threading_try(check.check_proxies, args=(self.proxy_hub.all_proxies, self,))
+            self.in_check = False
+
+    def report(self, proxy):
+        if proxy in self.proxies:
+            self.proxies.remove(proxy)
+
+    def put(self, proxies):
         self.proxies = proxies
         self.plen = len(proxies)
+        self.last_update = time.time()
+        self.proxy_hub.save_states()
 
     def _wait(self):
-        wait_counter = float('inf')
         sleep_time = 0.1
         while not self.plen:
-            wait_counter += sleep_time
-            if wait_counter > 10:
-                wait_counter = 0
-                print(f'Waiting for proxy for {self.domain}')
-            time.sleep(sleep_time)
+            sleep_time += 0.1
+            if sleep_time > 15:
+                if sleep_time % 2 == 0:
+                    logger.info(f'Waiting for proxy for {self.condition.url}',
+                                name='Controller')
+            time.sleep(0.1)
 
     def get(self):
         self._wait()
@@ -45,45 +78,96 @@ class ProxyOnDomain:
         return self.proxies
 
 
-class Proxies:
+class ProxyHub:
     def __init__(self):
         self.all_proxies = []
         self.last_tab = get_tab()
-        self.proxies_on_domain = {}
 
-    def add_route(self, url='http://httpbin.org/'):
-        domain = parse_domain(url)
-        if domain not in self.proxies_on_domain:
-            self.proxies_on_domain[domain] = ProxyOnDomain(domain)
-        callback = self.proxies_on_domain[domain]
-        threading_try(check.check_proxies, args=(self.all_proxies, url, callback,))
-        
-    def _get_proxies_on_domain(self, url):
-        domain = parse_domain(url)
-        if domain not in self.proxies_on_domain:
-            domain = 'httpbin.org'
-        proxies_on_domain = self.proxies_on_domain[domain]
-        return proxies_on_domain
-        
-    def get(self, url='http://httpbin.org/'):
-        proxies_on_domain = self._get_proxies_on_domain(url)
-        proxy = proxies_on_domain.get()
-        return proxy
+        self.stored_data = self._load_stored_data()
+        self.proxies_on_condition = {}
+
+    @overload
+    def add_route(self, check_conditions: SpecialConditions):
+        ...
+
+    @overload
+    def add_route(self, url: str):
+        ...
+
+    @overload
+    def get_all(self, check_conditions: SpecialConditions):
+        ...
+
+    @overload
+    def get_all(self, url: str):
+        ...
+
+    @overload
+    def get(self, check_conditions: SpecialConditions):
+        ...
+
+    @overload
+    def get(self, url: str):
+        ...
+
+    @staticmethod
+    def _check_argument(check_conditions):
+        if isinstance(check_conditions, SpecialConditions):
+            pass
+        elif isinstance(check_conditions, str):
+            check_conditions = SpecialConditions(url=check_conditions)
+        else:
+            return TypeError(f'Argument should be ``Conditions`` or ``str``')
+        return check_conditions
+
+    @staticmethod
+    def _load_stored_data():
+        stored = provision.try_open('proxies.json', {})
+        return {tuple(json.loads(key)): proxies for key, proxies in stored.items()}
+
+    def save_states(self):
+        data_to_store = {}
+        for proxy_group in self.proxies_on_condition.values():
+            signature = json.dumps(proxy_group.condition.signature)
+            data_to_store[signature] = proxy_group.json()
+        provision.try_write('proxies.json', data_to_store)
+
+    def add_route(self, check_conditions):
+        check_conditions = self._check_argument(check_conditions)
+        if check_conditions.signature not in self.proxies_on_condition:
+            stored_data = self.stored_data.get(check_conditions.signature, None)
+            new_pool = ProxyOnCondition(self, check_conditions, from_data=stored_data)
+            self.proxies_on_condition[check_conditions.signature] = new_pool
+
+    def get(self, check_conditions):
+        check_conditions = self._check_argument(check_conditions)
+        proxies = self.proxies_on_condition[check_conditions.signature]
+        return proxies.get()
     
-    def get_all(self, url='http://httpbin.org/'):
-        proxies_on_domain = self._get_proxies_on_domain(url)
-        return proxies_on_domain.get_all()
+    def get_all(self, check_conditions):
+        check_conditions = self._check_argument(check_conditions)
+        proxies = self.proxies_on_condition[check_conditions.signature]
+        return proxies.get_all()
+
+    def report(self, check_conditions, proxy):
+        check_conditions = self._check_argument(check_conditions)
+        proxies = self.proxies_on_condition[check_conditions.signature]
+        proxies.report(proxy)
+
+    def update(self):
+        for proxy_group in self.proxies_on_condition.values():
+            proxy_group.update()
 
 
-class ManualProxies(Proxies):
+class ManualProxies(ProxyHub):
     def __init__(self, path):
         super().__init__()
         provision.multi_try(self._load_proxies, args=(path,), name='Controller')
-        self.add_route()
+        self.add_route(NormalConditions())
 
     def _load_proxies(self, path):
         with open(path, 'r') as fp:
-            payload = json.load(fp)
+            payload = json_.load(fp)
         to_proxies = [UniProxy(row) for row in payload]
         self.all_proxies = to_proxies
 

@@ -1,12 +1,14 @@
 import re
 from bs4 import BeautifulSoup
+
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
 class TNA(SeatsParser):
-    proxy_check_url = 'https://tna-tickets.ru/'
+    proxy_check = NormalConditions()
     event = 'tna-tickets.ru'
     url_filter = lambda url: 'tna-tickets.ru' in url
 

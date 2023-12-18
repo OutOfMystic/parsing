@@ -66,7 +66,7 @@ class LocalCacheDict(HashDict):
         normal_dict = {item: value for item, value in self.items()}
         with open(self.path, 'wb+') as f:
             pickle.dump(normal_dict, f)
-        super().__setitem__(key, value)
+        super().__setitem__(key, value)\
 
 
 class LowerDict(HashDict):

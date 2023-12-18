@@ -8,15 +8,17 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 
 from parse_module.drivers.proxelenium import ProxyWebDriver
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.utils.date import month_list
 from parse_module.manager.proxy.instances import ProxySession
 
 
 class BolshoiParser(EventParser):
-    proxy_check_url = 'https://ticket.bolshoi.ru/'
-    def __init__(self, controller):
-        super().__init__(controller)
+    proxy_check = SpecialConditions(url='https://ticket.bolshoi.ru/')
+
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://ticket.bolshoi.ru/api/v1/client/shows/'

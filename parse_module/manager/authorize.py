@@ -9,7 +9,8 @@ from multiprocessing import Queue
 import urllib3
 from urllib3.exceptions import InsecureRequestWarning
 
-from parse_module.manager.proxy.loader import ManualProxies, Proxies
+from parse_module.manager.proxy.check import NormalConditions
+from parse_module.manager.proxy.loader import ManualProxies, ProxyHub
 from parse_module.utils import provision
 
 
@@ -139,9 +140,9 @@ class Account:
 
 
 class AccountsQueue(threading.Thread):
-    proxy_check_url = 'http://httpbin.org/'
+    proxy_check = NormalConditions()
 
-    def __init__(self, accounts_path, proxy_hub: Proxies,
+    def __init__(self, accounts_path, proxy_hub: ProxyHub,
                  separator='\t', mix=False,
                  ignore_limit=False, reauthorize=False):
         super().__init__()
@@ -174,7 +175,7 @@ class AccountsQueue(threading.Thread):
         return f"({self.ready.qsize()}, {self.to_inspect.qsize()})"
 
     def get_proxy(self):
-        return self.proxy_hub.get(self.proxy_check_url)
+        return self.proxy_hub.get(self.proxy_check)
 
     def first_fill_queue(self):
         with open(self.accounts_path, 'r') as f:

@@ -9,6 +9,7 @@ from telebot import TeleBot
 from telebot.apihelper import ApiTelegramException
 from bs4 import BeautifulSoup
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
@@ -28,7 +29,7 @@ class UserData(NamedTuple):
 
 
 class BdtSpbBot(EventParser):
-    proxy_check_url = 'https://spb.ticketland.ru/'
+    proxy_check = SpecialConditions(url='https://spb.ticketland.ru/')
 
     def __init__(self, *args: list, **extra: dict) -> None:
         super().__init__(*args, **extra)
@@ -560,7 +561,7 @@ class BdtSpbBot(EventParser):
                                args=(ticket_to_new_threading_basket, event_date, self.session),
                                raise_exc=False,
                                tries=1)
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.before_body()
 
             this_index += self.max_ticket_in_basket

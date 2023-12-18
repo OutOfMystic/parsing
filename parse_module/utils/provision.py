@@ -100,6 +100,7 @@ def multi_try(to_try: Callable,
               args: Iterable = None,
               kwargs: dict = None,
               print_errors=True,
+              use_logger=True,
               multiplier=1.14):
     """
     Try to execute smth ``tries`` times.
@@ -116,6 +117,7 @@ def multi_try(to_try: Callable,
         kwargs: keyword arguments sent to ``to_try``
         raise_exc: raise exception or not after all
         print_errors: log errors on each try
+        use_logger: log errors via the custom logger
         multiplier: wait ratio, increase up to 1.5
 
     Returns: value from a last successful attempt.
@@ -138,6 +140,7 @@ def multi_try(to_try: Callable,
         result, exc = _tryfunc(to_try,
                                name,
                                print_errors=print_errors,
+                               use_logger=use_logger,
                                args=args,
                                kwargs=kwargs,
                                from_multi_try=(i, tries))
@@ -157,6 +160,7 @@ def _tryfunc(func,
              name='',
              error_prefix='',
              print_errors=True,
+             use_logger=True,
              args=None,
              kwargs=None,
              from_multi_try=None):
@@ -178,7 +182,11 @@ def _tryfunc(func,
             str_exception = str(exc).split('\n')[0]
             error = f'({type(exc).__name__}){tried_overall} {str_exception}'
             error_with_prefix = error_prefix + error
-            logger.error(error_with_prefix, name=name)
+            if use_logger:
+                logger.error(error_with_prefix, name=name)
+            else:
+                name_part = f'{name} | ' if name else ''
+                print(name_part + utils.red(error_with_prefix))
         return TryError, exc
     else:
         return result, None

@@ -15,8 +15,8 @@ class OutputEvent(NamedTuple):
 
 class TicketsFcdmRu(EventParser):
 
-    def __init__(self, controller) -> None:
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://tickets.fcdm.ru/api/event-show/posted?viewPage=TICKETS'

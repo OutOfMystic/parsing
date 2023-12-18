@@ -17,8 +17,8 @@ class OutputEvent(NamedTuple):
 
 class ALL_Circus_from_ticket_place_Events(EventParser):
 
-    def __init__(self, controller) -> None:
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.urls_ONE = {

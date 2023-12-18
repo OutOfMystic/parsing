@@ -3,6 +3,7 @@ import json
 from bs4 import BeautifulSoup
 from requests.exceptions import ProxyError
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
@@ -11,7 +12,7 @@ from parse_module.utils.parse_utils import double_split
 class Luzhniki(SeatsParser):
     event = 'luzhniki.ru'
     url_filter = lambda url: 'msk.kassir.ru' in url and 'frame' in url
-    proxy_check_url = 'https://msk.kassir.ru/'
+    proxy_check = SpecialConditions(url='https://msk.kassir.ru/')
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)

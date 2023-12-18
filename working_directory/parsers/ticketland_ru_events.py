@@ -1,14 +1,15 @@
 from bs4 import BeautifulSoup
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 
 
 class Parser(EventParser):
-    proxy_check_url = 'https://www.ticketland.ru/'
+    proxy_check = SpecialConditions(url='https://www.ticketland.ru/')
 
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 1800
         self.driver_source = None
         self.url = 'https://www.ticketland.ru/teatry/'
@@ -258,7 +259,7 @@ class Parser(EventParser):
                         self.error(event, venue, 'too long!!!!!!!!!!!!')
                         continue
                     self.register_event(event[0], event[1], date=event[2], venue=venue)
-                # self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+                # self.proxy = self.controller.proxy_hub.get(self.proxy_check)
 
     def filter_events_from_mikhailovsky(self, title, scene):
         skip_event = [

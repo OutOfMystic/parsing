@@ -11,23 +11,25 @@ from loguru import logger
 
 from ..manager.backstage import tasker
 from ..manager.core import BotCore
+from ..manager.proxy import check
 from ..manager.proxy.instances import UniProxy
-from ..manager.proxy.loader import Proxies
+from ..manager.proxy.loader import ProxyHub
 from ..manager.telecore import tele_core
 from ..utils import utils
 from ..utils.provision import try_open
 
 
 class Notifier(BotCore, ABC):
+    proxy_check = check.NormalConditions()
 
     def __init__(self,
                  proxy: UniProxy = None,
-                 proxy_hub: Proxies = None,
+                 proxy_hub: ProxyHub = None,
                  tele_profiles: Iterable = None):
         if proxy and proxy_hub:
-            SyntaxWarning('Use proxy_hub or proxy parameter, not both.\nProxy argument will be taken.')
+            raise SyntaxWarning('Use proxy_hub or proxy parameter, not both.\nProxy argument will be taken.')
         elif proxy_hub:
-            proxy = proxy_hub.get()
+            proxy = proxy_hub.get(self.proxy_check)
         super().__init__(proxy=proxy)
         self.proxy_hub = proxy_hub
         self.tele_bool = True

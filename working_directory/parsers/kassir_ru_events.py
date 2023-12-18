@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
 from parse_module.manager.proxy.instances import ProxySession
@@ -12,10 +13,10 @@ from parse_module.utils import utils
 
 
 class KassirParser(EventParser):
-    proxy_check_url = 'https://msk.kassir.ru/'
+    proxy_check = SpecialConditions(url='https://msk.kassir.ru/')
 
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.new_urls = {
@@ -81,7 +82,7 @@ class KassirParser(EventParser):
         count = 5
         while not get_events.ok and count > 0:
             self.error(f'{self.proxy.args}, {self.session.cookies} kassir events')
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = ProxySession(self)
             get_events = self.session.get(url_to_api, headers=self.new_headers)
             count -= 1

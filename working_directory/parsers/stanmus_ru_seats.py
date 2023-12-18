@@ -1,6 +1,7 @@
 import json
 from time import sleep
 
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
@@ -10,7 +11,7 @@ from parse_module.utils import utils
 class StanmusParser(SeatsParser):
     event = 'stanmus.ru'
     url_filter = lambda url: 'stanmus.ru' in url
-    proxy_check_url = 'https://stanmus.ru/shows/'
+    proxy_check = NormalConditions()
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -66,7 +67,7 @@ class StanmusParser(SeatsParser):
         count = 10
         if r.status_code != 200 and count > 0:
             self.error(f'Status code: {r.status_code} Cannot load {self.url} Sleep..')
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = ProxySession(self)
             sleep(60)
             count -= 1

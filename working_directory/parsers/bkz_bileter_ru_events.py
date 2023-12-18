@@ -3,14 +3,15 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 
 class BkzEvents(EventParser):
-    proxy_check_url = 'https://www.bileter.ru/'
+    proxy_check = NormalConditions()
 
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://www.bileter.ru/afisha/building/bolshoy_kontsertnyiy_zal_oktyabrskiy.html'

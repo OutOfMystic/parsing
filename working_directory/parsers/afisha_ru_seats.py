@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from time import sleep
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils import utils
@@ -8,7 +9,7 @@ from parse_module.utils import utils
 class AfishaRuSeats(SeatsParser):
     event = 'mapi.afisha.ru'
     url_filter = lambda event: 'mapi.afisha.ru' in event
-    proxy_check_url = 'https://www.afisha.ru/'
+    proxy_check = SpecialConditions(url='https://www.afisha.ru/')
     
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -48,12 +49,13 @@ class AfishaRuSeats(SeatsParser):
             resp = response.json()
         except:
             resp = False
+        count = 0
         if not resp and count < 5:
             count += 1
             if count > 2:
                 sleep(30)
             self.warning(f' cannot load {self.url} try +={count}')
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = ProxySession(self)
             return self.load_scheme()
 

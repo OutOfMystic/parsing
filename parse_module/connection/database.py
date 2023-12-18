@@ -135,13 +135,7 @@ class ParsingDB(DBConnection):
                          database="crmdb")
 
     @locker
-    def get_all_schemes(self):
-        records = self.select("SELECT id, name, json FROM "
-                              "public.tables_constructor")
-        return {id_: (name, json_,) for id_, name, json_ in records}
-
-    @locker
-    def get_scheme(self, tasks):
+    def get_scheme(self, tasks, **kwargs):
         dicted_tasks = defaultdict(list)
         event_lockers = []
         for scheme_id, callback, event_locker in tasks:
@@ -178,7 +172,7 @@ class ParsingDB(DBConnection):
         return {id_: venue for id_, _, venue in records}
 
     @locker
-    def get_all_tickets(self, tasks):
+    def get_all_tickets(self, tasks, **kwargs):
         dicted_tasks = {}
         event_lockers = []
         for event_id, callback, event_locker in tasks:
@@ -186,11 +180,11 @@ class ParsingDB(DBConnection):
             event_lockers.append(event_locker)
 
         event_ids = ', '.join(str(event_id) for event_id in dicted_tasks)
-        self.execute("SELECT id, status, event_id_id FROM public.tables_tickets "
+        self.execute("SELECT id, status, original_price, event_id_id FROM public.tables_tickets "
                      f"WHERE event_id_id IN ({event_ids})")
 
-        for id_, status, event_id in self.fetchall():
-            dicted_tasks[event_id][id_] = status == 'available-pars'
+        for id_, status, price, event_id in self.fetchall():
+            dicted_tasks[event_id][id_] = price if status == 'available-pars' else False
         for event_locker in event_lockers:
             event_locker.set()
 
@@ -228,7 +222,7 @@ class ParsingDB(DBConnection):
         self.commit()
 
     @locker
-    def update_dancefloors(self, change_dict, margin_func):
+    def update_dancefloors(self, change_dict, margin_func, **kwargs):
         scripts = []
         for dancefloor, price_amount in change_dict.items():
             if price_amount is None:
@@ -251,39 +245,47 @@ class ParsingDB(DBConnection):
         self.commit()
 
     @locker
-    def update_tickets(self, tickets, margin_func):
+    def update_tickets(self, tasks, **kwargs):
+        tickets = {}
+        for task, margin_func in tasks:
+            for ticket_id, value in task.items():
+                if value is True:
+                    tickets[ticket_id] = True
+                elif value is False:
+                    tickets[ticket_id] = False
+                else:
+                    tickets[ticket_id] = (value, margin_func(value),)
         set_to_false, set_to_true, true_with_price = divide_tickets(tickets)
+        logger.debug(f'To False {len(set_to_false)}')
+        logger.debug(f'To True {len(set_to_true)}')
+        for price_and_sell_price, ticket_ids in true_with_price.items():
+            logger.debug(f'To True wth price {len(ticket_ids)} ({price_and_sell_price[1]})')
         set_to_false_str = map(str, set_to_false)
         set_to_true_str = map(str, set_to_true)
         false_string = ", ".join(set_to_false_str)
         true_string = ", ".join(set_to_true_str)
 
-        if false_string:
-            self.execute("UPDATE public.tables_tickets "
-                         "SET status='not' WHERE "
-                         f"id IN ({false_string}) AND "
-                         f"status='available-pars';")
-            self.commit()
-            #print(f'Falsed: {len(set_to_false)}')
-        if true_string:
-            self.execute("UPDATE public.tables_tickets "
-                         "SET status='available-pars' "
-                         f"WHERE id IN ({set_to_true}) AND "
-                         f"status='not';")
-            self.commit()
         scripts = []
-        for price in true_with_price:
-            sell_price = margin_func(price)
+        if false_string:
+            scripts.append("UPDATE public.tables_tickets "
+                           "SET status='not' WHERE "
+                           f"id IN ({false_string}) AND "
+                           f"status='available-pars';")
+        if true_string:
+            scripts.append("UPDATE public.tables_tickets "
+                           "SET status='available-pars' "
+                           f"WHERE id IN ({set_to_true}) AND "
+                           f"status='not';")
+        for price_and_sell_price, ticket_ids in true_with_price.items():
+            price, sell_price = price_and_sell_price
             scripts.append("UPDATE public.tables_tickets "
                            f"SET status='available-pars', original_price={price}, "
                            f"sell_price={sell_price} "
-                           f"WHERE id IN ({true_with_price[price]}) AND "
+                           f"WHERE id IN ({ticket_ids}) AND "
                            f"status='not';")
-            #true_count = true_with_price[price].count(',') + 1
-            #print(f'Trued: {true_count} with price {sell_price}')
         if scripts:
             self.execute('\n'.join(scripts))
-        self.commit()
+            self.commit()
 
     @locker
     def add_parsed_events(self, rows):
@@ -417,23 +419,22 @@ class TableDict(dict):
 def divide_tickets(tickets):
     set_to_false = []
     set_to_true = []
-    true_with_price = {}
+    true_with_price_str = defaultdict(list)
     for ticket_id, availability in tickets.items():
         if availability is False:
             set_to_false.append(ticket_id)
         elif availability is True:
             set_to_true.append(ticket_id)
-        elif isinstance(availability, int):
-            if availability not in true_with_price:
-                true_with_price[availability] = []
-            true_with_price[availability].append(ticket_id)
+        elif isinstance(availability, tuple):
+            true_with_price_str[availability].append(ticket_id)
         else:
             raise TypeError(f'Parsed ticket value should be int or bool,'
                             f' not {type(availability).__name__}')
-    for price in true_with_price:
-        price_strs = [str(price) for price in true_with_price[price]]
-        true_with_price[price] = ", ".join(price_strs)
-    return set_to_false, set_to_true, true_with_price
+    true_with_price_dict = {}
+    for price, ticket_ids in true_with_price_str.items():
+        price_strs = [str(price) for price in ticket_ids]
+        true_with_price_dict[price] = ", ".join(price_strs)
+    return set_to_false, set_to_true, true_with_price_dict
 
 
 def int_keys(dict_):

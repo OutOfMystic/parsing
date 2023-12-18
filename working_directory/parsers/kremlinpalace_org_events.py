@@ -3,16 +3,17 @@ from typing import Optional, Union
 
 from bs4 import BeautifulSoup
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
 class KremlInPalace(EventParser):
-    proxy_check_url = 'https://kremlinpalace.org/'
+    proxy_check = SpecialConditions(url='https://kremlinpalace.org/')
 
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://kremlinpalace.org/'
@@ -202,7 +203,7 @@ class KremlInPalace(EventParser):
             a_events = self.get_events()
             if a_events is None:
                 if count_error >= 5:
-                    self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+                    self.proxy = self.controller.proxy_hub.get(self.proxy_check)
                     self.session = ProxySession(self)
                 count_error += 1
             else:

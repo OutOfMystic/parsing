@@ -4,17 +4,17 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
-from parse_module.utils import utils
 
 
 class AfishaEvents(EventParser):
-    proxy_check_url = 'https://www.afisha.ru/'
+    proxy_check = SpecialConditions(url='https://www.afisha.ru/')
 
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.delay = 3600
         self.driver_source = None
         self.domain = 'https://www.afisha.ru'
@@ -93,7 +93,7 @@ class AfishaEvents(EventParser):
         if not js_to_parsing and count < 8:
             count += 1
             self.warning(f' try to find XApplication token + {count}')
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = ProxySession(self)
             return self.get_x_token(x_ath_url, count)
         
@@ -152,7 +152,7 @@ class AfishaEvents(EventParser):
         if (not response.ok or not resp) and count < 8:
             count += 1
             self.warning(f' cannot load {url} try +={count}')
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = ProxySession(self)
             return self.get_pages(url, count)
         
