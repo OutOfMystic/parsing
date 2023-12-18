@@ -227,9 +227,10 @@ class ParserScheme(Scheme):
         # sending changes to database
         parsed_dancefloors.clear()
         margin_func = self._margins[cur_priority]
-        tasker.put_throttle(db_manager.update_dancefloors, to_change, margin_func,
-                            from_thread='Controller',
-                            kwargs={'update_dancefloors': ''})
+        if to_change:
+            tasker.put_throttle(db_manager.update_dancefloors, to_change, margin_func,
+                                from_thread='Controller',
+                                kwargs={'update_dancefloors': ''})
 
         # applying changes of tickets in local storage
         for dancefloor, price_amount in to_change.items():

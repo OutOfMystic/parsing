@@ -189,6 +189,9 @@ class Controller(threading.Thread):
 
         all_connections = {group: [] for group in self.seats_groups}
         predefined_connections, ai_connections = self.get_connections(subjects)
+        print([cnn['event_id'] for cnn in predefined_connections])
+        print([cnn['event_id'] for cnn in ai_connections])
+        input()
         for connection in predefined_connections:
             for group in self.seats_groups:
                 if group.url_filter(connection['url']):
