@@ -26,7 +26,7 @@ class Scheme:
 
     def get_scheme(self):
         callback = []
-        with shelve.open('schemes') as shelf:
+        """with shelve.open('schemes') as shelf:
             name_scheme = shelf.get(str(self.scheme_id), None)
         if name_scheme:
             name, scheme = name_scheme
@@ -40,7 +40,15 @@ class Scheme:
             del event_locker
             with shelve.open('schemes') as shelf:
                 shelf[str(self.scheme_id)] = callback
-            name, scheme = callback
+            name, scheme = callback"""
+        event_locker = threading.Event()
+        task = [self.scheme_id, callback, event_locker]
+        tasker.put_throttle(db_manager.get_scheme, task,
+                            from_iterable=False,
+                            from_thread='Controller')
+        event_locker.wait(600)
+        del event_locker
+        name, scheme = callback
 
         if name is None and scheme is None:
             return False
@@ -323,7 +331,7 @@ class ParserScheme(Scheme):
                 price = sector_parsed[row_seat]
                 price = price // 100 * 100
                 if price < 100:
-                    logger.info(f'Tickets with rice below 100 ({ticket_id}) are skipped', name=self.name)
+                    logger.info(f'Tickets with price below 100 ({ticket_id}) are skipped', name=self.name)
                     continue
                 if seat_avail_subject != price:
                     logger.debug(ticket_id, seat_avail_subject, price)

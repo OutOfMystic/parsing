@@ -92,7 +92,7 @@ class Logger(threading.Thread):
             if self.level_filter != log['level']:
                 return
         if self.source_filter is not None:
-            if self.source_filter != log['name']:
+            if self.source_filter.lower() not in log['name'].lower():
                 return
         try:
             self.print_log(log, message=message)
