@@ -6,8 +6,8 @@ from parse_module.manager.proxy.instances import ProxySession
 
 
 class DynamoParser(EventParser):
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 1800
         self.driver_source = None
         self.url = 'https://tickets.dynamo.ru/?_ga=2.193174821.947964618.1675930069-641847379.1675930069'

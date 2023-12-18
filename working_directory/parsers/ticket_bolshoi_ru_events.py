@@ -1,6 +1,8 @@
 import json
 import requests
 from bs4 import BeautifulSoup
+
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils import utils
@@ -8,10 +10,10 @@ from parse_module.utils.date import month_list
 
 
 class Parser(EventParser):
-    proxy_check_url = 'https://ticket.bolshoi.ru/shows'
+    proxy_check = SpecialConditions(url='https://ticket.bolshoi.ru/shows')
 
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://ticket.bolshoi.ru/shows'

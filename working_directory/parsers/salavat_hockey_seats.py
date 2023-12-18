@@ -2,12 +2,14 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils import utils
 
+
 class Hc_Salavat_Seats(SeatsParser): 
-    proxy_check_url = 'https://tickets.hcsalavat.ru/ru'
+    proxy_check = NormalConditions()
     event = 'https://tickets.hcsalavat.ru/ru'
     url_filter = lambda url: 'hcsalavat.ru' in url
 

@@ -4,6 +4,7 @@ import re
 from requests.exceptions import JSONDecodeError, ProxyError
 from bs4 import BeautifulSoup
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
@@ -12,7 +13,7 @@ from parse_module.utils import utils, provision
 
 class LenkomParser(SeatsParser):
     event = 'ticketland.ru'
-    proxy_check_url = 'https://www.ticketland.ru/'
+    proxy_check = SpecialConditions(url='https://www.ticketland.ru/')
     url_filter = lambda url: 'ticketland.ru' in url and 'lenkom' in url
 
     def __init__(self, *args, **extra):
@@ -51,7 +52,7 @@ class LenkomParser(SeatsParser):
             self.count_error += 1
             if self.count_error == 50:
                 raise ProxyError('ticketland seats parser except ProxyError')
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.before_body()
             return self._get_tl_csrf_and_data()
         try:
@@ -138,18 +139,18 @@ class LenkomParser(SeatsParser):
             self.count_error += 1
             if self.count_error == 50:
                 raise ProxyError('ticketland seats parser except ProxyError')
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.before_body()
             return self._get_tl_csrf_and_data()
 
         if '"Unable to verify your data submission."' in r_text:
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.before_body()
         if 'CDbException' in r_text:
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.before_body()
         if '""' in r_text:
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.before_body()
         if isinstance(r_json, str):
             self.error(f'Error {r_json} {self.url} {r_text} ')
@@ -157,7 +158,7 @@ class LenkomParser(SeatsParser):
         if r_json is None:
             self.error(f'r_json is None == True {r_json} {self.url}')
             try:
-                self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+                self.proxy = self.controller.proxy_hub.get(self.proxy_check)
                 self.before_body()
             except:
                 self.error(f'r_json is None == True {r_json} {self.url}')

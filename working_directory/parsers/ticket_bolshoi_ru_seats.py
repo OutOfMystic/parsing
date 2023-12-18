@@ -7,6 +7,7 @@ import requests
 from loguru import logger
 
 from parse_module.manager import authorize
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils import parse_utils, captcha
@@ -16,7 +17,7 @@ DEL_FROM_CART = False
 
 
 class BolshoiQueue(authorize.AccountsQueue):
-    proxy_check_url = 'https://ticket.bolshoi.ru/api/csrfToken'
+    proxy_check = 'https://ticket.bolshoi.ru/api/csrfToken'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -261,7 +262,7 @@ class BolshoiQueue(authorize.AccountsQueue):
         return r.json()['_csrf']
 
     def run(self):
-        self.proxy = self.proxy_hub.get(self.proxy_check_url)
+        self.proxy = self.proxy_hub.get(self.proxy_check)
         self.sitekey = self.get_sitekey()
         super().run()
 
@@ -269,7 +270,7 @@ class BolshoiQueue(authorize.AccountsQueue):
 class BtParser(SeatsParser):
     event = 'ticket.bolshoi.ru'
     url_filter = lambda url: 'bolshoi.ru' in url
-    proxy_check_url = 'https://ticket.bolshoi.ru/api/csrfToken'
+    proxy_check = SpecialConditions(url='https://ticket.bolshoi.ru/api/csrfToken')
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)

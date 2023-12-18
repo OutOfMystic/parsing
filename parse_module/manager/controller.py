@@ -6,6 +6,7 @@ import random
 import threading
 import time
 
+from .inspect import run_inspection
 from .proxy import loader
 from .telecore import tele_core
 from ..connection.database import TableDict
@@ -39,7 +40,7 @@ class Controller(threading.Thread):
         self.pending_delay = pending_delay
         self._debug_url = debug_url
         self._debug_event_id = debug_event_id
-        self.debug = True if self._debug_event_id or self._debug_url else False
+        self.debug = self._debug_event_id or self._debug_url
         self.release = release
 
         self._prepare_workdir()
@@ -53,6 +54,7 @@ class Controller(threading.Thread):
         self._table_sites = TableDict(db_manager.get_site_names)
         self._already_warned_on_collect = set()
 
+        self.console = run_inspection(release=True)
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
         self.event_aliases = EventAliases(step=5)
         self.parsing_types = db_manager.get_parsing_types()
@@ -85,7 +87,6 @@ class Controller(threading.Thread):
                 return
         except TypeError:
             return
-        self.proxy_hub.add_route(parser_variable.proxy_check_url)
 
     def _start_event_parser(self, parser_class, parser_name):
         if parser_name not in list(self.parsing_types.values()):
@@ -93,12 +94,14 @@ class Controller(threading.Thread):
             self.parsing_types = db_manager.get_parsing_types()
             self.bprint(f'New type has been registered: {parser_name}')
 
+        self.proxy_hub.add_route(parser_class.proxy_check)
         parser = parser_class(self, parser_name)
         parser.start()
-        self.bprint(f'EVENT parser {parser_name} has started')
+        self.bprint(f'{parser.name} has started')
         self.event_parsers.append(parser)
 
     def _init_seats_parsers(self, parser_class, parser_name):
+        self.proxy_hub.add_route(parser_class.proxy_check)
         group = SeatsParserGroup(self, parser_class, parser_name)
         self.bprint(f'{group.name} has started')
         self.seats_groups.append(group)
@@ -220,12 +223,11 @@ class Controller(threading.Thread):
         # Waiting for seats lockers to be released
         while any(group.start_lock.locked() for group in self.seats_groups):
             if time.time() - lock_time > self.pending_delay:
-                connected = len(self.all_connected_plain())
-                to_connect = len(plain_dict_values(all_connections))
+                connected = sum(group.going_to_start for group in self.seats_groups)
                 groups_locked = [group.name for group in self.seats_groups if group.start_lock.locked()]
                 groups_in_a_row = ', '.join(groups_locked) if len(groups_locked) <= 3 else len(groups_locked)
-                message = f'Seats groups\' ({groups_in_a_row}) lockers are still being released ' \
-                          f'Total loaded is {connected}  ...'
+                message = f'Seats groups\' ({groups_in_a_row}) lockers are still being released... ' \
+                          f'Going to start {connected}'
                 self.bprint(message, color=utils.Fore.LIGHTGREEN_EX)
             time.sleep(5)
 
@@ -297,10 +299,6 @@ class Controller(threading.Thread):
             self.bprint(f'Seats-Notifier for {seats_parser.parent} ({seats_parser.name}) '
                         f'was attached to the parser')
             self.seats_notifiers.append(notifier)
-
-    def all_connected_plain(self):
-        chain = itertools.chain.from_iterable(group.parsers for group in self.seats_groups)
-        return list(chain)
 
     def _reset_tickets(self, subjects, all_connections):
         if not self.release or self.debug:

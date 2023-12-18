@@ -1,5 +1,6 @@
 import json
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split, lrsplit
@@ -9,7 +10,7 @@ import codecs
 class InticketsParser(SeatsParser):
     event = 'intickets.ru'
     url_filter = lambda url: 'intickets.ru' in url and 'pre8136' not in url
-    proxy_check_url = 'https://iframeab-pre4073.intickets.ru/'
+    proxy_check = SpecialConditions(url='https://iframeab-pre4073.intickets.ru/')
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)

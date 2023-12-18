@@ -38,7 +38,7 @@ class ArmyParser(SeatsParser):
             if count < 7:
                 count += 1
                 self.warning(f' try to find XApplication token ArmiiTeatr + {count}')
-                self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+                self.proxy = self.controller.proxy_hub.get(self.proxy_check)
                 self.session = ProxySession(self)
                 return self.get_xsrf_token(count)
             else:
@@ -66,7 +66,7 @@ class ArmyParser(SeatsParser):
         except:
             if count < 5:
                 count += 1
-                self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+                self.proxy = self.controller.proxy_hub.get(self.proxy_check)
                 self.session = ProxySession(self) 
                 self.warning(f' cannot load {url} try +={count}')
                 count += 1

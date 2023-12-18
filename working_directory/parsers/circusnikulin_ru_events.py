@@ -11,8 +11,8 @@ from itertools import groupby
 
 class Parser(EventParser):
 
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://www.circusnikulin.ru/tickets'

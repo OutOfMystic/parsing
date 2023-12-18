@@ -2,14 +2,16 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils import utils
 
+
 class KVNParser(EventParser):
-    proxy_check_url = 'https://domkvn.ru/'
-    def __init__(self, controller):
-        super().__init__(controller)
+    proxy_check = NormalConditions()
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 2200
         self.driver_source = None
         self.url = 'https://domkvn.ru/afisha-1.html'

@@ -54,7 +54,7 @@ def list_events(args):
     objects = db_manager.get_parsed_events()
 
     print('Initialising a neural network...')
-    for pairs, submatrix_shapes, priority, margin, _, _, _ in make_matrix(subjects, objects, venues):
+    for pairs, submatrix_shapes, priority, margin, _, _ in make_matrix(subjects, objects, venues):
         names_from_pairs = [(subject['event_name'], object_['event_name'],) for subject, object_ in pairs]
         assignments = solve_pairs(names_from_pairs, submatrix_shapes, originals=pairs)
         connections = [build_connection(*assignment, priority, margin) for assignment in assignments]

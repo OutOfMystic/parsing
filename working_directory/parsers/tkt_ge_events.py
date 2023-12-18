@@ -1,12 +1,13 @@
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
 
 
 class TktGe(EventParser):
-    proxy_check_url = 'https://tkt.ge/'
+    proxy_check = NormalConditions()
 
-    def __init__(self, controller) -> None:
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://tkt.ge/event/355735/bruno-mars'

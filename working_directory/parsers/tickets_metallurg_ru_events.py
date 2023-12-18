@@ -4,8 +4,8 @@ from parse_module.manager.proxy.instances import ProxySession
 
 
 class XKMetalurg(EventParser):
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://tickets.metallurg.ru/webapi/calendars/available/list/grouped'

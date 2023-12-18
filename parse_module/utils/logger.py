@@ -1,6 +1,9 @@
+import ctypes
 import inspect
 import json
+import os
 import re
+import subprocess
 import sys
 import threading
 import time
@@ -25,22 +28,27 @@ class Logger(threading.Thread):
             ignore_files = ['manager.core.debug',
                             'manager.core.error',
                             'manager.core.critical',
+                            'models.group.error',
                             'utils.provision.multi_try',
                             'utils.logger.error',
-                            'utils.logger.critical']
+                            'utils.logger.critical',
+                            'utils.provision._tryfunc']
         self.release = release
         self.log_path = log_path
         self.ignore_files = ignore_files
         self.drop_path_level = drop_path_level
+        self.source_filter = None
+        self.level_filter = None
 
         self._buffer = []
         self._debug_buffer = []
+        self._stub_buffer = []
+        self._print_locker = False
 
         self.start()
-        self.info('Parsing system inited', name='Controller')
+        self.info('Logger started', name='Controller')
 
     def log(self, message: str, level, **kwargs):
-        message = message[:10000]
         now = datetime.now()
 
         if 'traceback' in kwargs:
@@ -56,14 +64,14 @@ class Logger(threading.Thread):
         log = {
             'timestamp': now.isoformat(),
             'level': level,
-            'mes': message,
+            'message': message[:10000],
             **kwargs
         }
         if call_stack is not None:
             log['call_stack'] = call_stack
         self._buffer.append(log)
 
-        if level != 'INFO' and not self.release:
+        if not self.release:
             name = f' | {kwargs["name"]}' if 'name' in kwargs else ''
             debug_log = f'{level} {readable_datetime(now)}{name}\n'
             for kwarg, value in kwargs.items():
@@ -74,7 +82,23 @@ class Logger(threading.Thread):
             debug_log += '\n'
             self._debug_buffer.append(debug_log)
 
-        self.print_log(log, message=message)
+        if self._print_locker:
+            self._stub_buffer.append(log)
+        else:
+            self.filter_and_print(log, message=message)
+
+    def filter_and_print(self, log, message=None):
+        if self.level_filter is not None:
+            if self.level_filter != log['level']:
+                return
+        if self.source_filter is not None:
+            if self.source_filter != log['name']:
+                return
+        try:
+            self.print_log(log, message=message)
+        except Exception as err:
+            if not self._print_locker:
+                logger.error(f'Error printing message from a log. {err}')
 
     @staticmethod
     def print_log(log, message=None):
@@ -152,6 +176,44 @@ class Logger(threading.Thread):
             lprint(to_print, console_print=False, prefix=self.name)
             del logs
 
+    def apply_filter(self, source, level):
+        self.source_filter = source
+        self.level_filter = level
+
+        print('\n' * 1000 + 'Collecting last messages ...')
+
+        start_time = time.time()
+        rows = []
+        self.pause()
+        with open(self.log_path, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+            for line in lines:
+                if not line:
+                    continue
+                rows.append(line)
+                if '"message":"Logger started"' in line:
+                    rows.clear()
+        print(time.time() - start_time)
+
+        start_time = time.time()
+        for row in rows:
+            log = json.loads(row)
+            self.filter_and_print(log)
+        print(time.time() - start_time)
+
+        start_time = time.time()
+        self.resume()
+        print(time.time() - start_time)
+
+    def pause(self):
+        self._print_locker = True
+
+    def resume(self):
+        while self._stub_buffer:
+            log = self._stub_buffer.pop(0)
+            self.filter_and_print(log)
+        self._print_locker = False
+
     def run(self):
         while True:
             try:
@@ -179,7 +241,10 @@ def get_current_stack(ignore_files=None, drop_path_level=0):
         if not any(str_call.endswith(end) for end in ignore_files):
             call_with_lineno = str_call + f':{call.lineno}'
             str_calls.append(call_with_lineno)
-    return str_calls[3]
+    try:
+        return str_calls[3]
+    except:
+        return "Callstack cannot be traced"
 
 
 def parse_traceback(traceback_string, ignore_files=None, drop_path_level=0):

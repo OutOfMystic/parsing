@@ -1,5 +1,6 @@
 import random
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 
@@ -7,7 +8,7 @@ from parse_module.manager.proxy.instances import ProxySession
 class Lenkom(SeatsParser):
     event = 'tickets.afisha.ru'
     url_filter = lambda url: 'wl/54' in url and 'tickets.afisha.ru' in url
-    proxy_check_url = 'https://tickets.afisha.ru/'
+    proxy_check = SpecialConditions(url='https://tickets.afisha.ru/')
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)

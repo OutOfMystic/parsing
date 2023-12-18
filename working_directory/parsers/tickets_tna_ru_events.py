@@ -10,8 +10,8 @@ from parse_module.utils import utils
 
 
 class TNA(EventParser):
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3200
         self.driver_source = None
         self.urls = [

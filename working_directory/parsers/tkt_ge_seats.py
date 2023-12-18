@@ -9,6 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 
 from parse_module.drivers.proxelenium import ProxyWebDriver
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
@@ -22,7 +23,7 @@ class OutputData(NamedTuple):
 class TktGe(SeatsParser):
     event = 'tkt.ge'
     url_filter = lambda url: 'tkt.ge' in url
-    proxy_check_url = 'https://tkt.ge/'
+    proxy_check = NormalConditions()
 
     def __init__(self, *args, **extra) -> None:
         super().__init__(*args, **extra)

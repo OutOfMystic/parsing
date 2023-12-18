@@ -66,7 +66,7 @@ class OperettaParser(SeatsParser):
         count = 8
         while not r.ok and count > 0:
             self.debug(f'{self.proxy.args = }, {self.session.cookies = } mosoperetta 505 bad gateway')
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = ProxySession(self)
             r = self.session.get(self.url, headers=headers, verify=False)
             count -= 1

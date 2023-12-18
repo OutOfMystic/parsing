@@ -132,8 +132,8 @@ class BotCore(threading.Thread):
                                    multiplier=multiplier)
 
     def slide_tab(self):
-        self.bprint('Max waste time elapsed, but nothing '
-                    'has been changed. Configure slide_tab method', color=utils.Fore.YELLOW)
+        self.warning('Max waste time elapsed, but nothing '
+                     'has been changed. Configure slide_tab method')
 
     def except_on_main(self):
         if self.driver:
@@ -171,18 +171,17 @@ class BotCore(threading.Thread):
 
     def run_except(self):
         try:
-            time_string = f'{time.time() - self.error_timer} sec'
-            print(utils.colorize(time_string, utils.Fore.YELLOW))
             if (time.time() - self.error_timer) >= self.max_waste_time:
                 mes = ('--max_waste_time elapsed '
                        f'({self.max_waste_time} сек)--')
                 self.error(mes)
                 self.error_timer = time.time()
+                self.change_proxy(report=True)
+                self.before_body()
                 self.slide_tab()
             self.except_on_main()
         except Exception as error:
-            printing_error = str(error).split('\n')[0] if '\n' in str(error) else str(error)
-            self.error('Except on exception: ' + str(error))
+            self.error(f'Except on exception: {error}')
         time.sleep(1)
 
     def run(self):
@@ -203,6 +202,9 @@ class BotCore(threading.Thread):
                 self.on_many_exceptions()
             delay = get_delay(self.delay)
             time.sleep(delay)
+
+    def change_proxy(self, report=False):
+        return
 
     def _process_termination(self):
         if self.driver:

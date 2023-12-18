@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 from bs4 import BeautifulSoup
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
@@ -11,7 +12,7 @@ from parse_module.utils.parse_utils import double_split
 class KremlInPalace(SeatsParser):
     event = 'kremlinpalace.org'
     url_filter = lambda url: 'kremlinpalace.org' in url
-    proxy_check_url = 'https://kremlinpalace.org/'
+    proxy_check = SpecialConditions(url='https://kremlinpalace.org/')
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -254,7 +255,7 @@ class KremlInPalace(SeatsParser):
                 if count_error == 9:
                     raise AttributeError(error)
                 if count_error >= 5:
-                    self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+                    self.proxy = self.controller.proxy_hub.get(self.proxy_check)
                     self.session = ProxySession(self)
                 continue
         else:

@@ -1,3 +1,4 @@
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 
@@ -5,7 +6,7 @@ from parse_module.manager.proxy.instances import ProxySession
 class NationsParser(SeatsParser):
     event = 'theatreofnations.ru'
     url_filter = lambda url: 'theatreofnations.ru' in url
-    proxy_check_url = 'https://theatreofnations.ru/events/'
+    proxy_check = SpecialConditions(url='https://theatreofnations.ru/events/')
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)

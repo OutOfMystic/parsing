@@ -1,11 +1,13 @@
 from bs4 import BeautifulSoup
+
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
 class Icetickets(SeatsParser):
-    proxy_check_url = 'https://icetickets.ru//'
+    proxy_check = NormalConditions()
     event = 'icetickets.ru'
     url_filter = lambda url: 'icetickets.ru' in url
 

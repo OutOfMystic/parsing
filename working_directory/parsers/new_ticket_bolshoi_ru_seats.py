@@ -1,12 +1,13 @@
 import time
 
 from parse_module.drivers.queue_to_big_theatre import queue_big_theatre, result_json
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 
 
 class BolshoiParser(SeatsParser):
-    proxy_check_url = 'https://ticket.bolshoi.ru/'
+    proxy_check = SpecialConditions(url='https://ticket.bolshoi.ru/')
     event = 'ticket.bolshoi.ru'
     url_filter = lambda url: 'ticket.bolshoi.ru' in url
 

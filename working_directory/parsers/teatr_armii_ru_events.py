@@ -8,8 +8,8 @@ from parse_module.utils import utils
 
 class Parser(EventParser):
 
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 1200
         self.driver_source = None
         self.url = 'https://www.afisha.ru/wl/29/api?site=teatrarmii.ru'
@@ -26,6 +26,7 @@ class Parser(EventParser):
                     'User-Agent': self.user_agent}
 
         get_xsrf_token = self.session.get(url=url, headers=headers)
+        count = 0
         try:
             # soup = BeautifulSoup(get_xsrf_token.text, 'lxml')
             # XSRF_TOKEN = soup.find(attrs={'name':'csrf-token'}).get('content')
@@ -34,7 +35,7 @@ class Parser(EventParser):
             if count < 7:
                 count += 1
                 self.warning(f' try to find XApplication token ArmiiTeatr + {count}')
-                self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+                self.proxy = self.controller.proxy_hub.get(self.proxy_check)
                 self.session = ProxySession(self)
                 return self.get_xsrf_token(count)
             else:
@@ -61,7 +62,7 @@ class Parser(EventParser):
         except Exception as ex:
             count += 1
             self.error(f' cannot load {events_url} {ex} try +={count}')
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = ProxySession(self)
             return self.get_all_events(xsrf_token, count)
     

@@ -3,6 +3,8 @@ import time
 
 import requests
 
+from parse_module.utils.logger import logger
+
 API_KEY = 'f86fe003c5bc005f93a7516e2973658c'
 
 
@@ -32,7 +34,7 @@ def non_selenium_recaptcha(googlekey, url,
 
     r = requests.post('https://rucaptcha.com/in.php', data=params)
     if print_logs:
-        print('rucaptcha.com: ' + r.text)
+        logger.info('rucaptcha.com: ' + r.text, name='Captcha')
     try:
         response = json.loads(r.text)
     except:
@@ -58,7 +60,7 @@ def non_selenium_recaptcha(googlekey, url,
             request = response['request']
             if status:
                 if print_logs:
-                    print('rucaptcha.com: ' + r.text)
+                    logger.info('rucaptcha.com: ' + r.text, name='Captcha')
                 return request
             if request != 'CAPCHA_NOT_READY':
                 raise RuntimeError(f'Captcha error: {request}')
@@ -91,7 +93,7 @@ def yandex_smart_captcha(sitekey, url,
 
     r = requests.post('https://rucaptcha.com/in.php', data=params)
     if print_logs:
-        print('rucaptcha.com: ' + r.text)
+        logger.info('rucaptcha.com: ' + r.text, name='Captcha')
     try:
         response = json.loads(r.text)
     except:
@@ -131,7 +133,7 @@ def yandex_smart_captcha(sitekey, url,
             request = response['request']
             if status:
                 if print_logs:
-                    print('rucaptcha.com: ' + r.text)
+                    logger.info('rucaptcha.com: ' + r.text, name='Captcha')
                 return request
             if request != 'CAPCHA_NOT_READY':
                 if count_error != 5:
@@ -179,7 +181,7 @@ def afisha_recaptcha(file,
     files = {'file': file}
     r = requests.post('https://rucaptcha.com/in.php', files=files, data=params)
     if print_logs:
-        print('rucaptcha.com: ' + r.text)
+        logger.info('rucaptcha.com: ' + r.text, name='Captcha')
     try:
         response = json.loads(r.text)
     except:
@@ -205,7 +207,7 @@ def afisha_recaptcha(file,
             request = response['request']
             if status:
                 if print_logs:
-                    print('rucaptcha.com: ' + r.text)
+                    logger.info('rucaptcha.com: ' + r.text, name='Captcha')
                 return request
             if request != 'CAPCHA_NOT_READY':
                 raise RuntimeError(f'Captcha error: {request}')
@@ -242,7 +244,7 @@ def yandex_afisha_coordinates_captha(image_with_elements, imginstructions, texti
 
     r = requests.post('https://rucaptcha.com/in.php', data=params)
     if print_logs:
-        print('rucaptcha.com: ' + r.text)
+        logger.info('rucaptcha.com: ' + r.text, name='Captcha')
     try:
         response = json.loads(r.text)
     except:
@@ -268,7 +270,7 @@ def yandex_afisha_coordinates_captha(image_with_elements, imginstructions, texti
             request = response['request']
             if status:
                 if print_logs:
-                    print('rucaptcha.com: ' + r.text)
+                    logger.info('rucaptcha.com: ' + r.text, name='Captcha')
                 return request
             if request != 'CAPCHA_NOT_READY':
                 raise RuntimeError(f'Captcha error: {request}')

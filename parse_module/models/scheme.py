@@ -1,3 +1,4 @@
+import shelve
 import threading
 from threading import Lock
 
@@ -6,6 +7,7 @@ from ..manager.backstage import tasker
 from ..utils import utils, provision
 from ..utils.exceptions import InternalError, SchemeError, ParsingError
 from ..utils.logger import logger
+from ..utils.types import LocalCacheDict
 
 
 class Dancefloor:
@@ -25,15 +27,22 @@ class Scheme:
 
     def get_scheme(self):
         callback = []
-        event_locker = threading.Event()
-        task = [self.scheme_id, callback, event_locker]
-        tasker.put_throttle(db_manager.get_scheme, task,
-                            from_iterable=False,
-                            from_thread='Controller')
-        event_locker.wait(600)
-        del event_locker
+        with shelve.open('schemes.shelf') as shelf:
+            name_scheme = shelf.get(str(self.scheme_id), None)
+        if name_scheme:
+            name, scheme = name_scheme
+        else:
+            event_locker = threading.Event()
+            task = [self.scheme_id, callback, event_locker]
+            tasker.put_throttle(db_manager.get_scheme, task,
+                                from_iterable=False,
+                                from_thread='Controller')
+            event_locker.wait(600)
+            del event_locker
+            with shelve.open('schemes.shelf') as shelf:
+                shelf[str(self.scheme_id)] = callback
+            name, scheme = callback
 
-        name, scheme = callback
         if name is None and scheme is None:
             return False
         self.name = name.replace(' - ', '-') \
@@ -158,7 +167,8 @@ class ParserScheme(Scheme):
             if not dict_sector:
                 raise ParsingError('List sectors are restricted in '
                                    'current version, use dict instead')
-            handle_func = self._handle_sector_dict if dict_sector else self._handle_sector_list
+            handle_func = self._handle_sector_dict
+            # handle_func = self._handle_sector_dict if dict_sector else self._handle_sector_list
             changes, bookings_, discards = handle_func(sector_all, sector_parsed,
                                                        prohibited, bookings)
             to_change.update(changes)
@@ -169,8 +179,8 @@ class ParserScheme(Scheme):
         parsed_sectors.clear()
         margin_func = self._margins[cur_priority]
         if to_change:
-            tasker.put_throttle(db_manager.update_tickets, to_change, margin_func,
-                                from_thread='Controller')
+            tasker.put_throttle(db_manager.update_tickets, [to_change, margin_func],
+                                from_thread='Controller', from_iterable=False)
 
         # applying changes of tickets in local storage
         for scheme_name, parsed_name in sector_names:
@@ -244,8 +254,8 @@ class ParserScheme(Scheme):
                     # new_sector[new_ticket] = False
                     new_sector[new_ticket] = db_tickets[new_id]
             if to_change:
-                tasker.put_throttle(db_manager.update_tickets, to_change, lambda price: price,
-                                    from_thread='Controller')
+                tasker.put_throttle(db_manager.update_tickets, [to_change, lambda price: price],
+                                    from_thread='Controller', from_iterable=False)
             for sector_name, dancefloor in scheme.dancefloors.items():
                 ticket_id = dancefloor.ticket_id
                 new_id = ticket_id + first_id
@@ -301,8 +311,7 @@ class ParserScheme(Scheme):
                 to_discard.append(ticket_id)
         return to_change, to_book, to_discard
 
-    @staticmethod
-    def _handle_sector_dict(sector_all, sector_parsed, prohibited, booking):
+    def _handle_sector_dict(self, sector_all, sector_parsed, prohibited, booking):
         to_change = {}
         to_discard = []
         to_book = []
@@ -314,10 +323,11 @@ class ParserScheme(Scheme):
             if row_seat in sector_parsed:
                 price = sector_parsed[row_seat]
                 price = price // 100 * 100
-                if price < 1:
-                    print(utils.yellow(f'Zero price for ticket {ticket_id}'))
+                if price < 100:
+                    logger.info(f'Tickets with rice below 100 ({ticket_id}) are skipped', name=self.name)
                     continue
                 if seat_avail_subject != price:
+                    logger.debug(ticket_id, seat_avail_subject, price)
                     to_change[ticket_id] = price
                 to_book.append(ticket_id)
             else:

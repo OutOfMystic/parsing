@@ -6,6 +6,7 @@ import json
 from bs4 import BeautifulSoup
 from requests.exceptions import ProxyError, ReadTimeout
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split, lrsplit, decode_unicode_escape
@@ -17,7 +18,7 @@ class KassirParser(SeatsParser):
     url_filter = lambda event: 'kassir.ru' in event and 'crocus2' not in event and 'frame' not in event \
                                and 'schematr' not in event \
                                and 'vtb-arena-tsentralnyiy-stadion-dinamo/rusalochka' not in event
-    proxy_check_url = 'https://kassir.ru/'
+    proxy_check = SpecialConditions(url='https://kassir.ru/')
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -1632,7 +1633,7 @@ class KassirParser(SeatsParser):
             self.debug(url)
             self.debug(response.text)
             self.warning(f'{count} {self.proxy.args}, {url}, {self.session.cookies} this IP is block')
-            self.proxy = self.controller.proxy_hub.get(url=self.proxy_check_url)
+            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = ProxySession(self)
             sleep(5)
             response = self.session.get(url, headers=self.new_headers)

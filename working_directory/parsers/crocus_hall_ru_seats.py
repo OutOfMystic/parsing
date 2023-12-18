@@ -1,6 +1,7 @@
 from requests.exceptions import ProxyError, JSONDecodeError
 import re
 
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
@@ -9,7 +10,7 @@ from parse_module.utils.parse_utils import double_split
 class CrocusHall(SeatsParser):
     event = 'crocus-hall.ru'
     url_filter = lambda url: 'crocus2.kassir.ru' in url
-    proxy_check_url = 'https://crocus2.kassir.ru/'
+    proxy_check = SpecialConditions(url='https://crocus2.kassir.ru/')
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
