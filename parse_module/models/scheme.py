@@ -27,7 +27,7 @@ class Scheme:
 
     def get_scheme(self):
         callback = []
-        with shelve.open('schemes.shelf') as shelf:
+        with shelve.open('schemes') as shelf:
             name_scheme = shelf.get(str(self.scheme_id), None)
         if name_scheme:
             name, scheme = name_scheme
