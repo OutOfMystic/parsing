@@ -45,7 +45,8 @@ class Scheme:
         task = [self.scheme_id, callback, event_locker]
         tasker.put_throttle(db_manager.get_scheme, task,
                             from_iterable=False,
-                            from_thread='Controller')
+                            from_thread='Controller',
+                            kwargs={'get_scheme': ''})
         event_locker.wait(600)
         del event_locker
         name, scheme = callback
@@ -187,7 +188,8 @@ class ParserScheme(Scheme):
         margin_func = self._margins[cur_priority]
         if to_change:
             tasker.put_throttle(db_manager.update_tickets, [to_change, margin_func],
-                                from_thread='Controller', from_iterable=False)
+                                from_thread='Controller', from_iterable=False,
+                                kwargs={'update_tickets': ''})
 
         # applying changes of tickets in local storage
         for scheme_name, parsed_name in sector_names:
@@ -226,7 +228,8 @@ class ParserScheme(Scheme):
         parsed_dancefloors.clear()
         margin_func = self._margins[cur_priority]
         tasker.put_throttle(db_manager.update_dancefloors, to_change, margin_func,
-                            from_thread='Controller')
+                            from_thread='Controller',
+                            kwargs={'update_dancefloors': ''})
 
         # applying changes of tickets in local storage
         for dancefloor, price_amount in to_change.items():
@@ -243,7 +246,8 @@ class ParserScheme(Scheme):
         task = [self.event_id, db_tickets, event_locker]
         tasker.put_throttle(db_manager.get_all_tickets, task,
                             from_iterable=False,
-                            from_thread='Controller')
+                            from_thread='Controller',
+                            kwargs={'get_all_tickets': ''})
         event_locker.wait(600)
         del event_locker
 

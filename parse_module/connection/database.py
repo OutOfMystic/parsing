@@ -135,7 +135,7 @@ class ParsingDB(DBConnection):
                          database="crmdb")
 
     @locker
-    def get_scheme(self, tasks):
+    def get_scheme(self, tasks, **kwargs):
         dicted_tasks = defaultdict(list)
         event_lockers = []
         for scheme_id, callback, event_locker in tasks:
@@ -172,7 +172,7 @@ class ParsingDB(DBConnection):
         return {id_: venue for id_, _, venue in records}
 
     @locker
-    def get_all_tickets(self, tasks):
+    def get_all_tickets(self, tasks, **kwargs):
         dicted_tasks = {}
         event_lockers = []
         for event_id, callback, event_locker in tasks:
@@ -222,7 +222,7 @@ class ParsingDB(DBConnection):
         self.commit()
 
     @locker
-    def update_dancefloors(self, change_dict, margin_func):
+    def update_dancefloors(self, change_dict, margin_func, **kwargs):
         scripts = []
         for dancefloor, price_amount in change_dict.items():
             if price_amount is None:
@@ -245,7 +245,7 @@ class ParsingDB(DBConnection):
         self.commit()
 
     @locker
-    def update_tickets(self, tasks):
+    def update_tickets(self, tasks, **kwargs):
         tickets = {}
         for task, margin_func in tasks:
             for ticket_id, value in task.items():

@@ -3,6 +3,7 @@ import sys
 import threading
 
 from parse_module.console import base
+from parse_module.manager.backstage import tasker
 from parse_module.utils import utils
 from parse_module.utils.logger import logger
 
@@ -46,8 +47,14 @@ class ControllerInterface(base.CommandPrompt):
 
     @staticmethod
     def get_back(args_row):
-        logger.resume()
         utils.blueprint('Console flow resumed')
+        logger.resume()
+
+    @staticmethod
+    def backstage(args_row):
+        tasker.inspect_queue()
+        input(utils.blue('Press any key to continue output stream...'))
+        logger.resume()
 
 
 def get_home(cmd, args_row, value):
@@ -83,5 +90,6 @@ commands = {
     'level': ControllerInterface.log_level,
     'clear': ControllerInterface.clear,
     'resume': ControllerInterface.get_back,
+    'backstage': ControllerInterface.backstage,
     '': ControllerInterface.get_back
 }
