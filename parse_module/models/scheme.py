@@ -38,7 +38,7 @@ class Scheme:
                                 from_thread='Controller')
             event_locker.wait(600)
             del event_locker
-            with shelve.open('schemes.shelf') as shelf:
+            with shelve.open('schemes') as shelf:
                 shelf[str(self.scheme_id)] = callback
             name, scheme = callback
 
