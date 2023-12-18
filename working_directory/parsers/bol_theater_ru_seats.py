@@ -221,24 +221,25 @@ class BolTheaterParser(SeatsParser):
         return loz_row
 
     def get_event_seats(self):
-        headers = {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Accept-Language': 'ru-RU,ru;q=0.9',
-            'Connection': 'keep-alive',
-            'Host': 'bol-theater.ru',
-            'Referer': 'https://bol-theater.ru/afisha.html',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'same-origin',
-            'Sec-Fetch-User': '?1',
-            'Upgrade-Insecure-Requests': '1',
-            'User-Agent': self.user_agent,
-            'sec-ch-ua': '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
+        self.headers = {
+            'authority': 'www.bileter.ru',
+            'accept': 'text/html, */*; q=0.01',
+            'accept-language': 'ru,en;q=0.9',
+            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'referer': 'https://www.bileter.ru/afisha',
+            'sec-ch-ua': '"Chromium";v="116", "Not)A;Brand";v="24", "YaBrowser";v="23"',
             'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
+            'sec-ch-ua-platform': '"Linux"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-origin',
+            'user-agent': self.user_agent,
+            'x-pjax': 'true',
+            'x-pjax-container': '#js_id_afisha_performances_grid',
+            'x-requested-with': 'XMLHttpRequest',
         }
-        r = self.session.get(self.url, headers=headers)
+        
+        r = self.session.get(self.url, headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
 
         seats = []
