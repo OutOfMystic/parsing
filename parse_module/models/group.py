@@ -137,7 +137,8 @@ class SeatsParserGroup:
     def _start_parser(self, event_data):
         scheme = self._router.get_scheme(event_data['event_id'], event_data['scheme_id'], self.name)
         if scheme is provision.TryError:
-            self.error(f'SEATS parser {self.parent_event} ({event_data["event_name"]}'
+            self.error(f'SEATS parser {self.parent_event} event_id: {event_data["event_id"]}'
+                       f'scheme_id is: {event_data["scheme_id"]} ({event_data["event_name"]}'
                        f' {event_data["date"]}) has not started: scheme error')
             return
         margin_rules = self.controller.margins[event_data['margin']]
