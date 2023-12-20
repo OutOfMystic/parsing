@@ -3,7 +3,7 @@ from threading import Lock
 
 from ..connection import db_manager
 from ..manager.backstage import tasker
-from ..utils import utils, provision, shelve
+from ..utils import utils, provision
 from ..utils.exceptions import InternalError, SchemeError, ParsingError
 from ..utils.logger import logger
 from ..utils.types import LocalCacheDict
@@ -339,7 +339,7 @@ class ParserScheme(Scheme):
                     logger.info(f'Tickets with price below 100 ({ticket_id}) are skipped', name=self.name)
                     continue
                 if seat_avail_subject != price:
-                    logger.debug(ticket_id, seat_avail_subject, price)
+                    # logger.debug(ticket_id, seat_avail_subject, price)
                     to_change[ticket_id] = price
                 to_book.append(ticket_id)
             else:
