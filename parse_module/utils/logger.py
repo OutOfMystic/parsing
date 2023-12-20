@@ -198,8 +198,8 @@ class Logger(threading.Thread):
             try:
                 log = json.loads(row)
                 self.filter_and_print(log)
-            except:
-                pass
+            except Exception as err:
+                self.warning(f'Lost log: {err}')
         print(time.time() - start_time)
 
         start_time = time.time()
@@ -211,8 +211,11 @@ class Logger(threading.Thread):
 
     def resume(self):
         while self._stub_buffer:
-            log = self._stub_buffer.pop(0)
-            self.filter_and_print(log)
+            try:
+                log = self._stub_buffer.pop(0)
+                self.filter_and_print(log)
+            except Exception as err:
+                self.warning(f'Lost log: {err}')
         self._print_locker = False
 
     def run(self):
@@ -245,7 +248,10 @@ def get_current_stack(ignore_files=None, drop_path_level=0):
     try:
         return str_calls[3]
     except:
-        return "Callstack cannot be traced"
+        try:
+            return str_calls[-1]
+        except:
+            return "--Callstack cannot be traced--"
 
 
 def parse_traceback(traceback_string, ignore_files=None, drop_path_level=0):

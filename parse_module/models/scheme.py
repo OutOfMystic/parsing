@@ -1,12 +1,20 @@
 import threading
+from collections import namedtuple
 from threading import Lock
+
+from psycopg2 import extras
 
 from ..connection import db_manager
 from ..manager.backstage import tasker
 from ..utils import utils, provision
-from ..utils.exceptions import InternalError, SchemeError, ParsingError
+from ..utils.exceptions import SchemeError, ParsingError
 from ..utils.logger import logger
-from ..utils.types import LocalCacheDict
+from ..utils.provision import multi_try
+
+
+Ticket = namedtuple('Ticket', ['x_coord', 'y_coord', 'sector', 'sector_id',
+                               'row', 'seat', 'status', 'original_price', 'sell_price',
+                               'event_id', 'scheme_id', 'no_schema_available'])
 
 
 class Dancefloor:
@@ -14,6 +22,19 @@ class Dancefloor:
         self.ticket_id = ticket_id
         self.amount = 0
         self.price = 0
+
+
+def get_scheme_wrapper(scheme_id):
+    callback = []
+    event_locker = threading.Event()
+    task = [scheme_id, callback, event_locker]
+    tasker.put_throttle(db_manager.get_scheme, task,
+                        from_iterable=False,
+                        from_thread='Controller',
+                        kwargs={'get_scheme': ''})
+    event_locker.wait(600)
+    del event_locker
+    return callback
 
 
 class Scheme:
@@ -25,7 +46,6 @@ class Scheme:
         self.dancefloors = {}
 
     def get_scheme(self):
-        callback = []
         """with shelve.open('schemes') as shelf:
             name_scheme = shelf.get(str(self.scheme_id), None)
         if name_scheme:
@@ -41,15 +61,7 @@ class Scheme:
             with shelve.open('schemes') as shelf:
                 shelf[str(self.scheme_id)] = callback
             name, scheme = callback"""
-        event_locker = threading.Event()
-        task = [self.scheme_id, callback, event_locker]
-        tasker.put_throttle(db_manager.get_scheme, task,
-                            from_iterable=False,
-                            from_thread='Controller',
-                            kwargs={'get_scheme': ''})
-        event_locker.wait(600)
-        del event_locker
-        name, scheme = callback
+        name, scheme = get_scheme_wrapper(self.scheme_id)
 
         if name is None and scheme is None:
             return False
@@ -101,15 +113,17 @@ class Scheme:
 
 class ParserScheme(Scheme):
 
-    def __init__(self, scheme, event_id):
+    def __init__(self, scheme, event_id, group_name):
         super().__init__(scheme.scheme_id)
         self.event_id = event_id
         self.name = scheme.name
+        self.group_name = group_name
         self._margins = {}
         self._lock = Lock()
         self._prohibitions = {}
         self._bookings = {}
-        self._customize(scheme)
+        multi_try(self._customize, to_except=self.make_tickets,
+                  args=(scheme,), tries=5, name=group_name)
 
     def bind(self, priority, margin_func):
         try:
@@ -245,6 +259,7 @@ class ParserScheme(Scheme):
         db_tickets = {}
         event_locker = threading.Event()
         task = [self.event_id, db_tickets, event_locker]
+
         tasker.put_throttle(db_manager.get_all_tickets, task,
                             from_iterable=False,
                             from_thread='Controller',
@@ -252,6 +267,10 @@ class ParserScheme(Scheme):
         event_locker.wait(600)
         del event_locker
 
+        if not db_tickets:
+            raise SchemeError(f'Schema {self.scheme_id} cannot '
+                              f'be applied to event {self.event_id}!\n'
+                              f'No tickets on scheme! Try to reassign it')
         first_id = min(db_tickets.keys())
         try:
             to_change = {}
@@ -274,9 +293,9 @@ class ParserScheme(Scheme):
                 new_sector = Dancefloor(new_id)
                 self.dancefloors[sector_name] = new_sector
         except KeyError:
-            raise InternalError(f'Schema {self.scheme_id} cannot '
-                                f'be applied to event {self.event_id}!\n'
-                                f'This scheme was assigned wrong! Try to reassign it')
+            raise SchemeError(f'Schema {self.scheme_id} cannot '
+                              f'be applied to event {self.event_id}!\n'
+                              f'This scheme was assigned wrong! Try to reassign it')
 
     def _update_prohibitions(self, cur_priority):
         for priority in self._bookings:
@@ -351,6 +370,72 @@ class ParserScheme(Scheme):
         #print(to_book)
         #print(to_discard)
         return to_change, to_book, to_discard
+
+    def make_tickets(self, exception, scheme):
+        """
+        Создать билеты у event_id
+        взять схему для билетов в public.tables_constructor с scheme_id
+        """
+        if not isinstance(exception, SchemeError):
+            raise exception
+
+        scheme_box = get_scheme_wrapper(scheme.scheme_id)
+        scheme_json = scheme_box[-1]
+
+        all_tickets = []
+
+        for ticket in scheme_json["seats"]:
+            sector = scheme_json["sectors"][ticket[3]]
+            if "count" in sector:
+                new_dance_ticket = {
+                    'x_coord': 0,
+                    'y_coord': 0,
+                    'sector': sector["name"],
+                    'sector_id': ticket[3],
+                    'row': "no_schema",
+                    'seat': "no_schema",
+                    'status': "not",
+                    'original_price': 1,
+                    'sell_price': 1,
+                    'event_id': self.event_id,
+                    'scheme_id': scheme.scheme_id,
+                    'no_schema_available': 0
+                }
+                tickets = Ticket(**new_dance_ticket)
+                all_tickets.append(tuple(tickets))
+            else:
+                new_ticket = {
+                    "x_coord": ticket[0],
+                    "y_coord": ticket[1],
+                    "sector": sector["name"],
+                    "sector_id": ticket[3],
+                    "row": ticket[5],
+                    "seat": ticket[6],
+                    "status": str('not'),
+                    "original_price": 1,
+                    "sell_price": 1,
+                    "event_id": self.event_id,
+                    "scheme_id": scheme.scheme_id,
+                    'no_schema_available': 0
+                }
+                tickets = Ticket(**new_ticket)
+                all_tickets.append(tuple(tickets))
+        clear_query = "DELETE FROM public.tables_tickets " \
+                      f"WHERE event_id_id={self.event_id}"
+        insert_query = """
+            INSERT INTO public.tables_tickets (
+                x_coord, y_coord, sector, sector_id, 
+                row, seat, status, original_price, sell_price, 
+                event_id_id, scheme_id_id,  no_schema_available
+            ) VALUES %s
+        """
+        db_manager.execute(clear_query)
+        db_manager.commit()
+        extras.execute_values(db_manager.cursor, insert_query, all_tickets, template=None, page_size=100)
+        logger.info(f'Scheme reassigned successfully '
+                    f'(event_id: {self.event_id}, scheme_id: {scheme.scheme_id})',
+                    name=self.group_name)
+        db_manager.commit()
 
 
 def differences_lower(left, right):

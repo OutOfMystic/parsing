@@ -136,7 +136,7 @@ class SeatsParserGroup:
         self.start_lock.release()
 
     def _start_parser(self, event_data):
-        scheme = self._router.get_scheme(event_data['event_id'], event_data['scheme_id'], self.name)
+        scheme = self._router.get_parser_scheme(event_data['event_id'], event_data['scheme_id'], name=self.name)
         if scheme is provision.TryError:
             self.error(f'SEATS parser {self.parent_event} ({event_data["event_name"]}'
                        f' {event_data["date"]}) has not started: scheme error')

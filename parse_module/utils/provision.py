@@ -16,7 +16,7 @@ colorama.init()
 
 
 class TryError(Exception):
-    pass
+    """All the tries were not succeeded"""
 
 
 def pool(function, aims, max_threads):
@@ -137,21 +137,28 @@ def multi_try(to_try: Callable,
 
     for i in range(tries):
         seconds = seconds ** multiplier
+        level = logger.error if i == tries - 1 else logger.warning
         result, exc = _tryfunc(to_try,
                                name,
                                print_errors=print_errors,
                                use_logger=use_logger,
                                args=args,
                                kwargs=kwargs,
-                               from_multi_try=(i, tries))
+                               from_multi_try=(i, tries),
+                               level=level)
         if result is not TryError:
             return result
         else:
             error_prefix = '[Another exception occurred during handling `to_except`]'
-            _tryfunc(to_except, name, error_prefix=error_prefix)
+            exc_args = None if len(inspect.signature(to_except).parameters) == 0 else (exc, *args,)
+            _tryfunc(to_except,
+                     name,
+                     args=exc_args,
+                     kwargs=kwargs,
+                     error_prefix=error_prefix)
     else:
         if raise_exc:
-            raise RuntimeError(f'Превышено число попыток ({tries})')
+            raise TryError(f'Превышено число попыток ({tries})')
         else:
             return TryError
 
@@ -161,6 +168,7 @@ def _tryfunc(func,
              error_prefix='',
              print_errors=True,
              use_logger=True,
+             level=logger.error,
              args=None,
              kwargs=None,
              from_multi_try=None):
@@ -175,18 +183,24 @@ def _tryfunc(func,
     except Exception as exc:
         if print_errors:
             tried_overall = ''
+            if level == logger.error:
+                color_switcher1, color_switcher2 = utils.Fore.YELLOW, utils.Fore.RED
+            else:
+                color_switcher1, color_switcher2 = utils.Fore.RED, utils.Fore.YELLOW
+
             if from_multi_try is not None:
                 tried, overall = from_multi_try
                 if overall != 1:
-                    tried_overall = f' {utils.Fore.YELLOW}[{tried + 1}/{overall}]{utils.Fore.RED}'
+                    tried_overall = f' {color_switcher1}[{tried + 1}/{overall}]{color_switcher2}'
             str_exception = str(exc).split('\n')[0]
             error = f'({type(exc).__name__}){tried_overall} {str_exception}'
             error_with_prefix = error_prefix + error
+
             if use_logger:
-                logger.error(error_with_prefix, name=name)
+                level(error_with_prefix, name=name)
             else:
                 name_part = f'{name} | ' if name else ''
-                print(name_part + utils.red(error_with_prefix))
+                print(f'{name_part}{color_switcher2}{error_with_prefix}{utils.Fore.RESET}')
         return TryError, exc
     else:
         return result, None
@@ -231,7 +245,7 @@ def delete_module(modname, paranoid=None):
                     pass
 
 
-def fpass():
+def fpass(exc, *args, **kwargs):
     pass
 
 
