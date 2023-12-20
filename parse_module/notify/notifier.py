@@ -10,7 +10,7 @@ import requests
 from loguru import logger
 
 from ..manager.backstage import tasker
-from ..manager.core import BotCore
+from ..manager.core import ThreadedBot
 from ..manager.proxy import check
 from ..manager.proxy.instances import UniProxy
 from ..manager.proxy.loader import ProxyHub
@@ -19,7 +19,7 @@ from ..utils import utils
 from ..utils.provision import try_open
 
 
-class Notifier(BotCore, ABC):
+class Notifier(ThreadedBot, ABC):
     proxy_check = check.NormalConditions()
 
     def __init__(self,

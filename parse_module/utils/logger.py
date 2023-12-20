@@ -1,9 +1,6 @@
-import ctypes
 import inspect
 import json
-import os
 import re
-import subprocess
 import sys
 import threading
 import time
@@ -21,7 +18,8 @@ class Logger(threading.Thread):
     def __init__(self, log_path='main.log',
                  release=True,
                  ignore_files=None,
-                 drop_path_level=0):
+                 drop_path_level=0,
+                 test=False):
         super().__init__()
 
         if ignore_files is None:
@@ -39,6 +37,7 @@ class Logger(threading.Thread):
         self.drop_path_level = drop_path_level
         self.source_filter = None
         self.level_filter = None
+        self.test = test
 
         self._buffer = []
         self._debug_buffer = []
@@ -46,7 +45,8 @@ class Logger(threading.Thread):
         self._print_locker = False
 
         self.start()
-        self.info('Logger started', name='Controller')
+        if not test:
+            self.info('Logger started', name='Controller')
 
     def log(self, message: str, level, **kwargs):
         now = datetime.now()
@@ -163,11 +163,10 @@ class Logger(threading.Thread):
     def send_logs(self):
         logs = self._buffer
         self._buffer = []
-        # jsoned = ''.join(json.dumps(log, ensure_ascii=False, separators=(',', ':')) + '\n'
-        #                  for log in logs)
-        jsoned = '\n'.join(' - '.join(str(value) for value in log.values()) for log in logs)
+        jsoned = ''.join(json.dumps(log, ensure_ascii=False, separators=(',', ':')) + '\n'
+                         for log in logs)
         with open(self.log_path, 'a', encoding='utf-8') as fp:
-            fp.write(jsoned + '\n')
+            fp.write(jsoned)
         del logs
 
         logs = self._debug_buffer
@@ -189,8 +188,6 @@ class Logger(threading.Thread):
         with open(self.log_path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
             for line in lines:
-                if not line:
-                    continue
                 rows.append(line)
                 if '"message":"Logger started"' in line:
                     rows.clear()
@@ -198,8 +195,11 @@ class Logger(threading.Thread):
 
         start_time = time.time()
         for row in rows:
-            log = json.loads(row)
-            self.filter_and_print(log)
+            try:
+                log = json.loads(row)
+                self.filter_and_print(log)
+            except:
+                pass
         print(time.time() - start_time)
 
         start_time = time.time()
@@ -272,4 +272,4 @@ COLORS = {
     'SUCCESS': Fore.GREEN
 }
 colors_reversed = {value: key for key, value in COLORS.items()}
-logger = Logger(release='release' in sys.argv, drop_path_level=1)
+logger = Logger(release='release' in sys.argv, drop_path_level=1, test=True)

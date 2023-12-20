@@ -3,30 +3,33 @@ import weakref
 from abc import abstractmethod, ABC
 from urllib.parse import urlparse
 
-from ..manager import core
+from ..manager import core, pooling
 from ..connection import db_manager
 from ..manager.proxy import check
 from ..utils import utils
 from ..utils.date import Date
-from ..utils.exceptions import ParsingError
+from ..utils.exceptions import ParsingError, ProxyHubError
 from ..utils.logger import logger
 
 
-class ParserBase(core.BotCore, ABC):
+class ParserBase(core.Bot, ABC):
     proxy_check = check.NormalConditions()
 
     def __init__(self, controller):
-        super().__init__()
+        super().__init__(skip_postinit=True)
         self.controller = controller
         self.session = None
         self.last_state = None
         self._notifier_event = None
         self._notifier_locker = None
+        self.proxy = self.controller.proxy_hub.get(self.proxy_check)
 
     def change_proxy(self, report=False):
         if report:
             self.controller.proxy_hub.report(self.proxy_check, self.proxy)
         self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+        if not self.proxy:
+            raise ProxyHubError(f'No proxy for {self.name}!')
 
     def set_notifier(self, event: threading.Event, locker: threading.Event):
         if self._notifier_event:
@@ -45,9 +48,27 @@ class ParserBase(core.BotCore, ABC):
             self._notifier_event.set()
             self._notifier_locker.wait(timeout=10)
 
-    def run(self):
-        self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-        super().run()
+    def proceed(self):
+        next_step_delay = 120
+        if self.proxy is None:
+            self.change_proxy()
+
+        if self.proxy is not None:
+            next_step_delay = self.get_delay()
+            if not self.fully_inited:
+                if self.driver:
+                    self.driver.quit()
+                self.inthread_init()
+            if self.fully_inited:
+                super().proceed()
+
+        if self._terminator.alive:
+            task = pooling.Task(self.proceed, self.name, next_step_delay)
+            self.controller.pool.add(task)
+
+    def start(self):
+        task = pooling.Task(self.proceed, self.name, 0)
+        self.controller.pool.add(task)
 
 
 class EventParser(ParserBase, ABC):

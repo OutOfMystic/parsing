@@ -2,14 +2,13 @@ import datetime
 import itertools
 
 import numpy as np
-from loguru import logger
 
 from . import base
 from ..connection import db_manager
 from ..models.ai_nlp.collect import make_matrix, solve_pairs, build_connection
 from ..models.ai_nlp.solve import solver
 from ..models.ai_nlp.venue import VenueAliases
-from ..models.group import crop_url
+from parse_module.manager.group import crop_url
 from ..utils import utils
 from ..utils.date import Date
 
