@@ -58,6 +58,7 @@ class ParserBase(core.Bot, ABC):
             if not self.fully_inited:
                 if self.driver:
                     self.driver.quit()
+                    self.driver = None
                 self.inthread_init()
             if self.fully_inited:
                 super().proceed()
