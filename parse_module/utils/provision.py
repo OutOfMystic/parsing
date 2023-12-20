@@ -149,7 +149,7 @@ def multi_try(to_try: Callable,
         if result is not TryError:
             return result
         else:
-            error_prefix = '[Another exception occurred during handling `to_except`]'
+            error_prefix = '[Another exception occurred during handling `to_except`]\n'
             exc_args = None if len(inspect.signature(to_except).parameters) == 0 else (exc, *args,)
             _tryfunc(to_except,
                      name,
@@ -176,8 +176,6 @@ def _tryfunc(func,
         kwargs = {}
     if args is None:
         args = tuple()
-    if error_prefix:
-        error_prefix += ' '
     try:
         result = func(*args, **kwargs)
     except Exception as exc:

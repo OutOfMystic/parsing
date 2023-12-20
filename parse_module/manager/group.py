@@ -8,7 +8,6 @@ from parse_module.utils.logger import logger
 
 
 class SeatsParserGroup:
-
     def __init__(self, controller, parser_class, module_name):
         self.controller = controller
         self.parent_event = parser_class.event
@@ -129,7 +128,7 @@ class SeatsParserGroup:
 
         self.going_to_start = len(prepared_data)
         for event_data in prepared_data:
-            provision.multi_try(self._start_parser, tries=3,
+            provision.multi_try(self._start_parser, to_except=self.handle_error, tries=3,
                                 args=(event_data,), raise_exc=False,
                                 name='Controller')
             self.going_to_start -= 1
@@ -137,10 +136,6 @@ class SeatsParserGroup:
 
     def _start_parser(self, event_data):
         scheme = self._router.get_parser_scheme(event_data['event_id'], event_data['scheme_id'], name=self.name)
-        if scheme is provision.TryError:
-            self.error(f'SEATS parser {self.parent_event} ({event_data["event_name"]}'
-                       f' {event_data["date"]}) has not started: scheme error')
-            return
         margin_rules = self.controller.margins[event_data['margin']]
         scheme.bind(event_data['priority'], margin_rules)
         event_data['scheme'] = scheme
@@ -165,6 +160,11 @@ class SeatsParserGroup:
 
     def error(self, message):
         logger.error(message, name=self.name)
+
+    def handle_error(self, exception, event_data):
+        self.error(f'SEATS parser {self.parent_event} event_id: {event_data["event_id"]}'
+                   f'scheme_id is: {event_data["scheme_id"]} ({event_data["event_name"]}'
+                   f' {event_data["date"]}) has not started: {exception}')
 
 
 def crop_url(url):
