@@ -339,7 +339,7 @@ class ParserScheme(Scheme):
                     logger.info(f'Tickets with price below 100 ({ticket_id}) are skipped', name=self.name)
                     continue
                 if seat_avail_subject != price:
-                    logger.debug(ticket_id, seat_avail_subject, price)
+                    # logger.debug(ticket_id, seat_avail_subject, price)
                     to_change[ticket_id] = price
                 to_book.append(ticket_id)
             else:
