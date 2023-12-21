@@ -48,7 +48,8 @@ class ScheduledExecutor(threading.Thread):
         if self._stats_counter % 1 == 0:
             with open('pooling_stats.csv', 'a') as f:
                 writer = csv.writer(f)
-                writer.writerows(self._stats)
+                writer.writerow(stat)
+                # writer.writerows(self._stats)
             self._stats.clear()
 
     def _step(self):
@@ -70,7 +71,7 @@ class ScheduledExecutor(threading.Thread):
                 continue
             result = result_callback.apply_result.get()
             to_del.append(i)
-            self._add_stats(result_callback.commit_time)
+            self._add_stats(result_callback.scheduled_time)
             if isinstance(result, Task):
                 self.add(result)
         for i in to_del[::-1]:
