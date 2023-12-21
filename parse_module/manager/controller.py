@@ -59,7 +59,7 @@ class Controller(threading.Thread):
         self.event_aliases = alias.EventAliases(step=5)
         self.parsing_types = db_manager.get_parsing_types()
         self.venues = venue.VenueAliases()
-        self.pool = pooling.ScheduledExecutor(max_threads=20)
+        self.pool = pooling.ScheduledExecutor(max_threads=40)
         self._load_parsers_with_config(config_path)
         self.fast_time = time.time()
 
