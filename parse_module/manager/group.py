@@ -162,6 +162,10 @@ class SeatsParserGroup:
         logger.error(message, name=self.name)
 
     def handle_error(self, exception, event_data):
+        event_id = event_data["event_id"]
+        if event_id in self._router.parser_schemes:
+            scheme = self._router.parser_schemes[event_id]
+            scheme.unbind(event_data['priority'], force=True)
         logger.debug(f'SEATS parser {self.parent_event} event_id: {event_data["event_id"]}\n'
                      f'scheme_id: {event_data["scheme_id"]} name: ({event_data["event_name"]}'
                      f' date: {event_data["date"]}) has not started\n'

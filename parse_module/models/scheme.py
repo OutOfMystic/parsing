@@ -137,7 +137,10 @@ class ParserScheme(Scheme):
         finally:
             self._lock.release()
 
-    def unbind(self, priority):
+    def unbind(self, priority, force=False):
+        if force:
+            if priority not in self._margins:
+                return
         try:
             self._lock.acquire()
 
