@@ -101,7 +101,7 @@ class DBConnection:
 
     def execute(self, request):
         return provision.multi_try(self.cursor_wrapper, args=('execute', request,),
-                                   to_except=self._connect_db, name='Controller',
+                                   handle_error=self._connect_db, name='Controller',
                                    multiplier=1.05, tries=5)
 
     def select(self, request):
@@ -117,12 +117,12 @@ class DBConnection:
 
     def fetchall(self):
         return provision.multi_try(self.cursor_wrapper, args=('fetchall',),
-                                   to_except=self._connect_db,
+                                   handle_error=self._connect_db,
                                    multiplier=1.05, tries=5, name='Controller')
 
     def commit(self):
         return provision.multi_try(self.connection_wrapper, args=('commit',),
-                                   to_except=self._connect_db,
+                                   handle_error=self._connect_db,
                                    multiplier=1.05, tries=5, name='Controller')
 
 

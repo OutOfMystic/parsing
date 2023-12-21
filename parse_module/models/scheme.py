@@ -122,7 +122,7 @@ class ParserScheme(Scheme):
         self._lock = Lock()
         self._prohibitions = {}
         self._bookings = {}
-        multi_try(self._customize, to_except=self.make_tickets,
+        multi_try(self._customize, handle_error=self.make_tickets,
                   args=(scheme,), tries=5, name=group_name)
 
     def bind(self, priority, margin_func):

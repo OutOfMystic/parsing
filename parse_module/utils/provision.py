@@ -50,7 +50,7 @@ def pool(function, aims, max_threads):
 
 def threading_try(to_try,
                   name='Main',
-                  to_except=None,
+                  handle_error=None,
                   tries=3,
                   args=None,
                   kwargs=None,
@@ -68,7 +68,7 @@ def threading_try(to_try,
     Args:
         to_try: main function
         name: name to identify logs
-        to_except: called if attempt was not succeeded
+        handle_error: called if attempt was not succeeded
         tries: number of attempts to execute ``to_try``
         args: arguments sent to ``to_try``
         kwargs: keyword arguments sent to ``to_try``
@@ -79,7 +79,7 @@ def threading_try(to_try,
     """
     kwargs = {
         'name': name,
-        'to_except': to_except,
+        'handle_error': handle_error,
         'tries': tries,
         'args': args,
         'kwargs': kwargs,
@@ -93,7 +93,7 @@ def threading_try(to_try,
 
 
 def multi_try(to_try: Callable,
-              to_except: Callable = None,
+              handle_error: Callable = None,
               tries=3,
               raise_exc=True,
               name='Main',
@@ -105,13 +105,13 @@ def multi_try(to_try: Callable,
     """
     Try to execute smth ``tries`` times.
     If all attempts are unsuccessful and ``raise_exc``
-    is True, raise an exception. ``to_except`` is called
+    is True, raise an exception. ``handle_error`` is called
     every time attempt was not succeeded.
 
     Args:
         to_try: main function
         name: name to identify logs
-        to_except: called if attempt was not succeeded
+        handle_error: called if attempt was not succeeded
         tries: number of attempts to execute ``to_try``
         args: arguments sent to ``to_try``
         kwargs: keyword arguments sent to ``to_try``
@@ -128,8 +128,8 @@ def multi_try(to_try: Callable,
         kwargs = {}
     if args is None:
         args = tuple()
-    if to_except is None:
-        to_except = fpass
+    if handle_error is None:
+        handle_error = fpass
     seconds = 3.0
     if tries == 1 and raise_exc is True:
         raise RuntimeError('If tries == 1, exception should not be raised.'
@@ -145,13 +145,13 @@ def multi_try(to_try: Callable,
                                args=args,
                                kwargs=kwargs,
                                from_multi_try=(i, tries),
-                               level=level)
+                               level=logger.error)
         if result is not TryError:
             return result
         else:
-            error_prefix = '[Another exception occurred during handling `to_except`]\n'
-            exc_args = None if len(inspect.signature(to_except).parameters) == 0 else (exc, *args,)
-            _tryfunc(to_except,
+            error_prefix = '[Exception during `handle_error`]\n'
+            exc_args = None if len(inspect.signature(handle_error).parameters) == 0 else (exc, *args,)
+            _tryfunc(handle_error,
                      name,
                      args=exc_args,
                      kwargs=kwargs,
@@ -243,7 +243,7 @@ def delete_module(modname, paranoid=None):
                     pass
 
 
-def fpass(exc, *args, **kwargs):
+def fpass():
     pass
 
 

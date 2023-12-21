@@ -8,6 +8,7 @@ from sortedcontainers import SortedDict
 
 from parse_module.utils import provision
 from parse_module.utils.logger import logger
+from parse_module.utils.provision import multi_try
 
 Task = namedtuple('Task', ['to_proceed', 'parser', 'wait'])
 Result = namedtuple('Result', ['scheduled_time', 'apply_result'])
@@ -22,26 +23,29 @@ class ScheduledExecutor(threading.Thread):
         self._stats = []
         self._starting_point = time.time()
         self._stats_counter = 0
-        with open('pooling_stats.csv', 'w') as f:
+        with open('pooling_stats.csv', 'w+') as f:
             f.write('')
         self.start()
 
     def add(self, task: Task):
         timestamp = task.wait + time.time()
-        self._tasks.setdefault(-timestamp, [])
-        self._tasks[-timestamp].append(task)
+        timestamp = -timestamp
+        self._tasks.setdefault(timestamp, [])
+        self._tasks[timestamp].append(task)
 
-    def _add_stats(self, commit_time):
+    def _add_stats(self, scheduled_time):
+        scheduled_time = -scheduled_time
         log_time = time.time()
         stat = (
             log_time - self._starting_point,
-            log_time + commit_time,
+            log_time - scheduled_time,
             len(self._results),
+            len(self._tasks)
         )
 
         self._stats_counter += 1
         self._stats.append(stat)
-        if self._stats_counter % 200 == 0:
+        if self._stats_counter % 1 == 0:
             with open('pooling_stats.csv', 'a') as f:
                 writer = csv.writer(f)
                 writer.writerows(self._stats)
@@ -53,11 +57,11 @@ class ScheduledExecutor(threading.Thread):
         if not sliced:
             time.sleep(0.2)
         for _ in range(sliced):
-            commit_time, tasks = self._tasks.popitem()
+            scheduled_time, tasks = self._tasks.popitem()
             for task in tasks:
                 kwargs = {'name': task.parser, 'tries': 1, 'raise_exc': False}
                 apply_result = self._pool.apply_async(provision.multi_try, [task.to_proceed], kwds=kwargs)
-                result = Result(scheduled_time=commit_time + task.wait, apply_result=apply_result)
+                result = Result(scheduled_time=scheduled_time, apply_result=apply_result)
                 self._results.append(result)
 
         to_del = []
@@ -74,5 +78,5 @@ class ScheduledExecutor(threading.Thread):
 
     def run(self):
         while True:
-            self._step()
+            multi_try(self._step, tries=1, raise_exc=False, name='Controller')
 
