@@ -48,7 +48,8 @@ class ScheduledExecutor(threading.Thread):
         if self._stats_counter % 1 == 0:
             with open('pooling_stats.csv', 'a') as f:
                 writer = csv.writer(f)
-                writer.writerows(self._stats)
+                writer.writerow(stat)
+                # writer.writerows(self._stats)
             self._stats.clear()
 
     def _step(self):
