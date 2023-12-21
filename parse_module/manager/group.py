@@ -58,7 +58,7 @@ class SeatsParserGroup:
 
     def stop_by_margin(self, margin):
         provision.threading_try(self._stop_by_margin, name='Controller', tries=1,
-                                args=(margin,), to_except=self.start_lock.release)
+                                args=(margin,), handle_error=self.start_lock.release)
 
     def _stop_by_margin(self, margin_id):
         self.start_lock.acquire()
@@ -75,7 +75,7 @@ class SeatsParserGroup:
         {priority, event_id, subject_date, url, margin_name, signature}
         """
         provision.threading_try(self._update, name=self.name, args=(connections,),
-                                to_except=self.start_lock.release, tries=1)
+                                handle_error=self.start_lock.release, tries=1)
 
     def _update(self, connections):
         self.start_lock.acquire()
@@ -128,7 +128,7 @@ class SeatsParserGroup:
 
         self.going_to_start = len(prepared_data)
         for event_data in prepared_data:
-            provision.multi_try(self._start_parser, to_except=self.handle_error, tries=3,
+            provision.multi_try(self._start_parser, handle_error=self.handle_error, tries=3,
                                 args=(event_data,), raise_exc=False,
                                 name='Controller')
             self.going_to_start -= 1
@@ -162,9 +162,16 @@ class SeatsParserGroup:
         logger.error(message, name=self.name)
 
     def handle_error(self, exception, event_data):
-        self.error(f'SEATS parser {self.parent_event} event_id: {event_data["event_id"]}'
-                   f'scheme_id is: {event_data["scheme_id"]} ({event_data["event_name"]}'
-                   f' {event_data["date"]}) has not started: {exception}')
+        event_id = event_data["event_id"]
+        if event_id in self._router.parser_schemes:
+            scheme = self._router.parser_schemes[event_id]
+            scheme.unbind(event_data['priority'], force=True)
+            logger.warning('Scheme was already prepared. Unbind forced. '
+                           'This may cause an incorrect parser start')
+        logger.debug(f'SEATS parser {self.parent_event} event_id: {event_data["event_id"]}\n'
+                     f'scheme_id: {event_data["scheme_id"]} name: ({event_data["event_name"]}'
+                     f' date: {event_data["date"]}) has not started\n'
+                     f'({type(exception).__name__}) {exception}', name=self.name)
 
 
 def crop_url(url):

@@ -63,7 +63,7 @@ class BotBase:
 
     def threading_try(self,
                       to_try: Callable,
-                      to_except: Callable = None,
+                      handle_error: Callable = None,
                       tries=3,
                       raise_exc=True,
                       args: Iterable = None,
@@ -80,7 +80,7 @@ class BotBase:
         object as argument and handle it
         """
         kwargs = {
-            'to_except': to_except,
+            'handle_error': handle_error,
             'tries': tries,
             'args': args,
             'kwargs': kwargs,
@@ -94,7 +94,7 @@ class BotBase:
 
     def multi_try(self,
                   to_try: Callable,
-                  to_except: Callable = None,
+                  handle_error: Callable = None,
                   tries=3,
                   raise_exc=True,
                   args: Iterable = None,
@@ -104,12 +104,12 @@ class BotBase:
         """
         Try to execute smth ``tries`` times.
         If all attempts are unsuccessful and ``raise_exc``
-        is True, raise an exception. ``to_except`` is called
+        is True, raise an exception. ``handle_error`` is called
         every time attempt was not succeeded.
 
         Args:
             to_try: main function
-            to_except: called if attempt was not succeeded
+            handle_error: called if attempt was not succeeded
             tries: number of attempts to execute ``to_try``
             args: arguments sent to ``to_try``
             kwargs: keyword arguments sent to ``to_try``
@@ -123,7 +123,7 @@ class BotBase:
         """
         return provision.multi_try(to_try,
                                    name=self.name,
-                                   to_except=to_except,
+                                   handle_error=handle_error,
                                    tries=tries,
                                    args=args,
                                    kwargs=kwargs,
@@ -187,7 +187,7 @@ class BotBase:
     def proceed(self):
         if self.step % self.step_counter == 0 and self.step:
             self.bprint('Проход номер ' + str(self.step))
-        result = provision.multi_try(self.run_try, to_except=self.run_except,
+        result = provision.multi_try(self.run_try, handle_error=self.run_except,
                                      name=self.name, tries=self.max_tries, raise_exc=False)
         self.step += 1
         if result is provision.TryError and self._terminator.alive:
