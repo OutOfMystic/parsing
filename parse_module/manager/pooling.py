@@ -22,6 +22,8 @@ class ScheduledExecutor(threading.Thread):
         self._stats = []
         self._starting_point = time.time()
         self._stats_counter = 0
+        with open('pooling_stats.csv', 'a') as f:
+            f.write('')
         self.start()
 
     def add(self, task: Task):

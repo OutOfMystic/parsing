@@ -188,6 +188,10 @@ class Logger(threading.Thread):
         rows = []
         self.pause()
         with open(self.log_path, 'r', encoding='utf-8') as file:
+            file.seek(0, 2)
+            file_size = file.tell()
+            start_pos = max(0, file_size - 2 * 1024 * 1024)
+            file.seek(start_pos)
             lines = file.readlines()
             for line in lines:
                 rows.append(line)
