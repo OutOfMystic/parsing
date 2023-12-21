@@ -10,7 +10,7 @@ from parse_module.utils import provision
 from parse_module.utils.logger import logger
 
 Task = namedtuple('Task', ['to_proceed', 'parser', 'wait'])
-Result = namedtuple('Result', ['commit_time', 'apply_result'])
+Result = namedtuple('Result', ['scheduled_time', 'apply_result'])
 
 
 class ScheduledExecutor(threading.Thread):
@@ -22,7 +22,7 @@ class ScheduledExecutor(threading.Thread):
         self._stats = []
         self._starting_point = time.time()
         self._stats_counter = 0
-        with open('pooling_stats.csv', 'a') as f:
+        with open('pooling_stats.csv', 'w') as f:
             f.write('')
         self.start()
 
@@ -57,7 +57,7 @@ class ScheduledExecutor(threading.Thread):
             for task in tasks:
                 kwargs = {'name': task.parser, 'tries': 1, 'raise_exc': False}
                 apply_result = self._pool.apply_async(provision.multi_try, [task.to_proceed], kwds=kwargs)
-                result = Result(commit_time=commit_time, apply_result=apply_result)
+                result = Result(scheduled_time=commit_time + task.wait, apply_result=apply_result)
                 self._results.append(result)
 
         to_del = []
