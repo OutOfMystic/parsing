@@ -310,7 +310,7 @@ class Controller(threading.Thread):
         events_to_reset = all_event_ids - event_ids
 
         _, _, new_to_reset = differences(self._events_were_reset, events_to_reset)
-        logger.debug(f'{len(events_to_reset)} were reset')
+        logger.debug(f'{len(new_to_reset)} were reset')
         db_manager.reset_tickets(new_to_reset)
         self._events_were_reset = list(events_to_reset)
 

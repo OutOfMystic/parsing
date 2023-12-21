@@ -10,6 +10,7 @@ from parse_module.utils import provision
 from parse_module.utils.logger import logger
 
 Task = namedtuple('Task', ['to_proceed', 'parser', 'wait'])
+Result = namedtuple('Result', ['commit_time', 'apply_result'])
 
 
 class ScheduledExecutor(threading.Thread):
@@ -49,21 +50,21 @@ class ScheduledExecutor(threading.Thread):
         sliced = len(self._tasks) - bisection
         if not sliced:
             time.sleep(0.2)
-            return
         for _ in range(sliced):
             commit_time, tasks = self._tasks.popitem()
             for task in tasks:
                 kwargs = {'name': task.parser, 'tries': 1, 'raise_exc': False}
                 apply_result = self._pool.apply_async(provision.multi_try, [task.to_proceed], kwds=kwargs)
-                self._add_stats(commit_time)
-                self._results.append(apply_result)
+                result = Result(commit_time=commit_time, apply_result=apply_result)
+                self._results.append(result)
 
         to_del = []
-        for i, apply_result in enumerate(self._results):
-            if not apply_result.ready():
+        for i, result_callback in enumerate(self._results):
+            if not result_callback.apply_result.ready():
                 continue
+            result = result_callback.apply_result.get()
             to_del.append(i)
-            result = apply_result.get()
+            self._add_stats(result_callback.commit_time)
             if isinstance(result, Task):
                 self.add(result)
         for i in to_del[::-1]:

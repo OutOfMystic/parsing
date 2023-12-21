@@ -50,6 +50,8 @@ class Logger(threading.Thread):
 
     def log(self, message: str, level, **kwargs):
         now = datetime.now()
+        if level == 'DEBUG' and self.release:
+            return
 
         if 'traceback' in kwargs:
             call_stack = parse_traceback(kwargs['traceback'],
