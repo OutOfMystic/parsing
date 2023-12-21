@@ -53,8 +53,10 @@ class ScheduledExecutor(threading.Thread):
             self._stats.clear()
 
     def _step(self):
-        bisection = self._tasks.bisect_left(-time.time())
+        bisection = self._tasks.bisect_right(-time.time())
         sliced = len(self._tasks) - bisection
+        if sliced:
+            logger.info('Slice data', len(self._tasks), bisection)
         if not sliced:
             time.sleep(0.2)
         for _ in range(sliced):
