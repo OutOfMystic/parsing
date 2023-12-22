@@ -21,6 +21,10 @@ from . import extension
 
 class ProxyWebDriver(webdriver.Chrome):
     def __init__(self, options=None, **kwargs):
+        script_directory = os.path.dirname(os.path.abspath(__file__))
+        main_directory = os.path.dirname(script_directory)
+        # Создаем относительный путь к chromedriver.exe
+        chromedriver_path = os.path.join(main_directory, 'working_directory', 'chromedriver.exe')
         # Unpacking initial keyword arguments
         self.proxy = kwargs.get('proxy', None)
         self.tab = kwargs.get('tab', 0)
@@ -31,7 +35,7 @@ class ProxyWebDriver(webdriver.Chrome):
         self.headers_to_add = kwargs.get('headers_to_add', {})
         self.blocked_hosts = kwargs.get('blocked_hosts', default_blocked_hosts)
         big_theatre_id = kwargs.get('id_profile', None)
-        self.service = Service()
+        self.service = Service(executable_path=chromedriver_path)
         # Formatting scripts for an extension
         background_js = ''
         if self.proxy is not None:
@@ -58,7 +62,7 @@ class ProxyWebDriver(webdriver.Chrome):
         elif options:
             chrome_options = options
         chrome_options.add_argument(f'--user-agent={self.user_agent}')
-        chrome_options.binary_location = r'C:\Users\Administrator\Desktop\parsing-fwk\chromedriver.exe'
+        chrome_options.binary_location = chromedriver_path
         if self.blocked_hosts:
             stringed_rules = [f'MAP {host} 127.0.0.1' for host in self.blocked_hosts]
             to_args = ', '.join(stringed_rules)
