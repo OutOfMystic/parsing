@@ -52,10 +52,17 @@ class ScheduledExecutor(threading.Thread):
                 # writer.writerows(self._stats)
             self._stats.clear()
 
+    @staticmethod
+    def get_key(key):
+        key = str(key)
+        ppos = key.index('.')
+        return float(key[ppos-4:ppos+2])
+
     def _step(self):
         bisection = self._tasks.bisect_right(-time.time())
         sliced = len(self._tasks) - bisection
-        logger.debug('Slice data', len(self._tasks), bisection, sliced, -time.time(), list(self._tasks.keys()))
+        logger.debug(len(self._tasks), bisection, sliced, self.get_key(time.time()),
+                     list(self.get_key(key) for key in self._tasks.keys()))
         if not sliced:
             time.sleep(0.2)
         for _ in range(sliced):
