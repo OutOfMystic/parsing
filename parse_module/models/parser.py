@@ -35,6 +35,9 @@ class ParserBase(core.Bot, ABC):
         else:
             self._notifier = notifier
 
+    def detach_notifier(self):
+        self._notifier = None
+
     def trigger_notifier(self):
         notifier = self._notifier
         if notifier:
