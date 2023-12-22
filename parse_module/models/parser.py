@@ -1,3 +1,4 @@
+import time
 import weakref
 from abc import abstractmethod, ABC
 from urllib.parse import urlparse
@@ -27,7 +28,7 @@ class ParserBase(core.Bot, ABC):
             self.controller.proxy_hub.report(self.proxy_check, self.proxy)
         self.proxy = self.controller.proxy_hub.get(self.proxy_check)
         if not self.proxy:
-            raise ProxyHubError(f'No proxy for {self.name}!')
+            raise ProxyHubError(f'No proxy!')
 
     def set_notifier(self, notifier):
         if self._notifier:
@@ -44,6 +45,7 @@ class ParserBase(core.Bot, ABC):
             notifier.proceed()
 
     def proceed(self):
+        start_time = time.time()
         next_step_delay = 120
         if self.proxy is None:
             self.change_proxy()
@@ -61,6 +63,7 @@ class ParserBase(core.Bot, ABC):
         if self._terminator.alive:
             task = pooling.Task(self.proceed, self.name, next_step_delay)
             self.controller.pool.add(task)
+        logger.debug('Success', self.name, int((time.time() - start_time) * 10) / 10)
 
     def start(self):
         task = pooling.Task(self.proceed, self.name, 0)
