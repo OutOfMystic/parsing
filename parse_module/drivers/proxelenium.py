@@ -23,8 +23,10 @@ class ProxyWebDriver(webdriver.Chrome):
     def __init__(self, options=None, **kwargs):
         script_directory = os.path.dirname(os.path.abspath(__file__))
         main_directory = os.path.dirname(script_directory)
+        main_directory = os.path.dirname(main_directory)
         # Создаем относительный путь к chromedriver.exe
         chromedriver_path = os.path.join(main_directory, 'working_directory', 'chromedriver.exe')
+        #must_be_chromedriver_path = r'C:\Users\Administrator\Desktop\parsing\working_directory\chromedriver.exe'
         # Unpacking initial keyword arguments
         self.proxy = kwargs.get('proxy', None)
         self.tab = kwargs.get('tab', 0)
@@ -62,7 +64,6 @@ class ProxyWebDriver(webdriver.Chrome):
         elif options:
             chrome_options = options
         chrome_options.add_argument(f'--user-agent={self.user_agent}')
-        chrome_options.binary_location = chromedriver_path
         if self.blocked_hosts:
             stringed_rules = [f'MAP {host} 127.0.0.1' for host in self.blocked_hosts]
             to_args = ', '.join(stringed_rules)
