@@ -177,3 +177,4 @@ afisha_exporter/result.json
 
 # Allow
 !afisha_exporter/.env
+/working_directory/

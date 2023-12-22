@@ -263,7 +263,6 @@ class Controller(threading.Thread):
         for parsing_name, event_parser in event_parsers_to_add.items():
             notifier_data = events_to_load_names[parsing_name]
             notifier = from_parsing.EventNotifier(self, event_parser, **notifier_data)
-            notifier.start()
             self.bprint(f'Event-Notifier for {event_parser.name}'
                         f' was attached to the parser')
             self.event_notifiers.append(notifier)
@@ -297,7 +296,6 @@ class Controller(threading.Thread):
             notifier_data = seats_to_load_names[event_id]
             notifier = from_parsing.SeatsNotifier(self, seats_parser, name=seats_parser.name,
                                                   **notifier_data)
-            notifier.start()
             self.bprint(f'Seats-Notifier for {seats_parser.parent} ({seats_parser.name}) '
                         f'was attached to the parser')
             self.seats_notifiers.append(notifier)

@@ -1,5 +1,3 @@
-import threading
-import weakref
 from abc import ABC
 from typing import Union, Iterable
 
@@ -36,6 +34,10 @@ class ParsingNotifier(Notifier, ABC):
         self.parser.set_notifier(self)
         if self.parser.last_state is not None and self.parser.error_timer == float('inf'):
             self.body(with_state=self.parser.last_state)
+
+    def stop(self):
+        self.parser.detach_notifier()
+        super().stop()
 
 
 class EventNotifier(ParsingNotifier, ABC):
