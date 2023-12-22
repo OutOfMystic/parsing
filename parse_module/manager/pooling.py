@@ -55,8 +55,7 @@ class ScheduledExecutor(threading.Thread):
     def _step(self):
         bisection = self._tasks.bisect_right(-time.time())
         sliced = len(self._tasks) - bisection
-        if sliced:
-            logger.info('Slice data', len(self._tasks), bisection)
+        logger.debug('Slice data', len(self._tasks), bisection, sliced, -time.time(), list(self._tasks.keys()))
         if not sliced:
             time.sleep(0.2)
         for _ in range(sliced):
@@ -73,6 +72,7 @@ class ScheduledExecutor(threading.Thread):
                 continue
             result = result_callback.apply_result.get()
             to_del.append(i)
+            logger.debug(-int(-time.time() - result_callback.scheduled_time))
             self._add_stats(result_callback.scheduled_time)
             if isinstance(result, Task):
                 self.add(result)

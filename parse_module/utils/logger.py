@@ -260,16 +260,22 @@ def get_current_stack(ignore_files=None, drop_path_level=0):
             return "--Callstack cannot be traced--"
 
 
-def parse_traceback(traceback_string, ignore_files=None, drop_path_level=0):
+def parse_traceback(traceback_string, ignore_files=None,
+                    drop_path_level=0, project_name='parsing'):
     if ignore_files is None:
         ignore_files = []
-    matches = re.findall(r'File "([^"]*\\working_directory[^"]+)", line (\d+), in (\w+)\n', traceback_string)
+    matches = re.findall(rf'File "([^"]*\\working_directory[^"]+)", line (\d+), in (\w+)\n', traceback_string)
     not_mult_matches = [match for match in matches if 'multi_try.py' not in match]
+    if not matches:
+        matches = re.findall(r'File "([^"]*\\parse_module[^"]+)", line (\d+), in (\w+)\n', traceback_string)
+        not_mult_matches = [match for match in matches if 'multi_try.py' not in match]
     if not matches:
         return get_current_stack(ignore_files=ignore_files, drop_path_level=drop_path_level)
     file_path, line_number, func_name = not_mult_matches[-1]
-    file_path = file_path.split('parsing', 1)[-1]
-    file_path_prep= file_path.replace('\\', '.').replace('/', '.')
+    file_path = file_path.split(project_name, 1)[-1]
+    if file_path.endswith('.py'):
+        file_path = file_path[:-3]
+    file_path_prep = file_path.replace('\\', '.').replace('/', '.')
     file_parts = file_path_prep.split('.')[1 + drop_path_level:]
     file_path_formatted = '.'.join(file_parts)
     return f'(Traceback) {file_path_formatted}.{func_name}:{line_number}'
