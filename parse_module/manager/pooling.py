@@ -55,6 +55,7 @@ class ScheduledExecutor(threading.Thread):
     def _step(self):
         bisection = self._tasks.bisect_right(-time.time())
         sliced = len(self._tasks) - bisection
+        logger.debug('Slice data', len(self._tasks), bisection, sliced, -time.time(), list(self._tasks.keys()))
         if not sliced:
             time.sleep(0.2)
         for _ in range(sliced):
