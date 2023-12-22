@@ -1,4 +1,3 @@
-import threading
 import weakref
 from abc import abstractmethod, ABC
 from urllib.parse import urlparse
@@ -20,8 +19,7 @@ class ParserBase(core.Bot, ABC):
         self.controller = controller
         self.session = None
         self.last_state = None
-        self._notifier_event = None
-        self._notifier_locker = None
+        self._notifier = None
         self.proxy = self.controller.proxy_hub.get(self.proxy_check)
 
     def change_proxy(self, report=False):
@@ -31,22 +29,16 @@ class ParserBase(core.Bot, ABC):
         if not self.proxy:
             raise ProxyHubError(f'No proxy for {self.name}!')
 
-    def set_notifier(self, event: threading.Event, locker: threading.Event):
-        if self._notifier_event:
+    def set_notifier(self, notifier):
+        if self._notifier:
             self.error(f'Notifier for parser {self.name} has already been set. Refused.')
         else:
-            self._notifier_event = event
-            self._notifier_locker = locker
-
-    def detach_notifier(self):
-        if self._notifier_event:
-            self._notifier_event = None
-            self._notifier_locker = None
+            self._notifier = notifier
 
     def trigger_notifier(self):
-        if self._notifier_event:
-            self._notifier_event.set()
-            self._notifier_locker.wait(timeout=10)
+        notifier = self._notifier
+        if notifier:
+            notifier.proceed()
 
     def proceed(self):
         next_step_delay = 120

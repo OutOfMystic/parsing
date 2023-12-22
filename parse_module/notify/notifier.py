@@ -1,8 +1,6 @@
 import json
 import os
-import threading
 import time
-import weakref
 from abc import ABC
 from typing import Union, Iterable
 
@@ -152,7 +150,7 @@ class Notifier(ThreadedBot, ABC):
         ``dict`` is more preferred than ``list``,
         ``list`` is more preferred than ``bool``
 
-        NEVER INSPECT THE CODE!!!
+        NEVER INSPECT THE CODE!!! ТУТ СТРАШНО
         """
 
         if comments is None:

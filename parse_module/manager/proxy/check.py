@@ -3,8 +3,7 @@ import time
 
 from requests.exceptions import ProxyError
 
-from ...utils import provision, utils
-from .instances import UniProxy
+from ...utils import provision
 from ...utils.logger import logger
 
 CHECK_DELAY = 2 * 60 * 60
