@@ -182,8 +182,7 @@ class SeatsParser(ParserBase, ABC):
             'Wrong seats data format, should be iterable'
         lower_sectors = (sector.lower() for sector in self.scheme.sectors)
         if sector_name.lower() not in lower_sectors:
-            mes = f"Sector '{sector_name}' wasn\'t found on the scheme, being ignored!\n" \
-                  f"Parser: {self.__class__.__name__}. URL: {self.url}"
+            mes = f"Sector '{sector_name}' wasn\'t found on the scheme! {self.url}"
             if hasattr(self, 'venue'):
                 mes += f' {self.venue}'
             self.warning(mes)
@@ -234,8 +233,7 @@ class SeatsParser(ParserBase, ABC):
         """
         lower_sectors = (sector.lower() for sector in self.scheme.dancefloors)
         if sector_name.lower() not in lower_sectors:
-            mes = f"Dance floor sector '{sector_name}' wasn\'t found " \
-                  f"on the scheme, being ignored!"
+            mes = f"Dance floor sector '{sector_name}' wasn\'t found on the scheme! {self.url}"
             self.bprint(mes, color=utils.Fore.YELLOW)
         if sector_name in self.parsed_dancefloors:
             raise ParsingError(f'Sector name {sector_name} is already registered')
