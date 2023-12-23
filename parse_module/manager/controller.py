@@ -30,7 +30,7 @@ class Controller(threading.Thread):
     def __init__(self,
                  parsers_path,
                  config_path,
-                 pending_delay=20,
+                 pending_delay=120,
                  debug_url=None,
                  debug_event_id=None,
                  release=False):

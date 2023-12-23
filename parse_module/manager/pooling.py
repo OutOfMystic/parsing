@@ -45,7 +45,7 @@ class ScheduledExecutor(threading.Thread):
 
         self._stats_counter += 1
         self._stats.append(stat)
-        if self._stats_counter % 1 == 0:
+        if self._stats_counter % 20 == 0:
             with open('pooling_stats.csv', 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow(stat)
@@ -60,8 +60,8 @@ class ScheduledExecutor(threading.Thread):
 
     def _step(self):
         bisection = self._tasks.bisect_left(time.time())
-        logger.debug(len(self._tasks), len(self._results), bisection, self.get_key(time.time()),
-                     list(self.get_key(key) for key in self._tasks.keys())[:30])
+        # logger.debug(len(self._tasks), len(self._results), bisection, self.get_key(time.time()),
+        #              list(self.get_key(key) for key in self._tasks.keys())[:30])
         if not bisection:
             time.sleep(1)
         for _ in range(bisection):
@@ -91,7 +91,7 @@ class ScheduledExecutor(threading.Thread):
         to_del = []
         to_warn = []
         for timed, start_time in self._timers.items():
-            if timed not in self._tasks:
+            if timed not in self._results:
                 to_del.append(timed)
             else:
                 block_time = 600 if 'EventParser (' in timed.task.parser else 300
@@ -101,7 +101,7 @@ class ScheduledExecutor(threading.Thread):
             del self._timers[timed]
 
         if len(to_warn) == self.max_threads:
-            logger.critical('EXECUTION TOTALLY BLOCKED')
+            logger.critical('EXECUTION TOTALLY BLOCKED', name='Controller')
         else:
             for timed in to_warn:
                 logger.warning(f'Execution blocked. Check for input() or smth blocking the execution',
