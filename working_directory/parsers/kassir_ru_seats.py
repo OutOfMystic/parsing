@@ -1,24 +1,22 @@
-from typing import Optional, Union
 from time import sleep
 import re
-import json
 
 from bs4 import BeautifulSoup
-from requests.exceptions import ProxyError, ReadTimeout
 
-from parse_module.manager.proxy.check import SpecialConditions
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
-from parse_module.utils.parse_utils import double_split, lrsplit, decode_unicode_escape
-from parse_module.utils import utils
+from parse_module.utils.parse_utils import double_split
+
 
 
 class KassirParser(SeatsParser):
+    proxy_check = NormalConditions()
     event = 'kassir.ru'
     url_filter = lambda event: 'kassir.ru' in event and 'crocus2' not in event and 'frame' not in event \
                                and 'schematr' not in event \
                                and 'vtb-arena-tsentralnyiy-stadion-dinamo/rusalochka' not in event
-    proxy_check = SpecialConditions(url='https://kassir.ru/')
+    
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -1635,7 +1633,7 @@ class KassirParser(SeatsParser):
             self.warning(f'{count} {self.proxy.args}, {url}, {self.session.cookies} this IP is block')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = ProxySession(self)
-            sleep(5)
+            sleep(60)
             response = self.session.get(url, headers=self.new_headers)
             count -= 1
 
@@ -1677,7 +1675,6 @@ class KassirParser(SeatsParser):
     def body(self):
         list_to_reformat = ['Кремлёвский дворец', 'Театр «Современник»',
                             'Театр Сатиры', 'Казанский цирк', 'Театр Маяковского'] #venue will need to reformat 
-        
         if 'widget.kassir.ru' in self.url:
             self.id = self.url.split('=')[-1].strip()
             self.domain = re.search(r'(?<=domain\=)[\w\.]+(?=&)', self.url)[0].strip()
@@ -1685,13 +1682,12 @@ class KassirParser(SeatsParser):
             url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?widgetKey={KEY}&domain={self.domain}'
         else:
             url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?domain={self.domain}'
-
         try:
-            self.session.get(url=self.url, headers=self.headers)
+            self.session.get(url=self.url, headers=self.headers, timeout=10)
         except Exception as ex:
-            self.error(f'Cannot load {self.url} {ex}')
+            self.warning(f'Cannot load {self.url} {ex}')
         else:
-            self.debug(f'{self.url} load succes')
+            self.debug(f'load succes {self.url}')
 
         a_sectors = self.new_get_sectors(url)
         
