@@ -1,6 +1,7 @@
 import time
 import re
 
+import requests
 from requests.exceptions import JSONDecodeError, ProxyError
 from bs4 import BeautifulSoup
 

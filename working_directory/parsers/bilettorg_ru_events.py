@@ -109,6 +109,14 @@ class Bilettorg(EventParser):
                         ]]
                     ):
                         continue
+                elif 'вернадского' in event[4].lower():
+                    if any(
+                        [i in event[2] for i in [
+                            '23 Дек 2023 13:00'
+                        ]]
+                    ):
+                        continue
+                
                     
                 self.register_event(event[0], event[1], date=event[2], 
                                     scene=event[3], venue=event[4])

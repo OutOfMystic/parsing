@@ -1,9 +1,5 @@
-import threading
-import weakref
 from abc import ABC
 from typing import Union, Iterable
-
-from loguru import logger
 
 from .notifier import Notifier
 from ..models.parser import EventParser, SeatsParser
@@ -35,32 +31,13 @@ class ParsingNotifier(Notifier, ABC):
         if delay:
             self.parser.delay = delay
 
-        self._notifier_event = threading.Event()
-        self._notifier_locker = threading.Event()
-        self.parser.set_notifier(self._notifier_event, self._notifier_locker)
+        self.parser.set_notifier(self)
         if self.parser.last_state is not None and self.parser.error_timer == float('inf'):
             self.body(with_state=self.parser.last_state)
-        self.stop = weakref.finalize(self, self._finalize_notifier)
 
-    def _finalize_notifier(self):
-        super().stop()
+    def stop(self):
         self.parser.detach_notifier()
-
-    def on_many_exceptions(self):
-        self._notifier_event.clear()
-
-    def run_try(self):
-        self._notifier_event.wait()
-        try:
-            if not self.parser.stop.alive:
-                self.stop()
-            super().run_try()
-        except Exception as err:
-            raise err
-        finally:
-            self._notifier_event.clear()
-        if not self._terminator.alive:
-            return False
+        super().stop()
 
 
 class EventNotifier(ParsingNotifier, ABC):
@@ -73,14 +50,8 @@ class EventNotifier(ParsingNotifier, ABC):
 
     def body(self, with_state=None):
         skip_sending = False
-        try:
-            self._notifier_locker.set()
-            events_chosen = with_state if with_state is not None else self.parser.events
-            events_n_comments = {event_name: f'. **{date}**\n{url}' for event_name, url, date, _ in events_chosen}
-        except Exception as err:
-            raise err
-        finally:
-            self._notifier_locker.clear()
+        events_chosen = with_state if with_state is not None else self.parser.events
+        events_n_comments = {event_name: f'. **{date}**\n{url}' for event_name, url, date, _ in events_chosen}
         parsed_event_names = list(events_n_comments)
         total_mes = '\n  '.join(f'{key}{value}' for key, value in events_n_comments.items())
         total_len = len(self.parser.name) + len(total_mes) + len(self.parser.url) + 100
@@ -117,18 +88,12 @@ class SeatsNotifier(ParsingNotifier, ABC):
         self.event_id = event_id
 
     def body(self, with_state=None):
-        try:
-            self._notifier_locker.set()
-            if with_state is None:
-                parsed_sectors, parsed_dancefloors = self.parser.parsed_sectors, self.parser.parsed_dancefloors
-            else:
-                parsed_sectors, parsed_dancefloors = with_state
-            sectors_dict = {sector_name: len(seats) for sector_name, seats in parsed_sectors.items()}
-            dancefloors = [dancefloor for dancefloor, amount in parsed_dancefloors.items() if amount]
-        except Exception as err:
-            raise err
-        finally:
-            self._notifier_locker.clear()
+        if with_state is None:
+            parsed_sectors, parsed_dancefloors = self.parser.parsed_sectors, self.parser.parsed_dancefloors
+        else:
+            parsed_sectors, parsed_dancefloors = with_state
+        sectors_dict = {sector_name: len(seats) for sector_name, seats in parsed_sectors.items()}
+        dancefloors = [dancefloor for dancefloor, amount in parsed_dancefloors.items() if amount]
 
         parser_name = f'**{self.parser.name}** ({self.parser.parent})'
         self.change_ticket_state(parser_name + ' танцполы', dancefloors,

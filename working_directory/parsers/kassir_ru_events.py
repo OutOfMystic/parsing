@@ -1,19 +1,13 @@
-import json
-import locale
 from datetime import datetime
 from urllib.parse import urlparse
 
-from bs4 import BeautifulSoup
-
-from parse_module.manager.proxy.check import SpecialConditions
+from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
-from parse_module.utils.parse_utils import double_split
 from parse_module.manager.proxy.instances import ProxySession
-from parse_module.utils import utils
 
 
 class KassirParser(EventParser):
-    proxy_check = SpecialConditions(url='https://msk.kassir.ru/')
+    proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -170,12 +164,13 @@ class KassirParser(EventParser):
 
         a_events = []
         for url, venue_id in self.new_urls.items():
+            self.info('Kassir seats',url)
             try:
                 events = self.new_get_events(url)
                 all_dates = self.new_reformat_events(events)
                 a_events.extend(all_dates)
             except Exception as ex:
-                self.error(f'{ex}, {url} cannot load!')
+                self.warning(f'{ex}, {url} cannot load!')
                 raise
 
         for event in a_events:

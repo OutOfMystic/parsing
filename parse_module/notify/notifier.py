@@ -1,8 +1,6 @@
 import json
 import os
-import threading
 import time
-import weakref
 from abc import ABC
 from typing import Union, Iterable
 
@@ -10,7 +8,7 @@ import requests
 from loguru import logger
 
 from ..manager.backstage import tasker
-from ..manager.core import BotCore
+from ..manager.core import ThreadedBot
 from ..manager.proxy import check
 from ..manager.proxy.instances import UniProxy
 from ..manager.proxy.loader import ProxyHub
@@ -19,7 +17,7 @@ from ..utils import utils
 from ..utils.provision import try_open
 
 
-class Notifier(BotCore, ABC):
+class Notifier(ThreadedBot, ABC):
     proxy_check = check.NormalConditions()
 
     def __init__(self,
@@ -152,7 +150,7 @@ class Notifier(BotCore, ABC):
         ``dict`` is more preferred than ``list``,
         ``list`` is more preferred than ``bool``
 
-        NEVER INSPECT THE CODE!!!
+        NEVER INSPECT THE CODE!!! ТУТ СТРАШНО
         """
 
         if comments is None:

@@ -2,24 +2,23 @@ import os
 import time
 import random
 import weakref
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Callable, Iterable
 
 import requests
 import threading
 import statistics
 
-from . import user_agent
+from ..models import user_agent
 from ..utils import utils, parse_utils, provision
 from ..drivers.hrenium import HrenDriver
 from ..drivers.proxelenium import ProxyWebDriver
 from ..utils.logger import logger
 
 
-class BotCore(threading.Thread):
+class BotBase:
 
     def __init__(self, proxy=None):
-        super().__init__()
         self.delay = 30
         self.name = 'unnamed'
         self.proxy = proxy
@@ -33,6 +32,7 @@ class BotCore(threading.Thread):
         self.error_timer = float('inf')
         self.step = 0
         self.driver = None
+        self.fully_inited = False
         self._terminator = weakref.finalize(self, self._finalize)
 
     def __str__(self):
@@ -63,7 +63,7 @@ class BotCore(threading.Thread):
 
     def threading_try(self,
                       to_try: Callable,
-                      to_except: Callable = None,
+                      handle_error: Callable = None,
                       tries=3,
                       raise_exc=True,
                       args: Iterable = None,
@@ -80,7 +80,7 @@ class BotCore(threading.Thread):
         object as argument and handle it
         """
         kwargs = {
-            'to_except': to_except,
+            'handle_error': handle_error,
             'tries': tries,
             'args': args,
             'kwargs': kwargs,
@@ -94,7 +94,7 @@ class BotCore(threading.Thread):
 
     def multi_try(self,
                   to_try: Callable,
-                  to_except: Callable = None,
+                  handle_error: Callable = None,
                   tries=3,
                   raise_exc=True,
                   args: Iterable = None,
@@ -104,12 +104,12 @@ class BotCore(threading.Thread):
         """
         Try to execute smth ``tries`` times.
         If all attempts are unsuccessful and ``raise_exc``
-        is True, raise an exception. ``to_except`` is called
+        is True, raise an exception. ``handle_error`` is called
         every time attempt was not succeeded.
 
         Args:
             to_try: main function
-            to_except: called if attempt was not succeeded
+            handle_error: called if attempt was not succeeded
             tries: number of attempts to execute ``to_try``
             args: arguments sent to ``to_try``
             kwargs: keyword arguments sent to ``to_try``
@@ -123,7 +123,7 @@ class BotCore(threading.Thread):
         """
         return provision.multi_try(to_try,
                                    name=self.name,
-                                   to_except=to_except,
+                                   handle_error=handle_error,
                                    tries=tries,
                                    args=args,
                                    kwargs=kwargs,
@@ -184,24 +184,20 @@ class BotCore(threading.Thread):
             self.error(f'Except on exception: {error}')
         time.sleep(1)
 
-    def run(self):
-        self.step = 0
+    def proceed(self):
+        if self.step % self.step_counter == 0 and self.step:
+            self.bprint('Проход номер ' + str(self.step))
+        result = provision.multi_try(self.run_try, handle_error=self.run_except,
+                                     name=self.name, tries=self.max_tries, raise_exc=False)
+        self.step += 1
+        if result is provision.TryError and self._terminator.alive:
+            provision.multi_try(self.on_many_exceptions, name=self.name, tries=1, raise_exc=False)
+
+    def inthread_init(self):
         if self.driver_source:
             self.driver = self.driver_source()
         self.before_body()
-        while True:
-            if not self._terminator.alive:
-                self._process_termination()
-                break
-            if self.step % self.step_counter == 0 and self.step:
-                self.bprint('Проход номер ' + str(self.step))
-            result = provision.multi_try(self.run_try, to_except=self.run_except,
-                                         name=self.name, tries=self.max_tries, raise_exc=False)
-            self.step += 1
-            if result == provision.TryError and self._terminator.alive:
-                self.on_many_exceptions()
-            delay = get_delay(self.delay)
-            time.sleep(delay)
+        self.fully_inited = True
 
     def change_proxy(self, report=False):
         return
@@ -242,6 +238,35 @@ class BotCore(threading.Thread):
     def success(self, *messages, **parameters):
         message = ' '.join(str(arg) for arg in messages)
         logger.success(message, name=self.name, **parameters)
+
+
+class Bot(BotBase, ABC):
+    def __init__(self, proxy=None, skip_postinit=False):
+        super().__init__(proxy=proxy)
+        if not skip_postinit:
+            self.inthread_init()
+
+    def get_delay(self):
+        return get_delay(self.delay)
+
+    def stop(self):
+        super().stop()
+        self._process_termination()
+
+
+class ThreadedBot(threading.Thread, BotBase, ABC):
+    def __init__(self, proxy=None):
+        super().__init__(proxy=proxy)
+
+    def run(self):
+        self.inthread_init()
+        while True:
+            if not self._terminator.alive:
+                self._process_termination()
+                return
+            self.proceed()
+            delay = get_delay(self.delay)
+            time.sleep(delay)
 
 
 def download(url, filename=None, session=None, save=True, **kwargs):

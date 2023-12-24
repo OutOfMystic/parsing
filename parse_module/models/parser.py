@@ -1,53 +1,73 @@
-import threading
+import time
 import weakref
 from abc import abstractmethod, ABC
 from urllib.parse import urlparse
 
-from ..manager import core
+from ..manager import core, pooling
 from ..connection import db_manager
 from ..manager.proxy import check
 from ..utils import utils
 from ..utils.date import Date
-from ..utils.exceptions import ParsingError
+from ..utils.exceptions import ParsingError, ProxyHubError
 from ..utils.logger import logger
 
 
-class ParserBase(core.BotCore, ABC):
+class ParserBase(core.Bot, ABC):
     proxy_check = check.NormalConditions()
 
     def __init__(self, controller):
-        super().__init__()
+        super().__init__(skip_postinit=True)
         self.controller = controller
         self.session = None
         self.last_state = None
-        self._notifier_event = None
-        self._notifier_locker = None
+        self._notifier = None
+        self.proxy = self.controller.proxy_hub.get(self.proxy_check)
 
     def change_proxy(self, report=False):
         if report:
             self.controller.proxy_hub.report(self.proxy_check, self.proxy)
         self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+        if not self.proxy:
+            raise ProxyHubError(f'No proxy!')
 
-    def set_notifier(self, event: threading.Event, locker: threading.Event):
-        if self._notifier_event:
+    def set_notifier(self, notifier):
+        if self._notifier:
             self.error(f'Notifier for parser {self.name} has already been set. Refused.')
         else:
-            self._notifier_event = event
-            self._notifier_locker = locker
+            self._notifier = notifier
 
     def detach_notifier(self):
-        if self._notifier_event:
-            self._notifier_event = None
-            self._notifier_locker = None
+        self._notifier = None
 
     def trigger_notifier(self):
-        if self._notifier_event:
-            self._notifier_event.set()
-            self._notifier_locker.wait(timeout=10)
+        notifier = self._notifier
+        if notifier:
+            notifier.proceed()
 
-    def run(self):
-        self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-        super().run()
+    def proceed(self):
+        start_time = time.time()
+        next_step_delay = 120
+        if self.proxy is None:
+            self.change_proxy()
+
+        if self.proxy is not None:
+            next_step_delay = self.get_delay()
+            if not self.fully_inited:
+                if self.driver:
+                    self.driver.quit()
+                    self.driver = None
+                self.inthread_init()
+            if self.fully_inited:
+                super().proceed()
+
+        if self._terminator.alive:
+            task = pooling.Task(self.proceed, self.name, next_step_delay)
+            self.controller.pool.add(task)
+        logger.debug('Success', self.name, int((time.time() - start_time) * 10) / 10)
+
+    def start(self):
+        task = pooling.Task(self.proceed, self.name, 0)
+        self.controller.pool.add(task)
 
 
 class EventParser(ParserBase, ABC):
@@ -160,8 +180,7 @@ class SeatsParser(ParserBase, ABC):
             'Wrong seats data format, should be iterable'
         lower_sectors = (sector.lower() for sector in self.scheme.sectors)
         if sector_name.lower() not in lower_sectors:
-            mes = f"Sector '{sector_name}' wasn\'t found on the scheme, being ignored!\n" \
-                  f"Parser: {self.__class__.__name__}. URL: {self.url}"
+            mes = f"Sector '{sector_name}' wasn\'t found on the scheme! {self.url}"
             if hasattr(self, 'venue'):
                 mes += f' {self.venue}'
             self.warning(mes)
@@ -212,8 +231,7 @@ class SeatsParser(ParserBase, ABC):
         """
         lower_sectors = (sector.lower() for sector in self.scheme.dancefloors)
         if sector_name.lower() not in lower_sectors:
-            mes = f"Dance floor sector '{sector_name}' wasn\'t found " \
-                  f"on the scheme, being ignored!"
+            mes = f"Dance floor sector '{sector_name}' wasn\'t found on the scheme! {self.url}"
             self.bprint(mes, color=utils.Fore.YELLOW)
         if sector_name in self.parsed_dancefloors:
             raise ParsingError(f'Sector name {sector_name} is already registered')

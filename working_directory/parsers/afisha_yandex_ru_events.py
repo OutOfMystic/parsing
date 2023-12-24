@@ -411,7 +411,7 @@ class YandexAfishaParser(EventParser):
         )
         img_captha_href = img_captha.get_attribute('src')
 
-        img_captha_order = driver.find_element(By.CSS_SELECTOR, value='div.AdvancedCaptcha-SilhouetteTask canvas')
+        img_captha_order = driver.find_element(By.CSS_SELECTOR, value='div.AdvancedCaptcha-SilhouetteTask')
         img_captha_order.screenshot('afisha_catcha_order.png')
 
         textinstructions = driver.find_element(By.CSS_SELECTOR, value='span.Text').text
@@ -867,6 +867,7 @@ class YandexAfishaParser(EventParser):
 
         # places = self.get_places()
         for url in self.our_urls:
+            # self.info(url, 'yandex Events')
             client_key, request_id, dates = self.place_request(url)
             venue = self.place['title']
             if url == 'https://afisha.yandex.ru/kazan/circus_show/places/tsirk-kazan':

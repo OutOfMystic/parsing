@@ -26,9 +26,11 @@ class ProxyOnCondition:
                 self.proxies = [UniProxy(proxy) for proxy in from_data['proxies']]
                 self.plen = len(self.proxies)
                 self.last_update = from_data['timestamp']
+                logger.info(f'Restored proxies for {self.condition.url} '
+                            f'({len(from_data["proxies"])})', name='Controller')
             else:
                 logger.warning(f'Refused loading proxies for {self.condition.url}. '
-                               f'Poor availability ({len(from_data["proxies"])})')
+                               f'Poor availability ({len(from_data["proxies"])})', name='Controller')
         self.update()
 
     def json(self):
@@ -52,26 +54,26 @@ class ProxyOnCondition:
             self.proxies.remove(proxy)
 
     def put(self, proxies):
+        self.last_update = time.time()
         self.proxies = proxies
         self.plen = len(proxies)
-        self.last_update = time.time()
         self.proxy_hub.save_states()
 
     def _wait(self):
         sleep_time = 0.1
-        while not self.plen:
+        while not self.last_update:
             sleep_time += 0.1
-            if sleep_time > 15:
-                if sleep_time % 2 == 0:
-                    logger.info(f'Waiting for proxy for {self.condition.url}',
-                                name='Controller')
             time.sleep(0.1)
 
     def get(self):
-        self._wait()
-        self.last_tab += 1
-        tab = self.last_tab % self.plen
-        return self.proxies[tab]
+        if not self.last_update:
+            self._wait()
+        if self.proxies:
+            self.last_tab += 1
+            tab = self.last_tab % self.plen
+            return self.proxies[tab]
+        else:
+            return None
 
     def get_all(self):
         self._wait()

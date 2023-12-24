@@ -1,9 +1,6 @@
-import ctypes
 import inspect
 import json
-import os
 import re
-import subprocess
 import sys
 import threading
 import time
@@ -21,7 +18,8 @@ class Logger(threading.Thread):
     def __init__(self, log_path='main.log',
                  release=True,
                  ignore_files=None,
-                 drop_path_level=0):
+                 drop_path_level=0,
+                 test=False):
         super().__init__()
 
         if ignore_files is None:
@@ -39,6 +37,7 @@ class Logger(threading.Thread):
         self.drop_path_level = drop_path_level
         self.source_filter = None
         self.level_filter = None
+        self.test = test
 
         self._buffer = []
         self._debug_buffer = []
@@ -46,10 +45,13 @@ class Logger(threading.Thread):
         self._print_locker = False
 
         self.start()
-        self.info('Logger started', name='Controller')
+        if not test:
+            self.info('Logger started', name='Controller')
 
     def log(self, message: str, level, **kwargs):
         now = datetime.now()
+        if level == 'DEBUG' and self.release:
+            return
 
         if 'traceback' in kwargs:
             call_stack = parse_traceback(kwargs['traceback'],
@@ -163,11 +165,10 @@ class Logger(threading.Thread):
     def send_logs(self):
         logs = self._buffer
         self._buffer = []
-        # jsoned = ''.join(json.dumps(log, ensure_ascii=False, separators=(',', ':')) + '\n'
-        #                  for log in logs)
-        jsoned = '\n'.join(' - '.join(str(value) for value in log.values()) for log in logs)
+        jsoned = ''.join(json.dumps(log, ensure_ascii=False, separators=(',', ':')) + '\n'
+                         for log in logs)
         with open(self.log_path, 'a', encoding='utf-8') as fp:
-            fp.write(jsoned + '\n')
+            fp.write(jsoned)
         del logs
 
         logs = self._debug_buffer
@@ -187,10 +188,12 @@ class Logger(threading.Thread):
         rows = []
         self.pause()
         with open(self.log_path, 'r', encoding='utf-8') as file:
+            file.seek(0, 2)
+            file_size = file.tell()
+            start_pos = max(0, file_size - 2 * 1024 * 1024)
+            file.seek(start_pos)
             lines = file.readlines()
             for line in lines:
-                if not line:
-                    continue
                 rows.append(line)
                 if '"message":"Logger started"' in line:
                     rows.clear()
@@ -198,8 +201,11 @@ class Logger(threading.Thread):
 
         start_time = time.time()
         for row in rows:
-            log = json.loads(row)
-            self.filter_and_print(log)
+            try:
+                log = json.loads(row)
+                self.filter_and_print(log)
+            except Exception as err:
+                self.warning(f'Lost log: {err}')
         print(time.time() - start_time)
 
         start_time = time.time()
@@ -211,8 +217,11 @@ class Logger(threading.Thread):
 
     def resume(self):
         while self._stub_buffer:
-            log = self._stub_buffer.pop(0)
-            self.filter_and_print(log)
+            try:
+                log = self._stub_buffer.pop(0)
+                self.filter_and_print(log)
+            except Exception as err:
+                self.warning(f'Lost log: {err}')
         self._print_locker = False
 
     def run(self):
@@ -245,19 +254,28 @@ def get_current_stack(ignore_files=None, drop_path_level=0):
     try:
         return str_calls[3]
     except:
-        return "Callstack cannot be traced"
+        try:
+            return str_calls[-1]
+        except:
+            return "--Callstack cannot be traced--"
 
 
-def parse_traceback(traceback_string, ignore_files=None, drop_path_level=0):
+def parse_traceback(traceback_string, ignore_files=None,
+                    drop_path_level=0, project_name='parsing'):
     if ignore_files is None:
         ignore_files = []
-    matches = re.findall(r'File "([^"]*\\working_directory[^"]+)", line (\d+), in (\w+)\n', traceback_string)
+    matches = re.findall(rf'File "([^"]*\\working_directory[^"]+)", line (\d+), in (\w+)\n', traceback_string)
     not_mult_matches = [match for match in matches if 'multi_try.py' not in match]
+    if not matches:
+        matches = re.findall(r'File "([^"]*\\parse_module[^"]+)", line (\d+), in (\w+)\n', traceback_string)
+        not_mult_matches = [match for match in matches if 'multi_try.py' not in match]
     if not matches:
         return get_current_stack(ignore_files=ignore_files, drop_path_level=drop_path_level)
     file_path, line_number, func_name = not_mult_matches[-1]
-    file_path = file_path.split('parsing', 1)[-1]
-    file_path_prep= file_path.replace('\\', '.').replace('/', '.')
+    file_path = file_path.split(project_name, 1)[-1]
+    if file_path.endswith('.py'):
+        file_path = file_path[:-3]
+    file_path_prep = file_path.replace('\\', '.').replace('/', '.')
     file_parts = file_path_prep.split('.')[1 + drop_path_level:]
     file_path_formatted = '.'.join(file_parts)
     return f'(Traceback) {file_path_formatted}.{func_name}:{line_number}'
@@ -272,4 +290,4 @@ COLORS = {
     'SUCCESS': Fore.GREEN
 }
 colors_reversed = {value: key for key, value in COLORS.items()}
-logger = Logger(release='release' in sys.argv, drop_path_level=1)
+logger = Logger(release='release' in sys.argv, drop_path_level=1, test=True)

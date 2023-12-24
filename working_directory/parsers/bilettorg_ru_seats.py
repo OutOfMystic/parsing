@@ -1,7 +1,10 @@
+import re
+
+from bs4 import BeautifulSoup
+
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession
-from bs4 import BeautifulSoup
 from parse_module.utils.parse_utils import double_split
 
 
@@ -642,6 +645,25 @@ class Bilettorg(SeatsParser):
             
         return new_a_sectors
 
+    @staticmethod
+    def reformat_maly(a_sectors):
+        new_a_sectors = []
+        for event in a_sectors:
+            name = event['name']
+
+            if 'балкон' in event['name'].lower():
+                number = re.search(r'\d+(?=\-ого)', event['name'])[0]
+                if number == '1':
+                    name = f"Балкон первого яруса"
+                elif number == '2':
+                    name = f"Балкон второго яруса"
+
+            new_a_sectors.append({
+                    'name': name,
+                    'tickets': event['tickets']
+                })
+        return new_a_sectors
+
 
     def parse_seats(self):
         total_sector = []
@@ -661,17 +683,20 @@ class Bilettorg(SeatsParser):
             list_double_sectors = []
             data_in_sector_name = sector_name.replace(',', '').split()
             if 'балкон' in data_in_sector_name:
-                number_level = double_split(sector_name, ', ', '-й')
-                if 'ПС' in data_in_sector_name:
-                    sector_name = f'Балкон {number_level} яруса Правая сторона'
-                elif 'ЛС' in data_in_sector_name:
-                    sector_name = f'Балкон {number_level} яруса Левая сторона'
-                else:
-                    if '4' == str(number_level):
-                        list_double_sectors.append(f'Балкон {number_level} яруса Левая сторона')
+                try:
+                    number_level = double_split(sector_name, ', ', '-й')
+                    if 'ПС' in data_in_sector_name:
                         sector_name = f'Балкон {number_level} яруса Правая сторона'
+                    elif 'ЛС' in data_in_sector_name:
+                        sector_name = f'Балкон {number_level} яруса Левая сторона'
                     else:
-                        sector_name = f'Балкон {number_level} яруса'
+                        if '4' == str(number_level):
+                            list_double_sectors.append(f'Балкон {number_level} яруса Левая сторона')
+                            sector_name = f'Балкон {number_level} яруса Правая сторона'
+                        else:
+                            sector_name = f'Балкон {number_level} яруса'
+                except:
+                    ...
             elif 'бельэтажа' in data_in_sector_name:
                 number_level = double_split(sector_name, 'бельэтажа ', ',')
                 if 'ПС' in data_in_sector_name:
@@ -762,6 +787,8 @@ class Bilettorg(SeatsParser):
             a_sectors = self.reformat_stanislavskii(a_sectors)
         elif 'Российский Молодежный театр' in self.venue:
             a_sectors = self.reformat_ramt(a_sectors)
+        elif 'Малый театр России' in self.venue:
+            a_sectors = self.reformat_maly(a_sectors)
         
         for sector in a_sectors:
             self.register_sector(sector['name'], sector['tickets'])

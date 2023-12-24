@@ -1,10 +1,7 @@
 import json
 import os
+import sys
 import time
-from http.cookiejar import CookieJar, Cookie
-
-import requests
-
 from parse_module.utils import utils
 import zipfile
 from pathlib import Path
@@ -14,15 +11,22 @@ from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+
 
 from .hrenium import default_user_agent
 from ..utils import parse_utils
 from . import extension
-from ..utils.logger import logger
 
 
 class ProxyWebDriver(webdriver.Chrome):
-    def __init__(self, chrome_options=None, **kwargs):
+    def __init__(self, options=None, **kwargs):
+        script_directory = os.path.dirname(os.path.abspath(__file__))
+        main_directory = os.path.dirname(script_directory)
+        main_directory = os.path.dirname(main_directory)
+        # Создаем относительный путь к chromedriver.exe
+        chromedriver_path = os.path.join(main_directory, 'working_directory', 'chromedriver.exe')
+        #must_be_chromedriver_path = r'C:\Users\Administrator\Desktop\parsing\working_directory\chromedriver.exe'
         # Unpacking initial keyword arguments
         self.proxy = kwargs.get('proxy', None)
         self.tab = kwargs.get('tab', 0)
@@ -32,8 +36,8 @@ class ProxyWebDriver(webdriver.Chrome):
         self.listen_request_headers = kwargs.get('listen_request_headers', False)
         self.headers_to_add = kwargs.get('headers_to_add', {})
         self.blocked_hosts = kwargs.get('blocked_hosts', default_blocked_hosts)
-        id_profile = kwargs.get('id_profile', None)
-
+        big_theatre_id = kwargs.get('id_profile', None)
+        self.service = Service(executable_path=chromedriver_path)
         # Formatting scripts for an extension
         background_js = ''
         if self.proxy is not None:
@@ -55,8 +59,10 @@ class ProxyWebDriver(webdriver.Chrome):
         manifest_json = _manifest_listen if self.listen_responses else _manifest
 
         # Defining chrome options
-        if chrome_options is None:
+        if options is None:
             chrome_options = webdriver.ChromeOptions()
+        elif options:
+            chrome_options = options
         chrome_options.add_argument(f'--user-agent={self.user_agent}')
         if self.blocked_hosts:
             stringed_rules = [f'MAP {host} 127.0.0.1' for host in self.blocked_hosts]
@@ -64,10 +70,10 @@ class ProxyWebDriver(webdriver.Chrome):
             chrome_options.add_argument(f'--host-rules={to_args}')
 
         # Packing an extension
-        if background_js:
-            if id_profile:
+        if background_js and False:
+            if big_theatre_id:
                 base_dir = Path(__file__).resolve().parent.joinpath('data_to_big_theatre')
-                ext_file = base_dir.joinpath(f'ext_{self.proxy.schema}{id_profile}.zip')
+                ext_file = base_dir.joinpath(f'ext_{self.proxy.schema}{big_theatre_id}.zip')
             else:
                 ext_file = f'ext_{self.proxy.schema}.zip'
             with zipfile.ZipFile(ext_file, 'w') as zp:
@@ -82,23 +88,30 @@ class ProxyWebDriver(webdriver.Chrome):
         if alternative_win_bin is not None:
             chrome_options.binary_location = alternative_win_bin
 
-        if id_profile:
-            error = True
+        if big_theatre_id:
+            error = None
             count_error = 0
-            while error and count_error < 10:  # Ограничение количества попыток
+            from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+            caps = DesiredCapabilities.CHROME
+            caps['goog:loggingPrefs'] = {'performance': 'ALL'}
+            chrome_options.add_argument('--enable-logging')
+            chrome_options.add_argument('--v=1')
+            while error is not False:
                 try:
-                    super().__init__(ChromeDriverManager().install(), chrome_options=chrome_options)
-                    error = False  # Успешная инициализация
+                    super().__init__(service=self.service,options=chrome_options)
+                    if error is True and count_error >= 10:
+                        mes = f'error SessionNotCreatedException: id_profile №{kwargs.get("id_profile")} is complite'
+                        print(f'{utils.colorize(mes, utils.Fore.GREEN)}\n', end='')
+                    error = False
                 except SessionNotCreatedException:
+                    error = True
+                    if count_error >= 10:
+                        mes = f'error SessionNotCreatedException: id_profile №{kwargs.get("id_profile")}'
+                        print(f'{utils.colorize(mes, utils.Fore.RED)}\n', end='')
                     count_error += 1
                     time.sleep(3)
-
-            if count_error >= 10:
-                mes = f'SessionNotCreatedException: id_profile №{kwargs.get("id_profile")}'
-                logger.error(mes, name='Controller')
-
         else:
-            super().__init__(ChromeDriverManager().install(), chrome_options=chrome_options)
+            super().__init__(service=self.service, options=chrome_options)
 
     def expl_wait(self, by_what, value, condition='presence', wait_time=15):
         """
@@ -124,61 +137,6 @@ class ProxyWebDriver(webdriver.Chrome):
     def find_elements_by_class_names(self, value):
         xpath = parse_utils.class_names_to_xpath(value)
         return self.find_elements('xpath', xpath)
-
-
-def make_cookie(selenium_cookie):
-    return Cookie(
-        version=0,
-        name=selenium_cookie['name'],
-        value=selenium_cookie['value'],
-        port='80',
-        port_specified=False,
-        domain=selenium_cookie['domain'],
-        domain_specified=True,
-        domain_initial_dot=False,
-        path=selenium_cookie['path'],
-        path_specified=True,
-        secure=selenium_cookie['secure'],
-        expires=selenium_cookie['expiry'],
-        discard=False,
-        comment=None,
-        comment_url=None,
-        rest=None,
-        rfc2109=False
-    )
-
-
-def driver_to_session(driver, session=None):
-    driver_cookies = driver.get_cookies()
-    cookies = CookieJar()
-    for driver_cookie in driver_cookies:
-        cookie = make_cookie(driver_cookie)
-        cookies.set_cookie(cookie)
-
-    session = session if session else requests.Session()
-    session.cookies = cookies
-    return session
-
-
-def session_to_driver(session, driver_class=None):
-
-    current_session = session if session else requests.Session()
-    cookies_selenium = []
-    for cookie in current_session.cookies:
-        cookie_dict = {
-            "domain": cookie.domain,
-            "name": cookie.name,
-            "path": cookie.path,
-            "value": cookie.value
-        }
-        cookies_selenium.append(cookie_dict)
-
-    driver = driver_class() if driver_class else webdriver.Chrome()
-    driver.get('http://httpbin.org/ip')
-    driver.delete_all_cookies()
-    for cookie in cookies_selenium:
-        driver.add_cookie(cookie)
-    return driver
 
 
 def extension_content(filename):

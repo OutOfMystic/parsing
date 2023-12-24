@@ -21,21 +21,18 @@ class SchemeRouter:
     group_schemes = {}
     event_lockers = {}
 
-    def get_scheme(self, event_id, scheme_id, group_name):
+    def get_parser_scheme(self, event_id, scheme_id, name='Controller'):
         lock = self._get_lock(event_id)
-        return provision.multi_try(self._get_scheme, name=group_name,
-                                   to_except=lock.release, raise_exc=False,
-                                   tries=1, args=(event_id, scheme_id, lock))
-
-    def _get_scheme(self, event_id, scheme_id, lock):
-        lock.acquire()
-        group_scheme = self.get_group_scheme(scheme_id)
-        if event_id not in self.parser_schemes:
-            new_scheme = scheme.ParserScheme(group_scheme, event_id)
-            self.parser_schemes[event_id] = new_scheme
-        got_scheme = self.parser_schemes[event_id]
-        lock.release()
-        return got_scheme
+        try:
+            lock.acquire()
+            group_scheme = self.get_group_scheme(scheme_id)
+            if event_id not in self.parser_schemes:
+                new_scheme = scheme.ParserScheme(group_scheme, event_id, name)
+                self.parser_schemes[event_id] = new_scheme
+            got_scheme = self.parser_schemes[event_id]
+            return got_scheme
+        finally:
+            lock.release()
 
     def get_group_scheme(self, scheme_id):
         if scheme_id not in self.group_schemes:
@@ -43,7 +40,7 @@ class SchemeRouter:
             add_result = new_scheme.get_scheme()
             if add_result is False:
                 if not wait_until(lambda: scheme_id in self.group_schemes):
-                    logger.critical(f'Scheme distributiom corrupted! {scheme_id}', name='Controller')
+                    logger.critical(f'Scheme distribution corrupted! {scheme_id}', name='Controller')
                     self.group_schemes[scheme_id] = new_scheme
             else:
                 self.group_schemes[scheme_id] = new_scheme
@@ -71,7 +68,7 @@ class GroupRouter:
 
     def route_scheme(self, url, event_id, scheme_id):
         group = self.route_group(url, event_id)
-        return group.router.get_scheme(event_id, scheme_id)
+        return group.router.get_parser_scheme(event_id, scheme_id)
 
     def _assign(self, scheme_id, groups):
         self._assignments[scheme_id] = groups[0]

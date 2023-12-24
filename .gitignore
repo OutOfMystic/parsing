@@ -167,8 +167,7 @@ exec_tools/har_reader/requests_code.py
 exec_tools/order_exporter
 events_state.json
 
-working_directory/parsers.json
-working_directory/account_pickles/
+working_directory/
 my_bots/
 all_tickets/
 *.pkl
@@ -178,3 +177,4 @@ afisha_exporter/result.json
 
 # Allow
 !afisha_exporter/.env
+/working_directory/

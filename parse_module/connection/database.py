@@ -101,7 +101,7 @@ class DBConnection:
 
     def execute(self, request):
         return provision.multi_try(self.cursor_wrapper, args=('execute', request,),
-                                   to_except=self._connect_db, name='Controller',
+                                   handle_error=self._connect_db, name='Controller',
                                    multiplier=1.05, tries=5)
 
     def select(self, request):
@@ -117,12 +117,12 @@ class DBConnection:
 
     def fetchall(self):
         return provision.multi_try(self.cursor_wrapper, args=('fetchall',),
-                                   to_except=self._connect_db,
+                                   handle_error=self._connect_db,
                                    multiplier=1.05, tries=5, name='Controller')
 
     def commit(self):
         return provision.multi_try(self.connection_wrapper, args=('commit',),
-                                   to_except=self._connect_db,
+                                   handle_error=self._connect_db,
                                    multiplier=1.05, tries=5, name='Controller')
 
 
@@ -256,10 +256,10 @@ class ParsingDB(DBConnection):
                 else:
                     tickets[ticket_id] = (value, margin_func(value),)
         set_to_false, set_to_true, true_with_price = divide_tickets(tickets)
-        logger.debug(f'To False {len(set_to_false)}')
-        logger.debug(f'To True {len(set_to_true)}')
-        for price_and_sell_price, ticket_ids in true_with_price.items():
-            logger.debug(f'To True wth price {len(ticket_ids)} ({price_and_sell_price[1]})')
+        # logger.debug(f'To False {len(set_to_false)}')
+        # logger.debug(f'To True {len(set_to_true)}')
+        # for price_and_sell_price, ticket_ids in true_with_price.items():
+        #    logger.debug(f'To True wth price {len(ticket_ids)} ({price_and_sell_price[1]})')
         set_to_false_str = map(str, set_to_false)
         set_to_true_str = map(str, set_to_true)
         false_string = ", ".join(set_to_false_str)

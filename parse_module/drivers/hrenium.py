@@ -42,7 +42,6 @@ class HrenDriver:
             if not self.find_elements(by_what, obj):
                 raise RuntimeError('Element timeout exception')
         provision.multi_try(to_try, name=self.from_thread,
-                            to_except=provision.fpass,
                             tries=2, raise_exc=True,
                             print_errors=print_errors)
             

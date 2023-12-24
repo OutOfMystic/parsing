@@ -6,18 +6,18 @@ import random
 import threading
 import time
 
+from . import pooling
 from .inspect import run_inspection
 from .proxy import loader
 from .telecore import tele_core
-from ..connection.database import TableDict
-from ..models.ai_nlp.alias import EventAliases
+from ..connection import database
+from ..models.ai_nlp import alias, venue
 from ..models.ai_nlp.collect import cross_subject_object
-from ..models.ai_nlp.venue import VenueAliases
 from ..models.margin import MarginRules
 from parse_module.notify import from_parsing
 from ..models.parser import db_manager
 from ..models.parser import SeatsParser, EventParser
-from ..models.group import SeatsParserGroup
+from parse_module.manager.group import SeatsParserGroup
 from ..utils import provision, utils
 from ..utils.date import Date
 from ..utils.logger import logger
@@ -30,7 +30,7 @@ class Controller(threading.Thread):
     def __init__(self,
                  parsers_path,
                  config_path,
-                 pending_delay=20,
+                 pending_delay=120,
                  debug_url=None,
                  debug_event_id=None,
                  release=False):
@@ -51,14 +51,15 @@ class Controller(threading.Thread):
         self.seats_notifiers = []
         self.margins = {}
         self._events_were_reset = []
-        self._table_sites = TableDict(db_manager.get_site_names)
+        self._table_sites = database.TableDict(db_manager.get_site_names)
         self._already_warned_on_collect = set()
 
         self.console = run_inspection(release=True)
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
-        self.event_aliases = EventAliases(step=5)
+        self.event_aliases = alias.EventAliases(step=5)
         self.parsing_types = db_manager.get_parsing_types()
-        self.venues = VenueAliases()
+        self.venues = venue.VenueAliases()
+        self.pool = pooling.ScheduledExecutor(max_threads=40)
         self._load_parsers_with_config(config_path)
         self.fast_time = time.time()
 
@@ -198,6 +199,7 @@ class Controller(threading.Thread):
             for group in self.seats_groups:
                 if group.url_filter(connection['url']):
                     all_connections[group].append(connection)
+        event_ids = set(connection['event_id'] for connection in plain_dict_values(all_connections))
 
         if not self.debug:
             for group, connections in all_connections.items():
@@ -261,7 +263,6 @@ class Controller(threading.Thread):
         for parsing_name, event_parser in event_parsers_to_add.items():
             notifier_data = events_to_load_names[parsing_name]
             notifier = from_parsing.EventNotifier(self, event_parser, **notifier_data)
-            notifier.start()
             self.bprint(f'Event-Notifier for {event_parser.name}'
                         f' was attached to the parser')
             self.event_notifiers.append(notifier)
@@ -295,7 +296,6 @@ class Controller(threading.Thread):
             notifier_data = seats_to_load_names[event_id]
             notifier = from_parsing.SeatsNotifier(self, seats_parser, name=seats_parser.name,
                                                   **notifier_data)
-            notifier.start()
             self.bprint(f'Seats-Notifier for {seats_parser.parent} ({seats_parser.name}) '
                         f'was attached to the parser')
             self.seats_notifiers.append(notifier)
@@ -308,7 +308,7 @@ class Controller(threading.Thread):
         events_to_reset = all_event_ids - event_ids
 
         _, _, new_to_reset = differences(self._events_were_reset, events_to_reset)
-        logger.debug(f'{len(events_to_reset)} were reset')
+        logger.debug(f'{len(new_to_reset)} were reset')
         db_manager.reset_tickets(new_to_reset)
         self._events_were_reset = list(events_to_reset)
 
