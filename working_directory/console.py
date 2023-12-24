@@ -13,6 +13,9 @@
  - show
  - apply [condition] [expression]
 """
+import sys
+sys.path.append("/home/lon8/python/work/parsing/")
+
 from parse_module.connection import db_manager
 from parse_module.console.command import CustomPrompt
 

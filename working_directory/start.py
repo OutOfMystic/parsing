@@ -1,5 +1,6 @@
 import json
 import sys
+sys.path.append("/home/lon8/python/work/parsing/")
 
 from parse_module.manager.controller import Controller
 from parse_module.connection import db_manager
