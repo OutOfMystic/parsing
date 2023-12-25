@@ -5,12 +5,15 @@ import numpy as np
 
 from . import base
 from ..connection import db_manager
+from ..models.ai_nlp import solve
 from ..models.ai_nlp.collect import make_matrix, solve_pairs, build_connection
-from ..models.ai_nlp.solve import solver
 from ..models.ai_nlp.venue import VenueAliases
 from parse_module.manager.group import crop_url
 from ..utils import utils
 from ..utils.date import Date
+
+
+solver, cache_dict = solve.get_model_and_cache()
 
 
 def route_cmd(args_row):
@@ -48,14 +51,14 @@ def list_events(args):
 
     print('Obtaining data from the database...')
     ai_evs = {}
-    venues = VenueAliases()
+    venues = VenueAliases(solver)
     subjects = db_manager.get_events_for_parsing()
     objects = db_manager.get_parsed_events()
 
     print('Initialising a neural network...')
     for pairs, submatrix_shapes, priority, margin, _, _ in make_matrix(subjects, objects, venues):
         names_from_pairs = [(subject['event_name'], object_['event_name'],) for subject, object_ in pairs]
-        assignments = solve_pairs(names_from_pairs, submatrix_shapes, originals=pairs)
+        assignments = solve_pairs(names_from_pairs, submatrix_shapes, solver, cache_dict, originals=pairs)
         connections = [build_connection(*assignment, priority, margin) for assignment in assignments]
         for conn in connections:
             event_id = conn['event_id']
@@ -103,7 +106,7 @@ def ai_solutions(args):
 
     print('Obtaining data from the database...')
     not_empty_assignments = {}
-    venues = VenueAliases()
+    venues = VenueAliases(solver)
     subjects = db_manager.get_events_for_parsing()
     parsing_types = db_manager.get_parsing_types()
     objects = db_manager.get_parsed_events()
@@ -133,7 +136,7 @@ def ai_solutions(args):
         key = (site, type_, venue, str(scheme))
 
         names_from_pairs = [(subject['event_name'], object_['event_name'],) for subject, object_ in pairs]
-        assignments = solve_pairs(names_from_pairs, submatrix_shapes, originals=pairs)
+        assignments = solve_pairs(names_from_pairs, submatrix_shapes, solver, cache_dict, originals=pairs)
         connections = [build_connection(*assignment, priority, margin) for assignment in assignments]
         connections.sort(key=lambda conn: conn['date'])
         predefined = []
@@ -221,7 +224,7 @@ def ai_solutions(args):
 
 def show_venues(_):
     print('Obtaining data from the database...')
-    venues = VenueAliases()
+    venues = VenueAliases(solver)
     types_on_site = db_manager.get_site_parsers()
     parsing_types = db_manager.get_parsing_types()
     objects = db_manager.get_parsed_events(types=parsing_types)
@@ -314,7 +317,7 @@ def ai_doubts(args):
 
     print('Initialising a neural network...')
     results = []
-    venues = VenueAliases()
+    venues = VenueAliases(solver)
     for pairs, shapes, priority, margin, site_id, type_id in make_matrix(subjects, objects, venues):
         site = sites[site_id]
         if type_id is None:

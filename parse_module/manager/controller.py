@@ -10,12 +10,13 @@ from . import pooling
 from .inspect import run_inspection
 from .proxy import loader
 from .telecore import tele_core
-from ..connection import database
-from ..models.ai_nlp import alias, venue
+from ..connection import db_manager
+from ..connection.database import TableDict
+from ..models import router
+from ..models.ai_nlp import alias, venue, solve
 from ..models.ai_nlp.collect import cross_subject_object
 from ..models.margin import MarginRules
 from parse_module.notify import from_parsing
-from ..models.parser import db_manager
 from ..models.parser import SeatsParser, EventParser
 from parse_module.manager.group import SeatsParserGroup
 from ..utils import provision, utils
@@ -24,6 +25,10 @@ from ..utils.logger import logger
 from ..utils.utils import differences
 
 PREDEFINED = True
+
+
+class SchemeRouter:
+    pass
 
 
 class Controller(threading.Thread):
@@ -51,14 +56,18 @@ class Controller(threading.Thread):
         self.seats_notifiers = []
         self.margins = {}
         self._events_were_reset = []
-        self._table_sites = database.TableDict(db_manager.get_site_names)
+        logger.debug('---')
+        self._table_sites = TableDict(db_manager.get_site_names)
+        logger.debug('---')
         self._already_warned_on_collect = set()
 
-        self.console = run_inspection(release=True)
+        self._router = router.get_router()
+        self._console = run_inspection(release=True)
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
+        self.solver, self._cache_dict = solve.get_model_and_cache()
         self.event_aliases = alias.EventAliases(step=5)
         self.parsing_types = db_manager.get_parsing_types()
-        self.venues = venue.VenueAliases()
+        self.venues = venue.VenueAliases(self.solver)
         self.pool = pooling.ScheduledExecutor(max_threads=40)
         self._load_parsers_with_config(config_path)
         self.fast_time = time.time()
@@ -167,7 +176,8 @@ class Controller(threading.Thread):
                 predefined_connections.append(connection)
 
         labels = (self._table_sites, self.parsing_types, self._already_warned_on_collect,)
-        for connection in cross_subject_object(subjects, self.parsed_events, self.venues, labels=labels):
+        for connection in cross_subject_object(subjects, self.parsed_events, self.venues,
+                                               self.solver, self._cache_dict, labels=labels):
             if connection['indicator'] in indicators:
                 message = f"{connection['event_name']} {connection['date']} route conflict.\n" \
                           f"This parser is already assigned by AI. Leaving predefined state.\n" \

@@ -2,7 +2,9 @@ import threading
 import time
 import csv
 from multiprocessing.pool import ThreadPool
-from collections import namedtuple, defaultdict
+from dataclasses import dataclass
+from collections import namedtuple
+from typing import Callable, Iterable
 
 from sortedcontainers import SortedDict
 
@@ -10,14 +12,23 @@ from parse_module.utils import provision
 from parse_module.utils.logger import logger
 from parse_module.utils.provision import multi_try
 
-Task = namedtuple('Task', ['to_proceed', 'parser', 'wait'])
+Task = namedtuple('Task', ['to_proceed', 'from_thread', 'wait'])
 Result = namedtuple('Result', ['scheduled_time', 'task', 'apply_result'])
 
 
+@dataclass
+class Task:
+    to_proceed: Callable
+    from_thread: str
+    wait: int = 0
+    args: Iterable = None
+
+
 class ScheduledExecutor(threading.Thread):
-    def __init__(self, max_threads=20):
+    def __init__(self, max_threads=40, send_stats=True):
         super().__init__()
         self.max_threads = max_threads
+        self.stats = send_stats
         self._tasks = SortedDict()
         self._pool = ThreadPool(processes=max_threads)
         self._results = []
@@ -25,8 +36,9 @@ class ScheduledExecutor(threading.Thread):
         self._timers = {}
         self._starting_point = time.time()
         self._stats_counter = 0
-        with open('pooling_stats.csv', 'w+') as f:
-            f.write('')
+        if self.stats:
+            with open('pooling_stats.csv', 'w+') as f:
+                f.write('')
         self.start()
 
     def add(self, task: Task):
@@ -35,6 +47,8 @@ class ScheduledExecutor(threading.Thread):
         self._tasks[timestamp].append(task)
 
     def _add_stats(self, scheduled_time):
+        if not self.stats:
+            return
         log_time = time.time()
         stat = (
             log_time - self._starting_point,
@@ -67,7 +81,7 @@ class ScheduledExecutor(threading.Thread):
         for _ in range(bisection):
             scheduled_time, tasks = self._tasks.popitem(0)
             for task in tasks:
-                kwargs = {'name': task.parser, 'tries': 1, 'raise_exc': False}
+                kwargs = {'args': task.args, 'name': task.from_thread, 'tries': 1, 'raise_exc': False}
                 apply_result = self._pool.apply_async(provision.multi_try, [task.to_proceed], kwds=kwargs)
                 result = Result(scheduled_time=scheduled_time, task=task, apply_result=apply_result)
                 self._results.append(result)
@@ -94,9 +108,9 @@ class ScheduledExecutor(threading.Thread):
             if timed not in self._results:
                 to_del.append(timed)
             else:
-                block_time = 600 if 'EventParser (' in timed.task.parser else 300
+                block_time = 600 if 'EventParser (' in timed.task.from_thread else 300
                 if time.time() - self._timers[timed] > block_time:
-                    to_warn.append(timed.task.parser)
+                    to_warn.append(timed.task.from_thread)
         for timed in to_del:
             del self._timers[timed]
 
@@ -105,9 +119,8 @@ class ScheduledExecutor(threading.Thread):
         else:
             for timed in to_warn:
                 logger.warning(f'Execution blocked. Check for input() or smth blocking the execution',
-                               name=timed.task.parser)
+                               name=timed.task.from_thread)
 
     def run(self):
         while True:
             multi_try(self._step, tries=1, raise_exc=False, name='Controller')
-

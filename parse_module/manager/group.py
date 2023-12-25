@@ -1,7 +1,7 @@
 import threading
 from urllib.parse import urlparse
+from multiprocessing import Lock
 
-from parse_module.models.router import SchemeRouter
 from parse_module.utils.date import Date
 from parse_module.utils import utils, provision
 from parse_module.utils.logger import logger
@@ -15,8 +15,8 @@ class SeatsParserGroup:
         self.name = f'SeatsGroup ({module_name}.{self.parser_class.__name__})'
         self.url_filter = parser_class.url_filter
         self.parsers = []
-        self._router = SchemeRouter()
-        self.start_lock = threading.Lock()
+        self._router = controller.scheme_router
+        self.start_lock = Lock()
         self.going_to_start = 0
 
     def bprint(self, mes, color=utils.Fore.LIGHTGREEN_EX):

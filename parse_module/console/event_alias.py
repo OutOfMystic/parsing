@@ -1,5 +1,5 @@
 from . import base
-from ..models.parser import db_manager
+from ..connection import db_manager
 
 
 def route_cmd(args_row):

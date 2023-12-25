@@ -1,21 +1,20 @@
 from collections import namedtuple
 
-from psycopg2 import connect, extras
+from psycopg2 import extras
 
-from parse_module.connection.database import ParsingDB
-from parse_module.manager.core import BotCore
+from parse_module.connection import db_manager
+from parse_module.manager.core import Bot
 from parse_module.utils import utils
 
-write = BotCore()
+write = Bot()
+
 
 def make_tickets_new(event_id, scheme_id):
     '''
     Создать билеты у event_id
     взять схему для билетов в public.tables_constructor с scheme_id
     '''
-    db_main = ParsingDB()
-    db_main.connect_db()
-    scheme_box = db_main.get_scheme(scheme_id)
+    scheme_box = db_manager.get_scheme(scheme_id)
     scheme_json = scheme_box[-1]
 
     Ticket = namedtuple('Ticket', [
@@ -73,12 +72,12 @@ def make_tickets_new(event_id, scheme_id):
         ) VALUES %s
     '''
     try:
-        extras.execute_values(db_main.cursor, insert_query, all_tickets, template=None, page_size=100)
+        extras.execute_values(db_manager.cursor, insert_query, all_tickets, template=None, page_size=100)
         write.bprint(f'write success {event_id}, {scheme_id}',color=utils.Fore.GREEN)
     except Exception as ex:
         write.bprint(f'Error occurred {ex}',color=utils.Fore.RED)
     finally:
-        db_main.commit()
+        db_manager.commit()
 
 if __name__ == '__main__':
     from parse_module.utils.provision import multi_try

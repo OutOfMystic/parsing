@@ -9,7 +9,7 @@ from more_itertools import chunked
 from parse_module.connection import db_manager
 from parse_module.console.base import print_cols
 from parse_module.utils import utils
-from parse_module.utils.date import Date, month_num_by_str, encode_month, decode_month, encode_day, decode_day
+from parse_module.utils.date import Date, month_num_by_str, encode_month
 
 MANUAL_TABLE = False
 ACQUIRINGS = {

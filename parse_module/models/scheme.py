@@ -1,16 +1,19 @@
+import multiprocessing
 import threading
 from collections import namedtuple
-from threading import Lock
+from importlib.resources import files
+from multiprocessing import Lock
 
 from psycopg2 import extras
 
+from .. import connection
 from ..connection import db_manager
 from ..manager.backstage import tasker
 from ..utils import utils, provision
 from ..utils.exceptions import SchemeError, ParsingError
 from ..utils.logger import logger
 from ..utils.provision import multi_try
-
+from ..utils.types import LocalDict
 
 Ticket = namedtuple('Ticket', ['x_coord', 'y_coord', 'sector', 'sector_id',
                                'row', 'seat', 'status', 'original_price', 'sell_price',
@@ -24,26 +27,16 @@ class Dancefloor:
         self.price = 0
 
 
-def get_scheme_wrapper(scheme_id):
-    callback = []
-    event_locker = threading.Event()
-    task = [scheme_id, callback, event_locker]
-    tasker.put_throttle(db_manager.get_scheme, task,
-                        from_iterable=False,
-                        from_thread='Controller',
-                        kwargs={'get_scheme': ''})
-    event_locker.wait(600)
-    del event_locker
-    return callback
-
-
 class Scheme:
+    saved_schemes = LocalDict(files(connection).joinpath('constructors.pkl'))
 
     def __init__(self, scheme_id):
         self.scheme_id = scheme_id
         self.name = ''
         self.sectors = {}
         self.dancefloors = {}
+        self.sector_names = self._sector_names()
+        self.sector_data = self._sector_data()
 
     def get_scheme(self):
         """with shelve.open('schemes') as shelf:
@@ -61,7 +54,7 @@ class Scheme:
             with shelve.open('schemes') as shelf:
                 shelf[str(self.scheme_id)] = callback
             name, scheme = callback"""
-        name, scheme = get_scheme_wrapper(self.scheme_id)
+        name, scheme = self._get_scheme_wrapper(self.scheme_id)
 
         if name is None and scheme is None:
             return False
@@ -90,10 +83,27 @@ class Scheme:
                 self.sectors[sector_name][id_row_seat] = False
         return True
 
-    def sector_names(self):
+    def _get_scheme_wrapper(self, scheme_id):
+        callback = self.saved_schemes.get(scheme_id, [])
+        if callback:
+            return callback
+
+        event_locker = multiprocessing.Event()
+        task = [scheme_id, callback, event_locker]
+        tasker.put_throttle(db_manager.get_scheme, task,
+                            from_iterable=False,
+                            from_thread='Controller',
+                            kwargs={'get_scheme': ''})
+        event_locker.wait(600)
+        del event_locker
+
+        self.saved_schemes[callback] = callback
+        return callback
+
+    def _sector_names(self):
         return list(self.sectors.keys())
 
-    def sector_data(self):
+    def _sector_data(self):
         for sector_name, tickets in self.sectors.items():
             min_id, max_id = float('inf'), float('-inf')
             min_row, max_row = float('inf'), float('-inf')
@@ -122,7 +132,7 @@ class ParserScheme(Scheme):
         self._lock = Lock()
         self._prohibitions = {}
         self._bookings = {}
-        multi_try(self._customize, handle_error=self.make_tickets,
+        multi_try(self._customize, handle_error=self.reassign_scheme,
                   args=(scheme,), tries=5, name=group_name)
 
     def bind(self, priority, margin_func):
@@ -137,10 +147,7 @@ class ParserScheme(Scheme):
         finally:
             self._lock.release()
 
-    def unbind(self, priority, force=False):
-        if force:
-            if priority not in self._margins:
-                return
+    def unbind(self, priority):
         try:
             self._lock.acquire()
 
@@ -260,7 +267,7 @@ class ParserScheme(Scheme):
 
     def _customize(self, scheme):
         db_tickets = {}
-        event_locker = threading.Event()
+        event_locker = multiprocessing.Event()
         task = [self.event_id, db_tickets, event_locker]
 
         tasker.put_throttle(db_manager.get_all_tickets, task,
@@ -374,7 +381,7 @@ class ParserScheme(Scheme):
         #print(to_discard)
         return to_change, to_book, to_discard
 
-    def make_tickets(self, exception, scheme):
+    def reassign_scheme(self, exception, scheme):
         """
         Создать билеты у event_id
         взять схему для билетов в public.tables_constructor с scheme_id
@@ -382,7 +389,7 @@ class ParserScheme(Scheme):
         if not isinstance(exception, SchemeError):
             raise exception
 
-        scheme_box = get_scheme_wrapper(scheme.scheme_id)
+        scheme_box = self._get_scheme_wrapper(scheme.scheme_id)
         scheme_json = scheme_box[-1]
 
         all_tickets = []

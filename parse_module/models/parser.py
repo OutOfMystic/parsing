@@ -178,7 +178,7 @@ class SeatsParser(ParserBase, ABC):
         """
         assert isinstance(seats, (dict, tuple)), \
             'Wrong seats data format, should be iterable'
-        lower_sectors = (sector.lower() for sector in self.scheme.sectors)
+        lower_sectors = (sector.lower() for sector in self.scheme.sector_names)
         if sector_name.lower() not in lower_sectors:
             mes = f"Sector '{sector_name}' wasn\'t found on the scheme! {self.url}"
             if hasattr(self, 'venue'):
@@ -243,7 +243,7 @@ class SeatsParser(ParserBase, ABC):
         Helping utility which prints sector names
         on scheme stored in database
         """
-        sector_names = self.scheme.sector_names()
+        sector_names = self.scheme.sector_names
         sector_names_str = ', '.join(sector_names)
         self.bprint('Sector names available: ' + sector_names_str)
 
@@ -256,7 +256,7 @@ class SeatsParser(ParserBase, ABC):
          - id range
         """
         to_print = ['Sector scheme:']
-        for name, id_range, row_range, seat_range in self.scheme.sector_data():
+        for name, id_range, row_range, seat_range in self.scheme.sector_data:
             str_data = (f'{utils.red(name)} ranges: '
                         f'rows {format_range(id_range)} '
                         f'seats {format_range(row_range)} '
@@ -266,7 +266,7 @@ class SeatsParser(ParserBase, ABC):
         self.bprint(combined_rows)
 
     def check_sectors(self):
-        db_sectors = self.scheme.sector_names()
+        db_sectors = self.scheme.sector_names
         parsed_sectors = self.parsed_sectors.keys()
         db_sectors = list(db_sectors)
         parsed_sectors = list(parsed_sectors)
