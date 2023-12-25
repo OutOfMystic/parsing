@@ -693,41 +693,37 @@ class AleksandrinskiyTeatr(LenkomParser):
                     _, seat = ticket_row_and_seat
                     sector['tickets'][(row_number, seat)] = price
                 sector['name'] = 'Бельэтаж'
-            elif '1 ярус' in sector['name']:
-                sector_nm = re.findall(r'\d+', sector['name'])[-1]
-                row_number = 'Ложа ' + sector_nm 
+            elif '1 ярус' in sector['name'] or 'Ярус 1' in sector['name']:
+                row_name = sector['name'].split('.')[0]
                 tickets = sector['tickets']
                 sector['tickets'] = {}
                 for ticket_row_and_seat, price in tickets.items():
                     _, seat = ticket_row_and_seat
-                    sector['tickets'][(row_number, seat)] = price
+                    sector['tickets'][(row_name, seat)] = price
                 sector['name'] = '1 ярус'
-            elif '2 ярус' in sector['name']:
-                sector_nm = re.findall(r'\d+', sector['name'])[-1]
-                row_number = 'Ложа ' + sector_nm 
+            elif '2 ярус' in sector['name'] or 'Ярус 2' in sector['name']:
+                row_name = sector['name'].split('.')[0]
                 tickets = sector['tickets']
                 sector['tickets'] = {}
                 for ticket_row_and_seat, price in tickets.items():
                     _, seat = ticket_row_and_seat
-                    sector['tickets'][(row_number, seat)] = price
+                    sector['tickets'][(row_name, seat)] = price
                 sector['name'] = '2 ярус'
-            elif '3 ярус' in sector['name']:
-                sector_nm = re.findall(r'\d+', sector['name'])[-1]
-                row_number = 'Ложа ' + sector_nm 
+            elif '3 ярус' in sector['name'] or 'Ярус 3' in sector['name']:
+                row_name = sector['name'].split('.')[0]
                 tickets = sector['tickets']
                 sector['tickets'] = {}
                 for ticket_row_and_seat, price in tickets.items():
                     _, seat = ticket_row_and_seat
-                    sector['tickets'][(row_number, seat)] = price
+                    sector['tickets'][(row_name, seat)] = price
                 sector['name'] = '3 ярус'
-            elif '4 ярус' in sector['name']:
-                sector_nm = re.findall(r'\d+', sector['name'])[-1]
-                row_number = 'Ложа ' + sector_nm 
+            elif '4 ярус' in sector['name'] or 'Ярус 4' in sector['name']:
+                row_name = sector['name'].split('.')[0]
                 tickets = sector['tickets']
                 sector['tickets'] = {}
                 for ticket_row_and_seat, price in tickets.items():
                     _, seat = ticket_row_and_seat
-                    sector['tickets'][(row_number, seat)] = price
+                    sector['tickets'][(row_name, seat)] = price
                 sector['name'] = '4 ярус'
             elif 'Балкон 3-го яруса' in sector['name']:
                 tickets = sector['tickets']
