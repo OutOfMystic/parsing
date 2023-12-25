@@ -867,7 +867,7 @@ class YandexAfishaParser(EventParser):
 
         # places = self.get_places()
         for url in self.our_urls:
-            # self.info(url, 'yandex Events')
+            self.debug(url, 'yandex Events')
             client_key, request_id, dates = self.place_request(url)
             venue = self.place['title']
             if url == 'https://afisha.yandex.ru/kazan/circus_show/places/tsirk-kazan':

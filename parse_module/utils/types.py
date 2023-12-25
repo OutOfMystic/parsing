@@ -66,7 +66,22 @@ class LocalCacheDict(HashDict):
         normal_dict = {item: value for item, value in self.items()}
         with open(self.path, 'wb+') as f:
             pickle.dump(normal_dict, f)
-        super().__setitem__(key, value)\
+        super().__setitem__(key, value)
+
+
+class LocalDict(dict):
+    def __init__(self, path):
+        super().__init__()
+        self.path = path
+        cache = load_cache(self.path)
+        for key, value in cache.items():
+            super().__setitem__(key, value)
+
+    def __setitem__(self, key, value):
+        normal_dict = {item: value for item, value in self.items()}
+        with open(self.path, 'wb+') as f:
+            pickle.dump(normal_dict, f)
+        super().__setitem__(key, value)
 
 
 class LowerDict(HashDict):
@@ -85,5 +100,5 @@ def load_cache(path):
         with open(path, 'rb') as f:
             from_file = pickle.load(f)
     except Exception as err:
-        logger.info(f'Pickle file was not found, created an empty dict: {err}')
+        logger.info(f'Cache was not found. {err}')
     return from_file

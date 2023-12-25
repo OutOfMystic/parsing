@@ -10,7 +10,7 @@ from parse_module.utils.parse_utils import double_split
 class CrocusHall(SeatsParser):
     event = 'crocus-hall.ru'
     url_filter = lambda url: 'crocus2.kassir.ru' in url
-    proxy_check = SpecialConditions(url='https://crocus2.kassir.ru/')
+    #proxy_check = SpecialConditions(url='https://crocus2.kassir.ru/')
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)

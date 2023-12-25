@@ -82,14 +82,17 @@ def pairs_hasher(pairs):
     return hash_
 
 
+def get_model_and_cache():
+    ai_model = files(ai_nlp).joinpath('ai_model')
+    solver = Solver(ai_model, in_converter=translate,
+                    out_converter=softmax_to_result,
+                    timeout=180,
+                    remember_answers=True)
+    models_path = os.path.join(solver.model_name, 'assets', 'high_level_cache.pkl')
+    cache_dict = LocalCacheDict(models_path, hash_function=pairs_hasher)
+    return solver, cache_dict
+
+
 ord_iters = [[46, 32, 1104, 1105], range(48, 58), range(97, 123), range(1072, 1104)]
 ords = list(itertools.chain(*ord_iters))
 all_symbols = [chr(code) for code in ords]
-
-ai_model = files(ai_nlp).joinpath('ai_model')
-solver = Solver(ai_model, in_converter=translate,
-                out_converter=softmax_to_result,
-                timeout=180,
-                remember_answers=True)
-models_path = os.path.join(solver.model_name, 'assets', 'high_level_cache.pkl')
-cache_dict = LocalCacheDict(models_path, hash_function=pairs_hasher)

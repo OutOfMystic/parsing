@@ -3,18 +3,17 @@ import itertools
 import time
 
 from parse_module.connection import db_manager
-from parse_module.models.ai_nlp.solve import solver, cache_dict
 from parse_module.utils import utils
 from parse_module.utils.date import Date
 from parse_module.utils.logger import logger
 
 
-def cross_subject_object(subjects, objects, venues, labels=None):
+def cross_subject_object(subjects, objects, venues, solver, cache_dict, labels=None):
     start_time = time.time()
 
     for pairs, submatrix_shapes, priority, margin, _, _ in make_matrix(subjects, objects, venues, labels=labels):
         names_from_pairs = [(subject['event_name'], object_['event_name'],) for subject, object_ in pairs]
-        assignments = solve_pairs(names_from_pairs, submatrix_shapes, originals=pairs)
+        assignments = solve_pairs(names_from_pairs, submatrix_shapes, solver, cache_dict, originals=pairs)
         connections = [build_connection(subj, obj_, priority, margin) for subj, obj_ in assignments]
         for connection in connections:
             yield connection
@@ -134,7 +133,7 @@ def make_matrix(subjects, objects, venues, labels=None):
                     #                       f'    site {site_id}, parsing {type_}'))
 
 
-def get_packed_solutions(pairs, shapes, originals=None):
+def get_packed_solutions(pairs, shapes, solver, cache_dict, originals=None):
     pairs = tuple(pairs)
     if originals is None:
         originals = pairs
@@ -146,8 +145,8 @@ def get_packed_solutions(pairs, shapes, originals=None):
     return pack_back(originals, solved, shapes)
 
 
-def solve_pairs(pairs, shapes, originals=None):
-    packed_pairs = get_packed_solutions(pairs, shapes, originals=originals)
+def solve_pairs(pairs, shapes, solver, cache_dict, originals=None):
+    packed_pairs = get_packed_solutions(pairs, shapes, solver, cache_dict, originals=originals)
     return assign_pairs(packed_pairs)
 
 

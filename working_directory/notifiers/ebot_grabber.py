@@ -2,6 +2,7 @@ import json
 import os
 import threading
 from multiprocessing.pool import ThreadPool
+from multiprocessing import Lock
 
 from loguru import logger
 
@@ -26,7 +27,7 @@ class DomainGrabber(BotCore):
         self.saves_path = os.path.join('notifiers', 'all_tickets', f'{self.domain}.json')
         self.saves = try_open(self.saves_path, {}, json_=True)
         self.session = ProxySession(self)
-        self.lock = threading.Lock()
+        self.lock = Lock()
 
     def get_events(self):
         url = f'https://{self.domain}/events'

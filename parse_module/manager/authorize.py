@@ -4,7 +4,7 @@ import pickle
 import requests
 import threading
 import random
-from multiprocessing import Queue
+from multiprocessing import Queue, Lock
 
 import urllib3
 from urllib3.exceptions import InsecureRequestWarning
@@ -21,7 +21,7 @@ class PickleSaver(threading.Thread):
     def __init__(self):
         super().__init__()
         self.pickles_to_save = []
-        # self.save_lock = threading.Lock()
+        # self.save_lock = Lock()
 
     def put(self, fpath, data):
         self.pickles_to_save.append((fpath, data))

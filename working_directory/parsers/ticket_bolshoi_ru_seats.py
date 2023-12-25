@@ -278,7 +278,7 @@ class BtParser(SeatsParser):
         self.delay = 900
         self.driver_source = None
         self.event_id = None
-        self._lock = threading.Lock()
+        self._lock = Lock()
 
     def before_body(self):
         self.account = self.get_account()

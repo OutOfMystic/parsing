@@ -1,9 +1,9 @@
 import os
 import pickle
 import json
-import threading
 import time
 from collections import defaultdict
+from multiprocessing import Lock
 
 import psycopg2
 
@@ -47,7 +47,7 @@ class DBConnection:
         self._saved_selects = {}
         self.connection = None
         self.cursor = None
-        tasker.put(self.connect_db)
+        self.connect_db()
 
     def save_mode_on(self):
         logger.warning('DATABASE SAVE MODE TURNED ON', name='Controller')
@@ -75,10 +75,13 @@ class DBConnection:
                                            host=self.host,
                                            port=self.port,
                                            database=self.database)
+        logger.debug(self)
         self.cursor = self.connection.cursor()
+        logger.debug(self.cursor)
 
     def cursor_wrapper(self, func_name, *args):
         while self.cursor is None:
+            logger.debug(self)
             time.sleep(0.1)
         try:
             function = getattr(self.cursor, func_name)
@@ -449,5 +452,5 @@ def int_keys(dict_):
     return new_dict
 
 
-lock = threading.Lock()
+lock = Lock()
 db_manager = ParsingDB()

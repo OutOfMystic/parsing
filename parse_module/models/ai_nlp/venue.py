@@ -1,13 +1,8 @@
 import itertools
 import threading
-import time
+from multiprocessing import Lock
 
-from loguru import logger
-
-from . import collect
-from .solve import solver
 from ...connection import db_manager
-from ...utils import provision, utils
 
 
 class VenueAliases:
@@ -24,10 +19,11 @@ class VenueAliases:
     Если появился новый scheme
     """
 
-    def __init__(self):
+    def __init__(self, solver):
         self.aliases = {}
         self.schemes = {}
-        self._lock = threading.Lock()
+        self.solver = solver
+        self._lock = Lock()
 
     def update_names(self, venues: set):
         schemes = db_manager.get_scheme_names()

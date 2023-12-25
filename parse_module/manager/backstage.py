@@ -1,10 +1,11 @@
 import threading
 from datetime import datetime
-from queue import Queue
+from multiprocessing import Queue
 from typing import Callable
+from multiprocessing import Lock
 
 from ..console.base import print_cols
-from ..utils import provision, utils
+from ..utils import provision
 from ..utils.logger import logger
 
 
@@ -26,7 +27,7 @@ class Task:
 class BackTasker(threading.Thread):
     def __init__(self):
         super().__init__()
-        self._lock = threading.Lock()
+        self._lock = Lock()
         self.tasks = Queue()
 
     def put(self, func_: Callable, *args, **kwargs):

@@ -204,6 +204,38 @@ def _tryfunc(func,
         return result, None
 
 
+def just_try(to_try,
+             name='Main',
+             args=None,
+             kwargs=None,
+             print_errors=True):
+    """
+    A simplified multi_try statement.
+    The same as multi_try, but executes ``to_try`` code
+    only once and doesn't raise an exception.
+
+    Args:
+        to_try: main function
+        name: name to identify logs
+        args: arguments sent to ``to_try``
+        kwargs: keyword arguments sent to ``to_try``
+        print_errors: log errors on each try
+
+    Returns: value from a last successful attempt.
+    If all attempts fail, exception is raised or
+    provision.TryError is returned.
+    """
+    kwargs = {
+        'name': name,
+        'tries': 1,
+        'args': args,
+        'kwargs': kwargs,
+        'raise_exc': False,
+        'print_errors': print_errors
+    }
+    return multi_try(to_try, **kwargs)
+
+
 def get_script_dir(follow_symlinks=True):
     if getattr(sys, 'frozen', False):  # py2exe, PyInstaller, cx_Freeze
         path = os.path.abspath(sys.executable)

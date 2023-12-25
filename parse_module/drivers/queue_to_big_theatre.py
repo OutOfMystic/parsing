@@ -5,7 +5,7 @@ from parse_module.drivers.selemiun_tickets_bolshoi import WebdriverChrome
 from selenium.common.exceptions import TimeoutException
 import shutil
 from parse_module.utils import utils
-from queue import Queue
+from multiprocessing import Queue
 from parse_module.utils.provision import threading_try
 
 
