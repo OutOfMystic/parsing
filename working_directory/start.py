@@ -1,5 +1,4 @@
 import sys
-sys.path.append("/home/lon8/python/work/parsing/")
 
 from parse_module.manager.controller import Controller
 
