@@ -2,7 +2,7 @@ import multiprocessing
 import threading
 import time
 from collections import defaultdict
-from multiprocessing import Lock
+from threading import Lock
 
 from . import scheme
 from ..connection import db_manager
@@ -53,7 +53,7 @@ class SchemeRouterFrontend:
 
 class Postponer(threading.Thread):
 
-    def __init__(self, parser_schemes, locked_queues):
+    def __init__(self, parser_schemes: dict, locked_queues: dict):
         super().__init__()
         self.schemes = parser_schemes
         self.locked_queues = locked_queues
@@ -78,15 +78,15 @@ class Postponer(threading.Thread):
     def _step(self):
         try:
             self.lock.acquire()
-            queues = self.locked_queues.copy()
+            event_ids_ = list(self.locked_queues.keys())
         finally:
             self.lock.release()
 
         processed = 0
-        for event_id in queues:
+        for event_id in event_ids_:
             if event_id not in self.schemes:
                 continue
-            queue = queues.popitem(event_id)
+            queue = self.locked_queues.pop(event_id)
             for method, args in queue:
                 self._process_task(method, args)
                 processed += 1
@@ -101,15 +101,14 @@ class Postponer(threading.Thread):
                 time.sleep(0.2)
 
 
-class SchemeRouterBackend(multiprocessing.Process):
+class SchemeRouterBackend:
 
     def __init__(self, conn: multiprocessing.connection.Connection):
-        super().__init__()
         self.parser_schemes = {}
         self.group_schemes = {}
         self.event_lockers = defaultdict(Lock)
         self.conn = conn
-        self._pool = ScheduledExecutor()
+        self._pool = ScheduledExecutor(stats='scheme_router_stats.csv')
         self._locked_queues = {}
         self._postponer = Postponer(self.parser_schemes, self._locked_queues)
 
@@ -159,7 +158,10 @@ class SchemeRouterBackend(multiprocessing.Process):
         finally:
             lock.release()
 
-    def release_sectors(self, event_id, *args):
+    def release_sectors(self, *args):
+        self._postponer.put_task(self._release_sectors, args)
+
+    def _release_sectors(self, event_id, *args):
         scheme = self.parser_schemes[event_id]
         scheme.release_sectors(*args)
 
@@ -179,29 +181,7 @@ class SchemeRouterBackend(multiprocessing.Process):
         while True:
             command, args = self.conn.recv()
             method = getattr(self, command)
-            method(args)
-
-
-class GroupRouter:
-
-    def __init__(self, groups):
-        self.groups = groups
-        self._assignments = {}
-
-    def route_group(self, url, event_id):
-        scheme_id = db_manager.get_scheme_id(event_id)
-        if scheme_id in self._assignments:
-            return self._assignments[scheme_id]
-        groups = [group for group in self.groups if group.url_filter(url)]
-        self._assign(scheme_id, groups)
-        return self._assignments[scheme_id]
-
-    """def route_scheme(self, url, event_id, scheme_id):
-        group = self.route_group(url, event_id)
-        return group.router.get_parser_scheme(event_id, scheme_id)"""
-
-    def _assign(self, scheme_id, groups):
-        self._assignments[scheme_id] = groups[0]
+            method(*args)
 
 
 class SchemeProxy:
@@ -243,8 +223,35 @@ class SchemeProxy:
         return self._margins[priority]
 
 
+class GroupRouter:
+
+    def __init__(self, groups):
+        self.groups = groups
+        self._assignments = {}
+
+    def route_group(self, url, event_id):
+        scheme_id = db_manager.get_scheme_id(event_id)
+        if scheme_id in self._assignments:
+            return self._assignments[scheme_id]
+        groups = [group for group in self.groups if group.url_filter(url)]
+        self._assign(scheme_id, groups)
+        return self._assignments[scheme_id]
+
+    """def route_scheme(self, url, event_id, scheme_id):
+        group = self.route_group(url, event_id)
+        return group.router.get_parser_scheme(event_id, scheme_id)"""
+
+    def _assign(self, scheme_id, groups):
+        self._assignments[scheme_id] = groups[0]
+
+
+def process_function(inner_conn):
+    backend = SchemeRouterBackend(inner_conn)
+    backend.run()
+
+
 def get_router():
     outer_conn, inner_conn = multiprocessing.Pipe()
-    process = SchemeRouterBackend(inner_conn)
+    process = multiprocessing.Process(target=process_function, args=(inner_conn,))
     process.start()
     return SchemeRouterFrontend(outer_conn)

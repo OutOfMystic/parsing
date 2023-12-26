@@ -1,6 +1,6 @@
 import itertools
 import threading
-from multiprocessing import Lock
+from threading import Lock
 
 from ...connection import db_manager
 
@@ -39,7 +39,7 @@ class VenueAliases:
         schemes_fixed = {fix_scheme(scheme): scheme for scheme in schemes}
         pairs = itertools.product(all_aliases_fixed, schemes_fixed)
         pairs = list(pairs)
-        solved = solver.solve_pack(pairs)
+        solved = self.solver.solve_pack(pairs)
 
         names_len = len(schemes_fixed) if len(solved) else 1
         new_aliases = {}

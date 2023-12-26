@@ -1,8 +1,8 @@
 import threading
 from datetime import datetime
-from multiprocessing import Queue
+from queue import Queue
 from typing import Callable
-from multiprocessing import Lock
+from threading import Lock
 
 from ..console.base import print_cols
 from ..utils import provision

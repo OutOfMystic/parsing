@@ -1,6 +1,6 @@
 import threading
 from urllib.parse import urlparse
-from multiprocessing import Lock
+from threading import Lock
 
 from parse_module.utils.date import Date
 from parse_module.utils import utils, provision
@@ -15,7 +15,6 @@ class SeatsParserGroup:
         self.name = f'SeatsGroup ({module_name}.{self.parser_class.__name__})'
         self.url_filter = parser_class.url_filter
         self.parsers = []
-        self._router = controller.scheme_router
         self.start_lock = Lock()
         self.going_to_start = 0
 
@@ -135,7 +134,9 @@ class SeatsParserGroup:
         self.start_lock.release()
 
     def _start_parser(self, event_data):
-        scheme = self._router.get_parser_scheme(event_data['event_id'], event_data['scheme_id'], name=self.name)
+        scheme = self.controller.router.get_parser_scheme(event_data['event_id'],
+                                                          event_data['scheme_id'],
+                                                          name=self.name)
         margin_rules = self.controller.margins[event_data['margin']]
         scheme.bind(event_data['priority'], margin_rules)
         event_data['scheme'] = scheme
@@ -163,12 +164,12 @@ class SeatsParserGroup:
 
     def handle_error(self, exception, event_data):
         event_id = event_data["event_id"]
-        if event_id in self._router.parser_schemes:
-            scheme = self._router.parser_schemes[event_id]
+        if event_id in self.controller.router.parser_schemes:
+            scheme = self.controller.router.parser_schemes[event_id]
             scheme.unbind(event_data['priority'], force=True)
             logger.warning('Scheme was already prepared. Unbind forced. '
                            'This may cause an incorrect parser start')
-        logger.debug(f'SEATS parser {self.parent_event} event_id: {event_data["event_id"]}\n'
+        logger.error(f'SEATS parser {self.parent_event} event_id: {event_data["event_id"]}\n'
                      f'scheme_id: {event_data["scheme_id"]} name: ({event_data["event_name"]}'
                      f' date: {event_data["date"]}) has not started\n'
                      f'({type(exception).__name__}) {exception}', name=self.name)

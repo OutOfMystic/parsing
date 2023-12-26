@@ -5,7 +5,7 @@ import json
 import random
 import threading
 from socket import *
-from multiprocessing import Queue
+from queue import Queue
 from typing import Iterable
 
 import telebot

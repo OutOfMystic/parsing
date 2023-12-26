@@ -12,7 +12,6 @@ from .proxy import loader
 from .telecore import tele_core
 from ..connection import db_manager
 from ..connection.database import TableDict
-from ..models import router
 from ..models.ai_nlp import alias, venue, solve
 from ..models.ai_nlp.collect import cross_subject_object
 from ..models.margin import MarginRules
@@ -31,10 +30,11 @@ class SchemeRouter:
     pass
 
 
-class Controller(threading.Thread):
+class Controller:
     def __init__(self,
                  parsers_path,
                  config_path,
+                 router,
                  pending_delay=120,
                  debug_url=None,
                  debug_event_id=None,
@@ -56,12 +56,10 @@ class Controller(threading.Thread):
         self.seats_notifiers = []
         self.margins = {}
         self._events_were_reset = []
-        logger.debug('---')
         self._table_sites = TableDict(db_manager.get_site_names)
-        logger.debug('---')
         self._already_warned_on_collect = set()
 
-        self._router = router.get_router()
+        self.router = router
         self._console = run_inspection(release=True)
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
         self.solver, self._cache_dict = solve.get_model_and_cache()
@@ -327,6 +325,7 @@ class Controller(threading.Thread):
             print(utils.yellow('EMPTY CONFIGURATION'))
             return
         config = provision.try_open(config_path, {}, json_=True)
+        logger.debug(config)
         turn_on_stats = {False: 0, True: 0}
         for parser_name in config:
             key = config[parser_name]

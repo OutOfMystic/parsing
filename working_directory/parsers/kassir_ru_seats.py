@@ -1627,15 +1627,12 @@ class KassirParser(SeatsParser):
         response = self.session.get(url, headers=self.new_headers)
 
         count = 10
-        while (not response.ok or response.text == '[]') and count > 0 :
+        if (not response.ok or response.text == '[]') and count > 0:
+            self.change_proxy()
+            self.session = ProxySession(self)
             self.debug(url)
             self.debug(response.text)
-            self.warning(f'{count} {self.proxy.args}, {url}, {self.session.cookies} this IP is block')
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
-            sleep(60)
-            response = self.session.get(url, headers=self.new_headers)
-            count -= 1
+            raise RuntimeError(f'{count} {self.proxy.args}, {url}, {self.session.cookies} this IP is block')
 
         # with open('TEST2.json', 'w', encoding='utf-8') as file:
         #     json.dump(response.json(), file, indent=4, ensure_ascii=False) 
@@ -1670,7 +1667,6 @@ class KassirParser(SeatsParser):
                 res.get(sector[1],{}).update(place_to_write)
 
         return res
-    
 
     def body(self):
         list_to_reformat = ['Кремлёвский дворец', 'Театр «Современник»',

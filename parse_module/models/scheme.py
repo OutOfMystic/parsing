@@ -1,8 +1,7 @@
-import multiprocessing
 import threading
 from collections import namedtuple
 from importlib.resources import files
-from multiprocessing import Lock
+from threading import Lock
 
 from psycopg2 import extras
 
@@ -10,7 +9,7 @@ from .. import connection
 from ..connection import db_manager
 from ..manager.backstage import tasker
 from ..utils import utils, provision
-from ..utils.exceptions import SchemeError, ParsingError
+from ..utils.exceptions import SchemeError, ParsingError, InternalError
 from ..utils.logger import logger
 from ..utils.provision import multi_try
 from ..utils.types import LocalDict
@@ -88,7 +87,7 @@ class Scheme:
         if callback:
             return callback
 
-        event_locker = multiprocessing.Event()
+        event_locker = threading.Event()
         task = [scheme_id, callback, event_locker]
         tasker.put_throttle(db_manager.get_scheme, task,
                             from_iterable=False,
@@ -97,7 +96,7 @@ class Scheme:
         event_locker.wait(600)
         del event_locker
 
-        self.saved_schemes[callback] = callback
+        self.saved_schemes[scheme_id] = callback
         return callback
 
     def _sector_names(self):
@@ -138,8 +137,9 @@ class ParserScheme(Scheme):
     def bind(self, priority, margin_func):
         try:
             self._lock.acquire()
-            assert priority not in self._margins, "Scheme with the same priority" \
-                                                  " has already been binded"
+            if priority in self._margins:
+                raise InternalError(f"Scheme (event {self.event_id}) with the same priority "
+                                    f"({margin_func.name}) has already been binded")
             self._margins[priority] = margin_func
             self._bookings[priority] = set()
             self._prohibitions[priority] = set()
@@ -267,7 +267,7 @@ class ParserScheme(Scheme):
 
     def _customize(self, scheme):
         db_tickets = {}
-        event_locker = multiprocessing.Event()
+        event_locker = threading.Event()
         task = [self.event_id, db_tickets, event_locker]
 
         tasker.put_throttle(db_manager.get_all_tickets, task,

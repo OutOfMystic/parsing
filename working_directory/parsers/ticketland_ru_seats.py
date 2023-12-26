@@ -19,6 +19,10 @@ class LenkomParser(SeatsParser):
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
+        self.limit = None
+        self.is_special_sale = None
+        self.performance_id = None
+        self.tl_csrf_no_f = None
         self.delay = 1200
         self.driver_source = None
         self.venue = 'Ленком'
@@ -73,19 +77,22 @@ class LenkomParser(SeatsParser):
         limit = double_split(r_text, 'maxTicketCount: ', ',')
         is_special_sale = double_split(r_text, "isSpecialSale: '", "'")
 
-        return tl_csrf, performance_id, limit, is_special_sale
+        return tl_csrf.replace('=', '%3D'), performance_id, limit, is_special_sale
 
     def before_body(self):
         self.session = ProxySession(self)
+        self._get_init_vars_if_not_given()
+
+    def _get_init_vars_if_not_given(self):
+        if self.performance_id:
+            return True
         event_vars = self.get_tl_csrf_and_data()
-        while not event_vars:
-            self.info('Waiting event vars')
-            time.sleep(self.delay)
-            self.last_time_body = time.time()
-            event_vars = self.get_tl_csrf_and_data()
+        if event_vars:
+            self.tl_csrf_no_f, self.performance_id, self.limit, self.is_special_sale = event_vars
+            return True
         else:
-            tl_csrf, self.performance_id, self.limit, self.is_special_sale = event_vars
-        self.tl_csrf_no_f = tl_csrf.replace('=', '%3D')
+            self.info('Waiting event vars')
+            return False
 
     def request_to_ticketland(self, url, headers=None):
         try:
@@ -112,6 +119,8 @@ class LenkomParser(SeatsParser):
         return sector_name, row, seat, price
 
     def body(self):
+        if not self._get_init_vars_if_not_given():
+            return False
         json, all_ = 1, 1
 
         url = (f'https://{self.domain}/hallview/map/'
@@ -193,7 +202,6 @@ class LenkomParser(SeatsParser):
         for sector in a_sectors:
             self.register_sector(sector['name'], sector['tickets'])
         #self.check_sectors()
-
 
 
 class MkhtParser(LenkomParser):

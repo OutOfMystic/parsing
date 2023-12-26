@@ -4,7 +4,8 @@ import pickle
 import requests
 import threading
 import random
-from multiprocessing import Queue, Lock
+from threading import Lock
+from queue import Queue
 
 import urllib3
 from urllib3.exceptions import InsecureRequestWarning

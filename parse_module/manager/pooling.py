@@ -13,7 +13,7 @@ from parse_module.utils.logger import logger
 from parse_module.utils.provision import multi_try
 
 Task = namedtuple('Task', ['to_proceed', 'from_thread', 'wait'])
-Result = namedtuple('Result', ['scheduled_time', 'task', 'apply_result'])
+Result = namedtuple('Result', ['scheduled_time', 'from_thread', 'apply_result'])
 
 
 @dataclass
@@ -25,10 +25,10 @@ class Task:
 
 
 class ScheduledExecutor(threading.Thread):
-    def __init__(self, max_threads=40, send_stats=True):
+    def __init__(self, max_threads=40, stats='pooling_stats.csv'):
         super().__init__()
         self.max_threads = max_threads
-        self.stats = send_stats
+        self.stats = stats
         self._tasks = SortedDict()
         self._pool = ThreadPool(processes=max_threads)
         self._results = []
@@ -37,7 +37,7 @@ class ScheduledExecutor(threading.Thread):
         self._starting_point = time.time()
         self._stats_counter = 0
         if self.stats:
-            with open('pooling_stats.csv', 'w+') as f:
+            with open(stats, 'w+') as f:
                 f.write('')
         self.start()
 
@@ -60,7 +60,7 @@ class ScheduledExecutor(threading.Thread):
         self._stats_counter += 1
         self._stats.append(stat)
         if self._stats_counter % 20 == 0:
-            with open('pooling_stats.csv', 'a') as f:
+            with open(self.stats, 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow(stat)
                 # writer.writerows(self._stats)
@@ -83,7 +83,9 @@ class ScheduledExecutor(threading.Thread):
             for task in tasks:
                 kwargs = {'args': task.args, 'name': task.from_thread, 'tries': 1, 'raise_exc': False}
                 apply_result = self._pool.apply_async(provision.multi_try, [task.to_proceed], kwds=kwargs)
-                result = Result(scheduled_time=scheduled_time, task=task, apply_result=apply_result)
+                result = Result(scheduled_time=scheduled_time,
+                                from_thread=task.from_thread,
+                                apply_result=apply_result)
                 self._results.append(result)
 
         to_del = []
@@ -108,18 +110,18 @@ class ScheduledExecutor(threading.Thread):
             if timed not in self._results:
                 to_del.append(timed)
             else:
-                block_time = 600 if 'EventParser (' in timed.task.from_thread else 300
+                block_time = 600 if 'EventParser (' in timed.from_thread else 300
                 if time.time() - self._timers[timed] > block_time:
-                    to_warn.append(timed.task.from_thread)
+                    to_warn.append(timed.from_thread)
         for timed in to_del:
             del self._timers[timed]
 
         if len(to_warn) == self.max_threads:
-            logger.critical('EXECUTION TOTALLY BLOCKED', name='Controller')
+            logger.critical('EXECUTION IS TOTALLY BLOCKED', name='Controller')
         else:
-            for timed in to_warn:
-                logger.warning(f'Execution blocked. Check for input() or smth blocking the execution',
-                               name=timed.task.from_thread)
+            for thread_name in to_warn:
+                logger.error(f'Execution blocked. Check for input() or smth blocking the execution',
+                             name=thread_name)
 
     def run(self):
         while True:

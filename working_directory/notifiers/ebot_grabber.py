@@ -2,7 +2,7 @@ import json
 import os
 import threading
 from multiprocessing.pool import ThreadPool
-from multiprocessing import Lock
+from threading import Lock
 
 from loguru import logger
 
