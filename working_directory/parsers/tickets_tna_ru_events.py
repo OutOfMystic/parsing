@@ -1,5 +1,6 @@
 import json
 from time import sleep
+from datetime import datetime
 
 from bs4 import BeautifulSoup
 from telebot import TeleBot
@@ -38,21 +39,34 @@ class TNA(EventParser):
                 title = first_team[:first_team.index(' (')] + ' - ' + second_team[:second_team.index(' (')]
             except IndexError:
                 title = item.select('div.home_events_item_info a')[0].text.replace("'", '"')
+            
+            date_now = datetime.now()
+            current_year = date_now.year
+            current_month = date_now.month-1
+            short_months_in_russian = [
+            "янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"]
 
             try:
                 date_and_time = item.find('div', class_='tickets_item_date').text
-                date_and_time = date_and_time.replace(' /', '').split()
-                date_and_time[1] = date_and_time[1].title()[:3]
+                day, month, time = date_and_time.replace(' /', '').split()
+                month = month[:3].strip().replace('мая','май')
+                month_find = short_months_in_russian.index(month)
+                #date_and_time[1] = date_and_time[1].title()[:3]
+                if month_find < current_month:
+                    current_year += 1
+                normal_date = f"{day} {month.title()} {current_year} {time.strip()}"
 
-                normal_date = ' '.join(date_and_time)
             except AttributeError:
                 date_and_time = item.find('div', class_='home_events_item_date').text
                 date, time = date_and_time.split('/')
                 day, month = date.split()
-                month = month.title()[:3]
+                month = month[:3]
+                month_find = short_months_in_russian.index(month)
                 time = time.replace(' ', '')
 
-                normal_date = day + ' ' + month + ' ' + time
+                if month_find < current_month:
+                    current_year += 1
+                normal_date = f"{day} {month.title()} {current_year} {time.strip()}"
 
             parametr_for_get_href = item.find('a').get('href')
             url = f'https://tna-tickets.ru{parametr_for_get_href}'
