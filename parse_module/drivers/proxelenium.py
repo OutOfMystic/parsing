@@ -25,8 +25,13 @@ class ProxyWebDriver(webdriver.Chrome):
         main_directory = os.path.dirname(script_directory)
         main_directory = os.path.dirname(main_directory)
         # Создаем относительный путь к chromedriver.exe
-        chromedriver_path = os.path.join(main_directory, 'working_directory', 'chromedriver.exe')
-        #must_be_chromedriver_path = r'C:\Users\Administrator\Desktop\parsing\working_directory\chromedriver.exe'
+        platform = os.name
+        if platform == "posix": # Для Linux/Unix
+            chromedriver_path = os.path.join(main_directory, 'working_directory', 'chromedriver')
+        elif platform == "nt":  # Для Windows
+            chromedriver_path = os.path.join(main_directory, 'working_directory', 'chromedriver.exe')
+        else:
+            chromedriver_path = None
         # Unpacking initial keyword arguments
         self.proxy = kwargs.get('proxy', None)
         self.tab = kwargs.get('tab', 0)
