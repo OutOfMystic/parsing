@@ -325,7 +325,6 @@ class Controller:
             print(utils.yellow('EMPTY CONFIGURATION'))
             return
         config = provision.try_open(config_path, {}, json_=True)
-        logger.debug(config)
         turn_on_stats = {False: 0, True: 0}
         for parser_name in config:
             key = config[parser_name]

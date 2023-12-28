@@ -1,4 +1,3 @@
-import threading
 from urllib.parse import urlparse
 from threading import Lock
 
@@ -139,6 +138,7 @@ class SeatsParserGroup:
                                                           name=self.name)
         margin_rules = self.controller.margins[event_data['margin']]
         scheme.bind(event_data['priority'], margin_rules)
+        event_data = event_data.copy()
         event_data['scheme'] = scheme
         event_data['margin'] = margin_rules
         extra = event_data.pop('extra')
@@ -149,7 +149,7 @@ class SeatsParserGroup:
             parser.delay = 10
         parser.start()
         self.bprint(f'SEATS parser {self.parent_event} ({event_data["event_name"]}'
-                    f' {event_data["date"]}) has started')
+                    f' {event_data["date"]}) has started ({event_data["event_id"]})')
         self.parsers.append(parser)
 
     def _parser_already_started(self, new_parser):

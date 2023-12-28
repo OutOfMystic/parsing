@@ -66,8 +66,14 @@ class Date:
         else:
             raise TypeError(f'Can compare only Date and datetime objects')
 
-    def __ge__(self, other):
+    def __gt__(self, other):
         return not self.__lt__(other) and not self.__eq__(other)
+
+    def __ge__(self, other):
+        return not self.__lt__(other)
+
+    def __le__(self, other):
+        return not self.__gt__(other)
 
     @classmethod
     def now(cls):

@@ -21,7 +21,6 @@ class ParserBase(core.Bot, ABC):
         self.session = None
         self.last_state = None
         self._notifier = None
-        self.proxy = self.controller.proxy_hub.get(self.proxy_check)
 
     def change_proxy(self, report=False):
         if report:
@@ -291,9 +290,11 @@ class SeatsParser(ParserBase, ABC):
 
     def _format_name(self):
         event_name = self.event_name.replace(' - ', '-') \
-                                    .replace('\n', ' ')[:12]
+                                    .replace('\n', ' ') \
+                                    .replace(' ', '-')[:12]
+        scheme_name = self.scheme.name[:20].replace(' ', '-')
         date = self.date.short()
-        return f'{event_name} {date} {self.scheme.name} {self.domain}'
+        return f'#{self.event_id} {event_name} {date} {scheme_name} {self.domain}'
 
     def _set_extra(self, extra):
         for attr, value in extra.items():

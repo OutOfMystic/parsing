@@ -1,4 +1,3 @@
-from time import sleep
 import re
 
 from bs4 import BeautifulSoup
@@ -9,14 +8,12 @@ from parse_module.manager.proxy.instances import ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-
 class KassirParser(SeatsParser):
     proxy_check = NormalConditions()
     event = 'kassir.ru'
     url_filter = lambda event: 'kassir.ru' in event and 'crocus2' not in event and 'frame' not in event \
                                and 'schematr' not in event \
                                and 'vtb-arena-tsentralnyiy-stadion-dinamo/rusalochka' not in event
-    
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -1497,7 +1494,6 @@ class KassirParser(SeatsParser):
                 sector = f'Сектор {sector}'
             res_sectors.setdefault(sector, {}).update(tickets)
         return res_sectors
-            
 
     def new_reformat(self, a_sectors, venue):
         reformat_box = {

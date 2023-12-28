@@ -12,7 +12,7 @@ from ..utils.logger import logger
 from ..utils.provision import multi_try
 
 
-def wait_until(condition, timeout=60, step=0.1):
+def wait_until(condition, timeout=600, step=0.1):
     start_time = time.time()
     while not condition():
         if (time.time() - start_time) > timeout:
@@ -44,7 +44,8 @@ class SchemeRouterFrontend:
             add_result = new_scheme.get_scheme()
             if add_result is False:
                 if not wait_until(lambda: scheme_id in self.group_schemes):
-                    logger.critical(f'Scheme distribution corrupted! {scheme_id}', name='Controller')
+                    logger.error(f'Scheme distribution corrupted! Frontend. Scheme id {scheme_id}',
+                                 name='Controller')
                     self.group_schemes[scheme_id] = new_scheme
             else:
                 self.group_schemes[scheme_id] = new_scheme
@@ -70,10 +71,10 @@ class Postponer(threading.Thread):
             task = [method, args]
             queue.append(task)
 
-    def _process_task(self, method, args):
+    def _process_task(self, method, args, raise_exc=True):
         event_id = args[0]
         thread_name = self.schemes[event_id].name
-        multi_try(method, args=args, name=thread_name, tries=3)
+        multi_try(method, args=args, name=thread_name, tries=3, raise_exc=raise_exc)
 
     def _step(self):
         try:
@@ -87,8 +88,9 @@ class Postponer(threading.Thread):
             if event_id not in self.schemes:
                 continue
             queue = self.locked_queues.pop(event_id)
+            logger.debug(queue)
             for method, args in queue:
-                self._process_task(method, args)
+                self._process_task(method, args, raise_exc=False)
                 processed += 1
         return processed
 
@@ -171,7 +173,8 @@ class SchemeRouterBackend:
             add_result = new_scheme.get_scheme()
             if add_result is False:
                 if not wait_until(lambda: scheme_id in self.group_schemes):
-                    logger.critical(f'Scheme distribution corrupted! {scheme_id}', name='Controller')
+                    logger.error(f'Scheme distribution corrupted! Backend. Scheme id {scheme_id}',
+                                 name='Controller')
                     self.group_schemes[scheme_id] = new_scheme
             else:
                 self.group_schemes[scheme_id] = new_scheme
@@ -197,6 +200,7 @@ class SchemeProxy:
         self._margins = {}
 
     def bind(self, priority, margin_func):
+        logger.debug('gong', self.event_id, priority, name=self.name)
         operation = ['bind', [self.event_id, priority, margin_func]]
         self._margins[priority] = margin_func
         self.conn.send(operation)

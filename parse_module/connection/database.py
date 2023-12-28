@@ -135,7 +135,7 @@ class ParsingDB(DBConnection):
                          database="crmdb")
 
     @locker
-    def get_scheme(self, tasks, **kwargs):
+    def get_scheme(self, tasks, saved_schemes, **kwargs):
         dicted_tasks = defaultdict(list)
         event_lockers = []
         for scheme_id, callback, event_locker in tasks:
@@ -153,12 +153,16 @@ class ParsingDB(DBConnection):
             for callback in callbacks[1:]:
                 callback.append(None)
                 callback.append(None)
-        for scheme_id, callback in dicted_tasks.items():
-            if not callback:
+        for scheme_id, callbacks in dicted_tasks.items():
+            if callbacks:
+                if callbacks[0][0] is not None:
+                    saved_schemes[scheme_id] = callbacks[0]
+            else:
                 logger.error(f'PARSER STARTED INCORRECTLY. SCHEME {scheme_id} DATA WAS LOST', name='Controller')
 
         for event_locker in event_lockers:
             event_locker.set()
+        saved_schemes.dump()
 
     @locker
     def get_scheme_names(self):

@@ -151,10 +151,11 @@ def multi_try(to_try: Callable,
         else:
             error_prefix = '[Exception during `handle_error`]\n'
             exc_args = None if len(inspect.signature(handle_error).parameters) == 0 else (exc, *args,)
+            exc_kwargs = None if len(inspect.signature(handle_error).parameters) == 0 else kwargs
             _tryfunc(handle_error,
                      name,
                      args=exc_args,
-                     kwargs=kwargs,
+                     kwargs=exc_kwargs,
                      error_prefix=error_prefix)
     else:
         if raise_exc:

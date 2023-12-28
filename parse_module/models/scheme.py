@@ -27,7 +27,7 @@ class Dancefloor:
 
 
 class Scheme:
-    saved_schemes = LocalDict(files(connection).joinpath('constructors.pkl'))
+    saved_schemes = LocalDict('constructors.pkl')
 
     def __init__(self, scheme_id):
         self.scheme_id = scheme_id
@@ -62,6 +62,8 @@ class Scheme:
                         .replace('театр', '') \
                         .replace('Театр', '') \
                         .replace('  ', ' ').strip()
+        if self.name.startswith('-'):
+            self.name = self.name[1:]
         all_sectors = scheme['sectors']
 
         seats_list = scheme['seats']
@@ -90,13 +92,13 @@ class Scheme:
         event_locker = threading.Event()
         task = [scheme_id, callback, event_locker]
         tasker.put_throttle(db_manager.get_scheme, task,
+                            self.saved_schemes,
                             from_iterable=False,
                             from_thread='Controller',
                             kwargs={'get_scheme': ''})
         event_locker.wait(600)
         del event_locker
 
-        self.saved_schemes[scheme_id] = callback
         return callback
 
     def _sector_names(self):
@@ -135,6 +137,7 @@ class ParserScheme(Scheme):
                   args=(scheme,), tries=5, name=group_name)
 
     def bind(self, priority, margin_func):
+        logger.debug('binded', self.event_id, priority, name=self.name)
         try:
             self._lock.acquire()
             if priority in self._margins:
