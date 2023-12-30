@@ -3,7 +3,6 @@ import itertools
 import json
 import os
 import random
-import threading
 import time
 
 from . import pooling
@@ -56,12 +55,12 @@ class Controller:
         self.seats_notifiers = []
         self.margins = {}
         self._events_were_reset = []
-        self._table_sites = TableDict(db_manager.get_site_names)
         self._already_warned_on_collect = set()
 
         self.router = router
         self._console = run_inspection(release=True)
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
+        self._table_sites = TableDict(db_manager.get_site_names)
         self.solver, self._cache_dict = solve.get_model_and_cache()
         self.event_aliases = alias.EventAliases(step=5)
         self.parsing_types = db_manager.get_parsing_types()
@@ -102,6 +101,8 @@ class Controller:
             self.parsing_types = db_manager.get_parsing_types()
             self.bprint(f'New type has been registered: {parser_name}')
 
+        if self.debug:
+            return
         self.proxy_hub.add_route(parser_class.proxy_check)
         parser = parser_class(self, parser_name)
         parser.start()

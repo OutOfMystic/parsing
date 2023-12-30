@@ -167,7 +167,7 @@ class Notifier(ThreadedBot, ABC):
                 self._events_state[event_name] = []
             if event_name not in self._first_change:
                 self._events_state[event_name] = list(set(self._events_state[event_name]) | set(new_state))
-                tasker.put(self._events_state_write, event_name)
+                tasker.put(self._events_state_write, event_name, from_thread=self.name)
                 self._first_change.append(event_name)
 
             no_repeat = self._check_for_repeat(event_name, new_state, repeater_delay,
@@ -220,7 +220,7 @@ class Notifier(ThreadedBot, ABC):
             if no_repeat:
                 self.tickets_state[event_name] = new_state
             if first_plus:
-                tasker.put(self._events_state_write, event_name)
+                tasker.put(self._events_state_write, event_name, from_thread=self.name)
             return to_plus
         elif isinstance(new_state, dict):
             refreshed_state = {}
@@ -235,7 +235,7 @@ class Notifier(ThreadedBot, ABC):
             if event_name not in self._first_change:
                 united = set(self._events_state[event_name]) | set(self.tickets_state[event_name].keys())
                 self._events_state[event_name] = list(united)
-                tasker.put(self._events_state_write, event_name)
+                tasker.put(self._events_state_write, event_name, from_thread=self.name)
                 self._first_change.append(event_name)
 
             no_repeat = self._check_for_repeat(event_name, new_state, repeater_delay,
@@ -310,7 +310,7 @@ class Notifier(ThreadedBot, ABC):
             if no_repeat:
                 self.tickets_state[event_name] = refreshed_state.copy()
             if first_plus:
-                tasker.put(self._events_state_write, event_name)
+                tasker.put(self._events_state_write, event_name, from_thread=self.name)
             return only_plus
         else:
             no_repeat = self._check_for_repeat(event_name, new_state, repeater_delay,

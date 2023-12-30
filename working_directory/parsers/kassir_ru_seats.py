@@ -1626,8 +1626,7 @@ class KassirParser(SeatsParser):
         if (not response.ok or response.text == '[]') and count > 0:
             self.change_proxy()
             self.session = ProxySession(self)
-            self.debug(url)
-            self.debug(response.text)
+            self.debug(url, response.text)
             raise RuntimeError(f'{count} {self.proxy.args}, {url}, {self.session.cookies} this IP is block')
 
         # with open('TEST2.json', 'w', encoding='utf-8') as file:

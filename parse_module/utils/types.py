@@ -1,8 +1,6 @@
 import pickle
 from typing import Callable
 
-from loguru import logger
-
 
 class HashDict:
     def __init__(self, hash_function=hash):
@@ -76,11 +74,6 @@ class LocalDict(dict):
         cache = load_cache(self.path)
         for key, value in cache.items():
             dict.__setitem__(self, key, value)
-
-    def __setitem__(self, key, value):
-        with open(self.path, 'wb+') as f:
-            pickle.dump(self, f)
-        super().__setitem__(key, value)
 
     def dump(self):
         with open(self.path, 'wb+') as f:

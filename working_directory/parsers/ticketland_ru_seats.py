@@ -57,7 +57,7 @@ class LenkomParser(SeatsParser):
             self.count_error += 1
             if self.count_error == 50:
                 raise ProxyError('ticketland seats parser except ProxyError')
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+            self.change_proxy()
             self.before_body()
             return self._get_tl_csrf_and_data()
         try:
@@ -149,7 +149,7 @@ class LenkomParser(SeatsParser):
             self.count_error += 1
             if self.count_error == 50:
                 raise ProxyError('ticketland seats parser except ProxyError')
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+            self.change_proxy()
             self.before_body()
             return self._get_tl_csrf_and_data()
 
@@ -1096,6 +1096,7 @@ class TeatrGogolya(LenkomParser):
     
     def body(self):
         super().body()
+
 
 class Kreml(LenkomParser):
     event = 'ticketland.ru'

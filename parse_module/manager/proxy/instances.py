@@ -85,18 +85,7 @@ class ProxySession(Session):
         super().__init__()
         self.bot = bot
 
-    def get(self, *args, **kwargs):
+    def request(self, *args, **kwargs):
         kwargs['proxies'] = self.bot.proxy.requests
-        return super().get(*args, **kwargs)
-
-    def post(self, *args, **kwargs):
-        kwargs['proxies'] = self.bot.proxy.requests
-        return super().post(*args, **kwargs)
-
-    def put(self, *args, **kwargs):
-        kwargs['proxies'] = self.bot.proxy.requests
-        return super().put(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        kwargs['proxies'] = self.bot.proxy.requests
-        return super().delete(*args, **kwargs)
+        kwargs['timeout'] = kwargs['timeout'] if 'timeout' in kwargs else 30
+        return super().request(*args, **kwargs)

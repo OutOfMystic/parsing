@@ -81,6 +81,7 @@ class CircusSochiRu(SeatsParser):
         return r.json()
 
     def body(self) -> None:
+        self.debug('Starting body')
         for sector in self._parse_seats():
             if 'Ложа' in sector.sector_name:
                 continue

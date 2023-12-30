@@ -117,7 +117,7 @@ class Logger(threading.Thread):
             if message.count('\n') > 2:
                 parts = message.split('\n')[:2]
                 message = '\n'.join(parts) + '...'
-        dt_str = readable_datetime(timestamp).rjust(17, ' ')
+        dt_str = readable_datetime(timestamp).ljust(17, ' ')
         if call_stack:
             call_stack = ' | ' + call_stack
 

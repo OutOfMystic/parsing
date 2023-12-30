@@ -47,7 +47,7 @@ class DBConnection:
         self._saved_selects = {}
         self.connection = None
         self.cursor = None
-        tasker.put(self.connect_db)
+        tasker.put(self.connect_db, from_thread='Controller')
 
     def save_mode_on(self):
         logger.warning('DATABASE SAVE MODE TURNED ON', name='Controller')
@@ -80,10 +80,13 @@ class DBConnection:
     def cursor_wrapper(self, func_name, *args):
         while self.cursor is None:
             time.sleep(0.1)
+
         try:
             function = getattr(self.cursor, func_name)
             return function(*args)
         except psycopg2.ProgrammingError as error:
+            if str(error) == 'no results to fetch':
+                raise error
             logger.error(f'Unable to process command: {error}', name='Controller')
         except Exception as error:
             raise error
@@ -343,8 +346,12 @@ class ParsingDB(DBConnection):
                 if parsers is not None}
 
     @locker
-    def get_site_names(self):
-        self.execute('SELECT id, name from public.tables_sites')
+    def get_site_names(self, already=None):
+        if already:
+            found = ', '.join(str(elem) for elem in already)
+            self.execute(f'SELECT id, name from public.tables_sites WHERE id NOT IN ({found})')
+        else:
+            self.execute(f'SELECT id, name from public.tables_sites')
         return {id_: name for id_, name in self.fetchall()}
 
     @locker
@@ -411,8 +418,8 @@ class TableDict(dict):
         self.update_names()
 
     def update_names(self):
-        actual_sites = self.update_func()
-        self.update(actual_sites)
+        actual_data = self.update_func(self.keys())
+        self.update(actual_data)
 
     def __getitem__(self, item):
         if item not in self:

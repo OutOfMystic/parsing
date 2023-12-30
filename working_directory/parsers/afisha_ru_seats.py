@@ -23,7 +23,6 @@ class AfishaRuSeats(SeatsParser):
                 },
             }
 
-
     def before_body(self):
         self.session = ProxySession(self)
 
@@ -49,15 +48,9 @@ class AfishaRuSeats(SeatsParser):
             resp = response.json()
         except:
             resp = False
-        count = 0
-        if not resp and count < 5:
-            count += 1
-            if count > 2:
-                sleep(30)
-            self.warning(f' cannot load {self.url} try +={count}')
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
-            return self.load_scheme()
+        if not resp:
+            self.change_proxy()
+            raise RuntimeError(f' cannot load {self.url}')
 
         return response
 

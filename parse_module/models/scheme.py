@@ -34,8 +34,8 @@ class Scheme:
         self.name = ''
         self.sectors = {}
         self.dancefloors = {}
-        self.sector_names = self._sector_names()
-        self.sector_data = self._sector_data()
+        self.sector_names = []
+        self.sector_data = []
 
     def get_scheme(self):
         """with shelve.open('schemes') as shelf:
@@ -82,6 +82,9 @@ class Scheme:
             else:
                 id_row_seat = (ticket_id, str(ticket[5]), str(ticket[6]))
                 self.sectors[sector_name][id_row_seat] = False
+
+        self.sector_data = self._sector_data()
+        self.sector_names = self._sector_names()
         return True
 
     def _get_scheme_wrapper(self, scheme_id):
@@ -137,7 +140,6 @@ class ParserScheme(Scheme):
                   args=(scheme,), tries=5, name=group_name)
 
     def bind(self, priority, margin_func):
-        logger.debug('binded', self.event_id, priority, name=self.name)
         try:
             self._lock.acquire()
             if priority in self._margins:
@@ -151,6 +153,7 @@ class ParserScheme(Scheme):
             self._lock.release()
 
     def unbind(self, priority):
+        logger.debug(priority)
         try:
             self._lock.acquire()
 
@@ -161,8 +164,7 @@ class ParserScheme(Scheme):
             del self._bookings[priority]
             del self._prohibitions[priority]
         except Exception as err:
-            mes = utils.red(f'{self.name}: Error unbinding parser from scheme: {err}')
-            print(mes)
+            logger.error('Error unbinding parser from scheme: {err}', name=self.name)
         finally:
             self._lock.release()
 

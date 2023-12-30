@@ -41,7 +41,7 @@ class ScheduledExecutor(threading.Thread):
                 f.write('')
         self.start()
 
-    def add(self, task: Task):
+    def add_task(self, task: Task):
         timestamp = task.wait + time.time()
         self._tasks.setdefault(timestamp, [])
         self._tasks[timestamp].append(task)
@@ -74,8 +74,6 @@ class ScheduledExecutor(threading.Thread):
 
     def _step(self):
         bisection = self._tasks.bisect_left(time.time())
-        # logger.debug(len(self._tasks), len(self._results), bisection, self.get_key(time.time()),
-        #              list(self.get_key(key) for key in self._tasks.keys())[:30])
         if not bisection:
             time.sleep(1)
         for _ in range(bisection):
@@ -86,6 +84,7 @@ class ScheduledExecutor(threading.Thread):
                 result = Result(scheduled_time=scheduled_time,
                                 from_thread=task.from_thread,
                                 apply_result=apply_result)
+                # logger.debug(task.to_proceed, name=task.from_thread)
                 self._results.append(result)
 
         to_del = []
@@ -97,10 +96,11 @@ class ScheduledExecutor(threading.Thread):
                 continue
             result = result_callback.apply_result.get()
             to_del.append(i)
-            # logger.debug(-int(-time.time() - result_callback.scheduled_time))
+            # logger.debug('result', int(time.time() - result_callback.scheduled_time), 'sec',
+            #              name=result_callback.from_thread)
             self._add_stats(result_callback.scheduled_time)
             if isinstance(result, Task):
-                self.add(result)
+                self.add_task(result)
         for i in to_del[::-1]:
             del self._results[i]
 
@@ -126,3 +126,4 @@ class ScheduledExecutor(threading.Thread):
     def run(self):
         while True:
             multi_try(self._step, tries=1, raise_exc=False, name='Controller')
+
