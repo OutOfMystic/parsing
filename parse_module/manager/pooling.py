@@ -8,7 +8,8 @@ from typing import Callable, Iterable
 
 from sortedcontainers import SortedDict
 
-from parse_module.utils import provision
+from parse_module.console.base import print_cols
+from parse_module.utils import provision, utils
 from parse_module.utils.logger import logger
 from parse_module.utils.provision import multi_try
 
@@ -65,6 +66,23 @@ class ScheduledExecutor(threading.Thread):
                 writer.writerow(stat)
                 # writer.writerows(self._stats)
             self._stats.clear()
+
+    def inspect_queue(self):
+        log_time = time.time()
+        stat = f'Log time: {log_time - self._starting_point:.1f}, ' \
+               f'In process: {len(self._results)}/{self.max_threads}, ' \
+               f'Scheduled: {len(self._tasks)}'
+        utils.blueprint(stat)
+        tasks = self._tasks.copy()
+        to_print = []
+        for task_time, tasks in tasks.items():
+            time_to_task = task_time - time.time()
+            formed_time = int(time_to_task * 10) / 10
+            tasks_ = tasks.copy()
+            for task in tasks_:
+                row = [utils.green(formed_time), utils.colorize(task.from_thread, utils.Fore.LIGHTCYAN_EX)]
+                to_print.append(row)
+        print_cols(to_print[::-1])
 
     @staticmethod
     def get_key(key):
@@ -125,5 +143,5 @@ class ScheduledExecutor(threading.Thread):
 
     def run(self):
         while True:
-            multi_try(self._step, tries=1, raise_exc=False, name='Controller')
+            provision.just_try(self._step, name='Controller')
 

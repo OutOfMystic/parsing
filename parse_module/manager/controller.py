@@ -58,7 +58,7 @@ class Controller:
         self._already_warned_on_collect = set()
 
         self.router = router
-        self._console = run_inspection(release=True)
+        self._console = run_inspection(self, release=True)
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
         self._table_sites = TableDict(db_manager.get_site_names)
         self.solver, self._cache_dict = solve.get_model_and_cache()
