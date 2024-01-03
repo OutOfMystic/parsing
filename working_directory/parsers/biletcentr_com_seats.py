@@ -6,8 +6,8 @@ import re
 
 
 class StarParser(SeatsParser):
-    event = 'tickets-star.com'
-    url_filter = lambda event: 'tickets-star.com' in event
+    event = 'biletcentr.com.com'
+    url_filter = lambda event: 'biletcentr.com' in event
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -575,27 +575,7 @@ class StarParser(SeatsParser):
         return s, theatre
 
     def body(self):
-        skip_events = [
-            'https://www.tickets-star.com/cat/245/EventId/242282923/',
-            'https://www.tickets-star.com/cat/245/EventId/243579549/',
-            'https://www.tickets-star.com/cat/245/EventId/243579548/',
-            'https://www.tickets-star.com/cat/245/EventId/242282923/',
-            'https://www.tickets-star.com/cat/245/EventId/243579547/',
-            'https://www.tickets-star.com/cat/245/EventId/240344845/',
-            'https://www.tickets-star.com/cat/245/EventId/245265248/',
-            'https://www.tickets-star.com/cat/245/EventId/245265253/',
-            'https://www.tickets-star.com/cat/245/EventId/245265259/',
-            'https://www.tickets-star.com/cat/245/EventId/245265264/',
-            'https://www.tickets-star.com/cat/245/EventId/245363653/',
-            'https://www.tickets-star.com/cat/245/EventId/240344845/',
-            'https://www.tickets-star.com/cat/245/EventId/240344847/',
-            'https://www.tickets-star.com/cat/245/EventId/240344849/',
-            'https://www.tickets-star.com/cat/245/EventId/240344850/',
-            'https://www.tickets-star.com/cat/245/EventId/249417912/',
-            'https://www.tickets-star.com/cat/245/EventId/249417909/',
-            'https://www.tickets-star.com/cat/245/EventId/249417911/',
-            'https://www.tickets-star.com/cat/245/EventId/249417910/',
-        ]
+        skip_events = []
 
         if self.url in skip_events:
             return None
