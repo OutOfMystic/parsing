@@ -7,7 +7,7 @@ from threading import Lock
 
 from . import pooling
 from .router import SchemeRouterFrontend, wait_until
-from ..manager.pooling import ScheduledExecutor, Task
+from ..manager.pooling import ScheduledExecutor
 from ..models import scheme
 from ..utils import provision
 from ..utils.logger import logger
@@ -80,9 +80,22 @@ class SchemeRouterBackend:
         self.group_schemes = {}
         self.event_lockers = defaultdict(Lock)
         self.conn = conn
-        self._pool = ScheduledExecutor(stats='scheme_router_stats.csv')
+        self._pool = ScheduledExecutor(stats='scheme_router_stats.csv', max_threads=5)
         self._locked_queues = {}
         self._postponer = Postponer(self.parser_schemes, self._locked_queues)
+
+    def _get_group_scheme(self, scheme_id):
+        if scheme_id not in self.group_schemes:
+            new_scheme = scheme.Scheme(scheme_id)
+            add_result = new_scheme.setup_sectors(wait_mode=True)
+            if add_result is False:
+                if not wait_until(lambda: scheme_id in self.group_schemes):
+                    logger.error(f'Scheme distribution corrupted! Backend. Scheme id {scheme_id}',
+                                 name='Controller')
+                    self.group_schemes[scheme_id] = new_scheme
+            else:
+                self.group_schemes[scheme_id] = new_scheme
+        return self.group_schemes[scheme_id]
 
     def create_scheme(self, event_id, scheme_id, name):
         try:
@@ -134,19 +147,6 @@ class SchemeRouterBackend:
     def _release_sectors(self, event_id, *args):
         scheme = self.parser_schemes[event_id]
         scheme.release_sectors(*args)
-
-    def _get_group_scheme(self, scheme_id):
-        if scheme_id not in self.group_schemes:
-            new_scheme = scheme.Scheme(scheme_id)
-            add_result = new_scheme.setup_sectors()
-            if add_result is False:
-                if not wait_until(lambda: scheme_id in self.group_schemes):
-                    logger.error(f'Scheme distribution corrupted! Backend. Scheme id {scheme_id}',
-                                 name='Controller')
-                    self.group_schemes[scheme_id] = new_scheme
-            else:
-                self.group_schemes[scheme_id] = new_scheme
-        return self.group_schemes[scheme_id]
 
     def run(self) -> None:
         logger.info('Backend started', name='Controller')

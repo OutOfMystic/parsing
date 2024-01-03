@@ -27,7 +27,7 @@ class Dancefloor:
 
 
 class Scheme:
-    saved_schemes = LocalDict('constructors.pkl')
+    saved_schemes = LocalDict('constructors.sql')
 
     def __init__(self, scheme_id):
         self.scheme_id = scheme_id
@@ -37,7 +37,7 @@ class Scheme:
         self.sector_names = []
         self.sector_data = []
 
-    def setup_sectors(self):
+    def setup_sectors(self, wait_mode=False):
         """with shelve.open('schemes') as shelf:
             name_scheme = shelf.get(str(self.scheme_id), None)
         if name_scheme:
@@ -53,7 +53,10 @@ class Scheme:
             with shelve.open('schemes') as shelf:
                 shelf[str(self.scheme_id)] = callback
             name, scheme = callback"""
-        name, scheme = self._get_scheme_wrapper(self.scheme_id)
+        if wait_mode:
+            name, scheme = self.saved_schemes.wait_and_get(self.scheme_id, timeout=1800, delay=10)
+        else:
+            name, scheme = self._get_scheme_wrapper(self.scheme_id)
 
         if name is None and scheme is None:
             return False
@@ -99,7 +102,7 @@ class Scheme:
                             from_iterable=False,
                             from_thread='Controller',
                             kwargs={'get_scheme': ''})
-        event_locker.wait()
+        event_locker.wait(1800)
         del event_locker
 
         if not callback:

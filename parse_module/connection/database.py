@@ -166,7 +166,6 @@ class ParsingDB(DBConnection):
         finally:
             for event_locker in event_lockers:
                 event_locker.set()
-        saved_schemes.dump()
 
     @locker
     def get_scheme_names(self):

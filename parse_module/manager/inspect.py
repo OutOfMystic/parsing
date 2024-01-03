@@ -56,6 +56,8 @@ class ControllerInterface(base.CommandPrompt):
         input(utils.blue('Press any key to continue output stream...'))
         logger.resume()
 
+    def pooling(args_row):
+
 
 def get_home(cmd, args_row, value):
     return prespell_home, None, ' '
@@ -86,10 +88,12 @@ def run_inspection(release=True):
 
 
 commands = {
+    'source': ControllerInterface.log_source,
     'filter': ControllerInterface.log_source,
     'level': ControllerInterface.log_level,
     'clear': ControllerInterface.clear,
     'resume': ControllerInterface.get_back,
     'backstage': ControllerInterface.backstage,
+    'pooling': ControllerInterface.pooling,
     '': ControllerInterface.get_back
 }
