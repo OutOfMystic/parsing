@@ -30,7 +30,8 @@ class Logger(threading.Thread):
                             'utils.provision.multi_try',
                             'utils.logger.error',
                             'utils.logger.critical',
-                            'utils.provision._tryfunc']
+                            'utils.provision._tryfunc',
+                            'models.parser._debug_only']
         self.release = release
         self.log_path = log_path
         self.ignore_files = ignore_files

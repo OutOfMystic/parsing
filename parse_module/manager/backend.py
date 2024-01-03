@@ -5,6 +5,7 @@ import time
 from collections import defaultdict
 from threading import Lock
 
+from . import pooling
 from .router import SchemeRouterFrontend, wait_until
 from ..manager.pooling import ScheduledExecutor, Task
 from ..models import scheme
@@ -39,17 +40,17 @@ class Postponer(threading.Thread):
     def _process_task(self, method, args, raise_exc=True):
         event_id = args[0]
         thread_name = self.schemes[event_id].name
-        multi_try(method, args=args, name=thread_name, tries=3, raise_exc=raise_exc)
+        return multi_try(method, args=args, name=thread_name, tries=3, raise_exc=raise_exc)
 
     def _step(self):
         try:
             self.lock.acquire()
-            event_ids_ = list(self.locked_queues.keys())
+            event_ids_waiting_to_proceed = list(self.locked_queues.keys())
         finally:
             self.lock.release()
 
         processed = 0
-        for event_id in event_ids_:
+        for event_id in event_ids_waiting_to_proceed:
             if event_id not in self.schemes:
                 continue
             try:
@@ -60,6 +61,7 @@ class Postponer(threading.Thread):
             for method, args in queue:
                 self._process_task(method, args, raise_exc=False)
                 processed += 1
+
         return processed
 
     def run(self):
@@ -88,7 +90,7 @@ class SchemeRouterBackend:
             self._locked_queues[event_id] = []
         finally:
             self._postponer.lock.release()
-            task = Task(self._create_scheme, 'Controller', args=(event_id, scheme_id, name,))
+            task = pooling.Task(self._create_scheme, 'Controller', args=(event_id, scheme_id, name,))
             self._pool.add_task(task)
 
     def _create_scheme(self, event_id, scheme_id, name):
@@ -136,7 +138,7 @@ class SchemeRouterBackend:
     def _get_group_scheme(self, scheme_id):
         if scheme_id not in self.group_schemes:
             new_scheme = scheme.Scheme(scheme_id)
-            add_result = new_scheme.get_scheme()
+            add_result = new_scheme.setup_sectors()
             if add_result is False:
                 if not wait_until(lambda: scheme_id in self.group_schemes):
                     logger.error(f'Scheme distribution corrupted! Backend. Scheme id {scheme_id}',

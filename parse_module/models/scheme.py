@@ -37,7 +37,7 @@ class Scheme:
         self.sector_names = []
         self.sector_data = []
 
-    def get_scheme(self):
+    def setup_sectors(self):
         """with shelve.open('schemes') as shelf:
             name_scheme = shelf.get(str(self.scheme_id), None)
         if name_scheme:
@@ -99,9 +99,11 @@ class Scheme:
                             from_iterable=False,
                             from_thread='Controller',
                             kwargs={'get_scheme': ''})
-        event_locker.wait(600)
+        event_locker.wait()
         del event_locker
 
+        if not callback:
+            raise RuntimeError('Scheme awaiting timed out')
         return callback
 
     def _sector_names(self):
@@ -153,7 +155,6 @@ class ParserScheme(Scheme):
             self._lock.release()
 
     def unbind(self, priority):
-        logger.debug(priority)
         try:
             self._lock.acquire()
 
@@ -164,7 +165,7 @@ class ParserScheme(Scheme):
             del self._bookings[priority]
             del self._prohibitions[priority]
         except Exception as err:
-            logger.error('Error unbinding parser from scheme: {err}', name=self.name)
+            logger.error(f'Error unbinding parser from scheme: {err}', name=self.name)
         finally:
             self._lock.release()
 

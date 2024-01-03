@@ -253,8 +253,6 @@ class KassirParser(SeatsParser):
                 a_sectors_new.setdefault(sector, {}).update(tickets)
         return a_sectors_new
 
-
-
     @staticmethod
     def reformat_vtb_for_dynamo(a_sectors):
         vtb_hockey_reformat_dict = {
@@ -1710,8 +1708,6 @@ class KassirParser(SeatsParser):
             a_sectors = self.reformat_megasport(a_sectors)
         elif self.venue == 'G-Drive Арена':
             a_sectors = self.reformat_g_drive(a_sectors)
-
-        
 
         for sector, tickets in a_sectors.items():
             self.register_sector(sector.strip(), tickets)

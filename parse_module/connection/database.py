@@ -146,25 +146,26 @@ class ParsingDB(DBConnection):
             event_lockers.append(event_locker)
 
         scheme_ids = ', '.join(str(scheme_id) for scheme_id in dicted_tasks)
-        self.execute("SELECT name, json, id FROM public.tables_constructor "
-                     f"WHERE id IN ({scheme_ids})")
+        try:
+            self.execute("SELECT name, json, id FROM public.tables_constructor "
+                         f"WHERE id IN ({scheme_ids})")
 
-        for name, json_, scheme_id in self.fetchall():
-            callbacks = dicted_tasks[scheme_id]
-            callbacks[0].append(name)
-            callbacks[0].append(json_)
-            for callback in callbacks[1:]:
-                callback.append(None)
-                callback.append(None)
-        for scheme_id, callbacks in dicted_tasks.items():
-            if callbacks:
-                if callbacks[0][0] is not None:
-                    saved_schemes[scheme_id] = callbacks[0]
-            else:
-                logger.error(f'PARSER STARTED INCORRECTLY. SCHEME {scheme_id} DATA WAS LOST', name='Controller')
-
-        for event_locker in event_lockers:
-            event_locker.set()
+            for name, json_, scheme_id in self.fetchall():
+                callbacks = dicted_tasks[scheme_id]
+                callbacks[0].append(name)
+                callbacks[0].append(json_)
+                for callback in callbacks[1:]:
+                    callback.append(None)
+                    callback.append(None)
+            for scheme_id, callbacks in dicted_tasks.items():
+                if callbacks:
+                    if callbacks[0][0] is not None:
+                        saved_schemes[scheme_id] = callbacks[0]
+                else:
+                    logger.error(f'PARSER STARTED INCORRECTLY. SCHEME {scheme_id} DATA WAS LOST', name='Controller')
+        finally:
+            for event_locker in event_lockers:
+                event_locker.set()
         saved_schemes.dump()
 
     @locker

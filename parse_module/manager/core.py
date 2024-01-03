@@ -205,15 +205,13 @@ class BotBase:
     def _process_termination(self):
         if self.driver:
             self.driver.quit()
-        self.bprint(f'Thread {self.name} has been {terminated}')
+        self.info(f'Thread has been {terminated}')
 
     def stop(self):
         return self._terminator()
 
     def _finalize(self):
-        self.bprint(f'Thread {self.name} '
-                    f'{utils.red("termination")} '
-                    f'{utils.green("started")}')
+        self.info(f'Thread {utils.red("termination")} {utils.green("started")}')
 
     def debug(self, *messages, **parameters):
         message = ' '.join(str(arg) for arg in messages)

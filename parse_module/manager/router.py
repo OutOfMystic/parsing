@@ -25,7 +25,7 @@ class SchemeRouterFrontend:
     def _get_group_scheme(self, scheme_id):
         if scheme_id not in self.group_schemes:
             new_scheme = scheme.Scheme(scheme_id)
-            add_result = new_scheme.get_scheme()
+            add_result = new_scheme.setup_sectors()
             if add_result is False:
                 if not wait_until(lambda: scheme_id in self.group_schemes):
                     logger.error(f'Scheme distribution corrupted! Frontend. Scheme id {scheme_id}',
@@ -58,7 +58,7 @@ class SchemeProxy:
         if force:
             if priority not in self._margins:
                 return
-        operation = ['unbind', [self.event_id, [priority]]]
+        operation = ['unbind', [self.event_id, priority]]
         del self._margins[args[0]]
         self.conn.send(operation)
 
