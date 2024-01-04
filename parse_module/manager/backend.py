@@ -162,11 +162,17 @@ class SchemeRouterBackend:
             provision.just_try(method, args=args, name='Controller')
 
 
-def process_function(inner_conn):
+def change_connection(login, password):
+    while not db_manager.connection:
+        time.sleep(0.1)
     db_manager.connection.close()
-    db_manager.user = 'parsing_main'
-    db_manager.password = 'cnwhUCJMIIrF2g'
+    db_manager.user = login
+    db_manager.password = password
     db_manager.connect_db()
+
+
+def process_function(inner_conn):
+    change_connection('parsing_main', 'cnwhUCJMIIrF2g')
     backend_ = SchemeRouterBackend(inner_conn)
     backend_.run()
 
