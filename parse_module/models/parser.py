@@ -72,8 +72,8 @@ class ParserBase(core.Bot, ABC):
             self._debug_only('Pooled', int((time.time() - start_time) * 10) / 10)
 
     def _debug_only(self, mes, *args):
-        #if self.controller.debug:
-        self.debug(mes, *args)
+        if self.controller.debug:
+            self.debug(mes, *args)
 
     def start(self):
         task = pooling.Task(self.proceed, self.name, 0)

@@ -8,7 +8,7 @@ import time
 from . import pooling
 from .inspect import run_inspection
 from .proxy import loader
-from .telecore import tele_core
+from .telecore import TeleCore
 from ..connection import db_manager
 from ..connection.database import TableDict
 from ..models.ai_nlp import alias, venue, solve
@@ -23,10 +23,6 @@ from ..utils.logger import logger
 from ..utils.utils import differences
 
 PREDEFINED = True
-
-
-class SchemeRouter:
-    pass
 
 
 class Controller:
@@ -58,6 +54,7 @@ class Controller:
         self._already_warned_on_collect = set()
 
         self.router = router
+        self.tele_core = get_telecore()
         self._console = run_inspection(self, release=True)
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
         self._table_sites = TableDict(db_manager.get_site_names)
@@ -385,8 +382,6 @@ class Controller:
     def run(self):
         if self.parser_modules is None:
             raise RuntimeError('Controller cannot be started being non-configured')
-        tele_core.add('notifications', '6002068146:AAHx8JmyW3QhhFK5hhdFIvTXs3XFlsWNraw')
-        tele_core.add('bills', '5741231744:AAGHiVougv4uoRia5I_behO9r1oMj1NEMI8')
         self.fast_time = time.time()
         fast_delay = 5
 
@@ -402,6 +397,18 @@ class Controller:
                                 tries=1, raise_exc=False)
             delay = self.pending_delay if time.time() > self.fast_time else fast_delay
             time.sleep(delay)
+
+
+def get_telecore():
+    admins = [454746771]
+    tele_profiles = os.path.join('config', 'tele_profiles.json')
+    tele_accordance = os.path.join('config', 'tele_accordance.json')
+    tele_core = TeleCore(profiles_config=tele_profiles,
+                         accordance_config=tele_accordance,
+                         admins=admins)
+    tele_core.add('notifications', '6002068146:AAHx8JmyW3QhhFK5hhdFIvTXs3XFlsWNraw')
+    tele_core.add('bills', '5741231744:AAGHiVougv4uoRia5I_behO9r1oMj1NEMI8')
+    return tele_core
 
 
 def load_parsers(path):

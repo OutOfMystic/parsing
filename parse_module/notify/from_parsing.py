@@ -17,7 +17,7 @@ class ParsingNotifier(Notifier, ABC):
                  min_amount: int = 2,
                  min_increase: int = 5,
                  repeats_until_succeeded: int = 1):
-        super().__init__(tele_profiles=tele_profiles)
+        super().__init__(controller.tele_core, tele_profiles=tele_profiles)
         self.controller = controller
         self.parser = parser
         self.min_amount = min_amount

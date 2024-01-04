@@ -7,6 +7,7 @@ from threading import Lock
 
 from . import pooling
 from .router import SchemeRouterFrontend, wait_until
+from ..connection import db_manager
 from ..manager.pooling import ScheduledExecutor
 from ..models import scheme
 from ..utils import provision
@@ -162,6 +163,10 @@ class SchemeRouterBackend:
 
 
 def process_function(inner_conn):
+    db_manager.connection.close()
+    db_manager.user = 'parsing_main'
+    db_manager.password = 'cnwhUCJMIIrF2g'
+    db_manager.connect_db()
     backend_ = SchemeRouterBackend(inner_conn)
     backend_.run()
 

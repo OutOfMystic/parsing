@@ -1,3 +1,4 @@
+import asyncio
 import threading
 import time
 import csv
@@ -72,7 +73,6 @@ class ScheduledExecutor(threading.Thread):
         stat = f'Log time: {log_time - self._starting_point:.1f}, ' \
                f'In process: {len(self._results)}/{self.max_threads}, ' \
                f'Scheduled: {len(self._tasks)}'
-        utils.blueprint(stat)
         tasks = self._tasks.copy()
         to_print = []
         for task_time, tasks in tasks.items():
@@ -83,6 +83,7 @@ class ScheduledExecutor(threading.Thread):
                 row = [utils.green(formed_time), utils.colorize(task.from_thread, utils.Fore.LIGHTCYAN_EX)]
                 to_print.append(row)
         print_cols(to_print[::-1])
+        utils.blueprint(stat)
 
     @staticmethod
     def get_key(key):
