@@ -91,12 +91,6 @@ class ScheduledExecutor(threading.Thread):
         ppos = key.split('.')[0][-5:]
         return int(ppos)
 
-    async def _step(self):
-        bisection = self._tasks.bisect_left(time.time())
-        if not bisection:
-            await asyncio.sleep(1)
-
-
     def _step(self):
         bisection = self._tasks.bisect_left(time.time())
         if not bisection:
