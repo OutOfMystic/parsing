@@ -1,12 +1,13 @@
 import json
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Lenkom(EventParser):
+class Lenkom(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://tickets.afisha.ru/')
 
     def __init__(self, controller, name):
@@ -16,8 +17,8 @@ class Lenkom(EventParser):
         self.url = 'https://tickets.afisha.ru/wl/54/api/events?lang=ru'
         self.count_request = 0
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, data):
         a_event = []
@@ -76,7 +77,7 @@ class Lenkom(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         a_events = self.get_events()
 
         for event in a_events:

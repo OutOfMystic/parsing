@@ -3,13 +3,14 @@ from typing import Optional, Union
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class KremlInPalace(SeatsParser):
+class KremlInPalace(AsyncSeatsParser):
     event = 'kremlinpalace.org'
     url_filter = lambda url: 'kremlinpalace.org' in url
     proxy_check = SpecialConditions(url='https://kremlinpalace.org/')
@@ -24,8 +25,8 @@ class KremlInPalace(SeatsParser):
                            ' AppleWebKit/537.36 (KHTML, like Gecko)'
                            ' Chrome/111.0.0.0 Safari/537.36')
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         scheme_main = {
@@ -246,7 +247,7 @@ class KremlInPalace(SeatsParser):
 
         return all_sectors
 
-    def body(self):
+    async def body(self):
         for count_error in range(10):
             try:
                 all_sectors = self.get_seats()
@@ -256,7 +257,7 @@ class KremlInPalace(SeatsParser):
                     raise AttributeError(error)
                 if count_error >= 5:
                     self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-                    self.session = ProxySession(self)
+                    self.session = AsyncProxySession(self)
                 continue
         else:
             all_sectors = {}

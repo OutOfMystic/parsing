@@ -3,8 +3,9 @@ import time
 
 from bs4 import BeautifulSoup, Tag
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -13,7 +14,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class MelomanRu(SeatsParser):
+class MelomanRu(AsyncSeatsParser):
     event = 'meloman.ru'
     url_filter = lambda url: 'bigbilet.ru' in url
 
@@ -22,8 +23,8 @@ class MelomanRu(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if '3 Амф' in sector_name:

@@ -1,12 +1,13 @@
 from datetime import datetime
 from urllib.parse import urlparse
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class KassirParser(EventParser):
+class KassirParser(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -35,8 +36,8 @@ class KassirParser(EventParser):
              'https://msk.kassir.ru/teatry/mossoveta': '*', #mossoveta
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
 
     @staticmethod
@@ -77,7 +78,7 @@ class KassirParser(EventParser):
         while not get_events.ok and count > 0:
             self.error(f'{self.proxy.args}, {self.session.cookies} kassir events')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
+            self.session = AsyncProxySession(self)
             get_events = self.session.get(url_to_api, headers=self.new_headers)
             count -= 1
 
@@ -150,7 +151,7 @@ class KassirParser(EventParser):
                     raise
         return events_to_write
 
-    def body(self):
+    async def body(self):
         #('Ледовое шоу Евгения Плющенко «Русалочка»', 'https://schematr.kassir.ru/widget/?key=3a78a0c2-f33b-b849-851e-c1ba595f54bd&eventId=2012603', '28 Дек 2023 19:00', 'ВТБ Арена'),
         self.venue_to_replace = {
             'Красная площадь': 'Кремлёвский дворец',

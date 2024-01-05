@@ -5,14 +5,15 @@ import requests
 from requests.exceptions import JSONDecodeError, ProxyError
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils import utils, provision
 
 
-class LenkomParser(SeatsParser):
+class LenkomParser(AsyncSeatsParser):
     event = 'ticketland.ru'
     proxy_check = SpecialConditions(url='https://www.ticketland.ru/')
     url_filter = lambda url: 'ticketland.ru' in url and 'lenkom' in url
@@ -57,7 +58,7 @@ class LenkomParser(SeatsParser):
             self.count_error += 1
             if self.count_error == 50:
                 raise ProxyError('ticketland seats parser except ProxyError')
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+            self.change_proxy()
             self.before_body()
             return self._get_tl_csrf_and_data()
         try:
@@ -79,8 +80,8 @@ class LenkomParser(SeatsParser):
 
         return tl_csrf.replace('=', '%3D'), performance_id, limit, is_special_sale
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
         self._get_init_vars_if_not_given()
 
     def _get_init_vars_if_not_given(self):
@@ -118,7 +119,7 @@ class LenkomParser(SeatsParser):
     def reformat_seat(self, sector_name, row, seat, price, ticket):
         return sector_name, row, seat, price
 
-    def body(self):
+    async def body(self):
         if not self._get_init_vars_if_not_given():
             return False
         json, all_ = 1, 1
@@ -149,7 +150,7 @@ class LenkomParser(SeatsParser):
             self.count_error += 1
             if self.count_error == 50:
                 raise ProxyError('ticketland seats parser except ProxyError')
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+            self.change_proxy()
             self.before_body()
             return self._get_tl_csrf_and_data()
 
@@ -282,7 +283,7 @@ class MkhtParser(LenkomParser):
         for i in to_del[::-1]:
             del sectors[i]
 
-    def body(self):
+    async def body(self):
         super().body()
 
 
@@ -378,7 +379,7 @@ class MalyyParser(LenkomParser):
                 sector['name'] = sector['name'].replace('1-го', '1')
             
 
-    def body(self):
+    async def body(self):
         super().body()
 
 
@@ -396,7 +397,7 @@ class MalyyParser(LenkomParser):
 #             if 'ложи' in sector['name'].lower():
 #                 sector['name'] = sector['name'].capitalize()
 
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 
@@ -411,7 +412,7 @@ class MalyyParser(LenkomParser):
 #         for sector in sectors:
 #             sector['name'] = sector['name'].replace('  ', ' ')
 
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 
@@ -479,7 +480,7 @@ class VakhtangovaParser(LenkomParser):
                 row = '1'
         return sector_name, row, seat, price
 
-    def body(self):
+    async def body(self):
         super().body()
 
 
@@ -526,7 +527,7 @@ class VakhtangovaParser(LenkomParser):
 
 #                 sector['tickets'][row_, seat] = seats_change_row[row, seat]
 
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 
@@ -541,7 +542,7 @@ class VakhtangovaParser(LenkomParser):
 #         for sector in sectors:
 #             sector['name'] = sector['name'].replace('  ', ' ')
 
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 
@@ -600,7 +601,7 @@ class FomenkoParser(LenkomParser):
             if 'Партер рекомендовано детям от 10 лет' == sector['name']:
                 sector['name'] = 'Партер'
 
-    def body(self):
+    async def body(self):
         super().body()
 
 
@@ -628,7 +629,7 @@ class FomenkoParser(LenkomParser):
 #             elif 'Высокий партер' == sector['name']:
 #                 sector['name'] = 'Партер'
 
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 
@@ -643,7 +644,7 @@ class FomenkoParser(LenkomParser):
 #         for sector in sectors:
 #             sector['name'] = sector['name'].title()
 
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 
@@ -679,7 +680,7 @@ class FomenkoParser(LenkomParser):
 #                         sector_name[3] = sector_name[3].lower()
 #                         sector['name'] = ' '.join(sector_name[:2]) + ', ' + ' '.join(sector_name[2:])
 
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 
@@ -782,7 +783,7 @@ class AleksandrinskiyTeatr(LenkomParser):
             return None, row, seat, price
         return sector_name, row, seat, price
 
-    def body(self):
+    async def body(self):
         super().body()
 
 
@@ -812,7 +813,7 @@ class ZimniyTeatrSochi(LenkomParser):
                     sector['tickets'][(row_number, seat)] = price
                 sector['name'] = 'Бенуар'
 
-    def body(self):
+    async def body(self):
         super().body()
 
 
@@ -826,7 +827,7 @@ class UgolokDedushkiDurova(LenkomParser):
     def reformat(self, sectors, scene):
         ...
 
-    def body(self):
+    async def body(self):
         super().body()
 
 
@@ -844,7 +845,7 @@ class UgolokDedushkiDurova(LenkomParser):
 #             if 'Сектора А, В, C' in self.scheme.name:
 #                 sector['name'] = sector['name'].replace('Партер', 'Сектор')
 
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 
@@ -916,7 +917,7 @@ class BdtTeatr(LenkomParser):
 
         return sector_name, row, seat, price
 
-    def body(self):
+    async def body(self):
         super().body()
 
 
@@ -957,7 +958,7 @@ class BdtKamennoostrovskiyTeatr(LenkomParser):
                     new_tickets[('1', row_and_seat[1])] = price
                 sector['tickets'] = new_tickets
 
-    def body(self):
+    async def body(self):
         super().body()
 
 
@@ -1000,7 +1001,7 @@ class MikhailovskyTeatr(LenkomParser):
 
         return sector_name, row, seat, price
 
-    def body(self):
+    async def body(self):
         super().body()
 
 
@@ -1014,7 +1015,7 @@ class MikhailovskyTeatr(LenkomParser):
 #     def reformat(self, sectors, scene):
 #         ...
 
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 
@@ -1028,7 +1029,7 @@ class MikhailovskyTeatr(LenkomParser):
 #     def reformat(self, sectors, scene):
 #         ...
 
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 
@@ -1042,7 +1043,7 @@ class MikhailovskyTeatr(LenkomParser):
 #     def reformat(self, sectors, scene):
 #         ...
 
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 
@@ -1080,7 +1081,7 @@ class RAMT(LenkomParser):
             if sector['name'] in ramt_ref:
                 sector['name'] = ramt_ref.get(sector['name'])
 
-    def body(self):
+    async def body(self):
         super().body()
 
 
@@ -1094,8 +1095,9 @@ class TeatrGogolya(LenkomParser):
     def reformat(self, sectors, scene):
         ...
     
-    def body(self):
+    async def body(self):
         super().body()
+
 
 class Kreml(LenkomParser):
     event = 'ticketland.ru'
@@ -1126,5 +1128,5 @@ class Kreml(LenkomParser):
     def reformat(self, sectors, scene):
         pass
 
-    def body(self):
+    async def body(self):
         super().body()

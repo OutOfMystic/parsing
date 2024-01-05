@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from ..manager import core, pooling
 from ..connection import db_manager
 from ..manager.proxy import check
-from ..utils import utils
+from ..utils import utils, provision
 from ..utils.date import Date
 from ..utils.exceptions import ParsingError, ProxyHubError
 from ..utils.logger import logger
@@ -25,9 +25,11 @@ class ParserBase(core.Bot, ABC):
     def change_proxy(self, report=False):
         if report:
             self.controller.proxy_hub.report(self.proxy_check, self.proxy)
+        # logger.debug('change_proxy start')
         self.proxy = self.controller.proxy_hub.get(self.proxy_check)
         if not self.proxy:
-            raise ProxyHubError(f'No proxy!')
+            raise ProxyHubError(f'Out of proxies!')
+        # logger.debug('change_proxy finish')
 
     def set_notifier(self, notifier):
         if self._notifier:
@@ -45,9 +47,11 @@ class ParserBase(core.Bot, ABC):
 
     def proceed(self):
         start_time = time.time()
-        next_step_delay = 120
+        next_step_delay = min(self.get_delay() / 15, 120)
         if self.proxy is None:
-            self.change_proxy()
+            self._debug_only('changing proxy', int((time.time() - start_time) * 10) / 10)
+            provision.just_try(self.change_proxy)
+            self._debug_only('changed proxy', int((time.time() - start_time) * 10) / 10)
 
         if self.proxy is not None:
             next_step_delay = self.get_delay()
@@ -56,17 +60,26 @@ class ParserBase(core.Bot, ABC):
                     self.driver.quit()
                     self.driver = None
                 self.inthread_init()
-            if self.fully_inited:
+                self._debug_only('inited', int((time.time() - start_time) * 10) / 10)
+            if self.fully_inited and self._terminator.alive:
+                self._debug_only('Proceeding', int((time.time() - start_time) * 10) / 10)
                 super().proceed()
+                self._debug_only('Proceeded', int((time.time() - start_time) * 10) / 10)
+            else:
+                next_step_delay = max(self.get_delay() / 7, 300)
 
         if self._terminator.alive:
             task = pooling.Task(self.proceed, self.name, next_step_delay)
-            self.controller.pool.add(task)
-        logger.debug('Success', self.name, int((time.time() - start_time) * 10) / 10)
+            self.controller.pool.add_task(task)
+            self._debug_only('Pooled', int((time.time() - start_time) * 10) / 10)
+
+    def _debug_only(self, mes, *args):
+        if self.controller.debug:
+            self.debug(mes, *args)
 
     def start(self):
         task = pooling.Task(self.proceed, self.name, 0)
-        self.controller.pool.add(task)
+        self.controller.pool.add_task(task)
 
 
 class EventParser(ParserBase, ABC):
@@ -80,9 +93,7 @@ class EventParser(ParserBase, ABC):
         self.stop = weakref.finalize(self, self._finalize_parser)
 
     def _finalize_parser(self):
-        logger.debug(self.stop.alive)
         super().stop()
-        logger.debug(self.stop.alive)
         self.trigger_notifier()
 
     def _change_events_state(self):
@@ -141,7 +152,6 @@ class EventParser(ParserBase, ABC):
 
 
 class SeatsParser(ParserBase, ABC):
-    event = 'Parent Event'
     url_filter = lambda event: 'ticketland.ru' in event
 
     def __init__(self, controller, event_id, event_name,
@@ -310,13 +320,17 @@ class SeatsParser(ParserBase, ABC):
         if self.driver:
             self.driver.get(self.url)
 
+        self._debug_only('body started')
         self.body()
+        self._debug_only('body finished')
 
         if self.stop.alive:
             self.trigger_notifier()
             self.last_state = (self.parsed_sectors.copy(), self.parsed_dancefloors.copy(),)
+            self._debug_only('releasing sectors')
             self.scheme.release_sectors(self.parsed_sectors, self.parsed_dancefloors,
                                         self.priority, self.name)
+            self._debug_only('released sectors')
             self.parsed_sectors.clear()
             self.parsed_dancefloors.clear()
 
@@ -325,7 +339,7 @@ class SeatsParser(ParserBase, ABC):
         super().run_except()
 
     @abstractmethod
-    def body(self):
+    async def body(self):
         pass
 
 

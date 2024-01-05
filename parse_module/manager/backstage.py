@@ -30,10 +30,10 @@ class BackTasker(threading.Thread):
         self._lock = Lock()
         self.tasks = Queue()
 
-    def put(self, func_: Callable, *args, **kwargs):
+    def put(self, func_: Callable, *args, from_thread='Main', **kwargs):
         if args is None:
             args = tuple()
-        task = Task(func_, args, kwargs)
+        task = Task(func_, args, kwargs, from_thread=from_thread)
         self.tasks.put(task)
 
     def put_throttle(self, func_: Callable, first_arg, *args,

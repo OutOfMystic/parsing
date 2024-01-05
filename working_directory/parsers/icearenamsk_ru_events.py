@@ -1,11 +1,13 @@
+
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 
-class IceArenaMsk(EventParser):
+class IceArenaMsk(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         
@@ -60,11 +62,11 @@ class IceArenaMsk(EventParser):
         return result_date
     
     
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
         
 
-    def body(self):
+    async def body(self):
         for offset in range(0, 100, 9):
             params = {
                 '': 'undefined',

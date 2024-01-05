@@ -5,8 +5,9 @@ import locale
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -15,7 +16,7 @@ class OutputEvent(NamedTuple):
     date: str
     venue: str
 
-class ALL_Circus_from_ticket_place_Events(EventParser):
+class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -53,8 +54,8 @@ class ALL_Circus_from_ticket_place_Events(EventParser):
             }
         
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_date(date):
@@ -180,7 +181,7 @@ class ALL_Circus_from_ticket_place_Events(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         a_events = []
 
         for url, info in self.urls_ONE.items():

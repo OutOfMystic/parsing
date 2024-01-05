@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class BarvikhaConcertHall(SeatsParser):
+class BarvikhaConcertHall(AsyncSeatsParser):
     event = 'barvikhaconcerthall.ru'
     url_filter = lambda url: 'barvikhaconcerthall.ru' in url
 
@@ -13,8 +14,8 @@ class BarvikhaConcertHall(SeatsParser):
         self.driver_source = None
         self.svg_width_scene = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         scheme_width_59_table = {
@@ -272,7 +273,7 @@ class BarvikhaConcertHall(SeatsParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         all_sectors = self.get_seats()
 
         self.reformat(all_sectors)

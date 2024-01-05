@@ -4,9 +4,10 @@ import datetime
 from dateutil import relativedelta
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -15,7 +16,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class GoUnicsRu(EventParser):
+class GoUnicsRu(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -23,8 +24,8 @@ class GoUnicsRu(EventParser):
         self.driver_source = None
         self.url: str = 'https://go.unics.ru/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self):
         soup = self._requests_to_events()

@@ -47,7 +47,7 @@ class DBConnection:
         self._saved_selects = {}
         self.connection = None
         self.cursor = None
-        tasker.put(self.connect_db)
+        tasker.put(self.connect_db, from_thread='Controller')
 
     def save_mode_on(self):
         logger.warning('DATABASE SAVE MODE TURNED ON', name='Controller')
@@ -67,7 +67,7 @@ class DBConnection:
             pickle.dump(self._saved_selects, fp)
 
     def connect_db(self):
-        multi_try(self._connect_db, name='Controller', tries=5, multiplier=1.01)
+        multi_try(self._connect_db, name='Controller', tries=5)
 
     def _connect_db(self):
         self.connection = psycopg2.connect(user=self.user,
@@ -80,10 +80,13 @@ class DBConnection:
     def cursor_wrapper(self, func_name, *args):
         while self.cursor is None:
             time.sleep(0.1)
+
         try:
             function = getattr(self.cursor, func_name)
             return function(*args)
         except psycopg2.ProgrammingError as error:
+            if str(error) == 'no results to fetch':
+                raise error
             logger.error(f'Unable to process command: {error}', name='Controller')
         except Exception as error:
             raise error
@@ -102,7 +105,7 @@ class DBConnection:
     def execute(self, request):
         return provision.multi_try(self.cursor_wrapper, args=('execute', request,),
                                    handle_error=self._connect_db, name='Controller',
-                                   multiplier=1.05, tries=5)
+                                   tries=5)
 
     def select(self, request):
         if request in self._saved_selects:
@@ -118,12 +121,12 @@ class DBConnection:
     def fetchall(self):
         return provision.multi_try(self.cursor_wrapper, args=('fetchall',),
                                    handle_error=self._connect_db,
-                                   multiplier=1.05, tries=5, name='Controller')
+                                   tries=5, name='Controller')
 
     def commit(self):
         return provision.multi_try(self.connection_wrapper, args=('commit',),
                                    handle_error=self._connect_db,
-                                   multiplier=1.05, tries=5, name='Controller')
+                                   tries=5, name='Controller')
 
 
 class ParsingDB(DBConnection):
@@ -143,26 +146,26 @@ class ParsingDB(DBConnection):
             event_lockers.append(event_locker)
 
         scheme_ids = ', '.join(str(scheme_id) for scheme_id in dicted_tasks)
-        self.execute("SELECT name, json, id FROM public.tables_constructor "
-                     f"WHERE id IN ({scheme_ids})")
+        try:
+            self.execute("SELECT name, json, id FROM public.tables_constructor "
+                         f"WHERE id IN ({scheme_ids})")
 
-        for name, json_, scheme_id in self.fetchall():
-            callbacks = dicted_tasks[scheme_id]
-            callbacks[0].append(name)
-            callbacks[0].append(json_)
-            for callback in callbacks[1:]:
-                callback.append(None)
-                callback.append(None)
-        for scheme_id, callbacks in dicted_tasks.items():
-            if callbacks:
-                if callbacks[0][0] is not None:
-                    saved_schemes[scheme_id] = callbacks[0]
-            else:
-                logger.error(f'PARSER STARTED INCORRECTLY. SCHEME {scheme_id} DATA WAS LOST', name='Controller')
-
-        for event_locker in event_lockers:
-            event_locker.set()
-        saved_schemes.dump()
+            for name, json_, scheme_id in self.fetchall():
+                callbacks = dicted_tasks[scheme_id]
+                callbacks[0].append(name)
+                callbacks[0].append(json_)
+                for callback in callbacks[1:]:
+                    callback.append(None)
+                    callback.append(None)
+            for scheme_id, callbacks in dicted_tasks.items():
+                if callbacks:
+                    if callbacks[0][0] is not None:
+                        saved_schemes[scheme_id] = callbacks[0]
+                else:
+                    logger.error(f'PARSER STARTED INCORRECTLY. SCHEME {scheme_id} DATA WAS LOST', name='Controller')
+        finally:
+            for event_locker in event_lockers:
+                event_locker.set()
 
     @locker
     def get_scheme_names(self):
@@ -343,8 +346,12 @@ class ParsingDB(DBConnection):
                 if parsers is not None}
 
     @locker
-    def get_site_names(self):
-        self.execute('SELECT id, name from public.tables_sites')
+    def get_site_names(self, already=None):
+        if already:
+            found = ', '.join(str(elem) for elem in already)
+            self.execute(f'SELECT id, name from public.tables_sites WHERE id NOT IN ({found})')
+        else:
+            self.execute(f'SELECT id, name from public.tables_sites')
         return {id_: name for id_, name in self.fetchall()}
 
     @locker
@@ -411,8 +418,8 @@ class TableDict(dict):
         self.update_names()
 
     def update_names(self):
-        actual_sites = self.update_func()
-        self.update(actual_sites)
+        actual_data = self.update_func(self.keys())
+        self.update(actual_data)
 
     def __getitem__(self, item):
         if item not in self:

@@ -5,28 +5,28 @@ from typing import Iterable, Any
 from colorama import Fore, Back
 
 
-def green(mes: str):
+def green(mes):
     return Fore.LIGHTGREEN_EX + Back.RESET + str(mes) + default_fore + default_back
 
 
-def red(mes: str):
+def red(mes):
     return Fore.RED + Back.RESET + str(mes) + default_fore + default_back
 
 
-def blue(mes: str):
+def blue(mes):
     return Fore.BLUE + Back.RESET + str(mes) + default_fore + default_back
 
 
-def blueprint(mes: str):
+def blueprint(mes):
     mes = Fore.BLUE + Back.RESET + str(mes) + default_fore + default_back
     print(mes)
 
 
-def yellow(mes: str):
+def yellow(mes):
     return Fore.YELLOW + Back.RESET + str(mes) + default_fore + default_back
 
 
-def colorize(mes: str,
+def colorize(mes,
              color):
     return color + default_back + str(mes) + default_fore
 

@@ -1,21 +1,21 @@
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 from bs4 import BeautifulSoup
 import re
 
 
-class StarParser(SeatsParser):
-    event = 'tickets-star.com'
-    url_filter = lambda event: 'tickets-star.com' in event
+class StarParser(AsyncSeatsParser):
+    url_filter = lambda event: 'biletcentr.com' in event
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_f_sectors(self, sectors, get_f_name=None, add_sec=False):
         to_del = []
@@ -574,28 +574,8 @@ class StarParser(SeatsParser):
 
         return s, theatre
 
-    def body(self):
-        skip_events = [
-            'https://www.tickets-star.com/cat/245/EventId/242282923/',
-            'https://www.tickets-star.com/cat/245/EventId/243579549/',
-            'https://www.tickets-star.com/cat/245/EventId/243579548/',
-            'https://www.tickets-star.com/cat/245/EventId/242282923/',
-            'https://www.tickets-star.com/cat/245/EventId/243579547/',
-            'https://www.tickets-star.com/cat/245/EventId/240344845/',
-            'https://www.tickets-star.com/cat/245/EventId/245265248/',
-            'https://www.tickets-star.com/cat/245/EventId/245265253/',
-            'https://www.tickets-star.com/cat/245/EventId/245265259/',
-            'https://www.tickets-star.com/cat/245/EventId/245265264/',
-            'https://www.tickets-star.com/cat/245/EventId/245363653/',
-            'https://www.tickets-star.com/cat/245/EventId/240344845/',
-            'https://www.tickets-star.com/cat/245/EventId/240344847/',
-            'https://www.tickets-star.com/cat/245/EventId/240344849/',
-            'https://www.tickets-star.com/cat/245/EventId/240344850/',
-            'https://www.tickets-star.com/cat/245/EventId/249417912/',
-            'https://www.tickets-star.com/cat/245/EventId/249417909/',
-            'https://www.tickets-star.com/cat/245/EventId/249417911/',
-            'https://www.tickets-star.com/cat/245/EventId/249417910/',
-        ]
+    async def body(self):
+        skip_events = []
 
         if self.url in skip_events:
             return None

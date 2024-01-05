@@ -30,7 +30,8 @@ class Logger(threading.Thread):
                             'utils.provision.multi_try',
                             'utils.logger.error',
                             'utils.logger.critical',
-                            'utils.provision._tryfunc']
+                            'utils.provision._tryfunc',
+                            'models.parser._debug_only']
         self.release = release
         self.log_path = log_path
         self.ignore_files = ignore_files
@@ -117,7 +118,7 @@ class Logger(threading.Thread):
             if message.count('\n') > 2:
                 parts = message.split('\n')[:2]
                 message = '\n'.join(parts) + '...'
-        dt_str = readable_datetime(timestamp).rjust(17, ' ')
+        dt_str = readable_datetime(timestamp).ljust(17, ' ')
         if call_stack:
             call_stack = ' | ' + call_stack
 

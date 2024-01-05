@@ -2,10 +2,11 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
-class HcSibirHockey(EventParser):
+class HcSibirHockey(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
@@ -27,8 +28,8 @@ class HcSibirHockey(EventParser):
             "User-Agent": self.user_agent
             }
 
-    def before_body(self):
-            self.session = ProxySession(self)
+    async def before_body(self):
+            self.session = AsyncProxySession(self)
 
     @staticmethod
     def data_reformat(date, time):
@@ -41,7 +42,7 @@ class HcSibirHockey(EventParser):
         return f"{day} {month} {time}"
     
 
-    def body(self):
+    async def body(self):
             r = self.session.get(url=self.url, headers=self.headers, verify=False)
             soup = BeautifulSoup(r.text, 'lxml')
 

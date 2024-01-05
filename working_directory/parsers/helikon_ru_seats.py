@@ -1,8 +1,9 @@
 import json
 from typing import NamedTuple
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -10,7 +11,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class HelikonRu(SeatsParser):
+class HelikonRu(AsyncSeatsParser):
     event = 'helikon.ru'
     url_filter = lambda url: 'helikon.ru' in url
 
@@ -20,8 +21,8 @@ class HelikonRu(SeatsParser):
         self.driver_source = None
         self.url = 'https://core.helikon.ubsystem.ru/uiapi/event/scheme?id=' + self.url.split('/')[-1]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'Стол' in sector_name:

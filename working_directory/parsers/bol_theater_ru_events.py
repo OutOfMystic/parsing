@@ -5,14 +5,15 @@ import requests
 from bs4 import BeautifulSoup, PageElement
 from loguru import logger
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 import re
 
 
-class BolTheaterParser(EventParser):
+class BolTheaterParser(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
@@ -21,8 +22,8 @@ class BolTheaterParser(EventParser):
         }
         self.url = 'https://bol-theater.ru/afisha.html'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         month_years = [month_year.text.split() for month_year in soup.find_all('div', class_='afisha_month_link')]
@@ -83,7 +84,7 @@ class BolTheaterParser(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         a_events = self.get_events()
 
         for event in a_events:

@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.date import month_list
 
@@ -28,7 +28,7 @@ class UserData(NamedTuple):
     last_name: str
 
 
-class BdtSpbBot(EventParser):
+class BdtSpbBot(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://spb.ticketland.ru/')
 
     def __init__(self, *args: list, **extra: dict) -> None:
@@ -131,7 +131,7 @@ class BdtSpbBot(EventParser):
         self.tickets_already_sent = {}
 
     def before_body(self) -> None:
-        self.session = ProxySession(self)
+        self.session = AsyncProxySession(self)
 
     def _parse_free_tickets(self, soup: BeautifulSoup, event_date: str) -> list[TicketData]:
         self.csrf = soup.find('meta', attrs={'name': 'csrf-token'}).get('content')

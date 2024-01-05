@@ -1,12 +1,13 @@
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class Icetickets(SeatsParser):
+class Icetickets(AsyncSeatsParser):
     proxy_check = NormalConditions()
     event = 'icetickets.ru'
     url_filter = lambda url: 'icetickets.ru' in url
@@ -16,8 +17,8 @@ class Icetickets(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         kreml_reformat_dict = {
@@ -164,7 +165,7 @@ class Icetickets(SeatsParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         all_sectors = self.get_seats()
 
         self.reformat(all_sectors)

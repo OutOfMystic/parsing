@@ -1,13 +1,14 @@
 from bs4 import BeautifulSoup
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from requests import get
 from bs4 import BeautifulSoup
 from json import loads
 from parse_module.utils.exceptions import InternalError
 
 
-class HcTractorSeatsParser(SeatsParser):
+class HcTractorSeatsParser(AsyncSeatsParser):
     url_filter = lambda url: "tractor-arena.com" in url
     
     def __init__(self, *args, **extra) -> None:
@@ -19,8 +20,8 @@ class HcTractorSeatsParser(SeatsParser):
         self.url_format_event = f'https://tractor-arena.com/events/{self.parent_id}'
         self._id = self.url.split("/")[-1]
         
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
     
     def parse_widget_id(self):
         resp = get(self.url_format_event, headers={'user-agent': self.user_agent})
@@ -56,7 +57,7 @@ class HcTractorSeatsParser(SeatsParser):
                     sectors[name][(r_name, s_name)] = int(seat['p'])
         return sectors
 
-    def body(self):
+    async def body(self):
         try:
             sectors = self.parse_sectors()
         except KeyError:

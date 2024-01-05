@@ -1,16 +1,21 @@
+import os
 import sys
-sys.path.append("/home/lon8/python/parsing/")
+import time
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from parse_module.models import router
+from parse_module.manager import backend
 
 from parse_module.manager.controller import Controller
 
 DEBUG = False
-DEBUG_DATA = 20207
+DEBUG_DATA = 26411
 
 
 if __name__ == '__main__':
-    router = router.get_router()
+    router, process = backend.get_router()
+    time.sleep(1)
     release = 'release' in sys.argv
     debug_url, debug_event_id = None, None
     if DEBUG:

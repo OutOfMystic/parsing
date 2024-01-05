@@ -2,13 +2,14 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class KassirParser(SeatsParser):
+class KassirParser(AsyncSeatsParser):
     proxy_check = NormalConditions()
     event = 'kassir.ru'
     url_filter = lambda event: 'kassir.ru' in event and 'crocus2' not in event and 'frame' not in event \
@@ -41,8 +42,8 @@ class KassirParser(SeatsParser):
             'user-agent': self.user_agent
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_megasport(a_sectors):
@@ -252,8 +253,6 @@ class KassirParser(SeatsParser):
             else:
                 a_sectors_new.setdefault(sector, {}).update(tickets)
         return a_sectors_new
-
-
 
     @staticmethod
     def reformat_vtb_for_dynamo(a_sectors):
@@ -1625,9 +1624,8 @@ class KassirParser(SeatsParser):
         count = 10
         if (not response.ok or response.text == '[]') and count > 0:
             self.change_proxy()
-            self.session = ProxySession(self)
-            self.debug(url)
-            self.debug(response.text)
+            self.session = AsyncProxySession(self)
+            self.debug(url, response.text)
             raise RuntimeError(f'{count} {self.proxy.args}, {url}, {self.session.cookies} this IP is block')
 
         # with open('TEST2.json', 'w', encoding='utf-8') as file:
@@ -1664,7 +1662,7 @@ class KassirParser(SeatsParser):
 
         return res
 
-    def body(self):
+    async def body(self):
         list_to_reformat = ['Кремлёвский дворец', 'Театр «Современник»',
                             'Театр Сатиры', 'Казанский цирк', 'Театр Маяковского'] #venue will need to reformat 
         if 'widget.kassir.ru' in self.url:
@@ -1711,8 +1709,6 @@ class KassirParser(SeatsParser):
             a_sectors = self.reformat_megasport(a_sectors)
         elif self.venue == 'G-Drive Арена':
             a_sectors = self.reformat_g_drive(a_sectors)
-
-        
 
         for sector, tickets in a_sectors.items():
             self.register_sector(sector.strip(), tickets)

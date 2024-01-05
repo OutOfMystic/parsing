@@ -1,9 +1,11 @@
+
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.date import month_list
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -11,8 +13,8 @@ class Parser(EventParser):
         self.driver_source = None
         self.url = 'https://www.greatcircus.ru/#!events'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_events(self, events_data):
         a_events = []
@@ -82,7 +84,7 @@ class Parser(EventParser):
 
         return set_pres
 
-    def body(self):
+    async def body(self):
         events_data = self.get_request()
         a_events = self.get_events(events_data)
 

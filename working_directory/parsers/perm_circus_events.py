@@ -3,11 +3,12 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class CircusPerm(EventParser):
+class CircusPerm(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
@@ -26,8 +27,8 @@ class CircusPerm(EventParser):
             "user-agent": self.user_agent
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_date(date):
@@ -79,7 +80,7 @@ class CircusPerm(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         self.reformat_title = ({
             '"Ночь, улица, фонарь, аптека..."': 'Морские львы'
         })

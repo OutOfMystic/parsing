@@ -1,13 +1,14 @@
 from requests.exceptions import ProxyError, JSONDecodeError
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class VtbArena(SeatsParser):
+class VtbArena(AsyncSeatsParser):
     event = 'newticket.vtb-arena.com'
     url_filter = lambda url: 'newticket.vtb-arena.com' in url or 'schematr.kassir.ru/widget' in url
     proxy_check = SpecialConditions(url='https://schematr.kassir.ru/')
@@ -22,8 +23,8 @@ class VtbArena(SeatsParser):
         self.get_configuration_id = None
         self.count_error = 0
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, all_sectors):
         if 'динамо' in self.name.lower():
@@ -651,7 +652,7 @@ class VtbArena(SeatsParser):
 
         return all_sectors
 
-    def body(self):
+    async def body(self):
         if 'newticket' in self.url:
             all_sectors = self.get_seats()
         else:

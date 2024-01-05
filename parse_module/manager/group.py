@@ -9,7 +9,6 @@ from parse_module.utils.logger import logger
 class SeatsParserGroup:
     def __init__(self, controller, parser_class, module_name):
         self.controller = controller
-        self.parent_event = parser_class.event
         self.parser_class = parser_class
         self.name = f'SeatsGroup ({module_name}.{self.parser_class.__name__})'
         self.url_filter = parser_class.url_filter
@@ -148,7 +147,7 @@ class SeatsParserGroup:
         if self.controller.debug:
             parser.delay = 10
         parser.start()
-        self.bprint(f'SEATS parser {self.parent_event} ({event_data["event_name"]}'
+        self.bprint(f'SEATS parser ({event_data["event_name"]}'
                     f' {event_data["date"]}) has started ({event_data["event_id"]})')
         self.parsers.append(parser)
 
@@ -169,9 +168,7 @@ class SeatsParserGroup:
             scheme.unbind(event_data['priority'], force=True)
             logger.warning('Scheme was already prepared. Unbind forced. '
                            'This may cause an incorrect parser start')
-        logger.error(f'SEATS parser {self.parent_event} event_id: {event_data["event_id"]}\n'
-                     f'scheme_id: {event_data["scheme_id"]} name: ({event_data["event_name"]}'
-                     f' date: {event_data["date"]}) has not started\n'
+        logger.error(f'SEATS parser (scheme id {event_data["scheme_id"]}) has not started\n'
                      f'({type(exception).__name__}) {exception}', name=self.name)
 
 

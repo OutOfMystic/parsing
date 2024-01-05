@@ -11,10 +11,12 @@ from parse_module.utils.logger import logger
 class ControllerInterface(base.CommandPrompt):
     level = None
     source = None
+    controller = None
 
-    def __init__(self):
+    def __init__(self, controller):
         super().__init__()
-        self.first_cmds = [] # ['select scheme 19', 'select sector 0', 'apply "row==\'_\'" "row=\'1\'"', 'quit']
+        self.first_cmds = []  # ['select scheme 19', 'select sector 0', 'apply "row==\'_\'" "row=\'1\'"', 'quit']
+        ControllerInterface.controller = controller
         self.handler = get_home
         self.handle('', '')
 
@@ -56,6 +58,18 @@ class ControllerInterface(base.CommandPrompt):
         input(utils.blue('Press any key to continue output stream...'))
         logger.resume()
 
+    @staticmethod
+    def pooling(args_row):
+        ControllerInterface.controller.pool.inspect_queue()
+        input(utils.blue('Press any key to continue output stream...'))
+        logger.resume()
+
+    @staticmethod
+    def coroutines(args_row):
+        ControllerInterface.controller.pool_async.inspect_queue()
+        input(utils.blue('Press any key to continue output stream...'))
+        logger.resume()
+
 
 def get_home(cmd, args_row, value):
     return prespell_home, None, ' '
@@ -78,18 +92,23 @@ def process_command(cmd, args_row, stored):
         raise RuntimeError(f'No command "{cmd}" found')
 
 
-def run_inspection(release=True):
+def run_inspection(controller, release=True):
     if release:
-        console = ControllerInterface()
+        console = ControllerInterface(controller)
         threading.Thread(target=console.start_prompt).start()
         return console
 
 
 commands = {
+    'source': ControllerInterface.log_source,
     'filter': ControllerInterface.log_source,
     'level': ControllerInterface.log_level,
     'clear': ControllerInterface.clear,
     'resume': ControllerInterface.get_back,
     'backstage': ControllerInterface.backstage,
+    'pooling': ControllerInterface.pooling,
+    'pool': ControllerInterface.pooling,
+    'async': ControllerInterface.coroutines,
+    'coroutines': ControllerInterface.coroutines,
     '': ControllerInterface.get_back
 }

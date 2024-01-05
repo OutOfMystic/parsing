@@ -3,15 +3,16 @@ import itertools
 import json
 import os
 import random
-import threading
 import time
 
 from . import pooling
 from .inspect import run_inspection
 from .proxy import loader
-from .telecore import tele_core
+from .telecore import TeleCore
+from .. import coroutines
 from ..connection import db_manager
 from ..connection.database import TableDict
+from ..coroutines import AsyncEventParser, AsyncSeatsParser
 from ..models.ai_nlp import alias, venue, solve
 from ..models.ai_nlp.collect import cross_subject_object
 from ..models.margin import MarginRules
@@ -24,10 +25,6 @@ from ..utils.logger import logger
 from ..utils.utils import differences
 
 PREDEFINED = True
-
-
-class SchemeRouter:
-    pass
 
 
 class Controller:
@@ -56,17 +53,19 @@ class Controller:
         self.seats_notifiers = []
         self.margins = {}
         self._events_were_reset = []
-        self._table_sites = TableDict(db_manager.get_site_names)
         self._already_warned_on_collect = set()
 
         self.router = router
-        self._console = run_inspection(release=True)
+        self.tele_core = get_telecore()
+        self._console = run_inspection(self, release=True)
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
+        self._table_sites = TableDict(db_manager.get_site_names)
         self.solver, self._cache_dict = solve.get_model_and_cache()
         self.event_aliases = alias.EventAliases(step=5)
         self.parsing_types = db_manager.get_parsing_types()
         self.venues = venue.VenueAliases(self.solver)
-        self.pool = pooling.ScheduledExecutor(max_threads=40)
+        self.pool = pooling.ScheduledExecutor(max_threads=30)
+        self.pool_async = coroutines.ScheduledExecutor()
         self._load_parsers_with_config(config_path)
         self.fast_time = time.time()
 
@@ -85,7 +84,7 @@ class Controller:
         if parser_name.startswith('www.'):
             parser_name = parser_name.split('www.')[1]
         try:
-            if parser_variable in (EventParser, SeatsParser):
+            if parser_variable in (EventParser, SeatsParser, AsyncEventParser, AsyncSeatsParser):
                 return
             elif issubclass(parser_variable, EventParser):
                 self._start_event_parser(parser_variable, parser_name)
@@ -102,6 +101,8 @@ class Controller:
             self.parsing_types = db_manager.get_parsing_types()
             self.bprint(f'New type has been registered: {parser_name}')
 
+        if self.debug:
+            return
         self.proxy_hub.add_route(parser_class.proxy_check)
         parser = parser_class(self, parser_name)
         parser.start()
@@ -207,7 +208,6 @@ class Controller:
             for group in self.seats_groups:
                 if group.url_filter(connection['url']):
                     all_connections[group].append(connection)
-        event_ids = set(connection['event_id'] for connection in plain_dict_values(all_connections))
 
         if not self.debug:
             for group, connections in all_connections.items():
@@ -244,7 +244,7 @@ class Controller:
     def _load_notifiers(self):
         events_to_load, seats_to_load = db_manager.get_parser_notifiers()
 
-        events_to_load_names = {data['name']: data for data in events_to_load}
+        events_to_load_names = {f"EventParser ({data['name']})": data for data in events_to_load}
         loaded_events_names = {notifier.parser.name: notifier
                                for notifier in self.event_notifiers}
         to_del, to_review, to_add = utils.differences(loaded_events_names, events_to_load_names)
@@ -384,8 +384,6 @@ class Controller:
     def run(self):
         if self.parser_modules is None:
             raise RuntimeError('Controller cannot be started being non-configured')
-        tele_core.add('notifications', '6002068146:AAHx8JmyW3QhhFK5hhdFIvTXs3XFlsWNraw')
-        tele_core.add('bills', '5741231744:AAGHiVougv4uoRia5I_behO9r1oMj1NEMI8')
         self.fast_time = time.time()
         fast_delay = 5
 
@@ -401,6 +399,18 @@ class Controller:
                                 tries=1, raise_exc=False)
             delay = self.pending_delay if time.time() > self.fast_time else fast_delay
             time.sleep(delay)
+
+
+def get_telecore():
+    admins = [454746771, 772343631]
+    tele_profiles = os.path.join('config', 'tele_profiles.json')
+    tele_accordance = os.path.join('config', 'tele_accordance.json')
+    tele_core = TeleCore(profiles_config=tele_profiles,
+                         accordance_config=tele_accordance,
+                         admins=admins)
+    tele_core.add('notifications', '6002068146:AAHx8JmyW3QhhFK5hhdFIvTXs3XFlsWNraw')
+    tele_core.add('bills', '5741231744:AAGHiVougv4uoRia5I_behO9r1oMj1NEMI8')
+    return tele_core
 
 
 def load_parsers(path):

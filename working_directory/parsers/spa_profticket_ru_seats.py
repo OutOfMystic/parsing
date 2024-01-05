@@ -1,11 +1,12 @@
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.provision import multi_try
 from parse_module.utils import utils
 
 
-class ProfticketParser(SeatsParser):
+class ProfticketParser(AsyncSeatsParser):
     event = 'spa.profticket.ru'
     url_filter = lambda url: 'spa.profticket.ru' in url
     proxy_check = SpecialConditions(url='https://spa.profticket.ru/')
@@ -15,8 +16,8 @@ class ProfticketParser(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat_tickets(self, sector, f_row=None, f_seat=None):
         tickets_f = {}
@@ -180,7 +181,7 @@ class ProfticketParser(SeatsParser):
 
         return data
 
-    def body(self):
+    async def body(self):
         data_or_none = self.get_show_info()
         if data_or_none is None:
             return

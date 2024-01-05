@@ -5,8 +5,9 @@ from typing import NamedTuple
 
 from requests.exceptions import ProxyError, JSONDecodeError
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -14,7 +15,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class Mmdm(SeatsParser):
+class Mmdm(AsyncSeatsParser):
     event = 'mmdm.ru'
     url_filter = lambda url: 'www.mmdm.ru' in url
 
@@ -28,8 +29,8 @@ class Mmdm(SeatsParser):
         self.user_agent: str = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' \
                                'Chrome/110.0.0.0 YaBrowser/23.3.2.806 Yowser/2.5 Safari/537.36'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
         self.session.cookies.set('__ddgid_', 'yuEsc7A7O3KpYzHw', domain='www.mmdm.ru')
         self.session.cookies.set('__ddg1_', 'vm5OlV40vtdtUMkebHon', domain='.mmdm.ru')
         self.session.cookies.set('__ddg2_', 'k3wy1Spd29SBOfv7', domain='.mmdm.ru')

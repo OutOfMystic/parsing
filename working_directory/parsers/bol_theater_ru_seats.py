@@ -1,12 +1,12 @@
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split, lrsplit
 from bs4 import BeautifulSoup
 import re
 
 
-class BolTheaterParser(SeatsParser):
-    event = 'bol-theater.ru'
+class BolTheaterParser(AsyncSeatsParser):
     url_filter = lambda event: 'bol-theater.ru' in event
 
     def __init__(self, *args, **extra):
@@ -16,8 +16,8 @@ class BolTheaterParser(SeatsParser):
 
         self.csrf = ''
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors, place_name):
         main_scene_reformat_dict = {
@@ -253,7 +253,7 @@ class BolTheaterParser(SeatsParser):
 
         return seats
 
-    def body(self):
+    async def body(self):
         seats = self.get_event_seats()
 
         a_sectors = []

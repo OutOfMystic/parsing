@@ -1,10 +1,11 @@
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.captcha import yandex_smart_captcha
 
 
-class OperettaParser(SeatsParser):
+class OperettaParser(AsyncSeatsParser):
     event = 'mosoperetta.ru'
     url_filter = lambda event: 'mosoperetta.ru' in event
 
@@ -15,8 +16,8 @@ class OperettaParser(SeatsParser):
 
         self.csrf = ''
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors, place_name):
         operetta_reformat_dict = {
@@ -67,7 +68,7 @@ class OperettaParser(SeatsParser):
         while not r.ok and count > 0:
             self.debug(f'{self.proxy.args = }, {self.session.cookies = } mosoperetta 505 bad gateway')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
+            self.session = AsyncProxySession(self)
             r = self.session.get(self.url, headers=headers, verify=False)
             count -= 1
 
@@ -158,7 +159,7 @@ class OperettaParser(SeatsParser):
 
         return a_seats
 
-    def body(self):
+    async def body(self):
         seats_url = self.get_event_data()
         seats = self.get_a_sector_seats(seats_url)
 

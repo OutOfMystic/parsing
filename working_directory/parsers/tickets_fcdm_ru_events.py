@@ -2,9 +2,10 @@ from typing import NamedTuple, Optional, Union
 import datetime
 import json
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -13,7 +14,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class TicketsFcdmRu(EventParser):
+class TicketsFcdmRu(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -21,8 +22,8 @@ class TicketsFcdmRu(EventParser):
         self.driver_source = None
         self.url = 'https://tickets.fcdm.ru/api/event-show/posted?viewPage=TICKETS'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self) -> OutputEvent:
         json_data = self._requests_to_events()

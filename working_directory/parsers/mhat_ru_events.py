@@ -1,10 +1,11 @@
 from bs4 import BeautifulSoup
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -12,8 +13,8 @@ class Parser(EventParser):
         self.driver_source = None
         self.url = 'https://mxat.ru/timetable/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_request(self, month_params=''):
         headers = {
@@ -93,7 +94,7 @@ class Parser(EventParser):
             months = self.get_months_params(soup.find('div', class_='submenu'))
             return events, months
 
-    def body(self):
+    async def body(self):
         events, months_params = self.parse_month_events()
         a_events = events
 

@@ -1,14 +1,15 @@
 import json
 from time import sleep
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils import utils
 
 
-class StanmusParser(SeatsParser):
+class StanmusParser(AsyncSeatsParser):
     event = 'stanmus.ru'
     url_filter = lambda url: 'stanmus.ru' in url
     proxy_check = NormalConditions()
@@ -18,8 +19,8 @@ class StanmusParser(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, sectors):
         for sector in sectors:
@@ -44,7 +45,7 @@ class StanmusParser(SeatsParser):
 
                     sector['name'] = f'Ложа {lozha_sym}'
 
-    def body(self):
+    async def body(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -68,7 +69,7 @@ class StanmusParser(SeatsParser):
         if r.status_code != 200 and count > 0:
             self.error(f'Status code: {r.status_code} Cannot load {self.url} Sleep..')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
+            self.session = AsyncProxySession(self)
             sleep(60)
             count -= 1
             r = self.session.get(self.url, headers=headers)

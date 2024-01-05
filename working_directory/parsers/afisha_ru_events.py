@@ -4,13 +4,14 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
 
 
-class AfishaEvents(EventParser):
+class AfishaEvents(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://www.afisha.ru/')
 
     def __init__(self, *args):
@@ -37,8 +38,8 @@ class AfishaEvents(EventParser):
             'https://www.afisha.ru/msk/theatre/gubernskiy-teatr-15883628/': '*', #gubernskiy
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_date(date):
@@ -94,7 +95,7 @@ class AfishaEvents(EventParser):
             count += 1
             self.warning(f' try to find XApplication token + {count}')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
+            self.session = AsyncProxySession(self)
             return self.get_x_token(x_ath_url, count)
         
         try:
@@ -153,7 +154,7 @@ class AfishaEvents(EventParser):
             count += 1
             self.warning(f' cannot load {url} try +={count}')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
+            self.session = AsyncProxySession(self)
             return self.get_pages(url, count)
         
         links = set()
@@ -189,7 +190,7 @@ class AfishaEvents(EventParser):
                 self.warning(f'Exception {ex}')
                 continue
 
-    def body(self):
+    async def body(self):
         self.venue_reformat = {
             'МДМ': 'Московский Дворец Молодежи',
             'Московский театр оперетты': 'Театр Оперетты'

@@ -2,8 +2,9 @@ from typing import NamedTuple, Optional, Union
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -14,7 +15,7 @@ class OutputEvent(NamedTuple):
     token: str
 
 
-class Contextfest(EventParser):
+class Contextfest(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -22,8 +23,8 @@ class Contextfest(EventParser):
         self.driver_source = None
         self.url: str = 'https://contextfest.com/programs/duo-12'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self) -> OutputEvent:
         soup = self._requests_to_events(self.url)

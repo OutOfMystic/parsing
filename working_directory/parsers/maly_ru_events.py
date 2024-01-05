@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -11,8 +12,8 @@ class Parser(EventParser):
         self.driver_source = None
         self.url = 'https://www.maly.ru/tickets'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_request(self, month_params=''):
         headers = {
@@ -67,7 +68,7 @@ class Parser(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         not_events_to_skip = 0
         a_events = []
         month_params = ''

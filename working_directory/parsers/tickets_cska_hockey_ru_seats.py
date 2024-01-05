@@ -3,12 +3,13 @@ import time
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class CskaHockeyParser(SeatsParser):
+class CskaHockeyParser(AsyncSeatsParser):
     event = 'tickets.cska-hockey.ru'
     url_filter = lambda event: 'tickets.cska-hockey.ru' in event
 
@@ -19,8 +20,8 @@ class CskaHockeyParser(SeatsParser):
 
         self.csrf = ''
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors, place_name):
         cska_arena_reformat_dict = {
@@ -325,7 +326,7 @@ class CskaHockeyParser(SeatsParser):
 
         return a_seats
 
-    def body(self):
+    async def body(self):
         event_id, sectors_info = self.get_event_data()
 
         a_sectors = []

@@ -5,29 +5,30 @@ import requests
 from bs4 import BeautifulSoup, PageElement
 from loguru import logger
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 import re
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.our_urls = {
-            'https://www.tickets-star.com/cat/176/CategoryId/2/': '*', #theatre_all
-            #'https://www.tickets-star.com/cirk/': '*',
-            'https://www.tickets-star.com/cat/229/StageId/63/': '*',  # Цирк вернадского
-            'https://www.tickets-star.com/cirk-na-cvetnom/': '*', # Никулина цирк на цветном
-            #'https://www.tickets-star.com/cat/229/StageId/55/': '*',  # Цирк на цветном
-            'https://www.tickets-star.com/cat/229/PlaceId/36/': '*', #armii teatr
+            'https://biletcentr.com/cat/176/CategoryId/2/': '*', #theatre_all
+            #'https://biletcentr.com/cirk/': '*',
+            'https://biletcentr.com/cat/229/StageId/63/': '*',  # Цирк вернадского
+            'https://biletcentr.com/cirk-na-cvetnom/': '*', # Никулина цирк на цветном
+            #'https://biletcentr.com/cat/229/StageId/55/': '*',  # Цирк на цветном
+            'https://biletcentr.com/cat/229/PlaceId/36/': '*', #armii teatr
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def r_str(self):
         letters_and_digits = string.ascii_letters + string.digits
@@ -46,7 +47,7 @@ class Parser(EventParser):
 
             places.append({
                 'name': place_name,
-                'url': 'https://www.tickets-star.com' + href,
+                'url': 'https://biletcentr.com' + href,
                 'short_url': href,
             })
 
@@ -84,7 +85,7 @@ class Parser(EventParser):
                     continue
 
                 event_row = bt_area.parent.parent
-                href = 'https://www.tickets-star.com' + bt_area.find('a', class_='btn').get('href')
+                href = 'https://biletcentr.com' + bt_area.find('a', class_='btn').get('href')
                 title = event_row.find('h2').text.strip()
                 full_place = event_row.find('div', class_='rep_date').text.strip().split(', ')
                 venue = self.format_venue(full_place[0])
@@ -112,8 +113,8 @@ class Parser(EventParser):
         return p_id
 
     def load_more_events(self, php_id, r_str):
-        url_p = 'https://www.tickets-star.com/Scripts/LoadMoreRepertoire.script.php'
-        url_pr = 'https://www.tickets-star.com/Scripts/LoadMoreRepertoireNextCount.script.php'
+        url_p = 'https://biletcentr.com/Scripts/LoadMoreRepertoire.script.php'
+        url_pr = 'https://biletcentr.com/Scripts/LoadMoreRepertoireNextCount.script.php'
         headers = {'cookie': 'PHPSESSID='f'{r_str}'}
         payload = {'RequestUri': php_id}
         resp_p = self.session.post(url_p, data=payload, headers=headers)
@@ -167,7 +168,7 @@ class Parser(EventParser):
 
         return afisha_urls
 
-    def body(self):
+    async def body(self):
         afisha_urls = []
         for our_url, our_places in self.our_urls.items():
             afisha_urls += self.get_afisha_urls(our_url, our_places)
@@ -179,43 +180,18 @@ class Parser(EventParser):
 
         a_events = list(set(a_events))
 
-        skip_events = [
-            'https://www.tickets-star.com/cat/245/EventId/242282923/',
-            'https://www.tickets-star.com/cat/245/EventId/243579549/',
-            'https://www.tickets-star.com/cat/245/EventId/243579548/',
-            'https://www.tickets-star.com/cat/245/EventId/242282923/',
-            'https://www.tickets-star.com/cat/245/EventId/243579547/',
-            'https://www.tickets-star.com/cat/245/EventId/240344845/',
-            'https://www.tickets-star.com/cat/245/EventId/245265248/',
-            'https://www.tickets-star.com/cat/245/EventId/245265253/',
-            'https://www.tickets-star.com/cat/245/EventId/245265259/',
-            'https://www.tickets-star.com/cat/245/EventId/245265264/',
-            'https://www.tickets-star.com/cat/245/EventId/245363653/',
-            'https://www.tickets-star.com/cat/245/EventId/240344845/',
-            'https://www.tickets-star.com/cat/245/EventId/240344847/',
-            'https://www.tickets-star.com/cat/245/EventId/240344849/',
-            'https://www.tickets-star.com/cat/245/EventId/240344850/',
-            'https://www.tickets-star.com/cat/245/EventId/249417912/',
-            'https://www.tickets-star.com/cat/245/EventId/249417909/',
-            'https://www.tickets-star.com/cat/245/EventId/249417911/',
-            'https://www.tickets-star.com/cat/245/EventId/249417910/',
-        ]
+        skip_events = []
 
         for event in a_events:
             if event[1] in skip_events:
                 continue
             # if 'Цирк на Вернадского' in event[3]: #Вернадский цирк отсеиваем
             #     if  any([i in event[2] for i in [ 
-            #         '09 Дек 2023 14:30', '08 Дек',
-            #         '16 Дек 2023 10:00', '16 Дек 2023 13:00', '16 Дек 2023 16:00', '16 Дек 2023 19:00',
-            #         '17 Дек 2023 10:00', '17 Дек 2023 13:00', '17 Дек 2023 16:00', '17 Дек 2023 19:00',
-            #             '02 Янв 2024 10:00', '02 Янв 2024 13:00', '02 Янв 2024 16:00', '02 Янв 2024 19:00',
             #             '03 Янв 2024 10:00', '03 Янв 2024 13:00', '03 Янв 2024 16:00', '03 Янв 2024 19:00',
             #     ]]):
             #         continue
             # elif 'Цирк на Цветном бульваре' in event[4]:
             #     if any([i in event[2] for i in [ 
-            #             '09 Дек 2023 19:00', 
             #             '13 Янв 2024 14:30', '13 Янв 2024 18:00', '20 Янв', '21 Янв'
             #             ]]):
             #         continue

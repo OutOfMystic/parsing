@@ -3,8 +3,9 @@ import json
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.date import month_list
 
 
@@ -16,7 +17,7 @@ class OutputEvent(NamedTuple):
     venue: str
 
 
-class HelikonRu(EventParser):
+class HelikonRu(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -24,8 +25,8 @@ class HelikonRu(EventParser):
         self.driver_source = None
         self.url: str = 'https://www.helikon.ru/ru/playbill'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self) -> OutputEvent:
         soup = self._requests_to_events()

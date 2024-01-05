@@ -1,10 +1,11 @@
 import re
 from time import sleep
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
-class Hc_Avtomobilist_Seats(SeatsParser):
+class Hc_Avtomobilist_Seats(AsyncSeatsParser):
     event = 'tickets.hc-avto.ru'
     url_filter = lambda url: 'tickets.hc-avto.ru' in url
 
@@ -14,8 +15,8 @@ class Hc_Avtomobilist_Seats(SeatsParser):
         self.driver_source = None
         self.id = self.url.split('/')[-1]
        
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def get_row_and_place(info: str):

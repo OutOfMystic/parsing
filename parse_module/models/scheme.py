@@ -27,17 +27,17 @@ class Dancefloor:
 
 
 class Scheme:
-    saved_schemes = LocalDict('constructors.pkl')
+    saved_schemes = LocalDict('constructors.sql')
 
     def __init__(self, scheme_id):
         self.scheme_id = scheme_id
         self.name = ''
         self.sectors = {}
         self.dancefloors = {}
-        self.sector_names = self._sector_names()
-        self.sector_data = self._sector_data()
+        self.sector_names = []
+        self.sector_data = []
 
-    def get_scheme(self):
+    def setup_sectors(self, wait_mode=False):
         """with shelve.open('schemes') as shelf:
             name_scheme = shelf.get(str(self.scheme_id), None)
         if name_scheme:
@@ -53,7 +53,10 @@ class Scheme:
             with shelve.open('schemes') as shelf:
                 shelf[str(self.scheme_id)] = callback
             name, scheme = callback"""
-        name, scheme = self._get_scheme_wrapper(self.scheme_id)
+        if wait_mode:
+            name, scheme = self.saved_schemes.wait_and_get(self.scheme_id, timeout=1800, delay=10)
+        else:
+            name, scheme = self._get_scheme_wrapper(self.scheme_id)
 
         if name is None and scheme is None:
             return False
@@ -82,6 +85,9 @@ class Scheme:
             else:
                 id_row_seat = (ticket_id, str(ticket[5]), str(ticket[6]))
                 self.sectors[sector_name][id_row_seat] = False
+
+        self.sector_data = self._sector_data()
+        self.sector_names = self._sector_names()
         return True
 
     def _get_scheme_wrapper(self, scheme_id):
@@ -96,9 +102,11 @@ class Scheme:
                             from_iterable=False,
                             from_thread='Controller',
                             kwargs={'get_scheme': ''})
-        event_locker.wait(600)
+        event_locker.wait(1800)
         del event_locker
 
+        if not callback:
+            raise RuntimeError('Scheme awaiting timed out')
         return callback
 
     def _sector_names(self):
@@ -137,7 +145,6 @@ class ParserScheme(Scheme):
                   args=(scheme,), tries=5, name=group_name)
 
     def bind(self, priority, margin_func):
-        logger.debug('binded', self.event_id, priority, name=self.name)
         try:
             self._lock.acquire()
             if priority in self._margins:
@@ -161,8 +168,7 @@ class ParserScheme(Scheme):
             del self._bookings[priority]
             del self._prohibitions[priority]
         except Exception as err:
-            mes = utils.red(f'{self.name}: Error unbinding parser from scheme: {err}')
-            print(mes)
+            logger.error(f'Error unbinding parser from scheme: {err}', name=self.name)
         finally:
             self._lock.release()
 
@@ -424,7 +430,7 @@ class ParserScheme(Scheme):
                     "sector_id": ticket[3],
                     "row": ticket[5],
                     "seat": ticket[6],
-                    "status": str('not'),
+                    "status": 'not',
                     "original_price": 1,
                     "sell_price": 1,
                     "event_id": self.event_id,

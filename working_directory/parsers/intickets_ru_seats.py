@@ -1,13 +1,14 @@
 import json
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split, lrsplit
 import codecs
 
 
-class InticketsParser(SeatsParser):
+class InticketsParser(AsyncSeatsParser):
     event = 'intickets.ru'
     url_filter = lambda url: 'intickets.ru' in url and 'pre8136' not in url
     proxy_check = SpecialConditions(url='https://iframeab-pre4073.intickets.ru/')
@@ -17,8 +18,8 @@ class InticketsParser(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, sectors):
         for sector in sectors:
@@ -27,7 +28,7 @@ class InticketsParser(SeatsParser):
     def decode_unicode_escape(self, text):
         return codecs.decode(text.encode('UTF-8'), 'unicode-escape')
 
-    def body(self):
+    async def body(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',

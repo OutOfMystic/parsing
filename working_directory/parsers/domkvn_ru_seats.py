@@ -1,11 +1,12 @@
 import re
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
-class KVNParser(SeatsParser):
-    event = 'domkvn.ru'
+
+class KVNParser(AsyncSeatsParser):
     url_filter = lambda url: 'domkvn' in url
 
     def __init__(self, *args, **extra):
@@ -26,8 +27,8 @@ class KVNParser(SeatsParser):
             'user-agent': self.user_agent
         }
     
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_sector(sector_name, row):
@@ -78,7 +79,7 @@ class KVNParser(SeatsParser):
         return sector_name, sector_name2
     
     
-    def body(self):
+    async def body(self):
         r2 = self.session.get(url=self.url, headers=self.headers)
 
         sectors = r2.json().get('sectors')

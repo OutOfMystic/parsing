@@ -3,8 +3,9 @@ import re
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -14,7 +15,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class Lokobasket(EventParser):
+class Lokobasket(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -22,8 +23,8 @@ class Lokobasket(EventParser):
         self.driver_source = None
         self.url: str = 'https://hk-spartak.qtickets.ru/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self):
         soup = self._requests_to_events()

@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Vakhtakassa(SeatsParser):
+class Vakhtakassa(AsyncSeatsParser):
     event = 'vakhtakassa.com'
     url_filter = lambda url: 'vakhtakassa.com' in url
 
@@ -13,8 +14,8 @@ class Vakhtakassa(SeatsParser):
         self.driver_source = None
         self.count_request = 0
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_href(self, url, received_date, received_time):
         try:
@@ -133,7 +134,7 @@ class Vakhtakassa(SeatsParser):
         r = self.session.get(url, headers=headers)
         return r.json()
 
-    def body(self):
+    async def body(self):
         all_sectors = self.parse_seats()
 
         for sector in all_sectors:

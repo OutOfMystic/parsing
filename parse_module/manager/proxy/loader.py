@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time
 import json as json_
@@ -65,9 +66,25 @@ class ProxyOnCondition:
             sleep_time += 0.1
             time.sleep(0.1)
 
+    async def _wait_async(self):
+        sleep_time = 0.1
+        while not self.last_update:
+            sleep_time += 0.1
+            await asyncio.sleep(0.1)
+
     def get(self):
         if not self.last_update:
             self._wait()
+        if self.proxies:
+            self.last_tab += 1
+            tab = self.last_tab % self.plen
+            return self.proxies[tab]
+        else:
+            return None
+
+    async def get_async(self):
+        if not self.last_update:
+            await self._wait_async()
         if self.proxies:
             self.last_tab += 1
             tab = self.last_tab % self.plen
@@ -112,6 +129,14 @@ class ProxyHub:
     def get(self, url: str):
         ...
 
+    @overload
+    async def get_async(self, url: str):
+        ...
+
+    @overload
+    async def get_async(self, check_conditions: SpecialConditions):
+        ...
+
     @staticmethod
     def _check_argument(check_conditions):
         if isinstance(check_conditions, SpecialConditions):
@@ -150,6 +175,11 @@ class ProxyHub:
         check_conditions = self._check_argument(check_conditions)
         proxies = self.proxies_on_condition[check_conditions.signature]
         return proxies.get_all()
+
+    async def get_async(self, check_conditions):
+        check_conditions = self._check_argument(check_conditions)
+        proxies = self.proxies_on_condition[check_conditions.signature]
+        return await proxies.get_async()
 
     def report(self, check_conditions, proxy):
         check_conditions = self._check_argument(check_conditions)

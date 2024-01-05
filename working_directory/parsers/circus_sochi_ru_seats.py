@@ -1,8 +1,9 @@
 import json
 from typing import NamedTuple
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -10,8 +11,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class CircusSochiRu(SeatsParser):
-    event = 'circus-sochi.ru'
+class CircusSochiRu(AsyncSeatsParser):
     url_filter = lambda url: 'ticket-place.ru' in url and '|sochi' in url
 
     def __init__(self, *args, **extra) -> None:
@@ -20,8 +20,8 @@ class CircusSochiRu(SeatsParser):
         self.driver_source = None
         self.url = self.url[:self.url.index('|')]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         ...
@@ -81,6 +81,7 @@ class CircusSochiRu(SeatsParser):
         return r.json()
 
     def body(self) -> None:
+        self.debug('Starting body')
         for sector in self._parse_seats():
             if 'Ложа' in sector.sector_name:
                 continue

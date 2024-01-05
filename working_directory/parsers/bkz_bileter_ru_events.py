@@ -3,11 +3,12 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
-class BkzEvents(EventParser):
+class BkzEvents(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -32,8 +33,8 @@ class BkzEvents(EventParser):
         }
     
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_date(date):
@@ -94,7 +95,7 @@ class BkzEvents(EventParser):
             
 
 
-    def body(self):
+    async def body(self):
         a_events = self.get_all_events()
 
         for event in a_events:

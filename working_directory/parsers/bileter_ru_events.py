@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import Optional
 
+from parse_module.coroutines import AsyncEventParser
 from bs4 import BeautifulSoup
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
-class BileterEvent(EventParser):
+class BileterEvent(AsyncEventParser):
     proxy_check_url = "https://www.bileter.ru/"
     def __init__(self, controller):
         super().__init__(controller)
@@ -47,8 +48,8 @@ class BileterEvent(EventParser):
             'Сентября': 9, 'Октября': 10, 'Ноября': 11, 'Декабря': 12
         }[month]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
         
         
     def str_to_datetime(self, date : str) -> datetime:
@@ -97,7 +98,7 @@ class BileterEvent(EventParser):
             self.register_event(event_name=event[0], url=event[1], date=event[2], venue=event[3])
             
         
-    def body(self):
+    async def body(self):
         
         events_list = []
         page = 1

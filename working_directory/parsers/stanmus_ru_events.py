@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -11,8 +12,8 @@ class Parser(EventParser):
         self.driver_source = None
         self.url = 'https://stanmus.ru/shows/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_events(self, products_about, year):
         a_events = []
@@ -83,7 +84,7 @@ class Parser(EventParser):
 
         return months_params
 
-    def body(self):
+    async def body(self):
         init_month_soup, init_products = self.parse_show_list(return_soup=True)
         months_params = self.get_months_params(init_month_soup)
         init_year = months_params[0].split('_')[-1].strip()

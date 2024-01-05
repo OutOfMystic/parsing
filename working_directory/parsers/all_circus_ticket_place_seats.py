@@ -1,13 +1,14 @@
 import re
 from requests.exceptions import TooManyRedirects
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class SochiCirkParser(SeatsParser):
+class SochiCirkParser(AsyncSeatsParser):
     proxy_check = NormalConditions()
     url_filter = lambda url: 'ticket-place.ru' in url and 'sochi' in url
 
@@ -17,8 +18,8 @@ class SochiCirkParser(SeatsParser):
         self.driver_source = None
         self.url = self.url[:self.url.index('|')]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_all_seats(self):
             headers = {
@@ -63,7 +64,7 @@ class SochiCirkParser(SeatsParser):
                     continue
         return a_sectors
 
-    def body(self):
+    async def body(self):
         
         all_place = self.get_all_seats()
         all_place = all_place['data']['seats']['data']
@@ -90,7 +91,7 @@ class SochiCirkParser(SeatsParser):
 #             sector = 'Правая сторона'
 #         return sector
     
-#     def body(self):
+#     async def body(self):
 #         super().body()
 
 class VladivostokCirkParser(SochiCirkParser):
@@ -110,7 +111,7 @@ class VladivostokCirkParser(SochiCirkParser):
              sector = 'Ложа 3'
         return sector
     
-    def body(self):
+    async def body(self):
         super().body()
    
    

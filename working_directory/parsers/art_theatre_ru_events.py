@@ -2,20 +2,21 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Gorkovo(EventParser):
+class Gorkovo(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://art-theatre.ru/afisha'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_day_and_month(self, all_data_in_day):
         date = all_data_in_day.find('div', class_='data')
@@ -138,7 +139,7 @@ class Gorkovo(EventParser):
 
         return soup
 
-    def body(self):
+    async def body(self):
         events_is_complite = []
         a_events = self.parse_events()
 

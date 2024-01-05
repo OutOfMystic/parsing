@@ -2,11 +2,12 @@ import re
 import json
 from time import sleep
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
-class Hc_Sibir_Seats(SeatsParser): 
+class Hc_Sibir_Seats(AsyncSeatsParser): 
     event = 'tickets.hcsibir.ru'
     url_filter = lambda url: 'tickets.hcsibir.ru' in url
 
@@ -16,8 +17,8 @@ class Hc_Sibir_Seats(SeatsParser):
         self.driver_source = None
         self.event_id = self.url.split('/')[-1]
        
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def get_row_and_place(info: str):

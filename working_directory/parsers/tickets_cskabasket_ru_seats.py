@@ -3,8 +3,9 @@ from typing import NamedTuple
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -12,7 +13,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class CskaBasket(SeatsParser):
+class CskaBasket(AsyncSeatsParser):
     event = 'tickets.cskabasket.ru'
     url_filter = lambda url: 'tickets.cskabasket.ru' in url
 
@@ -23,8 +24,8 @@ class CskaBasket(SeatsParser):
         self.event_id = self.url.split('=')[-1]
         self.csrf_frontend = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'Сектор B4' in sector_name:

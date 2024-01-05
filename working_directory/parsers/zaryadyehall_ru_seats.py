@@ -4,8 +4,9 @@ from typing import NamedTuple, Optional, Union
 
 from requests.exceptions import JSONDecodeError
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -13,7 +14,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class ZaryadyeHall(SeatsParser):
+class ZaryadyeHall(AsyncSeatsParser):
     event = 'zaryadyehall.ru'
     url_filter = lambda url: 'listim.com' in url
 
@@ -25,8 +26,8 @@ class ZaryadyeHall(SeatsParser):
         # self.user_token: str = double_split(self.url, 'gclid=', '#')
         self.user_token: str = f'1404449{randint(100, 999)}'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'Бельэтаж сцена' in sector_name:

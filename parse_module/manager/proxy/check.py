@@ -5,6 +5,7 @@ from requests.exceptions import ProxyError
 
 from ...utils import provision
 from ...utils.logger import logger
+from ...models import user_agent
 
 CHECK_DELAY = 2 * 60 * 60
 
@@ -24,7 +25,6 @@ class SpecialConditions:
 
     @staticmethod
     def default_handler(proxy, url, method):
-        from ...models import user_agent
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp'
                       ',image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',

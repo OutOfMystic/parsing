@@ -2,14 +2,15 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 from parse_module.utils.date import month_list
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://ticket.bolshoi.ru/shows')
 
     def __init__(self, controller, name):
@@ -19,8 +20,8 @@ class Parser(EventParser):
         self.url = 'https://ticket.bolshoi.ru/shows'
         self.csrf = ''
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def deception_request(self):
         url = 'https://vk.com/'
@@ -114,7 +115,7 @@ class Parser(EventParser):
             a_events.append([event['description'], url, full_date, event['hallName']])
         return a_events
 
-    def body(self):
+    async def body(self):
         self.deception_request()
         self.main_page_request()
         self.csrf = self.get_csrf()

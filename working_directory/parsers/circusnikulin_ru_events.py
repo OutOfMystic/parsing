@@ -1,15 +1,17 @@
 import json
 import requests
 from bs4 import BeautifulSoup
+
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 from parse_module.utils.date import month_list
 from parse_module.utils.parse_utils import lrsplit, double_split
 from itertools import groupby
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -18,8 +20,8 @@ class Parser(EventParser):
         self.url = 'https://www.circusnikulin.ru/tickets'
         self.company_id = ''
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_events(self, events_data):
         a_events = []
@@ -124,7 +126,7 @@ class Parser(EventParser):
 
         return r_text
 
-    def body(self):
+    async def body(self):
         self.get_request()
         dates = self.get_dates(self.get_months_request())
 

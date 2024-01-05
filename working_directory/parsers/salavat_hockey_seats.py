@@ -2,13 +2,14 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
-class Hc_Salavat_Seats(SeatsParser): 
+class Hc_Salavat_Seats(AsyncSeatsParser): 
     proxy_check = NormalConditions()
     event = 'https://tickets.hcsalavat.ru/ru'
     url_filter = lambda url: 'hcsalavat.ru' in url
@@ -36,8 +37,8 @@ class Hc_Salavat_Seats(SeatsParser):
             'user-agent': self.user_agent
             }
        
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_seats(name):

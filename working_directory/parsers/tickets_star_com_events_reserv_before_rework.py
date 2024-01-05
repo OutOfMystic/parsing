@@ -2,12 +2,13 @@ import secrets
 import string
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 import re
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -15,8 +16,8 @@ class Parser(EventParser):
         self.driver_source = None
         self.url = 'https://www.tickets-star.com/cat/176/CategoryId/2/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def r_str(self):
         letters_and_digits = string.ascii_letters + string.digits
@@ -116,7 +117,7 @@ class Parser(EventParser):
                 links.append(link)
         return links
 
-    def body(self):
+    async def body(self):
         for link in self.get_links_events():
             self.register_event(link[0], link[1], date=link[2], scene=link[3], venue=link[4])
 

@@ -1,19 +1,20 @@
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
-class Icetickets(EventParser):
+class Icetickets(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://icetickets.ru/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
         self.our_places_data = [
             #'https://icetickets.ru/vid-meropriyatiya/shou',
@@ -115,7 +116,7 @@ class Icetickets(EventParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self):
+    async def body(self):
         a_events = []
         for url in self.our_places_data:
             for event in self.parse_events(url):

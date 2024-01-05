@@ -3,19 +3,20 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class VtbArena(EventParser):
+class VtbArena(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://vtb-arena.com/poster/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -95,7 +96,7 @@ class VtbArena(EventParser):
         soup = BeautifulSoup(r.text, 'lxml')
         return soup
 
-    def body(self):
+    async def body(self):
         soup = self.get_events(self.url)
         a_events = self.parse_events(soup)
 

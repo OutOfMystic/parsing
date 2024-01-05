@@ -8,9 +8,9 @@ from typing import Callable, Iterable
 
 from sortedcontainers import SortedDict
 
-from parse_module.utils import provision
+from parse_module.console.base import print_cols
+from parse_module.utils import provision, utils
 from parse_module.utils.logger import logger
-from parse_module.utils.provision import multi_try
 
 Task = namedtuple('Task', ['to_proceed', 'from_thread', 'wait'])
 Result = namedtuple('Result', ['scheduled_time', 'from_thread', 'apply_result'])
@@ -25,12 +25,12 @@ class Task:
 
 
 class ScheduledExecutor(threading.Thread):
-    def __init__(self, max_threads=40, stats='pooling_stats.csv'):
+    def __init__(self, max_threads=5, stats='pooling_stats.csv'):
         super().__init__()
         self.max_threads = max_threads
         self.stats = stats
+        self._pool = ThreadPool(max_threads)
         self._tasks = SortedDict()
-        self._pool = ThreadPool(processes=max_threads)
         self._results = []
         self._stats = []
         self._timers = {}
@@ -41,10 +41,9 @@ class ScheduledExecutor(threading.Thread):
                 f.write('')
         self.start()
 
-    def add(self, task: Task):
+    def add_task(self, task: Task):
         timestamp = task.wait + time.time()
-        self._tasks.setdefault(timestamp, [])
-        self._tasks[timestamp].append(task)
+        self._tasks.setdefault(timestamp, [task])
 
     def _add_stats(self, scheduled_time):
         if not self.stats:
@@ -66,6 +65,23 @@ class ScheduledExecutor(threading.Thread):
                 # writer.writerows(self._stats)
             self._stats.clear()
 
+    def inspect_queue(self):
+        log_time = time.time()
+        stat = f'Log time: {log_time - self._starting_point:.1f}, ' \
+               f'In process: {len(self._results)}, ' \
+               f'Scheduled: {len(self._tasks)}'
+        tasks = self._tasks.copy()
+        to_print = []
+        for task_time, tasks in tasks.items():
+            time_to_task = task_time - time.time()
+            formed_time = int(time_to_task * 10) / 10
+            tasks_ = tasks.copy()
+            for task in tasks_:
+                row = [utils.green(formed_time), utils.colorize(task.from_thread, utils.Fore.LIGHTCYAN_EX)]
+                to_print.append(row)
+        print_cols(to_print[::-1])
+        utils.blueprint(stat)
+
     @staticmethod
     def get_key(key):
         key = str(key)
@@ -74,10 +90,8 @@ class ScheduledExecutor(threading.Thread):
 
     def _step(self):
         bisection = self._tasks.bisect_left(time.time())
-        # logger.debug(len(self._tasks), len(self._results), bisection, self.get_key(time.time()),
-        #              list(self.get_key(key) for key in self._tasks.keys())[:30])
         if not bisection:
-            time.sleep(1)
+            time.sleep(2)
         for _ in range(bisection):
             scheduled_time, tasks = self._tasks.popitem(0)
             for task in tasks:
@@ -86,6 +100,7 @@ class ScheduledExecutor(threading.Thread):
                 result = Result(scheduled_time=scheduled_time,
                                 from_thread=task.from_thread,
                                 apply_result=apply_result)
+                # logger.debug(task.to_proceed, name=task.from_thread)
                 self._results.append(result)
 
         to_del = []
@@ -97,10 +112,11 @@ class ScheduledExecutor(threading.Thread):
                 continue
             result = result_callback.apply_result.get()
             to_del.append(i)
-            # logger.debug(-int(-time.time() - result_callback.scheduled_time))
+            # logger.debug('result', int(time.time() - result_callback.scheduled_time), 'sec',
+            #              name=result_callback.from_thread)
             self._add_stats(result_callback.scheduled_time)
             if isinstance(result, Task):
-                self.add(result)
+                self.add_task(result)
         for i in to_del[::-1]:
             del self._results[i]
 
@@ -125,4 +141,5 @@ class ScheduledExecutor(threading.Thread):
 
     def run(self):
         while True:
-            multi_try(self._step, tries=1, raise_exc=False, name='Controller')
+            provision.just_try(self._step, name='Controller')
+

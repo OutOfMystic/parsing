@@ -1,8 +1,9 @@
 import json
 from typing import NamedTuple
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -10,7 +11,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class TicketsFcdmRu(SeatsParser):
+class TicketsFcdmRu(AsyncSeatsParser):
     event = 'tickets.fcdm.ru'
     url_filter = lambda url: 'tickets.fcdm.ru' in url
 
@@ -19,8 +20,8 @@ class TicketsFcdmRu(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'A207' == sector_name:
