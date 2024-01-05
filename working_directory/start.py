@@ -1,8 +1,7 @@
 import sys
+sys.path.append("/home/lon8/python/parsing/")
 
 from parse_module.models import router
-
-sys.path.append("/home/lon8/python/work/parsing/")
 
 from parse_module.manager.controller import Controller
 
@@ -15,7 +14,7 @@ if __name__ == '__main__':
     release = 'release' in sys.argv
     debug_url, debug_event_id = None, None
     if DEBUG:
-        if isinstance(DEBUG_DATA, str):
+        if isinstance(DEBUG_DATA, str): 
             debug_url = DEBUG_DATA
         elif isinstance(DEBUG_DATA, int):
             debug_event_id = DEBUG_DATA
