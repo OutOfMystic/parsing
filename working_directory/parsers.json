@@ -3,7 +3,7 @@
   "salavat_hockey_events": false,
   "salavat_hockey_seats": false,
   "ramt_ru_events": false,
-  "lada_tlt_arena_events": false,
+  "lada_tlt_arena_events":  false,
   "lada_tlt_arena_seats": false,
   "domkvn_ru_events": false,
   "domkvn_ru_seats": false,
@@ -56,8 +56,8 @@
   "kassir_ru_seats": false,
   "tickets_ska_ru_events": false,
   "tickets_ska_ru_seats": false,
-  "new_ticket_bolshoi_ru_events": false,
-  "new_ticket_bolshoi_ru_seats": false,
+  "new_ticket_bolshoi_ru_events":false,
+  "new_ticket_bolshoi_ru_seats":false,
   "art_theatre_ru_events": false,
   "art_theatre_ru_seats": false,
   "lenkom_ru_events": false,
@@ -134,6 +134,7 @@
   "teatr_armii_ru_seats": false,
   "kazan_circus_ru_events": false,
   "kazan_circus_ru_seats": false,
+
   "find_new_web_sites": false,
   "bdt_spb_ru_bot": false
 }

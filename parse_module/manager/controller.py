@@ -402,7 +402,7 @@ class Controller:
 
 
 def get_telecore():
-    admins = [454746771]
+    admins = [454746771, 772343631]
     tele_profiles = os.path.join('config', 'tele_profiles.json')
     tele_accordance = os.path.join('config', 'tele_accordance.json')
     tele_core = TeleCore(profiles_config=tele_profiles,

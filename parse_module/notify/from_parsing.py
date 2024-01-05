@@ -65,7 +65,7 @@ class EventNotifier(ParsingNotifier, ABC):
                         f'Настолько много, что в сообщение не помещается')
             skip_sending = True
 
-        self.change_ticket_state(self.parser.name, [], url=self.parser.url,
+        self.change_ticket_state(f'**{self.parser.name}**', [], url=self.parser.url,
                                  appeared='События')
         self.change_ticket_state(f'**{self.parser.name}**', parsed_event_names,
                                  url=self.parser.url,

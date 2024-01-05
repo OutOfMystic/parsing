@@ -6,6 +6,7 @@ import threading
 import requests
 from loguru import logger
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager import authorize
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser

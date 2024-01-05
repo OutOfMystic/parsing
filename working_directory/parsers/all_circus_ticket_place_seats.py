@@ -1,6 +1,7 @@
 import re
 from requests.exceptions import TooManyRedirects
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession

@@ -3,6 +3,7 @@ from typing import NamedTuple, Optional, Union
 
 from requests.exceptions import JSONDecodeError
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 

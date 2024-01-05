@@ -1,5 +1,6 @@
 import time
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.drivers.queue_to_big_theatre import queue_big_theatre, result_json
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser

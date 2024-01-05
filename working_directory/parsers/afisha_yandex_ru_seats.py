@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from PIL import Image, ImageOps
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.utils.captcha import afisha_recaptcha
 from parse_module.models.parser import SeatsParser
