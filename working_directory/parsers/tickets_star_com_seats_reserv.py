@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import re
 
 
-class Parser(SeatsParser):
+class Parser(AsyncSeatsParser):
     event = 'tickets-star.com'
     url_filter = lambda event: 'tickets-star.com' in event
 
@@ -14,8 +14,8 @@ class Parser(SeatsParser):
         self.delay = 60
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_f_sectors(self, sectors, get_f_name=None):
         to_del = []
@@ -166,7 +166,7 @@ class Parser(SeatsParser):
 
         return s, theatre
 
-    def body(self):
+    async def body(self):
         sector = []
         places, theatre = self.get_places()
 
@@ -252,6 +252,6 @@ class MkhtParser(Parser):
         for i in to_del[::-1]:
             del sectors[i]
 
-    def body(self):
+    async def body(self):
         super().body()
 

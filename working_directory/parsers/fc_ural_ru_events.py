@@ -14,7 +14,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class FcUralRu(EventParser):
+class FcUralRu(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -22,8 +22,8 @@ class FcUralRu(EventParser):
         self.driver_source = None
         self.url: str = 'https://fc-ural.ru/bilety/bilety'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self) -> OutputEvent:
         soup = self._requests_to_events(self.url)

@@ -11,7 +11,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
-class TNA(EventParser):
+class TNA(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3200
@@ -23,8 +23,8 @@ class TNA(EventParser):
         self.BOT_TOKEN = '6002068146:AAHx8JmyW3QhhFK5hhdFIvTXs3XFlsWNraw'
         self.telegram_bot = TeleBot(self.BOT_TOKEN)
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -150,7 +150,7 @@ class TNA(EventParser):
             with open('files/events/akbars_events.json', 'w',encoding='utf-8') as file2:
                 json.dump(events_new, file2, indent=4, ensure_ascii=False)
 
-    def body(self):
+    async def body(self):
         for url in self.urls:
             a_events = self.get_events(url)
             

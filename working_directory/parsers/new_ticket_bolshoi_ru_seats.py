@@ -7,7 +7,7 @@ from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class BolshoiParser(SeatsParser):
+class BolshoiParser(AsyncSeatsParser):
     proxy_check = SpecialConditions(url='https://ticket.bolshoi.ru/')
     event = 'ticket.bolshoi.ru'
     url_filter = lambda url: 'ticket.bolshoi.ru' in url
@@ -17,8 +17,8 @@ class BolshoiParser(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         bolshoi_tickets_reformat_dict = {
@@ -296,7 +296,7 @@ class BolshoiParser(SeatsParser):
 
         return total_sector
 
-    def body(self):
+    async def body(self):
         if 'https://ticket.bolshoi.ru/show/5101' == self.url and 'война и мир' in self.name.lower():
             return
         if not hasattr(self, 'scene'):

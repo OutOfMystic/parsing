@@ -11,7 +11,7 @@ from parse_module.utils.parse_utils import double_split, lrsplit
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class BuletServis(EventParser):
+class BuletServis(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.a_events = None
@@ -26,8 +26,8 @@ class BuletServis(EventParser):
             }
         ]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup, venue_id, venue):
         a_events = {}
@@ -192,7 +192,7 @@ class BuletServis(EventParser):
             extra_data[eventdate] = formatted
         return extra_data
 
-    def body(self):
+    async def body(self):
         self.a_events = self.get_events()
         urls = set(event[1] for event in self.a_events.values())
 

@@ -3,7 +3,7 @@ from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class XKMetalurg(SeatsParser):
+class XKMetalurg(AsyncSeatsParser):
     event = 'tickets.metallurg.ru'
     url_filter = lambda url: 'tickets.metallurg.ru' in url
 
@@ -12,8 +12,8 @@ class XKMetalurg(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_seats(self, json_data):
         total_sector = []
@@ -133,7 +133,7 @@ class XKMetalurg(SeatsParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         all_sectors = self.get_seats()
 
         for sector in all_sectors:

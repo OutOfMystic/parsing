@@ -6,7 +6,7 @@ from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Lenkom(SeatsParser):
+class Lenkom(AsyncSeatsParser):
     event = 'tickets.afisha.ru'
     url_filter = lambda url: 'wl/54' in url and 'tickets.afisha.ru' in url
     proxy_check = SpecialConditions(url='https://tickets.afisha.ru/')
@@ -16,8 +16,8 @@ class Lenkom(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, all_sectors):
         for sector in all_sectors:
@@ -96,7 +96,7 @@ class Lenkom(SeatsParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         all_sectors = self.get_seats()
 
         self.reformat(all_sectors)

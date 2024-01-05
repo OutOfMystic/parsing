@@ -14,7 +14,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class MelomanRu(SeatsParser):
+class MelomanRu(AsyncSeatsParser):
     event = 'meloman.ru'
     url_filter = lambda url: 'bigbilet.ru' in url
 
@@ -23,8 +23,8 @@ class MelomanRu(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if '3 Амф' in sector_name:

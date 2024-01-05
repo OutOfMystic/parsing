@@ -4,7 +4,7 @@ from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class TktGe(EventParser):
+class TktGe(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -13,8 +13,8 @@ class TktGe(EventParser):
         self.driver_source = None
         self.url = 'https://tkt.ge/event/355735/bruno-mars'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def body(self) -> None:
         all_events = (

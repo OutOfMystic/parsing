@@ -17,15 +17,15 @@ class OutputEvent(NamedTuple):
     event_params: str
 
 
-class PelmenyNet(EventParser):
+class PelmenyNet(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url: str = 'https://pelmeny.net/afisha'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self) -> OutputEvent:
         soup = self._requests_to_events(self.url)

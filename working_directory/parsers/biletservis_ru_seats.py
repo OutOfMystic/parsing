@@ -8,7 +8,7 @@ from parse_module.utils.parse_utils import double_split, lrsplit, contains_class
 from parse_module.utils import utils
 
 
-class BiletServisParser(SeatsParser):
+class BiletServisParser(AsyncSeatsParser):
     url_filter = lambda url: 'biletservis.ru' in url
 
     def __init__(self, *args, **extra):
@@ -16,8 +16,8 @@ class BiletServisParser(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, sectors):
         for sector in sectors:
@@ -77,7 +77,7 @@ class BiletServisParser(SeatsParser):
                         loz_row = '2'
         return loz_row
 
-    def body(self):
+    async def body(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,i'
                       'mage/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',

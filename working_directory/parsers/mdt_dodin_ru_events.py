@@ -16,7 +16,7 @@ class OutputEvent(NamedTuple):
     id_event: str
 
 
-class MdtDodin(EventParser):
+class MdtDodin(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -24,8 +24,8 @@ class MdtDodin(EventParser):
         self.driver_source = None
         self.url: str = 'https://mdt-dodin.ru/plays/afisha/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self):
         soup = self._requests_to_events(self.url)

@@ -3,7 +3,7 @@ from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class DynamoParser(SeatsParser):
+class DynamoParser(AsyncSeatsParser):
     event = 'tickets.dynamo.ru'
     url_filter = lambda url: 'widget.afisha.yandex.ru' in url
 
@@ -12,8 +12,8 @@ class DynamoParser(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         tribune_1 = 'Трибуна Давыдова. '
@@ -146,7 +146,7 @@ class DynamoParser(SeatsParser):
 
         return r.json()
 
-    def body(self):
+    async def body(self):
         a_sectors = self.parse_seats()
 
         self.reformat(a_sectors)

@@ -6,7 +6,7 @@ from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class HcSalavatHockey(EventParser):
+class HcSalavatHockey(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -31,11 +31,11 @@ class HcSalavatHockey(EventParser):
             'user-agent': self.user_agent
         }
        
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
 
-    def body(self):
+    async def body(self):
         r = self.session.get(url=self.url, headers=self.headers, verify=False)
         soup = BeautifulSoup(r.text, 'lxml')
 

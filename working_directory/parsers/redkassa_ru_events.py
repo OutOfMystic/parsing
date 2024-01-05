@@ -11,7 +11,7 @@ from parse_module.utils.parse_utils import double_split
 
 
 
-class Redkassa(EventParser):
+class Redkassa(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -40,8 +40,8 @@ class Redkassa(EventParser):
             'user-agent': self.user_agent
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def get_date_from_url(href):
@@ -202,7 +202,7 @@ class Redkassa(EventParser):
         return a_events
 
 
-    def body(self):
+    async def body(self):
         a_events = []
         for url in self.urls:
             # Неверные url для seats парсера, если 2 или более ивента в 1 день

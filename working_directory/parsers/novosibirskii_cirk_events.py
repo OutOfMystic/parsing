@@ -8,7 +8,7 @@ from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class CircusNovosib(EventParser):
+class CircusNovosib(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
@@ -27,8 +27,8 @@ class CircusNovosib(EventParser):
             "user-agent": self.user_agent
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_date(date):
@@ -80,7 +80,7 @@ class CircusNovosib(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         page = self.session.get(self.url, headers=self.headers)
         events_ids = self.find_all_events(page)
 

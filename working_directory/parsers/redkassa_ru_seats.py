@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from parse_module.utils.parse_utils import double_split
 
 
-class Redkassa(SeatsParser):
+class Redkassa(AsyncSeatsParser):
     event = 'redkassa.ru'
     url_filter = lambda url: 'redkassa.ru' in url
 
@@ -14,8 +14,8 @@ class Redkassa(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         gubernskii = {
@@ -179,7 +179,7 @@ class Redkassa(SeatsParser):
         seance_id = double_split(script_with_seance_id, '{"seanceId":"', '","eventId"')
         return seance_id
 
-    def body(self):
+    async def body(self):
         a_sectors = self.parse_seats()
 
         self.reformat(a_sectors)

@@ -13,7 +13,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class TicketsFcZenit(SeatsParser):
+class TicketsFcZenit(AsyncSeatsParser):
     event = 'tickets.fc-zenit.ru'
     url_filter = lambda url: 'tickets.fc-zenit.ru' in url
 
@@ -22,8 +22,8 @@ class TicketsFcZenit(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         tribuna = ''

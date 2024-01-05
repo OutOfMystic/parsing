@@ -16,7 +16,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class Mikhailovsky(EventParser):
+class Mikhailovsky(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -24,8 +24,8 @@ class Mikhailovsky(EventParser):
         self.driver_source = None
         self.url: str = 'https://mikhailovsky.ru/afisha/performances/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self) -> Callable[[BeautifulSoup, str], OutputEvent]:
         soup = self._requests_to_events()

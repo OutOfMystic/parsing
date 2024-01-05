@@ -3,7 +3,7 @@ from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Gorkovo(SeatsParser):
+class Gorkovo(AsyncSeatsParser):
     event = 'art-theatre.ru'
     url_filter = lambda url: 'art-theatre.ru' in url
 
@@ -12,8 +12,8 @@ class Gorkovo(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         for sector in a_sectors:
@@ -77,7 +77,7 @@ class Gorkovo(SeatsParser):
         r = self.session.get(url, headers=headers)
         return r.json()
 
-    def body(self):
+    async def body(self):
         all_sectors = self.parse_seats()
 
         self.reformat(all_sectors)

@@ -14,7 +14,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class VDNHRu(SeatsParser):
+class VDNHRu(AsyncSeatsParser):
     event = 'vdnh.ru'
     url_filter = lambda url: 'vdnh.ru' in url
 
@@ -26,8 +26,8 @@ class VDNHRu(SeatsParser):
         self.token = double_split(self.url, '&token=', '&')
         self.fid = double_split(self.url, '&frontendId=', '&')
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'Амфитеатр' in sector_name:

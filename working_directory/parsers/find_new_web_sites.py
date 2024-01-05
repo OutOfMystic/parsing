@@ -10,7 +10,7 @@ from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Check_new_websites(EventParser):
+class Check_new_websites(AsyncEventParser):
     '''
         Check new domen from ip 179.43.166.54
     '''
@@ -25,8 +25,8 @@ class Check_new_websites(EventParser):
         self.bot = TeleBot(self.BOT_TOKEN)
         self.chat_id =  '-1001982695540'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_url(box_urls):
@@ -87,7 +87,7 @@ class Check_new_websites(EventParser):
             with open('files/portal_domens/urls.json', 'w', encoding='utf-8') as file1:
                 json.dump(new_urls, file1, indent=4, ensure_ascii=False)
 
-    def body(self):
+    async def body(self):
         a_urls = self.seo_auditor(self.ip)
         self.find_and_check(a_urls)
 

@@ -147,7 +147,7 @@ class BotBase:
     def selenium(self):
         return ProxyWebDriver(proxy=self.proxy)
 
-    def before_body(self):
+    async def before_body(self):
         pass
 
     @abstractmethod

@@ -9,7 +9,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split, decode_unicode_escape
 
 
-class BkzPars(SeatsParser):
+class BkzPars(AsyncSeatsParser):
     url_filter = lambda url: 'bileter.ru' in url
     proxy_check = NormalConditions()
 
@@ -19,8 +19,8 @@ class BkzPars(SeatsParser):
         self.driver_source = None
         self.event_id = self.url.split('/')[-1]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_seats(self, url_seats):
         headers = {
@@ -74,7 +74,7 @@ class BkzPars(SeatsParser):
                     )    
         return a_sectors
 
-    def body(self):
+    async def body(self):
         url_seats = f'https://www.bileter.ru/performance/hall-scheme?IdPerformance={self.event_id}'
         activePlaces = self.get_seats(url_seats)
         a_sectors = self.reformat(activePlaces)

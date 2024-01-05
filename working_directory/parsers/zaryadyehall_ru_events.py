@@ -15,7 +15,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class ZaryadyeHall(EventParser):
+class ZaryadyeHall(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -23,8 +23,8 @@ class ZaryadyeHall(EventParser):
         self.driver_source = None
         self.url: str = 'https://zaryadyehall.ru/event/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self) -> OutputEvent:
         soup = self._requests_to_events()

@@ -12,7 +12,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class AlexandrinskyRu(SeatsParser):
+class AlexandrinskyRu(AsyncSeatsParser):
     url_filter = lambda url: 'afisha.ru/wl/402' in url
 
     def __init__(self, *args, **extra) -> None:
@@ -20,8 +20,8 @@ class AlexandrinskyRu(SeatsParser):
         self.delay = 1200
         self.driver_source = None
         
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str, place_row: str) -> tuple[str, str]:
         if 'Ложа бельэтажа' in sector_name:

@@ -7,7 +7,7 @@ from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class HcAvtomobilistHockey(EventParser):
+class HcAvtomobilistHockey(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -30,8 +30,8 @@ class HcAvtomobilistHockey(EventParser):
             "User-Agent": self.user_agent
             }
 
-    def before_body(self):
-            self.session = ProxySession(self)
+    async def before_body(self):
+            self.session = AsyncProxySession(self)
 
     @staticmethod
     def date_reformat(date: str):
@@ -41,7 +41,7 @@ class HcAvtomobilistHockey(EventParser):
         month = month[:3].capitalize()
         return f"{day} {month} {year} {time}"
 
-    def body(self):
+    async def body(self):
             r = self.session.get(url=self.url, headers=self.headers)
             soup = BeautifulSoup(r.text, 'lxml')
 

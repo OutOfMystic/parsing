@@ -12,7 +12,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 import re
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -27,8 +27,8 @@ class Parser(EventParser):
             'https://biletcentr.com/cat/229/PlaceId/36/': '*', #armii teatr
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def r_str(self):
         letters_and_digits = string.ascii_letters + string.digits
@@ -168,7 +168,7 @@ class Parser(EventParser):
 
         return afisha_urls
 
-    def body(self):
+    async def body(self):
         afisha_urls = []
         for our_url, our_places in self.our_urls.items():
             afisha_urls += self.get_afisha_urls(our_url, our_places)

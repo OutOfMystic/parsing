@@ -26,7 +26,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class CircusSpbRu(EventParser):
+class CircusSpbRu(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -53,8 +53,8 @@ class CircusSpbRu(EventParser):
             "user-agent": self.user_agent
             }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def make_date(date):

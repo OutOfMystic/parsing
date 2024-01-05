@@ -15,7 +15,7 @@ from parse_module.utils.date import month_list
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class BolshoiParser(EventParser):
+class BolshoiParser(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://ticket.bolshoi.ru/')
 
     def __init__(self, controller, name):
@@ -24,8 +24,8 @@ class BolshoiParser(EventParser):
         self.driver_source = None
         self.url = 'https://ticket.bolshoi.ru/api/v1/client/shows/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, json_data):
         a_events = []
@@ -73,7 +73,7 @@ class BolshoiParser(EventParser):
 
         return self.parse_events(json_loads)
 
-    def body(self):
+    async def body(self):
         a_events = self.get_events()
 
         for event in a_events:

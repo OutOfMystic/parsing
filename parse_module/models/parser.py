@@ -339,7 +339,7 @@ class SeatsParser(ParserBase, ABC):
         super().run_except()
 
     @abstractmethod
-    def body(self):
+    async def body(self):
         pass
 
 

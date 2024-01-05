@@ -6,7 +6,7 @@ from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://www.ticketland.ru/')
 
     def __init__(self, controller, name):
@@ -57,8 +57,8 @@ class Parser(EventParser):
             ],
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_events(self, link, places_url, venue):
         number_page = 0
@@ -218,7 +218,7 @@ class Parser(EventParser):
             raise Exception('Запрос с загрузкой')
         return r_text
 
-    def body(self):
+    async def body(self):
         for places_url, our_places in self.our_places_data.items():
             headers = {
                 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',

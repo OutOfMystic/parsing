@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import re
 
 
-class StarParser(SeatsParser):
+class StarParser(AsyncSeatsParser):
     url_filter = lambda event: 'biletcentr.com' in event
 
     def __init__(self, *args, **extra):
@@ -14,8 +14,8 @@ class StarParser(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_f_sectors(self, sectors, get_f_name=None, add_sec=False):
         to_del = []
@@ -574,7 +574,7 @@ class StarParser(SeatsParser):
 
         return s, theatre
 
-    def body(self):
+    async def body(self):
         skip_events = []
 
         if self.url in skip_events:

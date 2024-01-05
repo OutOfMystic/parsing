@@ -6,15 +6,15 @@ from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class DynamoParser(EventParser):
+class DynamoParser(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 1800
         self.driver_source = None
         self.url = 'https://tickets.dynamo.ru/?_ga=2.193174821.947964618.1675930069-641847379.1675930069'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -100,7 +100,7 @@ class DynamoParser(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         a_events = self.get_events()
 
         for event in a_events:

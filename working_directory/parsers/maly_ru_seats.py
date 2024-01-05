@@ -8,7 +8,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class MalyParser(SeatsParser):
+class MalyParser(AsyncSeatsParser):
     event = 'maly.ru'
     url_filter = lambda url: 'maly.ru' in url
 
@@ -22,8 +22,8 @@ class MalyParser(SeatsParser):
         elif 'select-seat' in self.url:
             self.event_id = self.url.split('=')[-1]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, sectors):
         if self.name_of_scene == 'Историческая сцена':
@@ -142,7 +142,7 @@ class MalyParser(SeatsParser):
                 })
         return a_sectors
 
-    def body(self):
+    async def body(self):
         for _ in range(10):
             csrf = self.get_csrf()
             if csrf is not None:

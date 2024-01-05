@@ -4,7 +4,7 @@ from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Fomenko(SeatsParser):
+class Fomenko(AsyncSeatsParser):
     url_filter = lambda url: 'fomenki.ru' in url
 
     def __init__(self, *args, **extra):
@@ -12,8 +12,8 @@ class Fomenko(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_seats(self, json_data):
         total_sector = []
@@ -86,7 +86,7 @@ class Fomenko(SeatsParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         all_sectors = self.get_seats()
 
         for sector in all_sectors:

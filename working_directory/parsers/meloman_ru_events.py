@@ -16,7 +16,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class MelomanRu(EventParser):
+class MelomanRu(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -24,8 +24,8 @@ class MelomanRu(EventParser):
         self.driver_source = None
         self.url: str = 'https://meloman.ru/calendar/?hall=koncertnyj-zal-chajkovskogo'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self):
         next_url = self._get_next_url()

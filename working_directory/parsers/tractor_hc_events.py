@@ -11,7 +11,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
-class HcTractorEvents(EventParser):
+class HcTractorEvents(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -20,8 +20,8 @@ class HcTractorEvents(EventParser):
         self.driver_source = None
         self.url = 'https://hctraktor.org/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_html(self):
         headers = {
@@ -71,7 +71,7 @@ class HcTractorEvents(EventParser):
 
         return title, href, date_final, clientkey, session
 
-    def body(self):
+    async def body(self):
         r = self.get_html()
         clientkey = double_split(r.text, "setDefaultClientKey',", '])', n=0).strip(" '")
 

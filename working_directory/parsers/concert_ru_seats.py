@@ -5,7 +5,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class Concert(SeatsParser):
+class Concert(AsyncSeatsParser):
     url_filter = lambda url: 'www.concert.ru' in url
 
     def __init__(self, *args, **extra):
@@ -13,8 +13,8 @@ class Concert(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         kreml_reformat_dict = {
@@ -177,7 +177,7 @@ class Concert(SeatsParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self):
+    async def body(self):
         all_sectors = self.parse_seats()
 
         self.reformat(all_sectors)

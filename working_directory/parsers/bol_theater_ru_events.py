@@ -13,7 +13,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 import re
 
 
-class BolTheaterParser(EventParser):
+class BolTheaterParser(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
@@ -22,8 +22,8 @@ class BolTheaterParser(EventParser):
         }
         self.url = 'https://bol-theater.ru/afisha.html'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         month_years = [month_year.text.split() for month_year in soup.find_all('div', class_='afisha_month_link')]
@@ -84,7 +84,7 @@ class BolTheaterParser(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         a_events = self.get_events()
 
         for event in a_events:

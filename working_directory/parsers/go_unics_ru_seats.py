@@ -14,7 +14,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class MelomanRu(SeatsParser):
+class MelomanRu(AsyncSeatsParser):
     url_filter = lambda url: 'go.unics.ru' in url
 
     def __init__(self, *args, **extra) -> None:
@@ -23,8 +23,8 @@ class MelomanRu(SeatsParser):
         self.driver_source = None
         self.event_id = self.url.split('=')[-1]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'ПАРТЕР' in sector_name:

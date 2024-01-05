@@ -9,7 +9,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
-class KVNParser(EventParser):
+class KVNParser(AsyncEventParser):
     proxy_check = NormalConditions()
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -17,8 +17,8 @@ class KVNParser(EventParser):
         self.driver_source = None
         self.url = 'https://domkvn.ru/afisha-1.html'
     
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def date_reformat(date):
@@ -69,7 +69,7 @@ class KVNParser(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         r = self.get_url(self.url)
         soup = BeautifulSoup(r.text, 'lxml')
 

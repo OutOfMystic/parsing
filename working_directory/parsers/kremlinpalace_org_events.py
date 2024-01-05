@@ -10,7 +10,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class KremlInPalace(EventParser):
+class KremlInPalace(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://kremlinpalace.org/')
 
     def __init__(self, controller, name):
@@ -22,8 +22,8 @@ class KremlInPalace(EventParser):
                            ' AppleWebKit/537.36 (KHTML, like Gecko)'
                            ' Chrome/111.0.0.0 Safari/537.36')
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -198,14 +198,14 @@ class KremlInPalace(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         count_error = 0
         for i in range(10):
             a_events = self.get_events()
             if a_events is None:
                 if count_error >= 5:
                     self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-                    self.session = ProxySession(self)
+                    self.session = AsyncProxySession(self)
                 count_error += 1
             else:
                 break

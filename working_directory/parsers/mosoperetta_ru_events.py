@@ -7,7 +7,7 @@ from parse_module.utils.date import month_num_by_str
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class OperettaParser(EventParser):
+class OperettaParser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -34,8 +34,8 @@ class OperettaParser(EventParser):
         }
         r = self.session.get(self.url, headers=headers)
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -118,7 +118,7 @@ class OperettaParser(EventParser):
         while not r.ok and count > 0:
             self.debug(f'{self.proxy.args = }, {self.session.cookies = } kassir events')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
+            self.session = AsyncProxySession(self)
             r = self.session.post(url, headers=headers, data=data, verify=False)
             count -= 1
 
@@ -129,7 +129,7 @@ class OperettaParser(EventParser):
 
         return a_events, date
 
-    def body(self):
+    async def body(self):
         date = None
         a_events = []
 

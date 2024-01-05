@@ -9,7 +9,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class Bilettorg(SeatsParser):
+class Bilettorg(AsyncSeatsParser):
     proxy_check = NormalConditions()
     url_filter = lambda url: 'www.bilettorg.ru' in url
 
@@ -18,8 +18,8 @@ class Bilettorg(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         bolshoi_tickets_reformat_dict = {
@@ -770,7 +770,7 @@ class Bilettorg(SeatsParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self):
+    async def body(self):
         a_sectors = self.parse_seats()
 
         if self.venue in ['Большой театр']:

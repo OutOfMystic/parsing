@@ -9,7 +9,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class KassirParser(SeatsParser):
+class KassirParser(AsyncSeatsParser):
     proxy_check = NormalConditions()
     event = 'kassir.ru'
     url_filter = lambda event: 'kassir.ru' in event and 'crocus2' not in event and 'frame' not in event \
@@ -42,8 +42,8 @@ class KassirParser(SeatsParser):
             'user-agent': self.user_agent
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_megasport(a_sectors):
@@ -1624,7 +1624,7 @@ class KassirParser(SeatsParser):
         count = 10
         if (not response.ok or response.text == '[]') and count > 0:
             self.change_proxy()
-            self.session = ProxySession(self)
+            self.session = AsyncProxySession(self)
             self.debug(url, response.text)
             raise RuntimeError(f'{count} {self.proxy.args}, {url}, {self.session.cookies} this IP is block')
 
@@ -1662,7 +1662,7 @@ class KassirParser(SeatsParser):
 
         return res
 
-    def body(self):
+    async def body(self):
         list_to_reformat = ['Кремлёвский дворец', 'Театр «Современник»',
                             'Театр Сатиры', 'Казанский цирк', 'Театр Маяковского'] #venue will need to reformat 
         if 'widget.kassir.ru' in self.url:

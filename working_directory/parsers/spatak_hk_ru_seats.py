@@ -11,7 +11,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 
-class HockeySpartak(SeatsParser):
+class HockeySpartak(AsyncSeatsParser):
     event = 'moscow.qtickets.events'
     url_filter = lambda url: 'qtickets.events' in url and 'spartak' in url
 
@@ -21,8 +21,8 @@ class HockeySpartak(SeatsParser):
         self.driver_source = None
         self.id = re.search(r'\d+', self.url)[0]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def double_split(source, lstr, rstr, x=1, n=0):

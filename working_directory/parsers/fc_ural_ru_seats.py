@@ -14,7 +14,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class FcUralRu(SeatsParser):
+class FcUralRu(AsyncSeatsParser):
     url_filter = lambda url: 'ticket.fc-ural.ru' in url
 
     def __init__(self, *args, **extra) -> None:
@@ -22,8 +22,8 @@ class FcUralRu(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         ...

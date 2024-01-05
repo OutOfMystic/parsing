@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from parse_module.utils.parse_utils import decode_unicode_escape, double_split
 
 
-class BileterSeats(SeatsParser):
+class BileterSeats(AsyncSeatsParser):
     url_filter = lambda url: 'bileter.ru' in url
     proxy_check_url = 'https://www.bileter.ru/'
 
@@ -16,8 +16,8 @@ class BileterSeats(SeatsParser):
         self.driver_source = None
         self.event_id = self.url.split('/')[-1]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_seats(self, url_seats):
         headers = {
@@ -71,7 +71,7 @@ class BileterSeats(SeatsParser):
                     )    
         return a_sectors
 
-    def body(self):
+    async def body(self):
         url_seats = f'https://www.bileter.ru/performance/hall-scheme?IdPerformance={self.event_id}'
         activePlaces = self.get_seats(url_seats)
         a_sectors = self.reformat(activePlaces)

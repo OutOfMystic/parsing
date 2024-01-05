@@ -15,7 +15,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class Lokobasket(SeatsParser):
+class Lokobasket(AsyncSeatsParser):
     event = 'lokobasket.qtickets.ru'
     url_filter = lambda url: 'lokobasket.qtickets.ru' in url
 
@@ -25,8 +25,8 @@ class Lokobasket(SeatsParser):
         self.driver_source = None
         self.event_id = self.url.split('/')[-1]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector: OutputData) -> OutputData:
         reformat = {

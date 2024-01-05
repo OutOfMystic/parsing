@@ -9,7 +9,7 @@ from parse_module.utils.date import month_list
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Bilettorg(EventParser):
+class Bilettorg(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -31,8 +31,8 @@ class Bilettorg(EventParser):
             
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -92,7 +92,7 @@ class Bilettorg(EventParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self):
+    async def body(self):
         
         self.reformat_venue = {
             'Главный театр России': 'Большой театр'

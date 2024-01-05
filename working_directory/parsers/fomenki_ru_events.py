@@ -8,15 +8,15 @@ from parse_module.utils.date import month_list
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Fomenko(EventParser):
+class Fomenko(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://fomenki.ru/timetable'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self):
         a_events = []
@@ -92,7 +92,7 @@ class Fomenko(EventParser):
 
         return soup
 
-    def body(self):
+    async def body(self):
         a_events = self.parse_events()
 
         for event in a_events:

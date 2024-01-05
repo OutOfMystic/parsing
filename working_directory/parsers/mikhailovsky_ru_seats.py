@@ -12,7 +12,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class Mikhailovsky(SeatsParser):
+class Mikhailovsky(AsyncSeatsParser):
     event = 'mikhailovsky.ru'
     url_filter = lambda url: 'mikhailovsky.ru' in url
 
@@ -21,8 +21,8 @@ class Mikhailovsky(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str, row: str, seat: str) -> tuple[str, ...]:
         if 'ярус' in sector_name:

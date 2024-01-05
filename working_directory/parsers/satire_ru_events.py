@@ -7,7 +7,7 @@ from parse_module.utils.date import month_num_by_str
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class SatireParser(EventParser):
+class SatireParser(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
@@ -16,8 +16,8 @@ class SatireParser(EventParser):
         }
         self.url = 'https://satire.ru'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -105,7 +105,7 @@ class SatireParser(EventParser):
 
         return absolute_month_urls
 
-    def body(self):
+    async def body(self):
         month_urls = self.get_month_urls()
         a_events = []
         for month_url in month_urls:

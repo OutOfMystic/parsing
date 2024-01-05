@@ -24,7 +24,7 @@ from parse_module.utils.captcha import yandex_afisha_coordinates_captha
 from parse_module.drivers.proxelenium import ProxyWebDriver
 
 
-class YandexAfishaParser(EventParser):
+class YandexAfishaParser(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://afisha.yandex.ru/')
 
     def __init__(self, controller, name):
@@ -96,8 +96,8 @@ class YandexAfishaParser(EventParser):
         self.our_places_short = []
         self.place = {}
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
         self.our_places_short = []
 
     def get_dict_from_body(self, body, keyword):
@@ -855,7 +855,7 @@ class YandexAfishaParser(EventParser):
                 output_data.append((title, href, normal_date, scene, event_params, venue))
         return output_data
 
-    def body(self):
+    async def body(self):
         self.before_body()
 
         for url, venue in self.special_url_with_one_person.items():

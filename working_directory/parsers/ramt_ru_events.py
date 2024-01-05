@@ -12,7 +12,7 @@ from parse_module.utils.parse_utils import double_split
 from parse_module.utils import utils
 
 
-class AfishaEvents(EventParser):
+class AfishaEvents(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -38,8 +38,8 @@ class AfishaEvents(EventParser):
         }
         
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def make_date(date):
@@ -101,7 +101,7 @@ class AfishaEvents(EventParser):
         return a_events
 
 
-    def body(self):
+    async def body(self):
         r = self.session.get(url=self.domain, headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
 

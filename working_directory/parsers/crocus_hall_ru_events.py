@@ -7,7 +7,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
-class CrocusHall(EventParser):
+class CrocusHall(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -16,8 +16,8 @@ class CrocusHall(EventParser):
         self.driver_source = None
         self.url = 'https://crocus-hall.ru/events/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -136,7 +136,7 @@ class CrocusHall(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         a_events = self.get_events()
 
         for event in a_events:

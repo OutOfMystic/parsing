@@ -26,7 +26,7 @@ class DomainGrabber(BotCore):
         self.tickets = tickets
         self.saves_path = os.path.join('notifiers', 'all_tickets', f'{self.domain}.json')
         self.saves = try_open(self.saves_path, {}, json_=True)
-        self.session = ProxySession(self)
+        self.session = AsyncProxySession(self)
         self.lock = Lock()
 
     def get_events(self):
@@ -229,7 +229,7 @@ class DomainGrabber(BotCore):
     def on_many_exceptions(self):
         self.stop()
 
-    def body(self):
+    async def body(self):
         if self.tickets:
             events, events_with_tickets = self.get_everything()
             self.save_events(events, self.events, events_path)

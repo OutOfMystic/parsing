@@ -8,7 +8,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class CrocusHall(SeatsParser):
+class CrocusHall(AsyncSeatsParser):
     url_filter = lambda url: 'crocus2.kassir.ru' in url
     #proxy_check = SpecialConditions(url='https://crocus2.kassir.ru/')
 
@@ -21,8 +21,8 @@ class CrocusHall(SeatsParser):
         self.get_configuration_id = None
         self.count_error = 0
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, all_sectors):
         for sector in all_sectors:
@@ -350,7 +350,7 @@ class CrocusHall(SeatsParser):
 
         return all_sectors
 
-    def body(self):
+    async def body(self):
         all_sectors = self.get_seats()
 
         self.reformat(all_sectors)

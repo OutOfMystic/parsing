@@ -10,7 +10,7 @@ from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class Luzhniki(SeatsParser):
+class Luzhniki(AsyncSeatsParser):
     event = 'luzhniki.ru'
     url_filter = lambda url: 'msk.kassir.ru' in url and 'frame' in url
     proxy_check = SpecialConditions(url='https://msk.kassir.ru/')
@@ -21,8 +21,8 @@ class Luzhniki(SeatsParser):
         self.driver_source = None
         self.count_error = 0
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         for sector in a_sectors:
@@ -170,7 +170,7 @@ class Luzhniki(SeatsParser):
         for sector in all_sectors:
             self.register_sector(sector['name'], sector['tickets'])
 
-    def body(self):
+    async def body(self):
         skip_url = [
             'https://msk.kassir.ru/koncert/ok-lujniki/leningrad_2023-09-16',
             'https://msk.kassir.ru/frame/entry/index?key=55be3cc8-8788-f514-a5c0-a4e3cb622598&type=E&id=1982322',

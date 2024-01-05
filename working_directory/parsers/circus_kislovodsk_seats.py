@@ -3,7 +3,7 @@ from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class CircusKislovodsk(SeatsParser):
+class CircusKislovodsk(AsyncSeatsParser):
     url_filter = lambda url: 'ticket-place.ru' in url and '|kislovodsk' in url
 
     def __init__(self, *args, **extra) -> None:
@@ -50,10 +50,10 @@ class CircusKislovodsk(SeatsParser):
 
         return a_sectors
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def body(self):
+    async def body(self):
         session = self.session.get(self.url, headers=self.headers)
 
         a_sectors = self.work_with_json(session)

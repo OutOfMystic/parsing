@@ -4,7 +4,7 @@ from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class XKAvangarg(SeatsParser):
+class XKAvangarg(AsyncSeatsParser):
     url_filter = lambda url: 'tickets.hawk.ru' in url
 
     def __init__(self, *args, **extra):
@@ -12,8 +12,8 @@ class XKAvangarg(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, all_sectors):
         for sector in all_sectors:
@@ -150,7 +150,7 @@ class XKAvangarg(SeatsParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         all_sectors = self.get_seats()
 
         self.reformat(all_sectors)

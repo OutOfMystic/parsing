@@ -6,7 +6,7 @@ from parse_module.utils.date import month_list
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Concert(EventParser):
+class Concert(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -14,8 +14,8 @@ class Concert(EventParser):
         self.driver_source = None
         self.url = 'https://www.concert.ru'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
         self.our_places_data = [
             'https://www.concert.ru/shou/',
             # 'https://www.concert.ru/teatry/',
@@ -91,7 +91,7 @@ class Concert(EventParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self):
+    async def body(self):
         a_events = []
         for url in self.our_places_data:
             for events in self.parse_events(url):
