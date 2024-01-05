@@ -2,7 +2,7 @@ import json
 from typing import NamedTuple
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -11,7 +11,6 @@ class OutputData(NamedTuple):
 
 
 class Contextfest(SeatsParser):
-    event = 'contextfest.com'
     url_filter = lambda url: 'ticketscloud.com' in url
 
     def __init__(self, *args, **extra) -> None:

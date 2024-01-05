@@ -3,10 +3,11 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 

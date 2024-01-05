@@ -1,12 +1,11 @@
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 from bs4 import BeautifulSoup
 import re
 
 
 class StarParser(SeatsParser):
-    event = 'biletcentr.com.com'
     url_filter = lambda event: 'biletcentr.com' in event
 
     def __init__(self, *args, **extra):

@@ -2,13 +2,14 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
-class HcLadaHockeyTLTarena(EventParser):
+class HcLadaHockeyTLTarena(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -32,14 +33,12 @@ class HcLadaHockeyTLTarena(EventParser):
             'user-agent': self.user_agent
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    
-
-    def body(self):
-        r = self.session.get(url=self.url, headers=self.headers, verify=False)
-        soup = BeautifulSoup(r.text, 'lxml')
+    async def body(self):
+        text = await self.session.get_text(url=self.url, headers=self.headers, verify=False)
+        soup = BeautifulSoup(text, 'lxml')
 
         tables = soup.find_all('table', class_='table-choice')
 

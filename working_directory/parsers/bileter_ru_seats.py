@@ -1,11 +1,11 @@
 import json
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from bs4 import BeautifulSoup
 from parse_module.utils.parse_utils import decode_unicode_escape, double_split
 
+
 class BileterSeats(SeatsParser):
-    event = 'bileter.ru'
     url_filter = lambda url: 'bileter.ru' in url
     proxy_check_url = 'https://www.bileter.ru/'
 

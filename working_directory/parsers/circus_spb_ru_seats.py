@@ -4,7 +4,7 @@ from typing import NamedTuple, Optional, Union
 from requests.exceptions import TooManyRedirects
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -13,7 +13,6 @@ class OutputData(NamedTuple):
 
 
 class CircusSpbRu(SeatsParser):
-    event = 'circus.spb.ru'
     url_filter = lambda url: 'ticket-place.ru' in url and '|spb' in url
 
     def __init__(self, *args, **extra) -> None:

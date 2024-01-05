@@ -7,7 +7,7 @@ from threading import Lock
 from loguru import logger
 
 from parse_module.manager.core import BotCore
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.manager.proxy.loader import ManualProxies
 from parse_module.utils.parse_utils import double_split, lrsplit
 from parse_module.utils.provision import try_open, multi_try, TryError

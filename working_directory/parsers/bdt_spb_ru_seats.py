@@ -1,12 +1,12 @@
 import json
 from typing import NamedTuple
 
-from requests import Response
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -15,7 +15,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class BdtSpb(SeatsParser):
+class BdtSpb(AsyncSeatsParser):
     event: str = 'bdt.spb.ru'
     url_filter: str = lambda url: 'spb.ticketland.ru' in url and 'bdt-imtovstonogova' in url and 'to_parser' in url
     proxy_check = SpecialConditions(url='https://spb.ticketland.ru/')
@@ -26,10 +26,11 @@ class BdtSpb(SeatsParser):
         self.driver_source: None = None
         self.url = self.url.replace('to_parser', '')
 
-    def before_body(self) -> None:
-        self.session: ProxySession = ProxySession(self)
+    async def before_body(self):
+        self.session: AsyncProxySession = AsyncProxySession(self)
 
-    def _reformat(self, sector_name: str, row: str, seat: str) -> tuple[str, str]:
+    @staticmethod
+    def _reformat(sector_name: str, row: str, seat: str) -> tuple[str, str]:
         if_seat_in_parter = [
             39, 40, 61, 62, 63, 64, 85, 86, 87, 88, 109, 110, 111, 112, 133, 134, 135, 136, 157, 158, 159, 160,
             181, 182, 183, 184, 205, 206, 207, 208, 229, 230, 231, 232, 253, 254, 255, 256, 277, 278, 279, 280,
@@ -79,8 +80,8 @@ class BdtSpb(SeatsParser):
             try:
                 if 'правая' in sector_name:
                     sector_name = f'{new_sector_name}. Правая сторона, ложа ' + number_lozha
-                elif (('Бельэтаж' == new_sector_name or 'Второй ярус' == new_sector_name) and int(number_lozha) < 10) or \
-                        ('Бенуар' == new_sector_name and int(number_lozha) < 7):
+                elif (('Бельэтаж' == new_sector_name or 'Второй ярус' == new_sector_name) and int(number_lozha) < 10) \
+                        or ('Бенуар' == new_sector_name and int(number_lozha) < 7):
                     sector_name = f'{new_sector_name}. Правая сторона, ложа ' + number_lozha
                 else:
                     sector_name = f'{new_sector_name}. Левая сторона, ложа ' + number_lozha
@@ -96,8 +97,8 @@ class BdtSpb(SeatsParser):
 
         return sector_name, row
 
-    def parse_seats(self) -> list[OutputData]:
-        soup: BeautifulSoup = self._request_to_csrf()
+    async def parse_seats(self) -> list[OutputData]:
+        soup: BeautifulSoup = await self._request_to_csrf()
         csrf: str = soup.find('meta', attrs={'name': 'csrf-token'}).get('content')
         data_to_url: str = soup.select('body script')[0].text
         data_to_url: str = double_split(data_to_url, 'webPageId: ', ',')
@@ -143,7 +144,7 @@ class BdtSpb(SeatsParser):
 
         return output_list
 
-    def _request_to_place(self, url: str) -> json:
+    async def _request_to_place(self, url: str) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -161,10 +162,10 @@ class BdtSpb(SeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r: Response = self.session.get(url, headers=headers)
-        return r.json()
+        async with self.session.get(url, headers=headers) as r:
+            return await r.json()
 
-    def _request_to_csrf(self) -> BeautifulSoup:
+    async def _request_to_csrf(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -184,12 +185,12 @@ class BdtSpb(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r: Response = self.session.get(self.url, headers=headers)
-        return BeautifulSoup(r.text, 'lxml')
+        async with self.session.get(self.url, headers=headers) as r:
+            return BeautifulSoup(await r.text(), 'lxml')
 
-    def body(self) -> None:
+    async def body(self):
         try:
-            all_sectors: list[OutputData] = self.parse_seats()
+            all_sectors: list[OutputData] = await self.parse_seats()
 
             for sector in all_sectors:
                 self.register_sector(sector.sector_name, sector.tickets)

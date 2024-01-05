@@ -1,8 +1,8 @@
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+
 
 class CircusKislovodsk(SeatsParser):
-    event = 'circus-kislovodsk.ru'
     url_filter = lambda url: 'ticket-place.ru' in url and '|kislovodsk' in url
 
     def __init__(self, *args, **extra) -> None:

@@ -95,7 +95,7 @@ class LocalDict(dict):
 
     def connect_db(self):
         return provision.multi_try(self._connect_db, tries=10, raise_exc=False,
-                                   print_errors=False, multiplier=1.02)
+                                   print_errors=False)
 
     def _connect_db(self):
         conn = sqlite3.connect(self.path)

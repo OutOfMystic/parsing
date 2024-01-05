@@ -4,7 +4,7 @@ import json
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -14,7 +14,6 @@ class OutputData(NamedTuple):
 
 
 class MelomanRu(SeatsParser):
-    event = 'go.unics.ru'
     url_filter = lambda url: 'go.unics.ru' in url
 
     def __init__(self, *args, **extra) -> None:

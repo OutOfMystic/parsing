@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class Vakhtakassa(SeatsParser):

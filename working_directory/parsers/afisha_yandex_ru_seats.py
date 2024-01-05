@@ -16,7 +16,7 @@ from PIL import Image, ImageOps
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.utils.captcha import afisha_recaptcha
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils import utils
 from parse_module.drivers.proxelenium import ProxyWebDriver

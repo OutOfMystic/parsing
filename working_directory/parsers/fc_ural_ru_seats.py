@@ -4,7 +4,7 @@ from typing import NamedTuple
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -14,7 +14,6 @@ class OutputData(NamedTuple):
 
 
 class FcUralRu(SeatsParser):
-    event = 'fc-ural.ru'
     url_filter = lambda url: 'ticket.fc-ural.ru' in url
 
     def __init__(self, *args, **extra) -> None:

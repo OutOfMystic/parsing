@@ -1,11 +1,11 @@
 import re
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
+
 class KVNParser(SeatsParser):
-    event = 'domkvn.ru'
     url_filter = lambda url: 'domkvn' in url
 
     def __init__(self, *args, **extra):

@@ -64,6 +64,12 @@ class ControllerInterface(base.CommandPrompt):
         input(utils.blue('Press any key to continue output stream...'))
         logger.resume()
 
+    @staticmethod
+    def coroutines(args_row):
+        ControllerInterface.controller.pool_async.inspect_queue()
+        input(utils.blue('Press any key to continue output stream...'))
+        logger.resume()
+
 
 def get_home(cmd, args_row, value):
     return prespell_home, None, ' '
@@ -102,5 +108,7 @@ commands = {
     'backstage': ControllerInterface.backstage,
     'pooling': ControllerInterface.pooling,
     'pool': ControllerInterface.pooling,
+    'async': ControllerInterface.coroutines,
+    'coroutines': ControllerInterface.coroutines,
     '': ControllerInterface.get_back
 }

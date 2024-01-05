@@ -1,5 +1,5 @@
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 class CircusNovosib(SeatsParser):
     event = 'novosibirskii-cirkus.ru'

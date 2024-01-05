@@ -5,8 +5,9 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from telebot import TeleBot
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
@@ -84,7 +85,8 @@ class TNA(EventParser):
 
     def request_for_href(self, url):
         headers = {
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/web'
+                      'p,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, utf-8',
             'accept-language': 'ru,en;q=0.9',
             'cache-control': 'max-age=0',
@@ -107,7 +109,8 @@ class TNA(EventParser):
 
     def get_events(self, url: str):
         headers = {
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/we'
+                      'bp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, utf-8',
             'accept-language': 'ru,en;q=0.9',
             'cache-control': 'max-age=0',
@@ -146,7 +149,6 @@ class TNA(EventParser):
         if flag:
             with open('files/events/akbars_events.json', 'w',encoding='utf-8') as file2:
                 json.dump(events_new, file2, indent=4, ensure_ascii=False)
-        
 
     def body(self):
         for url in self.urls:
@@ -157,7 +159,6 @@ class TNA(EventParser):
                     self.check_new_events(a_events)
                 except Exception as ex:
                     self.error(ex, 'Exception in tickets_tna_ru_events, problems with TG bot')
-                    
 
             for event in a_events:
                 self.register_event(event[0], event[1], date=event[2])

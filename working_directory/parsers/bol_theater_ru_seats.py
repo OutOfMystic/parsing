@@ -1,12 +1,11 @@
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split, lrsplit
 from bs4 import BeautifulSoup
 import re
 
 
 class BolTheaterParser(SeatsParser):
-    event = 'bol-theater.ru'
     url_filter = lambda event: 'bol-theater.ru' in event
 
     def __init__(self, *args, **extra):

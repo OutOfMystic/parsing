@@ -9,7 +9,7 @@ from loguru import logger
 from parse_module.manager import authorize
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import parse_utils, captcha
 
 MAX_TRIES = 20

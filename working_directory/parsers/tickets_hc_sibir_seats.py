@@ -3,7 +3,7 @@ import json
 from time import sleep
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 class Hc_Sibir_Seats(SeatsParser): 

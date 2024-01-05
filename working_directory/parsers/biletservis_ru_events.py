@@ -4,10 +4,11 @@ import datetime
 
 from requests import TooManyRedirects
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils import provision
 from parse_module.utils.parse_utils import double_split, lrsplit
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class BuletServis(EventParser):

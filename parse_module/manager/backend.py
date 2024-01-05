@@ -153,7 +153,7 @@ class SchemeRouterBackend:
         logger.info('Backend started', name='Controller')
         while True:
             got_data = multi_try(self.conn.recv, tries=20, name='Controller',
-                                 raise_exc=False, multiplier=1.00)
+                                 raise_exc=False)
             if got_data is provision.TryError:
                 sys.exit()
             else:

@@ -2,7 +2,7 @@ import json
 from typing import NamedTuple
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -11,7 +11,6 @@ class OutputData(NamedTuple):
 
 
 class CircusSochiRu(SeatsParser):
-    event = 'circus-sochi.ru'
     url_filter = lambda url: 'ticket-place.ru' in url and '|sochi' in url
 
     def __init__(self, *args, **extra) -> None:

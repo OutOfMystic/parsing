@@ -4,12 +4,11 @@ from bs4 import BeautifulSoup
 
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split, decode_unicode_escape
 
 
 class BkzPars(SeatsParser):
-    event = 'bileter.ru'
     url_filter = lambda url: 'bileter.ru' in url
     proxy_check = NormalConditions()
 

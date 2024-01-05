@@ -430,7 +430,7 @@ class ParserScheme(Scheme):
                     "sector_id": ticket[3],
                     "row": ticket[5],
                     "seat": ticket[6],
-                    "status": str('not'),
+                    "status": 'not',
                     "original_price": 1,
                     "sell_price": 1,
                     "event_id": self.event_id,

@@ -9,8 +9,10 @@ from . import pooling
 from .inspect import run_inspection
 from .proxy import loader
 from .telecore import TeleCore
+from .. import coroutines
 from ..connection import db_manager
 from ..connection.database import TableDict
+from ..coroutines import AsyncEventParser, AsyncSeatsParser
 from ..models.ai_nlp import alias, venue, solve
 from ..models.ai_nlp.collect import cross_subject_object
 from ..models.margin import MarginRules
@@ -62,7 +64,8 @@ class Controller:
         self.event_aliases = alias.EventAliases(step=5)
         self.parsing_types = db_manager.get_parsing_types()
         self.venues = venue.VenueAliases(self.solver)
-        self.pool = pooling.ScheduledExecutor(max_threads=40)
+        self.pool = pooling.ScheduledExecutor(max_threads=30)
+        self.pool_async = coroutines.ScheduledExecutor()
         self._load_parsers_with_config(config_path)
         self.fast_time = time.time()
 
@@ -81,7 +84,7 @@ class Controller:
         if parser_name.startswith('www.'):
             parser_name = parser_name.split('www.')[1]
         try:
-            if parser_variable in (EventParser, SeatsParser):
+            if parser_variable in (EventParser, SeatsParser, AsyncEventParser, AsyncSeatsParser):
                 return
             elif issubclass(parser_variable, EventParser):
                 self._start_event_parser(parser_variable, parser_name)
@@ -205,7 +208,6 @@ class Controller:
             for group in self.seats_groups:
                 if group.url_filter(connection['url']):
                     all_connections[group].append(connection)
-        event_ids = set(connection['event_id'] for connection in plain_dict_values(all_connections))
 
         if not self.debug:
             for group, connections in all_connections.items():
@@ -242,7 +244,7 @@ class Controller:
     def _load_notifiers(self):
         events_to_load, seats_to_load = db_manager.get_parser_notifiers()
 
-        events_to_load_names = {data['name']: data for data in events_to_load}
+        events_to_load_names = {f"EventParser ({data['name']})": data for data in events_to_load}
         loaded_events_names = {notifier.parser.name: notifier
                                for notifier in self.event_notifiers}
         to_del, to_review, to_add = utils.differences(loaded_events_names, events_to_load_names)

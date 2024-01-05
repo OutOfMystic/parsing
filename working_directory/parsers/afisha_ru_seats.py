@@ -1,13 +1,12 @@
 from bs4 import BeautifulSoup
-from time import sleep
 
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
+
 class AfishaRuSeats(SeatsParser):
-    event = 'mapi.afisha.ru'
     url_filter = lambda event: 'mapi.afisha.ru' in event
     proxy_check = SpecialConditions(url='https://www.afisha.ru/')
     

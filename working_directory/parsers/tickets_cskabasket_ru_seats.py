@@ -4,7 +4,7 @@ from typing import NamedTuple
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):

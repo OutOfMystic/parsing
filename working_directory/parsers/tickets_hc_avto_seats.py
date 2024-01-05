@@ -2,7 +2,7 @@ import re
 from time import sleep
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 class Hc_Avtomobilist_Seats(SeatsParser):
     event = 'tickets.hc-avto.ru'

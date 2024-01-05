@@ -4,7 +4,7 @@ from typing import NamedTuple, Optional, Union
 from requests.exceptions import JSONDecodeError
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 class OutputData(NamedTuple):
     sector_name: str
@@ -12,7 +12,6 @@ class OutputData(NamedTuple):
 
 
 class AlexandrinskyRu(SeatsParser):
-    event = 'alexandrinsky.ru'
     url_filter = lambda url: 'afisha.ru/wl/402' in url
 
     def __init__(self, *args, **extra) -> None:

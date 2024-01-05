@@ -1,11 +1,12 @@
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class BdtSpb(EventParser):
+class BdtSpb(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -13,13 +14,13 @@ class BdtSpb(EventParser):
         self.driver_source = None
         self.url = 'https://bdt.spb.ru/afisha/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def parse_events(self):
+    async def parse_events(self):
         a_events = []
 
-        soup = self.requests_to_events(self.url)
+        soup = await self.requests_to_events(self.url)
 
         all_month = soup.select('ul.dirmenu li a[href^="/afisha/?month="]')
         for next_month_href in range(len(all_month) + 1):
@@ -54,13 +55,14 @@ class BdtSpb(EventParser):
 
             if next_month_href < len(all_month):
                 url = f'https://bdt.spb.ru{all_month[next_month_href].get("href")}'
-                soup = self.requests_to_events(url)
+                soup = await self.requests_to_events(url)
 
         return a_events
 
-    def requests_to_events(self, url):
+    async def requests_to_events(self, url):
         headers = {
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q'
+                      '=0.8,application/signed-exchange;v=b3;q=0.7',
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'cache-control': 'no-cache',
@@ -75,11 +77,11 @@ class BdtSpb(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
-        return BeautifulSoup(r.text, 'lxml')
+        async with self.session.get(url, headers=headers) as r:
+            return BeautifulSoup(await r.text(), 'lxml')
 
-    def body(self):
-        a_events = self.parse_events()
+    async def body(self):
+        a_events = await self.parse_events()
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2])

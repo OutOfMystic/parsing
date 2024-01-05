@@ -1,10 +1,9 @@
 import json
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class Fomenko(SeatsParser):
-    event = 'fomenki.ru'
     url_filter = lambda url: 'fomenki.ru' in url
 
     def __init__(self, *args, **extra):

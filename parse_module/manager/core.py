@@ -68,8 +68,7 @@ class BotBase:
                       raise_exc=True,
                       args: Iterable = None,
                       kwargs: dict = None,
-                      print_errors=True,
-                      multiplier=1.14):
+                      print_errors=True):
         """
         The same as multi_try, but executes to_try code
         into a new thread. After the new thread is started,
@@ -85,8 +84,7 @@ class BotBase:
             'args': args,
             'kwargs': kwargs,
             'raise_exc': raise_exc,
-            'print_errors': print_errors,
-            'multiplier': multiplier
+            'print_errors': print_errors
         }
         thread = threading.Thread(target=self.multi_try, args=(to_try,), kwargs=kwargs)
         thread.start()
@@ -99,8 +97,7 @@ class BotBase:
                   raise_exc=True,
                   args: Iterable = None,
                   kwargs: dict = None,
-                  print_errors=True,
-                  multiplier=1.14):
+                  print_errors=True):
         """
         Try to execute smth ``tries`` times.
         If all attempts are unsuccessful and ``raise_exc``
@@ -115,7 +112,6 @@ class BotBase:
             kwargs: keyword arguments sent to ``to_try``
             raise_exc: raise exception or not after all
             print_errors: log errors on each try
-            multiplier: wait ratio, increase up to 1.5
 
         Returns: value from a last successful attempt.
         If all attempts fail, exception is raised or
@@ -128,8 +124,7 @@ class BotBase:
                                    args=args,
                                    kwargs=kwargs,
                                    raise_exc=raise_exc,
-                                   print_errors=print_errors,
-                                   multiplier=multiplier)
+                                   print_errors=print_errors)
 
     def slide_tab(self):
         self.warning('Max waste time elapsed, but nothing '
@@ -254,7 +249,8 @@ class Bot(BotBase, ABC):
 
 class ThreadedBot(threading.Thread, BotBase, ABC):
     def __init__(self, proxy=None):
-        super().__init__(proxy=proxy)
+        threading.Thread.__init__(self)
+        BotBase.__init__(self, proxy=proxy)
 
     def run(self):
         self.inthread_init()

@@ -47,7 +47,7 @@ class ParserBase(core.Bot, ABC):
 
     def proceed(self):
         start_time = time.time()
-        next_step_delay = 120
+        next_step_delay = min(self.get_delay() / 15, 120)
         if self.proxy is None:
             self._debug_only('changing proxy', int((time.time() - start_time) * 10) / 10)
             provision.just_try(self.change_proxy)
@@ -65,6 +65,8 @@ class ParserBase(core.Bot, ABC):
                 self._debug_only('Proceeding', int((time.time() - start_time) * 10) / 10)
                 super().proceed()
                 self._debug_only('Proceeded', int((time.time() - start_time) * 10) / 10)
+            else:
+                next_step_delay = max(self.get_delay() / 7, 300)
 
         if self._terminator.alive:
             task = pooling.Task(self.proceed, self.name, next_step_delay)
@@ -150,7 +152,6 @@ class EventParser(ParserBase, ABC):
 
 
 class SeatsParser(ParserBase, ABC):
-    event = 'Parent Event'
     url_filter = lambda event: 'ticketland.ru' in event
 
     def __init__(self, controller, event_id, event_name,
