@@ -116,7 +116,7 @@ class VDNHRu(AsyncSeatsParser):
             "actionId": self.action_id
         }
         url = 'https://api.bil24.pro/json'
-        r = self.session.post(url, headers=headers, json=data)
+        r = await self.session.post(url, headers=headers, json=data)
         return r.json()
 
     def _request_to_get_svg_with_place(self, action_event_id: str) -> BeautifulSoup:
@@ -139,7 +139,7 @@ class VDNHRu(AsyncSeatsParser):
         url = (f'https://api.bil24.pro/image'
                f'?type=seatingPlan&actionEventId={action_event_id}'
                f'&userId=0&fid={self.fid}&locale=ru&rnd=0.628378540899625')
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'xml')
 
     async def body(self):

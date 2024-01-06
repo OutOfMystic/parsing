@@ -140,7 +140,7 @@ class Contextfest(AsyncSeatsParser):
         data = {
             'event': self.event_id
         }
-        r = self.session.post(self.url, headers=headers, json=data)
+        r = await self.session.post(self.url, headers=headers, json=data)
         return r.json()
 
     async def body(self):

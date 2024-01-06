@@ -59,7 +59,7 @@ class XKMetalurg(AsyncEventParser):
             'user-agent': self.user_agent
         }
         data = {"isSeason": -1}
-        r = self.session.post(self.url, headers=headers, json=data, verify=False)
+        r = await self.session.post(self.url, headers=headers, json=data, verify=False)
 
         if not r.json():
             return []

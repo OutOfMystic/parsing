@@ -60,7 +60,7 @@ class ArmyParser(AsyncSeatsParser):
         
        
         try:   
-            resp = self.session.post(url,data={'event_id':{self.event_id}}, headers=headers)
+            resp = await self.session.post(url,data={'event_id':{self.event_id}}, headers=headers)
             resp = resp.json()
             list_with_places = resp['places']
             scene = resp['event']["location_name"]

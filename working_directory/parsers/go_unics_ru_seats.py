@@ -105,7 +105,7 @@ class MelomanRu(AsyncSeatsParser):
             'view_id': sector_id
         }
         url = 'https://go.unics.ru/event/get-prices'
-        r = self.session.post(url, data=data, headers=headers)
+        r = await self.session.post(url, data=data, headers=headers)
         return r.json()
 
     def _request_to_soup(self) -> BeautifulSoup:
