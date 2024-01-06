@@ -93,6 +93,6 @@ class TicketsFcdmRu(AsyncSeatsParser):
         r = self.session.get(url, headers=headers, verify=False)
         return r.json()
 
-    def body(self) -> None:
+    async def body(self):
         for sector in self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

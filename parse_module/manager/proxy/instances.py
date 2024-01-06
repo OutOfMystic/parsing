@@ -1,9 +1,9 @@
-import json
-from typing import Any
+from typing import Any, Optional
 
 import aiohttp as aiohttp
-from aiohttp.client import _RequestContextManager
-from aiohttp.typedefs import StrOrURL
+from aiohttp import hdrs, ContentTypeError
+from aiohttp.client_reqrep import _is_expected_content_type, ClientResponse
+from aiohttp.typedefs import StrOrURL, JSONDecoder, DEFAULT_JSON_DECODER
 from requests import Session
 
 
@@ -64,7 +64,7 @@ class UniProxy(Proxy):
             super().__init__(ip, port, login=user, password=pwd, schema=type_)
 
     @staticmethod
-    def parse_str(row):
+    def parse_str(row: str):
         proxy_type, proxy_user, proxy_pass = 'http', None, None
         if r'://' in row:
             proxy_type, row = row.split(r'://')
@@ -103,6 +103,46 @@ class ProxySession(Session):
         return super().request(*args, **kwargs)
 
 
+class AwaitedResponse:
+    def __init__(self,
+                 request_info,
+                 history,
+                 text,
+                 headers,
+                 encoding,
+                 status_code):
+        self.request_info = request_info
+        self.history = history
+        self.encoding = encoding
+        self.text = text
+        self.headers = headers
+        self.status_code = status_code
+
+    def json(self, *,
+             encoding: Optional[str] = None,
+             loads: JSONDecoder = DEFAULT_JSON_DECODER,
+             content_type: Optional[str] = "application/json") -> Any:
+        if content_type:
+            ctype = self.headers.get(hdrs.CONTENT_TYPE, "").lower()
+            if not _is_expected_content_type(ctype, content_type):
+                raise ContentTypeError(
+                    self.request_info,
+                    self.history,
+                    message=(
+                        "Attempt to decode JSON with " "unexpected mimetype: %s" % ctype
+                    ),
+                    headers=self.headers,
+                )
+        stripped = self._body.strip()  # type: ignore[union-attr]
+        if not stripped:
+            return None
+
+        if encoding is None:
+            encoding = self.encoding
+
+        return loads(stripped.decode(encoding))
+
+
 class AsyncProxySession(aiohttp.ClientSession):
     def __init__(self, bot):
         super().__init__()
@@ -116,18 +156,41 @@ class AsyncProxySession(aiohttp.ClientSession):
             kwargs['ssl'] = kwargs.pop('verify')
         return await super()._request(*args, **kwargs)
 
-    async def get_text(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any):
-        async with self.get(url, allow_redirects=allow_redirects, ** kwargs) as response:
-            return await response.text()
+    @staticmethod
+    async def _static_response(method, *args, **kwargs):
+        response: ClientResponse
+        async with method(*args, **kwargs) as response:
+            return AwaitedResponse(response.request_info,
+                                   response.history,
+                                   await response.text(),
+                                   response.headers,
+                                   response.get_encoding(),
+                                   response.status)
 
-    async def get_json(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any):
-        async with self.get(url, allow_redirects=allow_redirects, ** kwargs) as response:
-            return await response.json()
+    async def get(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any):
+        """Perform HTTP GET request."""
+        return await self._static_response(super().get, url, allow_redirects=allow_redirects, **kwargs)
 
-    async def post_text(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any):
-        async with self.post(url, allow_redirects=allow_redirects, ** kwargs) as response:
-            return await response.text()
+    async def options(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any):
+        """Perform HTTP OPTIONS request."""
+        return await self._static_response(super().options, url, allow_redirects=allow_redirects, **kwargs)
 
-    async def post_json(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any):
-        async with self.post(url, allow_redirects=allow_redirects, ** kwargs) as response:
-            return await response.json()
+    async def head(self, url: StrOrURL, *, allow_redirects: bool = False, **kwargs: Any):
+        """Perform HTTP HEAD request."""
+        return await self._static_response(super().head, url, allow_redirects=allow_redirects, **kwargs)
+
+    async def post(self, url: StrOrURL, *, data: Any = None, **kwargs: Any):
+        """Perform HTTP POST request."""
+        return await self._static_response(super().post, url, data, **kwargs)
+
+    async def put(self, url: StrOrURL, *, data: Any = None, **kwargs: Any):
+        """Perform HTTP PUT request."""
+        return await self._static_response(super().put, url, data, **kwargs)
+
+    async def patch(self, url: StrOrURL, *, data: Any = None, **kwargs: Any):
+        """Perform HTTP PATCH request."""
+        return await self._static_response(super().patch, url, data, **kwargs)
+
+    async def delete(self, url: StrOrURL, **kwargs: Any):
+        """Perform HTTP DELETE request."""
+        return await self._static_response(super().delete, url, **kwargs)

@@ -142,6 +142,6 @@ class VDNHRu(AsyncSeatsParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'xml')
 
-    def body(self) -> None:
+    async def body(self):
         sector = self._parse_seats()
         self.register_sector(sector.sector_name, sector.tickets)

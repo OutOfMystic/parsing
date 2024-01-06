@@ -16,7 +16,7 @@ class TktGe(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def body(self) -> None:
+    async def body(self):
         all_events = (
             ('Бруно Марс', 'https://tkt.ge/api/v2/shows/get?itemId=355735', '01 Окт 2023 21:00'),
         )
