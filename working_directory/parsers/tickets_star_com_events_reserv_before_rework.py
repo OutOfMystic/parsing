@@ -93,8 +93,8 @@ class Parser(AsyncEventParser):
                     links.append(link)
                 url_p = 'https://www.tickets-star.com/Scripts/LoadMoreRepertoire.script.php'
                 url_pr = 'https://www.tickets-star.com/Scripts/LoadMoreRepertoireNextCount.script.php'
-                resp_p = self.session.post(url_p, data=payload, headers=headers)
-                resp_pr = self.session.post(url_pr, data=payload, headers=headers).text
+                resp_p = await self.session.post(url_p, data=payload, headers=headers)
+                resp_pr = await self.session.post(url_pr, data=payload, headers=headers).text
                 resp_pr = int(resp_pr)
                 soup_p = BeautifulSoup(resp_p.text, 'lxml')
                 bt_area = soup_p.find_all('div', class_='bt_area')

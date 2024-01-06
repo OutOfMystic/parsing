@@ -81,7 +81,7 @@ class XKMetalurg(AsyncSeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.post(url, headers=headers, json={})
+        r = await self.session.post(url, headers=headers, json={})
         return r.json()
 
     def request_for_price_in_sector(self, url):
@@ -122,7 +122,7 @@ class XKMetalurg(AsyncSeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.post(url, headers=headers, json=data, verify=False)
+        r = await self.session.post(url, headers=headers, json=data, verify=False)
         return r.json()
 
     def get_seats(self):

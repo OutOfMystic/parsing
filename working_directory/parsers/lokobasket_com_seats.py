@@ -201,7 +201,7 @@ class Lokobasket(AsyncSeatsParser):
             'event_id': self.event_id,
             'widget_session': 'eLdgrITSBV3mAwGoJSD8MlBUIzM5rf0n4hyoJTHz'
         }
-        r = self.session.post(self.url, headers=headers, data=data)
+        r = await self.session.post(self.url, headers=headers, data=data)
         return BeautifulSoup(r.text, 'lxml'), r.text
 
     async def body(self):

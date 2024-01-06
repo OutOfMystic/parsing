@@ -48,7 +48,7 @@ class HcTractorEventsNew(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url=self.url, headers=headers)
+        r = await self.session.get(url=self.url, headers=headers)
         return loads(BeautifulSoup(r.text, 'lxml').select_one("#__NEXT_DATA__").text)
 
     @staticmethod

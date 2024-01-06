@@ -60,7 +60,7 @@ class Check_new_websites(AsyncEventParser):
             "X-Requested-With": "XMLHttpRequest"
         }
         data = {'url': ip}
-        res = self.session.post(url, headers=headers, data=data)
+        res = await self.session.post(url, headers=headers, data=data)
         soup = BeautifulSoup(res.text, 'lxml')
 
         table = soup.find(id='Domain')

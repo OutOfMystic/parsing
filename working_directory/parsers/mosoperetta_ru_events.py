@@ -32,7 +32,7 @@ class OperettaParser(AsyncEventParser):
             'Sec-Fetch-Site': 'none',
             'Sec-Fetch-User': '?1',
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
 
     async def before_body(self):
         self.session = AsyncProxySession(self)

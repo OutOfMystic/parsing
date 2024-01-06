@@ -162,7 +162,7 @@ class BdtSpb(AsyncSeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        async with self.session.get(url, headers=headers) as r:
+        async with  self.session.get(url, headers=headers) as r:
             return await r.json()
 
     async def _request_to_csrf(self) -> BeautifulSoup:

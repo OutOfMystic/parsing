@@ -153,7 +153,7 @@ class Concert(AsyncSeatsParser):
             'X-Requested-With': 'XMLHttpRequest'
         }
         url = 'https://www.concert.ru/SubTickets'
-        r = self.session.post(url, headers=headers, data=data)
+        r = await self.session.post(url, headers=headers, data=data)
         return BeautifulSoup(r.text, 'lxml')
 
     def request_parser(self, url):

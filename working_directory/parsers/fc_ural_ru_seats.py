@@ -108,7 +108,7 @@ class FcUralRu(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     def _request_to_get_free_sectors(self) -> BeautifulSoup:
@@ -131,7 +131,7 @@ class FcUralRu(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):

@@ -173,7 +173,7 @@ class MalyParser(AsyncSeatsParser):
                 '_csrf': csrf
             }
             url = 'http://www.maly.ru/halls/event-hall-scheme'
-            r = self.session.post(url, data=data, headers=headers, verify=False)
+            r = await self.session.post(url, data=data, headers=headers, verify=False)
             seat_data = r.json()['seats']
             self.name_of_scene = 'Историческая сцена'
             a_sectors = self._get_sectors_data(seat_data, occupied_ticket_ids)
@@ -182,12 +182,12 @@ class MalyParser(AsyncSeatsParser):
             headers = {'user-agent': self.user_agent}
             params = {'id': self.event_id}
             url = 'http://maly.core.ubsystem.ru/uiapi/event/scheme'
-            r = self.session.get(url, params=params, headers=headers, verify=False)
+            r = await self.session.get(url, params=params, headers=headers, verify=False)
             seat_data = r.json()['seats']
             a_sectors = self._get_sectors_data(seat_data)
             
             try:
-                response = self.session.get(f'https://maly.core.ubsystem.ru/uiapi/event/{self.event_id}', headers=headers)
+                response = await self.session.get(f'https://maly.core.ubsystem.ru/uiapi/event/{self.event_id}', headers=headers)
                 self.name_of_scene = response.json()['hallScheme']['hall']['title']
             except Exception:
                 raise Exception('Cannot find hallScheme, name_of_scene')

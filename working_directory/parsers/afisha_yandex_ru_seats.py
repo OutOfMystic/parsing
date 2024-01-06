@@ -808,7 +808,7 @@ class YandexAfishaParser(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         url = f'https://afisha.yandex.ru{href}'
-        r = self.session.post(url, timeout=10, headers=headers, data=data)
+        r = await self.session.post(url, timeout=10, headers=headers, data=data)
         return r
 
     def solve_smart_captcha_image(self, driver):
@@ -896,7 +896,7 @@ class YandexAfishaParser(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         url = f'https://afisha.yandex.ru{href}&rep={rep}'
-        r = self.session.post(url, timeout=10, headers=headers, data=data)
+        r = await self.session.post(url, timeout=10, headers=headers, data=data)
 
         if not '<div class="CheckboxCaptcha' in r.text:
             self.info(f'Yandex captcha success solved bro!')

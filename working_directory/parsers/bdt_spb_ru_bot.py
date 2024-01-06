@@ -215,7 +215,7 @@ class BdtSpbBot(AsyncEventParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        response = self.session.get(url, headers=headers)
+        response = await self.session.get(url, headers=headers)
         return response.json()
 
     def _find_main_event(self) -> None:
@@ -288,7 +288,7 @@ class BdtSpbBot(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        response = self.session.get(url, headers=headers)
+        response = await self.session.get(url, headers=headers)
         return BeautifulSoup(response.text, 'lxml')
 
     def _check_self_url(self, url) -> BeautifulSoup:
@@ -312,7 +312,7 @@ class BdtSpbBot(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        response = self.session.get(url, headers=headers)
+        response = await self.session.get(url, headers=headers)
         if response.status_code == 200:
             return BeautifulSoup(response.text, 'lxml')
         else:

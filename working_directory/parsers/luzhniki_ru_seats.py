@@ -138,7 +138,7 @@ class Luzhniki(AsyncSeatsParser):
         }
         url = ('https://msk.kassir.ru/ru/frame/scheme/'
                f'sector?{sessid}&key={key}&id={id_to_requests}&sector={sector_data}&key={key}')
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return r.json()
 
     def request_parser_to_all_sectors(self):
@@ -159,7 +159,7 @@ class Luzhniki(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     def main_body(self):

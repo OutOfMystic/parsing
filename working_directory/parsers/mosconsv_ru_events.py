@@ -102,7 +102,7 @@ class WwwMosconsvRu(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     def _requests_to_events(self, url: str) -> BeautifulSoup:
@@ -118,7 +118,7 @@ class WwwMosconsvRu(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         if r.status_code == 407:
             raise ProxyError()
         return BeautifulSoup(r.text, 'lxml')
