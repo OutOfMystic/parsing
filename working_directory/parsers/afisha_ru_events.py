@@ -60,8 +60,7 @@ class AfishaEvents(AsyncEventParser):
             'User-Agent': self.user_agent
         } 
         response = await self.session.get(x_ath_url, headers=headers, verify=False)
-
-        soup = BeautifulSoup(await response.text(), 'lxml')
+        soup = BeautifulSoup(response.text, 'lxml')
         re_find_js = re.compile(r'^/js/.*\.js')
         scripts = soup.find_all('script', {'src': re_find_js})
         scripts = [self.domain + i.get('src') for i in scripts]
@@ -84,7 +83,7 @@ class AfishaEvents(AsyncEventParser):
         js_to_parsing = None
         for script in scripts:
             js_response = await self.session.get(script, headers=headers)
-            js_text = await js_response.text()
+            js_text = js_response.text
             search = [i in js_text for i in find_in_js]
             if any(search):
                 js_to_parsing = js_text
@@ -113,14 +112,14 @@ class AfishaEvents(AsyncEventParser):
 
     async def get_events_from_one_page(self, json_resp):
         a_events = [] 
-        perfomances = await json_resp.json()
+        perfomances = json_resp.json()
         perfomances = perfomances.get('Schedule')
         for category_name, category_data in perfomances.items():
             if not category_data:
                 continue
             events = category_data["Items"]
             
-            venue = await json_resp.json()
+            venue = json_resp.json()
             venue = venue.get("PlaceInfo").get("Name")
             if venue in self.venue_reformat:
                 venue = self.venue_reformat[venue]
@@ -149,10 +148,10 @@ class AfishaEvents(AsyncEventParser):
     async def get_pages(self, url, count=0):
         response = await self.session.get(url, headers=self.headers)
         try:
-            resp = await response.json()
-        except:
+            resp = response.json()
+        except Exception as ex:
             resp = False
-        if (response.status != 200 or not resp) and count < 8:
+        if (response.status_code != 200 or not resp) and count < 8:
             count += 1
             self.warning(f' cannot load {url} try +={count}')
             self.proxy = await self.controller.proxy_hub.get_async(self.proxy_check)
@@ -187,7 +186,7 @@ class AfishaEvents(AsyncEventParser):
         for url in links:
             try:
                 response = await self.session.get(url, headers=self.headers)
-                if response.ok:
+                if response.status_code == 200:
                     self.a_events.extend(await self.get_events_from_one_page(response))
             except Exception as ex:
                 self.warning(f'Exception {ex}')
@@ -209,7 +208,7 @@ class AfishaEvents(AsyncEventParser):
             await self.fill_a_events(all_pages)
     
         for event in self.a_events:
-            self.info(event)
+            #self.info(event)
             try:
                 self.register_event(event[0], event[1], date=event[2],
                                      venue=event[3], sessionID=event[4], XApplication=event[5])
