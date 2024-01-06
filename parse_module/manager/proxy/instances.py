@@ -1,5 +1,6 @@
 import json
 from typing import Any
+from dataclasses import dataclass
 
 import aiohttp as aiohttp
 from aiohttp.client import _RequestContextManager
@@ -107,7 +108,7 @@ class AsyncProxySession(aiohttp.ClientSession):
     def __init__(self, bot):
         super().__init__()
         self.bot = bot
-
+        
     async def _request(self, *args, **kwargs):
         kwargs['proxy'] = self.bot.proxy.async_proxy
         kwargs['proxy_auth'] = self.bot.proxy.async_proxy_auth
@@ -115,7 +116,7 @@ class AsyncProxySession(aiohttp.ClientSession):
         if 'verify' in kwargs:
             kwargs['ssl'] = kwargs.pop('verify')
         return await super()._request(*args, **kwargs)
-
+    
     async def get_text(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any):
         async with self.get(url, allow_redirects=allow_redirects, ** kwargs) as response:
             return await response.text()
