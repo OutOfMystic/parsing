@@ -195,3 +195,31 @@ class AsyncProxySession(aiohttp.ClientSession):
     async def delete(self, url: StrOrURL, **kwargs: Any) -> AwaitedResponse:
         """Perform HTTP DELETE request."""
         return await self._static_response(super().delete, url, **kwargs)
+
+    def get_with(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any):
+        """Perform HTTP GET request with ``with`` constructor."""
+        return super().get(url, allow_redirects=allow_redirects, **kwargs)
+
+    def options_with(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any):
+        """Perform HTTP OPTIONS request with ``with`` constructor."""
+        return super().options(url, allow_redirects=allow_redirects, **kwargs)
+
+    def head_with(self, url: StrOrURL, *, allow_redirects: bool = False, **kwargs: Any):
+        """Perform HTTP HEAD request with ``with`` constructor."""
+        return super().head(url, allow_redirects=allow_redirects, **kwargs)
+
+    def post_with(self, url: StrOrURL, *, data: Any = None, **kwargs: Any):
+        """Perform HTTP POST request with ``with`` constructor."""
+        return super().post(url, data=data, **kwargs)
+
+    def put_with(self, url: StrOrURL, *, data: Any = None, **kwargs: Any):
+        """Perform HTTP PUT request with ``with`` constructor."""
+        return super().put(url, data=data, **kwargs)
+
+    def patch_with(self, url: StrOrURL, *, data: Any = None, **kwargs: Any):
+        """Perform HTTP PATCH request with ``with`` constructor."""
+        return super().patch(url, data=data, **kwargs)
+
+    def delete_with(self, url: StrOrURL, **kwargs: Any):
+        """Perform HTTP DELETE request with ``with`` constructor."""
+        return super().delete(url, **kwargs)
