@@ -134,7 +134,7 @@ class AwaitedResponse:
                     ),
                     headers=self.headers,
                 )
-        stripped = self._body.strip()  # type: ignore[union-attr]
+        stripped = self.content.strip()  # type: ignore[union-attr]
         if not stripped:
             return None
 
