@@ -107,16 +107,17 @@ class AwaitedResponse:
     def __init__(self,
                  request_info,
                  history,
-                 text,
+                 content,
                  headers,
                  encoding,
                  status_code):
         self.request_info = request_info
         self.history = history
         self.encoding = encoding
-        self.text = text
+        self.content = content
         self.headers = headers
         self.status_code = status_code
+        self.text = self.content.decode(encoding)  # type: ignore[no-any-return,union-attr]
 
     def json(self, *,
              encoding: Optional[str] = None,
@@ -162,7 +163,7 @@ class AsyncProxySession(aiohttp.ClientSession):
         async with method(*args, **kwargs) as response:
             return AwaitedResponse(response.request_info,
                                    response.history,
-                                   await response.text(),
+                                   await response.read(),
                                    response.headers,
                                    response.get_encoding(),
                                    response.status)
