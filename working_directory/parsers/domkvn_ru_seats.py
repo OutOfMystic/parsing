@@ -80,7 +80,7 @@ class KVNParser(AsyncSeatsParser):
     
     
     async def body(self):
-        r2 = self.session.get(url=self.url, headers=self.headers)
+        r2 = await self.session.get(url=self.url, headers=self.headers)
 
         sectors = r2.json().get('sectors')
         sectors_ids = [i.get('id') for i in sectors]
@@ -90,7 +90,7 @@ class KVNParser(AsyncSeatsParser):
         for sector_id in sectors_ids:
             try :
                 url_to_sector = f"https://core.domkvn.ubsystem.ru/uiapi/event/scheme?id={scheme_id}&sector_id={sector_id}"
-                r3 = self.session.get(url=url_to_sector, headers=self.headers)
+                r3 = await self.session.get(url=url_to_sector, headers=self.headers)
                 seats = r3.json().get('seats')
                 
                 for seat in seats:

@@ -26,7 +26,7 @@ class AfishaRuSeats(AsyncSeatsParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def load_scheme(self):
+    async def load_scheme(self):
         headers = {
             "accept": "application/json",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",
@@ -42,7 +42,7 @@ class AfishaRuSeats(AsyncSeatsParser):
             'User-Agent': self.user_agent
         }
         url_seats = f'https://mapi.afisha.ru/api/v21/hall/{self.sessionID}?withSubstrate=true'
-        response = self.session.get(url_seats, headers=headers)
+        response = await self.session.get(url_seats, headers=headers)
 
         try:
             resp = response.json()
@@ -103,7 +103,7 @@ class AfishaRuSeats(AsyncSeatsParser):
         return dict_seats
 
     async def body(self):
-        scheme_json = self.load_scheme()
+        scheme_json = await self.load_scheme()
         if not scheme_json:
             self.warning(f'this event has empty json_file!{self.url} ')
             return False

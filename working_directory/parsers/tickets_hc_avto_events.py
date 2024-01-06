@@ -31,7 +31,7 @@ class HcAvtomobilistHockey(AsyncEventParser):
             }
 
     async def before_body(self):
-            self.session = AsyncProxySession(self)
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def date_reformat(date: str):
@@ -42,7 +42,7 @@ class HcAvtomobilistHockey(AsyncEventParser):
         return f"{day} {month} {year} {time}"
 
     async def body(self):
-            r = self.session.get(url=self.url, headers=self.headers)
+            r = await self.session.get(url=self.url, headers=self.headers)
             soup = BeautifulSoup(r.text, 'lxml')
 
             tickets = soup.select_one('#tickets')

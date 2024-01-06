@@ -665,12 +665,12 @@ class Bilettorg(AsyncSeatsParser):
         return new_a_sectors
 
 
-    def parse_seats(self):
+    async def parse_seats(self):
         total_sector = []
 
         anons_id = self.url.split('/')[-2]
         url = f'https://www.bilettorg.ru/ajax/tickets.php?anons_id={anons_id}'
-        soup = self.requests_to_seats(url)
+        soup = await self.requests_to_seats(url)
 
         all_sector = {}
         all_row_in_event = soup.select('li.buy-tickets__places-row')
@@ -750,7 +750,7 @@ class Bilettorg(AsyncSeatsParser):
 
         return total_sector
 
-    def requests_to_seats(self, url):
+    async def requests_to_seats(self, url):
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -767,11 +767,11 @@ class Bilettorg(AsyncSeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers)
-        return BeautifulSoup(r.text, 'lxml')
+        r_text = await self.session.get_text(url, headers=headers)
+        return BeautifulSoup(r_text, 'lxml')
 
     async def body(self):
-        a_sectors = self.parse_seats()
+        a_sectors = await self.parse_seats()
 
         if self.venue in ['Большой театр']:
             self.reformat(a_sectors)

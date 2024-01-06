@@ -24,8 +24,8 @@ class CircusKislovodsk(AsyncSeatsParser):
             "user-agent": self.user_agent
         }
 
-    def work_with_json(self, session):
-        places = session.json().get("data").get("seats").get("data")
+    def work_with_json(self, r_json :dict):
+        places = r_json.get("data").get("seats").get("data")
 
         reformat = {
             'Сектор 1': '1',
@@ -54,9 +54,9 @@ class CircusKislovodsk(AsyncSeatsParser):
         self.session = AsyncProxySession(self)
 
     async def body(self):
-        session = self.session.get(self.url, headers=self.headers)
+        r_json = await self.session.get_json(self.url, headers=self.headers)
 
-        a_sectors = self.work_with_json(session)
+        a_sectors = self.work_with_json(r_json)
 
         for sector, tickets in a_sectors.items():
             self.register_sector(sector, tickets)

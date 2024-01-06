@@ -48,8 +48,8 @@ class HcLadaHockeyTLTarena_seats(AsyncSeatsParser):
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'user-agent': self.user_agent
         }
-        r1_text = await self.session.get_text(url=url, headers=headers, verify=False)
-        zones = self.double_split(r1_text, 'CORE.data.zones = ', ';')
+        r1 = await self.session.get(url=url, headers=headers, verify_ssl=False)
+        zones = self.double_split(r1.text, 'CORE.data.zones = ', ';')
         json_data = json.loads(zones)
         ids = [i.get('id') for i in json_data]
         return ids
@@ -70,13 +70,13 @@ class HcLadaHockeyTLTarena_seats(AsyncSeatsParser):
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'user-agent': self.user_agent
             }   
-        r_json = await self.session.get_json(url=url, headers=headers, verify=False)
+        r = await self.session.get(url=url, headers=headers, verify=False)
 
         self.prices.update(
-            {i["pricezoneId"]: i["value"] for i in r_json['prices']}
+            {i["pricezoneId"]: i["value"] for i in r.json()['prices']}
         )
 
-        for place_info in r_json["seats"]:
+        for place_info in r.json()["seats"]:
             sector, row, place = re.findall(r'(\w+ \d+)', place_info.get('name'))
             row = str(row.split()[-1])
             place = str(place.split()[-1])

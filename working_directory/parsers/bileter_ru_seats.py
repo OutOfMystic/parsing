@@ -19,7 +19,7 @@ class BileterSeats(AsyncSeatsParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def get_seats(self, url_seats):
+    async def get_seats(self, url_seats):
         headers = {
             "accept": "*/*",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",
@@ -35,9 +35,9 @@ class BileterSeats(AsyncSeatsParser):
             "user-agent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
         }
 
-        r = self.session.get(url_seats, headers=headers)
+        r_json = await self.session.get_json(url_seats, headers=headers)
 
-        activePlaces = double_split(r.json()['html'], '"activePlaces":', '],') + ']'
+        activePlaces = double_split(r_json['html'], '"activePlaces":', '],') + ']'
         activePlaces = decode_unicode_escape(activePlaces)
         activePlaces = json.loads(activePlaces)
 
@@ -73,7 +73,7 @@ class BileterSeats(AsyncSeatsParser):
 
     async def body(self):
         url_seats = f'https://www.bileter.ru/performance/hall-scheme?IdPerformance={self.event_id}'
-        activePlaces = self.get_seats(url_seats)
+        activePlaces = await self.get_seats(url_seats)
         a_sectors = self.reformat(activePlaces)
 
         for sector_name, tickets in a_sectors.items():

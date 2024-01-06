@@ -16,9 +16,9 @@ class Parser(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def get_events(self, events_data):
+    async def get_events(self, events_data):
         a_events = []
-        set_pres = self.get_set_pres()
+        set_pres = await self.get_set_pres()
 
         for month_data in events_data:
             month = month_list[month_data['month']]
@@ -44,7 +44,7 @@ class Parser(AsyncEventParser):
 
         return a_events
 
-    def get_request(self):
+    async def get_request(self):
         url = 'https://www.greatcircus.ru/api/tickets/calendardata/0?lang=ru'  # &set=1, непонятно надо или нет
         headers = {
             'accept': 'application/json, text/javascript, */*; q=0.01',
@@ -62,20 +62,20 @@ class Parser(AsyncEventParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers)
+        
+        r_json = await self.session.get_json(url, headers=headers)
+        return r_json
 
-        return r.json()
-
-    def get_set_pres(self):
+    async def get_set_pres(self):
         url = 'https://www.greatcircus.ru/app/events/show.js'
-        r = self.session.get(url, headers={})
+        r_text = await self.session.get_text(url, headers={})
 
         set_pres = {
             1: 'pre4073',
             2: 'pre4809'
         }
 
-        if 'iframeab' not in r.text:
+        if 'iframeab' not in r_text:
             pass
         else:
             # TODO Если окажется что эти переменные меняются. Парсить их из r.text
@@ -85,8 +85,8 @@ class Parser(AsyncEventParser):
         return set_pres
 
     async def body(self):
-        events_data = self.get_request()
-        a_events = self.get_events(events_data)
+        events_data = await self.get_request()
+        a_events = await self.get_events(events_data)
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2])

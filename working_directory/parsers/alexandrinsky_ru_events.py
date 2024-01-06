@@ -22,30 +22,31 @@ class AlexandrinskyRu(AsyncEventParser):
         self.delay = 3600
         self.driver_source = None
         self.url: str = 'https://alexandrinsky.ru/afisha-i-bilety/'
+        self.session = None  # Инициализация переменной сеанса
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        soup = self._requests_to_events()
+    async def _parse_events(self):
+        soup = await self._requests_to_events()
 
-        all_axaj_pages = self._get_all_ajax_pages(soup)
+        all_ajax_pages = self._get_all_ajax_pages(soup)
 
         events = self._get_events_from_soup(soup)
 
-        return self._parse_events_from_soup(events, all_axaj_pages)
+        async for event in self._parse_events_from_soup(events, all_ajax_pages):
+            yield event
 
-    def _parse_events_from_soup(self, events: ResultSet[Tag], all_axaj_pages: int) -> OutputEvent:
-        for count_page in range(2, all_axaj_pages+2):
+    async def _parse_events_from_soup(self, events: ResultSet[Tag], all_ajax_pages: int):
+        for count_page in range(2, all_ajax_pages + 2):
             for event in events:
                 output_data = self._parse_data_from_event(event)
                 if output_data is not None:
                     for data in output_data:
                         yield data
 
-            soup = self._requests_to_axaj_events(str(count_page))
+            soup = await self._requests_to_axaj_events(str(count_page))
             events = self._get_events_from_soup(soup)
-            count_page += 1
 
     def _parse_data_from_event(self, event: Tag) -> Optional[Union[OutputEvent, None]]:
         title = event.find('a').text.strip()
@@ -72,7 +73,7 @@ class AlexandrinskyRu(AsyncEventParser):
         all_pages = all_pages.get('value')
         return int(all_pages)
 
-    def _requests_to_axaj_events(self, next_page: str) -> BeautifulSoup:
+    async def _requests_to_axaj_events(self, next_page: str) -> BeautifulSoup:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -99,10 +100,10 @@ class AlexandrinskyRu(AsyncEventParser):
             "PAGEN_2": next_page
         }
         url = 'https://alexandrinsky.ru/afisha-i-bilety/'
-        r = self.session.post(url, headers=headers, data=data)
-        return BeautifulSoup(r.text, 'lxml')
+        r_text = await self.session.get_text(url, headers=headers, data=data)
+        return BeautifulSoup(r_text, 'lxml')
 
-    def _requests_to_events(self) -> BeautifulSoup:
+    async def _requests_to_events(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -123,9 +124,10 @@ class AlexandrinskyRu(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
-        return BeautifulSoup(r.text, 'lxml')
-
-    def body(self) -> None:
-        for event in self._parse_events():
+        r_text = await self.session.get_text(self.url, headers=headers)
+        return BeautifulSoup(r_text, 'lxml')
+    
+    async def body(self) -> None:
+        async for event in self._parse_events():
             self.register_event(event.title, event.href, date=event.date, event_id=event.event_id)
+            self.debug(f'{event.title}, {event.href}, {event.date}, {event.event_id}')

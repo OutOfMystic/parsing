@@ -37,8 +37,8 @@ class HcLadaHockeyTLTarena(AsyncEventParser):
         self.session = AsyncProxySession(self)
 
     async def body(self):
-        text = await self.session.get_text(url=self.url, headers=self.headers, verify=False)
-        soup = BeautifulSoup(text, 'lxml')
+        r = await self.session.get(url=self.url, headers=self.headers, verify_ssl=False)
+        soup = BeautifulSoup(r.text, 'lxml')
 
         tables = soup.find_all('table', class_='table-choice')
 

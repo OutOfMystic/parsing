@@ -31,7 +31,7 @@ class HockeySpartak(AsyncSeatsParser):
         SplSplPage = SplPage.split(rstr)[0]
         return SplSplPage
 
-    def load_event(self, url, session_key):
+    async def load_event(self, url, session_key):
         #url = 'https://hk-spartak.qtickets.ru/event/80349'
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
@@ -54,7 +54,7 @@ class HockeySpartak(AsyncSeatsParser):
             'event_id': self.id,
             'widget_session': session_key
         }
-        r = self.session.post(url, headers=headers, data=data)
+        r = await self.session.post(url, headers=headers, data=data)
         soup, text = BeautifulSoup(r.text, 'lxml'), r.text
         return soup, text
     
@@ -85,7 +85,7 @@ class HockeySpartak(AsyncSeatsParser):
         seats_list = eval(seats_str)
         return seats_list
 
-    def get_all_seats(self, url):
+    async def get_all_seats(self, url):
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -102,7 +102,7 @@ class HockeySpartak(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         #exampleUrl1 = 'https://cdn.qtickets.tech/storage/temp/bundles/375268/3cda7f82b87ea5e3045e9b89ea573906-a8d376fc1f76fa376c5a8bccd41763e1.ru.public.js?cache_lock=on'
-        r1 = self.session.get(url, headers=headers, verify=False)
+        r1 = await self.session.get(url, headers=headers, verify=False)
         x = len(re.findall(r'function\(cfg\)', r1.text)) #столько есть отдельных массивов с одинаковыми переменными
 
         text1 = self.double_split(r1.text, '(function(cfg){var ', '\n', x=1, n=0)
@@ -119,7 +119,7 @@ class HockeySpartak(AsyncSeatsParser):
             seats1_list += seats2_list
         return seats1_list
     
-    def get_busy_seats(self, url):
+    async def get_busy_seats(self, url):
         headers = {
         'accept': 'application/json, text/javascript, */*; q=0.01',
         'accept-encoding': 'gzip, deflate, br',
@@ -137,7 +137,7 @@ class HockeySpartak(AsyncSeatsParser):
         'x-requested-with': 'XMLHttpRequest'
         }
         #ExampleUrl2 = 'https://hk-spartak.qtickets.ru/widget/seats?show_id=375268&widget_session=0000000000000000000000000000000000000000&salt=ca8120baca0962c1134829ed32577af9&cache_lock=on&hash=d3f3ab6c99215101748c464134055421'
-        r2 = self.session.get(url, headers=headers, verify=False)
+        r2 = await self.session.get(url, headers=headers, verify_ssl=False)
         # with open('TEST3.json', 'w', encoding='utf-8') as file:
         #     json.dump(r2.json(), file, indent=4, ensure_ascii=False) 
         seats = r2.json()
@@ -198,20 +198,20 @@ class HockeySpartak(AsyncSeatsParser):
         return sector
             
 
-    def body(self) -> None:
+    async def body(self) -> None:
         widget_session_keys = ['eLdgrITSBV3mAwGoJSD8MlBUIzM5rf0n4hyoJTHz', '0bZrs4wOy54onLqK8syqUEFzJ84Ape8TrT8e0fna',
                                'XtlsP70VIO5KsEzAFP34DyL7NEsWuithSGa95WUf']
         url = f'https://hk-spartak.qtickets.ru/event/{self.id}'
 
-        soup, text = self.load_event(url, random.choice(widget_session_keys))
+        soup, text = await self.load_event(url, random.choice(widget_session_keys))
         url_seats = self.get_all_seats_url(soup)
-        all_seats = self.get_all_seats(url_seats)
+        all_seats = await self.get_all_seats(url_seats)
         all_seats = { (i[0],str(i[2]),str(i[1])):i  for i in all_seats }
         #all_seats1 = { f"{i[0]},{str(i[2])},{str(i[1])}":i  for i in all_seats }
         # with open('TEST1.json', 'w', encoding='utf-8') as file:
         #     json.dump(all_seats1, file, indent=4, ensure_ascii=False)
         url_bad_seats = self.get_busy_seats_url(text)
-        bad_seats = self.get_busy_seats(url_bad_seats)
+        bad_seats = await self.get_busy_seats(url_bad_seats)
 
         avalibale_seats = self.main_work(all_seats, bad_seats)
 

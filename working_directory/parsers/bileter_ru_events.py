@@ -7,9 +7,10 @@ from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 class BileterEvent(AsyncEventParser):
+    
     proxy_check_url = "https://www.bileter.ru/"
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 1800
         self.driver_source = None
         self.headers = {
@@ -108,16 +109,16 @@ class BileterEvent(AsyncEventParser):
             for url in self.urls:
                 url += f'&page={page}'
                 
-                r = self.session.get(url, headers=self.headers)
+                r_text = await self.session.get_text(url, headers=self.headers)
 
                 page += 1
                 
-                soup = BeautifulSoup(r.text, 'lxml')
+                soup = BeautifulSoup(r_text, 'lxml')
                 
                 p = soup.find('p', class_='uppercase')
                 
                 if p is not None:
-                    print("Done")
+                    self.info("Done")
                     return
 
                 events = soup.find_all('div', class_='afishe-item')
@@ -131,14 +132,14 @@ class BileterEvent(AsyncEventParser):
                         link = self.get_link(event)
                         date = self.get_date(event)
                         
-                        print((title, link, date, venue))
+                        self.debug((title, link, date, venue))
                         events_list.append((title, link, date, venue))
                     else:
                         for ticket in tickets:
                             link = self.get_link_from_list(ticket)
                             date = self.get_date_from_list(ticket)
                             
-                            print((title, link, date, venue))
+                            self.debug((title, link, date, venue))
                             events_list.append((title, link, date, venue))
         
-        # self.put_db(events_list)
+            self.put_db(events_list)

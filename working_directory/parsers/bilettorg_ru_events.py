@@ -71,7 +71,7 @@ class Bilettorg(AsyncEventParser):
             a_events.append([title, href, normal_date, scene, venue])
         return a_events
 
-    def get_all_events(self, url):
+    async def get_all_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -89,8 +89,8 @@ class Bilettorg(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
-        return BeautifulSoup(r.text, 'lxml')
+        r_text = await self.session.get_text(url, headers=headers)
+        return BeautifulSoup(r_text, 'lxml')
 
     async def body(self):
         
@@ -99,7 +99,7 @@ class Bilettorg(AsyncEventParser):
         }
 
         for url in self.urls:
-            soup = self.get_all_events(url)
+            soup = await self.get_all_events(url)
             a_events = self.parse_events(soup)
 
             for event in a_events:
@@ -121,5 +121,3 @@ class Bilettorg(AsyncEventParser):
                     
                 self.register_event(event[0], event[1], date=event[2], 
                                     scene=event[3], venue=event[4])
-            
-

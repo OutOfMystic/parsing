@@ -24,8 +24,8 @@ class CircusRostov(AsyncSeatsParser):
             "user-agent": self.user_agent
         }
 
-    def work_with_json(self, session):
-        places = session.json().get("data").get("seats").get("data")
+    def work_with_json(self, r_json):
+        places = r_json.get("data").get("seats").get("data")
 
         reformat = {
             'Левый балкон': 'Балкон (левая сторона)',
@@ -52,9 +52,9 @@ class CircusRostov(AsyncSeatsParser):
         self.session = AsyncProxySession(self)
 
     async def body(self):
-        session = self.session.get(self.url, headers=self.headers)
+        r = await self.session.get(self.url, headers=self.headers)
 
-        a_sectors = self.work_with_json(session)
+        a_sectors = self.work_with_json(r.json())
 
         for sector, tickets in a_sectors.items():
             self.register_sector(sector, tickets)

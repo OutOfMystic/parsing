@@ -81,14 +81,14 @@ class AfishaEvents(AsyncEventParser):
             a_box[session_id] = (title, date_to_write, session_id)
         return a_box
 
-    def request_to_yandex(self, box, client_key):
+    async def request_to_yandex(self, box, client_key):
         a_events = []
         params = {
             'sessions_ids' : box,
             'clientKey': client_key
         }
         url= 'https://widget.afisha.yandex.ru/api/tickets/v1/sessions/sale-available'
-        r2 = self.session.get(url=url, headers=self.headers, params=params)
+        r2 = await self.session.get(url=url, headers=self.headers, params=params)
 
         session_box = double_split(r2.text, '"sessions":', ']')
         session_box = json.loads(session_box+']')
@@ -102,7 +102,7 @@ class AfishaEvents(AsyncEventParser):
 
 
     async def body(self):
-        r = self.session.get(url=self.domain, headers=self.headers)
+        r = await self.session.get(url=self.domain, headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
 
         self.session_dict = self.take_all_sessions(soup)
@@ -115,7 +115,7 @@ class AfishaEvents(AsyncEventParser):
         a_events = []
         for i in range(0, len(sesson_box), params_count):
             box = sesson_box[i:i+params_count]
-            cut_events = self.request_to_yandex(box, client_key)
+            cut_events = await self.request_to_yandex(box, client_key)
             a_events.extend(cut_events)
             
         for event in a_events:

@@ -36,7 +36,7 @@ class HcSalavatHockey(AsyncEventParser):
 
 
     async def body(self):
-        r = self.session.get(url=self.url, headers=self.headers, verify=False)
+        r = await self.session.get(url=self.url, headers=self.headers, verify_ssl=False)
         soup = BeautifulSoup(r.text, 'lxml')
 
         events = soup.find_all(class_='events__item')

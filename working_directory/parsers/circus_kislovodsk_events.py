@@ -42,17 +42,15 @@ class CircusKislovodsk(AsyncEventParser):
         #date_to_write=08 Янв 2024 12:00
         return date_to_write
 
-    def find_all_events(self, page):
-        soup = BeautifulSoup(page.text, 'lxml')
+    def find_all_events(self, page_text :str):
+        soup = BeautifulSoup(page_text, 'lxml')
         events = soup.select('div.ticket_item')
         events_id =[x.get('data-tp-event') for j in  [i.find_all('a') for i in events] for x in j]
         return events_id
     
-    def get_info_about_event(self, id):
+    async def get_info_about_event(self, id):
         url_to_api = f'https://ticket-place.ru/widget/{id}/data'
-        info_about = self.session.get(url_to_api, headers=self.headers)
-        info_about.encoding = 'utf-8'
-        info_about = info_about.json()
+        info_about = await self.session.get_json(url_to_api, headers=self.headers)
 
         title = info_about.get("data").get("name")
         id = info_about.get("data").get("id")
@@ -61,13 +59,13 @@ class CircusKislovodsk(AsyncEventParser):
 
         return title, href, date
 
-    def load_all_dates(self, id):
+    async def load_all_dates(self, id):
         a_events = []
         
         url = f'https://ticket-place.ru/widget/{id}/similar'
-        all_events_json = self.session.get(url, headers=self.headers)
+        all_events_json = await self.session.get_json(url, headers=self.headers)
 
-        for i in all_events_json.json().get("events"):
+        for i in all_events_json.get("events"):
             title = i.get("name")
             id = i.get("id")
             href = f'https://ticket-place.ru/widget/{id}/data|kislovodsk'
@@ -77,22 +75,20 @@ class CircusKislovodsk(AsyncEventParser):
         return a_events
 
     async def body(self):
-        page = self.session.get(self.url, headers=self.headers)
-        events_ids = self.find_all_events(page)
+        
+        r_text = await self.session.get_text(self.url, headers=self.headers)
+        
+        events_ids = self.find_all_events(r_text)
 
         a_events = set()
-        first_event = self.get_info_about_event(events_ids[0])
+        first_event = await self.get_info_about_event(events_ids[0])
         a_events.add(first_event)
 
         count = 10
         while len(a_events) < len(events_ids) and count > 1:
             id = events_ids[len(a_events)-1]
-            to_a_events = self.load_all_dates(id)
+            to_a_events = await self.load_all_dates(id)
             a_events.update(to_a_events)
             count -= 1
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2], venue='Кисловодский цирк')
-
-            
-
-

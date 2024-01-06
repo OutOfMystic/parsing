@@ -21,7 +21,7 @@ class SochiCirkParser(AsyncSeatsParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def get_all_seats(self):
+    async def get_all_seats(self):
             headers = {
                     'accept': 'application/json, text/plain, */*',
                     'accept-encoding': 'gzip, deflate, br',
@@ -39,7 +39,7 @@ class SochiCirkParser(AsyncSeatsParser):
                     'user-agent': self.user_agent
                 }
             try:
-                r1 = self.session.get(self.url,  headers=headers)
+                r1 = await self.session.get(self.url,  headers=headers)
             except TooManyRedirects:
                 self.error('TooManyREdirects')
             return r1.json()
@@ -66,7 +66,7 @@ class SochiCirkParser(AsyncSeatsParser):
 
     async def body(self):
         
-        all_place = self.get_all_seats()
+        all_place = await self.get_all_seats()
         all_place = all_place['data']['seats']['data']
 
         a_sectors = self.make_a_seats(all_place)

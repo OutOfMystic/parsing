@@ -19,7 +19,7 @@ class CrocusHall(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def parse_events(self, soup):
+    async def parse_events(self, soup):
         a_events = []
 
         items_list = soup.find_all('div', class_='afisha-items-list__item')
@@ -47,7 +47,7 @@ class CrocusHall(AsyncEventParser):
 
                 parametr_for_get_href = item.get('href')
                 url = f'https://crocus-hall.ru{parametr_for_get_href}/'
-                soup = self.request_for_href(url)
+                soup = await self.request_for_href(url)
 
                 all_date = []
                 detail_active = soup.find_all('div', class_='detail')
@@ -91,7 +91,7 @@ class CrocusHall(AsyncEventParser):
                 self.warning(f'{ex} {item}')
         return a_events
 
-    def request_for_href(self, url):
+    async def request_for_href(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -107,11 +107,11 @@ class CrocusHall(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r_text = await self.session.get_text(url, headers=headers)
 
-        return BeautifulSoup(r.text, "lxml")
+        return BeautifulSoup(r_text, "lxml")
 
-    def get_events(self):
+    async def get_events(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -128,16 +128,16 @@ class CrocusHall(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r_text = await self.session.get_text(self.url, headers=headers)
 
-        soup = BeautifulSoup(r.text, 'lxml')
+        soup = BeautifulSoup(r_text, 'lxml')
 
-        a_events = self.parse_events(soup)
+        a_events = await self.parse_events(soup)
 
         return a_events
 
     async def body(self):
-        a_events = self.get_events()
+        a_events = await self.get_events()
 
         for event in a_events:
             if 'Детский фестиваль «Счастливое детство»' == event[0]:

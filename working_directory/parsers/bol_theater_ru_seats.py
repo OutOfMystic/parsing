@@ -220,7 +220,7 @@ class BolTheaterParser(AsyncSeatsParser):
                         loz_row = '2'
         return loz_row
 
-    def get_event_seats(self):
+    async def get_event_seats(self):
         self.headers = {
             'authority': 'www.bileter.ru',
             'accept': 'text/html, */*; q=0.01',
@@ -239,8 +239,8 @@ class BolTheaterParser(AsyncSeatsParser):
             'x-requested-with': 'XMLHttpRequest',
         }
         
-        r = self.session.get(self.url, headers=self.headers)
-        soup = BeautifulSoup(r.text, 'lxml')
+        r_text = await self.session.get_text(self.url, headers=self.headers)
+        soup = BeautifulSoup(r_text, 'lxml')
 
         seats = []
         for ticket in soup.find_all('circle', class_='tickets_avail'):
@@ -254,7 +254,7 @@ class BolTheaterParser(AsyncSeatsParser):
         return seats
 
     async def body(self):
-        seats = self.get_event_seats()
+        seats = await self.get_event_seats()
 
         a_sectors = []
         for ticket in seats:
