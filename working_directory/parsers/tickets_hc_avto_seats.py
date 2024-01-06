@@ -102,7 +102,7 @@ class Hc_Avtomobilist_Seats(AsyncSeatsParser):
             sector = sector.replace('Б-н', 'Балкон')
         return sector
         
-    def body(self) -> None:
+    async def body(self):
         self.set_cookies()    
 
         availible_zones = self.get_availible_ids()

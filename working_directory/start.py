@@ -3,10 +3,9 @@ import sys
 import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-sys.path.append('/home/lon8/python/parsing/')
+# sys.path.append('/home/lon8/python/parsing/')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-# from parse_module.models import router
 from parse_module.manager import backend
 
 from parse_module.manager.controller import Controller

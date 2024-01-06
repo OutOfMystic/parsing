@@ -130,6 +130,6 @@ class MelomanRu(AsyncSeatsParser):
         self.csrf_token = double_split(r.text, '"csrf-token" content="', '">')
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
+    async def body(self):
         for sector in self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

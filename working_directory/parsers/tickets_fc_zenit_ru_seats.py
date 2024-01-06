@@ -184,7 +184,7 @@ class TicketsFcZenit(AsyncSeatsParser):
         r = self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
+    async def body(self):
         skip_sector = [
             'Сектор ADIAMOND',
             'Сектор A236',

@@ -80,7 +80,7 @@ class TicketsFcZenit(AsyncEventParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
+    async def body(self):
         for url in self.urls:
             for event in self._parse_events(url):
                 self.register_event(event.title, event.href, date=event.date)

@@ -156,7 +156,7 @@ class PelmenyNet(AsyncEventParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
+    async def body(self):
         all_events = set(self._parse_events())
         for event in all_events:
             self.register_event(

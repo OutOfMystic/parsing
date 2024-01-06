@@ -143,6 +143,6 @@ class Contextfest(AsyncSeatsParser):
         r = self.session.post(self.url, headers=headers, json=data)
         return r.json()
 
-    def body(self) -> None:
+    async def body(self):
         for sector in self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

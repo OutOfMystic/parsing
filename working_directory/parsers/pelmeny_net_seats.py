@@ -17,5 +17,5 @@ class PelmenyNet(AsyncSeatsParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def body(self) -> None:
+    async def body(self):
         return None

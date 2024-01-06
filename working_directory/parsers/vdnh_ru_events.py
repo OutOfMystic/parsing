@@ -132,7 +132,7 @@ class VDNHRu(AsyncEventParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
+    async def body(self):
         for event in self._parse_events():
             self.register_event(event.title, event.href, date=event.date)
         events = [
