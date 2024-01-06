@@ -79,15 +79,15 @@ class Fomenko(AsyncSeatsParser):
         }
         return await self.session.get(url, headers=headers)
 
-    def get_seats(self):
-        r = self.request_parser(url=self.url)
+    async def get_seats(self):
+        r = await self.request_parser(url=self.url)
 
         a_events = self.parse_seats(r.text)
 
         return a_events
 
     async def body(self):
-        all_sectors = self.get_seats()
+        all_sectors = await self.get_seats()
 
         for sector in all_sectors:
             self.register_sector(sector['name'], sector['tickets'])

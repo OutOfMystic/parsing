@@ -77,8 +77,8 @@ class CircusSochiRu(AsyncSeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r_json = await self.session.get_json(self.url, headers=headers)
-        return r_json
+        r = await self.session.get(self.url, headers=headers)
+        return r.json()
 
     async def body(self) -> None:
         self.debug('Starting body')

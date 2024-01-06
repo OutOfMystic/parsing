@@ -235,7 +235,7 @@ class BarvikhaConcertHall(AsyncSeatsParser):
         r = await self.session.get(url, headers=headers)
         return r.json()
 
-    def request_parser_to_index(self, url):
+    async def request_parser_to_index(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -254,11 +254,11 @@ class BarvikhaConcertHall(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     async def get_seats(self):
-        soup_to_index = self.request_parser_to_index(self.url)
+        soup_to_index = await self.request_parser_to_index(self.url)
         data_to_parse = soup_to_index.find('div', class_='js-event-tickets')
         index = data_to_parse.get('data-code')
         self.svg_width_scene = data_to_parse.get('data-scheme')

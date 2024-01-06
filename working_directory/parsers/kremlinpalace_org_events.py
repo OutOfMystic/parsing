@@ -166,7 +166,7 @@ class KremlInPalace(AsyncEventParser):
         )
 
     async def _set_cookie_for_bypassing_protection(self) -> Optional[Union[None, BeautifulSoup]]:
-        js_code, cookie__js_p_, r_text = self._get_js_code_and__js_p__from_main_site()
+        js_code, cookie__js_p_, r_text = await self._get_js_code_and__js_p__from_main_site()
         if cookie__js_p_ is None or 'var code = get_param("__js_p_", "int", 0);' not in js_code:
             return BeautifulSoup(r_text, 'lxml')
         self._processing_js_code_to_generate_cookie(js_code, cookie__js_p_)

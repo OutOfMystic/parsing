@@ -35,9 +35,9 @@ class BileterSeats(AsyncSeatsParser):
             "user-agent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
         }
 
-        r_json = await self.session.get_json(url_seats, headers=headers)
+        r = await self.session.get(url_seats, headers=headers)
 
-        activePlaces = double_split(r_json['html'], '"activePlaces":', '],') + ']'
+        activePlaces = double_split(r.json()['html'], '"activePlaces":', '],') + ']'
         activePlaces = decode_unicode_escape(activePlaces)
         activePlaces = json.loads(activePlaces)
 

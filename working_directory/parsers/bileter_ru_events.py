@@ -100,7 +100,6 @@ class BileterEvent(AsyncEventParser):
             
         
     async def body(self):
-        
         events_list = []
         page = 1
         
@@ -109,11 +108,11 @@ class BileterEvent(AsyncEventParser):
             for url in self.urls:
                 url += f'&page={page}'
                 
-                r_text = await self.session.get_text(url, headers=self.headers)
+                r = await self.session.gett(url, headers=self.headers)
 
                 page += 1
                 
-                soup = BeautifulSoup(r_text, 'lxml')
+                soup = BeautifulSoup(r.text(), 'lxml')
                 
                 p = soup.find('p', class_='uppercase')
                 
@@ -132,14 +131,12 @@ class BileterEvent(AsyncEventParser):
                         link = self.get_link(event)
                         date = self.get_date(event)
                         
-                        self.debug((title, link, date, venue))
                         events_list.append((title, link, date, venue))
                     else:
                         for ticket in tickets:
                             link = self.get_link_from_list(ticket)
                             date = self.get_date_from_list(ticket)
                             
-                            self.debug((title, link, date, venue))
                             events_list.append((title, link, date, venue))
         
             self.put_db(events_list)

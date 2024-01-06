@@ -81,8 +81,8 @@ class BolTheaterParser(AsyncEventParser):
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
         }
-        r_text = await self.session.get_text(self.url, headers=headers)
-        soup = BeautifulSoup(r_text, 'lxml')
+        r = await self.session.get(self.url, headers=headers)
+        soup = BeautifulSoup(r.text, 'lxml')
 
         a_events = self.parse_events(soup)
 

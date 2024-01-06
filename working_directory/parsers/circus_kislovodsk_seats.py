@@ -54,9 +54,9 @@ class CircusKislovodsk(AsyncSeatsParser):
         self.session = AsyncProxySession(self)
 
     async def body(self):
-        r_json = await self.session.get_json(self.url, headers=self.headers)
+        r = await self.session.get_json(self.url, headers=self.headers)
 
-        a_sectors = self.work_with_json(r_json)
+        a_sectors = self.work_with_json(r.json())
 
         for sector, tickets in a_sectors.items():
             self.register_sector(sector, tickets)

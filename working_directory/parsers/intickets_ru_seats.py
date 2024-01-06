@@ -44,18 +44,18 @@ class InticketsParser(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r_text = await self.session.get_text(self.url, headers=headers, verify_ssl=False)
+        r = await self.session.get(self.url, headers=headers, verify_ssl=False)
 
-        if 'Билетов больше нет' in r_text:
+        if 'Билетов больше нет' in r.text:
             return False
 
-        sectors_data = double_split(r_text, '"schemaSectorArr":', '}') + '}'
+        sectors_data = double_split(r.text, '"schemaSectorArr":', '}') + '}'
         sectors_data = self.decode_unicode_escape(sectors_data)
         sectors_data = json.loads(sectors_data)
 
         # data-seat="269034554|22|1|1500|11370050"
         # [0] - ticket_id, [1] - row, [2] - seat, [3] - price, [4] - sector_id
-        tickets_data = [ticket_str.split('|') for ticket_str in lrsplit(r_text, 'data-seat="', '"')]
+        tickets_data = [ticket_str.split('|') for ticket_str in lrsplit(r.text, 'data-seat="', '"')]
 
         a_sectors = []
         for ticket in tickets_data:

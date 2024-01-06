@@ -63,19 +63,19 @@ class Parser(AsyncEventParser):
             'x-requested-with': 'XMLHttpRequest'
         }
         
-        r_json = await self.session.get_json(url, headers=headers)
-        return r_json
+        r = await self.session.get(url, headers=headers)
+        return r.json()
 
     async def get_set_pres(self):
         url = 'https://www.greatcircus.ru/app/events/show.js'
-        r_text = await self.session.get_text(url, headers={})
+        r = await self.session.get(url, headers={})
 
         set_pres = {
             1: 'pre4073',
             2: 'pre4809'
         }
 
-        if 'iframeab' not in r_text:
+        if 'iframeab' not in r.text:
             pass
         else:
             # TODO Если окажется что эти переменные меняются. Парсить их из r.text

@@ -1,5 +1,5 @@
+import asyncio
 import json
-import time
 
 from bs4 import BeautifulSoup
 
@@ -164,7 +164,7 @@ class CskaHockeyParser(AsyncSeatsParser):
             get_data = r.json()
             expired_at = get_data.get('expired_at')
             if expired_at is None:
-                time.sleep(10)
+                asyncio.sleep(10)
             else:
                 break
         headers = {

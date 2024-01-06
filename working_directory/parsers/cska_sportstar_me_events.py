@@ -114,6 +114,6 @@ class CskaSportstar(AsyncEventParser):
         r = await self.session.post(self.url, json=data, headers=headers)
         return r.json()
 
-    def body(self) -> None:
+    async def body(self) -> None:
         for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

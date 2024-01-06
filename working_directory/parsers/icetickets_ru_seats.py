@@ -121,7 +121,7 @@ class Icetickets(AsyncSeatsParser):
         r = await self.session.post(url, data=data, headers=headers, verify=False)
         return BeautifulSoup(r.text, 'lxml')
 
-    def second_requests_parser(self, url):
+    async def second_requests_parser(self, url):
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -136,7 +136,7 @@ class Icetickets(AsyncSeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, verify=False)
         return BeautifulSoup(r.text, 'lxml')
 
     async def request_parser(self, url):

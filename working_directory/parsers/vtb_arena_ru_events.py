@@ -75,7 +75,7 @@ class VtbArena(AsyncEventParser):
                 a1_events.append((title, href, date_to_write))
         return a1_events
 
-    def get_events(self, url):
+    async def get_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -92,12 +92,12 @@ class VtbArena(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         soup = BeautifulSoup(r.text, 'lxml')
         return soup
 
     async def body(self):
-        soup = self.get_events(self.url)
+        soup = await self.get_events(self.url)
         a_events = self.parse_events(soup)
 
         for event in a_events:

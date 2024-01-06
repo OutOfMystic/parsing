@@ -120,7 +120,7 @@ class XKAvangarg(AsyncSeatsParser):
         r = await self.session.get(url, headers=headers, verify=False)
         return r.json()
 
-    def request_parser(self, url, data):
+    async def request_parser(self, url, data):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',

@@ -26,7 +26,7 @@ class BuletServis(AsyncEventParser):
             }
         ]
         
-    def get_headers(self):
+    def headers(self):
         return {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,imag'
                     'e/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -97,14 +97,14 @@ class BuletServis(AsyncEventParser):
         return a_events
 
     async def get_data(self, url):
-        r_text = await self.session.post_text(url, headers=self.get_headers())
-        soup = BeautifulSoup(r_text, 'lxml')
+        r = await self.session.post(url, headers=self.get_headers())
+        soup = BeautifulSoup(r.text, 'lxml')
         return soup
 
     async def get_events(self):
         url = self.url
-        r_text = await self.session.post_text(url, headers=self.get_headers())
-        soup = BeautifulSoup(r_text, 'lxml')
+        r = await self.session.post(url, headers=self.get_headers())
+        soup = BeautifulSoup(r.text, 'lxml')
 
         a_events = {}
         for data in self.needed_venues:
@@ -116,23 +116,23 @@ class BuletServis(AsyncEventParser):
         headers = self.get_headers()
 
         try:
-            r = await self.session.get_text(url, headers=headers)
+            r = await self.session.get(url, headers=headers)
         except TooManyRedirects:
             return {}
         # if response.url == 'https://biletservis.ru/':
         #     return {}
 
         needed_place_ids = [place['place_id'] for place in self.needed_venues]
-        all_data = double_split(r, 'widgetHallsIdsArr = new Array();', '\n')
+        all_data = double_split(r.text, 'widgetHallsIdsArr = new Array();', '\n')
         all_data = all_data.replace('; ', ';')
         data_cells = lrsplit(all_data, ".push('", "');")
         data_rows = more_itertools.grouper(data_cells, 7, incomplete='strict')
 
-        li_loaders = lrsplit(r, '<li onclick="$(\'#loader\').l', '});">')
+        li_loaders = lrsplit(r.text, '<li onclick="$(\'#loader\').l', '});">')
         li_list = [[double_split(li, "$('#eventdate').val('", "'"),
                    double_split(li, '?date=', "'")] for li in li_loaders]
-        cur_datesec = double_split(r, "id=eventdate value='", "'>")
-        cur_eventdate = double_split(r, "dateid value='", "'>")
+        cur_datesec = double_split(r.text, "id=eventdate value='", "'>")
+        cur_eventdate = double_split(r.text, "dateid value='", "'>")
         li_row = [cur_datesec, cur_eventdate]
         li_list.append(li_row)
 
@@ -182,4 +182,3 @@ class BuletServis(AsyncEventParser):
             kwargs = extra_data[eventdate]
             self.register_event(event[0], event[1], date=event[2],
                                 venue=event[3], scene=event[4], **kwargs)
-            self.debug(event)

@@ -131,7 +131,7 @@ class TNA(AsyncSeatsParser):
     async def get_seats(self):
         soup = await self.request_parser(url=self.url)
 
-        a_events = self.parse_seats(soup)
+        a_events = await self.parse_seats(soup)
 
         return a_events
 

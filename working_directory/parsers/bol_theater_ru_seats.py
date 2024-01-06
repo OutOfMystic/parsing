@@ -239,8 +239,8 @@ class BolTheaterParser(AsyncSeatsParser):
             'x-requested-with': 'XMLHttpRequest',
         }
         
-        r_text = await self.session.get_text(self.url, headers=self.headers)
-        soup = BeautifulSoup(r_text, 'lxml')
+        r = await self.session.get(self.url, headers=self.headers)
+        soup = BeautifulSoup(r.text, 'lxml')
 
         seats = []
         for ticket in soup.find_all('circle', class_='tickets_avail'):

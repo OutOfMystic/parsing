@@ -4,6 +4,7 @@ from time import sleep
 from bs4 import BeautifulSoup
 from telebot import TeleBot
 from telebot.apihelper import ApiTelegramException
+from parse_module.coroutines.parser import AsyncEventParser
 
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
