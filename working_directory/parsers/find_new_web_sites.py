@@ -8,6 +8,7 @@ from telebot.apihelper import ApiTelegramException
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.coroutines import AsyncEventParser
 
 
 class Check_new_websites(AsyncEventParser):
