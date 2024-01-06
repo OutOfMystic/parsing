@@ -421,8 +421,7 @@ class YandexAfishaParser(AsyncEventParser):
         r = await self.session.get(img_captha_href, stream=True)
         if r.status_code == 200:
             with open('afisha_catcha.png', 'wb') as f:
-                for chunk in r:
-                    f.write(chunk)
+                f.write(r.content)
 
 
         with Image.open('afisha_catcha.png') as img:

@@ -6,8 +6,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
-from parse_module.models.parser import EventParser
+from parse_module.manager.proxy.instances import AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -50,7 +49,7 @@ class AfishaEvents(AsyncEventParser):
             date.strftime("%Y %H:%M")
         return date_to_write
 
-    def get_x_token(self, x_ath_url, count=0):
+    async def get_x_token(self, x_ath_url, count=0):
         headers = {
             'Accept': 'text/html; charset=utf-8',
             'host': 'www.afisha.ru',
@@ -60,8 +59,7 @@ class AfishaEvents(AsyncEventParser):
             'Connection': 'keep-alive',
             'User-Agent': self.user_agent
         } 
-        response = self.session.get(x_ath_url, headers=headers, verify=False)
-
+        response = await self.session.get(x_ath_url, headers=headers, verify=False)
         soup = BeautifulSoup(response.text, 'lxml')
         re_find_js = re.compile(r'^/js/.*\.js')
         scripts = soup.find_all('script', {'src': re_find_js})
@@ -84,19 +82,20 @@ class AfishaEvents(AsyncEventParser):
             ]
         js_to_parsing = None
         for script in scripts:
-            js = self.session.get(script, headers=headers)
-            js.encoding = 'utf-8'
-            search = [i in js.text for i in find_in_js]
+            js_response = await self.session.get(script, headers=headers)
+            js_text = js_response.text
+            search = [i in js_text for i in find_in_js]
             if any(search):
-                js_to_parsing = js.text
+                js_to_parsing = js_text
                 break  
         
         if not js_to_parsing and count < 8:
             count += 1
             self.warning(f' try to find XApplication token + {count}')
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+            self.proxy = await self.controller.proxy_hub.get(self.proxy_check)
+            await self.session.close()
             self.session = AsyncProxySession(self)
-            return self.get_x_token(x_ath_url, count)
+            return await self.get_x_token(x_ath_url, count)
         
         try:
             x_auth_all_txt = double_split(js_to_parsing, 'e.InternalDesktop', '}')
@@ -111,15 +110,17 @@ class AfishaEvents(AsyncEventParser):
             XApplication = reformat.get('InternalDesktop', 'ec16316b-67e3-4a32-9f05-6a00d1dc0a8b')
         return XApplication
 
-    def get_events_from_one_page(self, json_resp):
+    async def get_events_from_one_page(self, json_resp):
         a_events = [] 
-        perfomances = json_resp.json()["Schedule"]
+        perfomances = json_resp.json()
+        perfomances = perfomances.get('Schedule')
         for category_name, category_data in perfomances.items():
             if not category_data:
                 continue
             events = category_data["Items"]
             
-            venue = json_resp.json().get("PlaceInfo").get("Name")
+            venue = json_resp.json()
+            venue = venue.get("PlaceInfo").get("Name")
             if venue in self.venue_reformat:
                 venue = self.venue_reformat[venue]
 
@@ -140,27 +141,28 @@ class AfishaEvents(AsyncEventParser):
                             url = f'https://mapi.afisha.ru/api/v21/hall/{sourcesessionID}?withSubstrate=true'
                             a_events.append((title, url, date, venue, sourcesessionID, self.X_AUTH_TOKEN ))
                 except Exception as ex:
-                    self.error(f'Cannot save this event {event} {ex}')
+                    self.warning(f'Cannot save this event {event} {ex}')
 
         return a_events
         
-    def get_pages(self, url, count=0):
-        response = self.session.get(url, headers=self.headers)
+    async def get_pages(self, url, count=0):
+        response = await self.session.get(url, headers=self.headers)
         try:
             resp = response.json()
-        except:
+        except Exception as ex:
             resp = False
-        if (not response.ok or not resp) and count < 8:
+        if (response.status_code != 200 or not resp) and count < 8:
             count += 1
             self.warning(f' cannot load {url} try +={count}')
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+            self.proxy = await self.controller.proxy_hub.get_async(self.proxy_check)
+            await self.session.close()
             self.session = AsyncProxySession(self)
-            return self.get_pages(url, count)
+            return await self.get_pages(url, count)
         
         links = set()
         # with open('TEST1.json', 'w', encoding='utf-8') as file:
         #     json.dump(response.json(), file, indent=4, ensure_ascii=False)
-        perfomances = response.json()["Schedule"] 
+        perfomances = resp.get("Schedule") 
         for category_name, category_data in perfomances.items():
             if not category_data:
                 continue
@@ -180,14 +182,15 @@ class AfishaEvents(AsyncEventParser):
         
         return links
             
-    def fill_a_events(self, links):
+    async def fill_a_events(self, links):
         for url in links:
             try:
-                response = self.session.get(url, headers=self.headers)
-                if response.ok:
-                    self.a_events.extend(self.get_events_from_one_page(response))
+                response = await self.session.get(url, headers=self.headers)
+                if response.status_code == 200:
+                    self.a_events.extend(await self.get_events_from_one_page(response))
             except Exception as ex:
                 self.warning(f'Exception {ex}')
+                raise
                 continue
 
     async def body(self):
@@ -199,12 +202,13 @@ class AfishaEvents(AsyncEventParser):
         self.a_events = []
 
         for url, venue in self.our_urls.items():
-            self.X_AUTH_TOKEN = self.get_x_token(url)
+            self.X_AUTH_TOKEN = await self.get_x_token(url)
             
-            all_pages = self.get_pages(url)
-            self.fill_a_events(all_pages)
+            all_pages = await self.get_pages(url)
+            await self.fill_a_events(all_pages)
     
         for event in self.a_events:
+            #self.info(event)
             try:
                 self.register_event(event[0], event[1], date=event[2],
                                      venue=event[3], sessionID=event[4], XApplication=event[5])
