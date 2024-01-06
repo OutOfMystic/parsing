@@ -50,7 +50,7 @@ class CskaHockeyParser(AsyncEventParser):
 
         return f'{d} {m} {y} {time}'
 
-    def skip_queue(self, id_queue):
+    async def skip_queue(self, id_queue):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -71,7 +71,7 @@ class CskaHockeyParser(AsyncEventParser):
         ]
         url = 'https://cska-hockey.queue.infomatika.ru/api/users/' + id_queue
         while True:
-            r = self.session.get(url, data=params, headers=headers)
+            r = await self.session.get(url, data=params, headers=headers)
             get_data = r.json()
             expired_at = get_data.get('expired_at')
             if expired_at is None:
@@ -96,10 +96,10 @@ class CskaHockeyParser(AsyncEventParser):
             'user-agent': self.user_agent
         }
         url = 'https://tickets.cska-hockey.ru/?queue=' + id_queue
-        r = self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, verify=False)
         return BeautifulSoup(r.text, 'lxml')
 
-    def get_events(self):
+    async def get_events(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -114,20 +114,20 @@ class CskaHockeyParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent,
         }
-        r = self.session.get(self.url, headers=headers, verify=False)
+        r = await self.session.get(self.url, headers=headers, verify=False)
 
         soup = BeautifulSoup(r.text, 'lxml')
         if 'https://cska-hockey.queue.infomatika.ru/' in r.url:
             get_id = soup.select('body script')[0].text
             get_id = double_split(get_id, '}}("', '",')
-            soup = self.skip_queue(get_id)
+            soup = await self.skip_queue(get_id)
 
         a_events = self.parse_events(soup)
 
         return a_events
 
     async def body(self):
-        a_events = self.get_events()
+        a_events = await self.get_events()
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2], venue=event[3])

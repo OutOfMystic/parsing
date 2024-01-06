@@ -34,7 +34,7 @@ class AlexandrinskyRu(AsyncEventParser):
 
         events = self._get_events_from_soup(soup)
 
-        async for event in self._parse_events_from_soup(events, all_ajax_pages):
+        async for event in await self._parse_events_from_soup(events, all_ajax_pages):
             yield event
 
     async def _parse_events_from_soup(self, events: ResultSet[Tag], all_ajax_pages: int):
@@ -100,8 +100,8 @@ class AlexandrinskyRu(AsyncEventParser):
             "PAGEN_2": next_page
         }
         url = 'https://alexandrinsky.ru/afisha-i-bilety/'
-        r_text = await self.session.get_text(url, headers=headers, data=data)
-        return BeautifulSoup(r_text, 'lxml')
+        r = await self.session.get(url, headers=headers, data=data)
+        return BeautifulSoup(r.text, 'lxml')
 
     async def _requests_to_events(self) -> BeautifulSoup:
         headers = {
@@ -124,8 +124,8 @@ class AlexandrinskyRu(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r_text = await self.session.get_text(self.url, headers=headers)
-        return BeautifulSoup(r_text, 'lxml')
+        r = await self.session.get(self.url, headers=headers)
+        return BeautifulSoup(r.text, 'lxml')
     
     async def body(self) -> None:
         async for event in self._parse_events():

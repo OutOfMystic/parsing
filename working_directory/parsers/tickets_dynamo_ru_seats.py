@@ -63,14 +63,14 @@ class DynamoParser(AsyncSeatsParser):
                     elif 19 <= number_sector < 2:
                         sector['name'] = tribune_1 + sector_name
 
-    def parse_seats(self):
-        get_parameter = self.request_json_data(url=self.url)
+    async def parse_seats(self):
+        get_parameter = await self.request_json_data(url=self.url)
 
         parameter_for_url = get_parameter.get('result').get('session').get('key')
         second_parameter_for_url = self.url[self.url.index('=')+1:]
 
         url_to_data = f'https://widget.afisha.yandex.ru/api/tickets/v1/sessions/{parameter_for_url}/hallplan/async?clientKey={second_parameter_for_url}'
-        json_data = self.last_request_json_data(url=url_to_data)
+        json_data = await self.last_request_json_data(url=url_to_data)
 
         total_sector = []
         for sector in json_data:
@@ -92,7 +92,7 @@ class DynamoParser(AsyncSeatsParser):
                     })
         return total_sector
 
-    def last_request_json_data(self, url, req=0):
+    async def last_request_json_data(self, url, req=0):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -110,21 +110,21 @@ class DynamoParser(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         if 'result' not in r.text:
             new_url = url + '&req_number=' + str(req)
-            return self.last_request_json_data(url=new_url, req=req+1)
+            return await self.last_request_json_data(url=new_url, req=req+1)
         if r.json()['status'] != 'success':
             new_url = url + '&req_number=' + str(req)
-            return self.last_request_json_data(url=new_url, req=req+1)
+            return await self.last_request_json_data(url=new_url, req=req+1)
         if 'hallplan' not in r.json()['result']:
             new_url = url + '&req_number=' + str(req)
-            return self.last_request_json_data(url=new_url, req=req+1)
+            return await self.last_request_json_data(url=new_url, req=req+1)
 
         return r.json()['result']['hallplan']['levels']
 
-    def request_json_data(self, url):
+    async def request_json_data(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -142,12 +142,12 @@ class DynamoParser(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         return r.json()
 
     async def body(self):
-        a_sectors = self.parse_seats()
+        a_sectors = await self.parse_seats()
 
         self.reformat(a_sectors)
 

@@ -66,9 +66,9 @@ class Vakhtakassa(AsyncEventParser):
             'user-agent': self.user_agent
         }
         try:
-            r = self.session.get(url, headers=headers)
+            r = await self.session.get(url, headers=headers)
         except SSLError:
-            r = self.session.get(url, headers=headers, verify=False)
+            r = await self.session.get(url, headers=headers, verify_ssl=False)
         return r
 
     async def body(self):

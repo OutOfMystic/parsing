@@ -31,8 +31,8 @@ class MdtDodin(AsyncSeatsParser):
 
         return sector_name
 
-    def _parse_seats(self) -> OutputData:
-        json_data = self._request_to_json_data()
+    async def _parse_seats(self) -> OutputData:
+        json_data = await self._request_to_json_data()
 
         output_data = self._get_output_data(json_data)
 
@@ -70,7 +70,7 @@ class MdtDodin(AsyncSeatsParser):
 
         return place_sector, place_row, place_seat, place_price
 
-    def _request_to_json_data(self) -> json:
+    async def _request_to_json_data(self) -> json:
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -87,9 +87,9 @@ class MdtDodin(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         url = 'https://mdtdodin.core.ubsystem.ru/uiapi/event/scheme?id=' + self.url.split('/')[-1]
-        r = self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, verify=False)
         return r.json()['seats']
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

@@ -43,7 +43,7 @@ class Lenkom(AsyncEventParser):
 
         return a_event
 
-    def request_parser(self):
+    async def request_parser(self):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -61,24 +61,24 @@ class Lenkom(AsyncEventParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         try:
             return r.json()
         except json.JSONDecodeError as e:
             if self.count_request == 10:
                 raise Exception(f'Возникла ошибка {e}')
             self.count_request += 1
-            return self.request_parser()
+            return await self.request_parser()
 
-    def get_events(self):
-        json_data = self.request_parser()
+    async def get_events(self):
+        json_data = await self.request_parser()
 
         a_events = self.parse_events(json_data)
 
         return a_events
 
     async def body(self):
-        a_events = self.get_events()
+        a_events = await self.get_events()
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2], event_id=event[3])

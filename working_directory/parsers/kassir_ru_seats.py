@@ -1603,7 +1603,7 @@ class KassirParser(AsyncSeatsParser):
         else: 
             return a_sectors
 
-    def new_get_sectors(self, url):
+    async def new_get_sectors(self, url):
         self.new_headers = {
             "accept": "*/*",
             'accept-encoding': 'gzip, deflate, br',
@@ -1619,7 +1619,7 @@ class KassirParser(AsyncSeatsParser):
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'user-agent': self.user_agent
         }
-        response = self.session.get(url, headers=self.new_headers)
+        response = await self.session.get(url, headers=self.new_headers)
 
         count = 10
         if (not response.ok or response.text == '[]') and count > 0:
@@ -1648,7 +1648,7 @@ class KassirParser(AsyncSeatsParser):
         for sector in avalible_sectors:
             res.setdefault(sector[1], {})
             url_load_cheme = f'https://api.kassir.ru/api/orders/sectors/scheme/{self.id}/{sector[0]}?domain={self.domain}'
-            r = self.session.get(url=url_load_cheme, headers=self.new_headers)
+            r = await self.session.get(url=url_load_cheme, headers=self.new_headers)
             s = BeautifulSoup(r.text, 'lxml-xml')
 
             polygon =  [i for i in s.find_all('polygon') if 'kh:tariff-group-id' in i.attrs]
@@ -1673,13 +1673,13 @@ class KassirParser(AsyncSeatsParser):
         else:
             url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?domain={self.domain}'
         try:
-            self.session.get(url=self.url, headers=self.headers, timeout=10)
+            await self.session.get(url=self.url, headers=self.headers, timeout=10)
         except Exception as ex:
             self.warning(f'Cannot load {self.url} {ex}')
         else:
             self.debug(f'load succes {self.url}')
 
-        a_sectors = self.new_get_sectors(url)
+        a_sectors = await self.new_get_sectors(url)
         
         if self.venue in list_to_reformat:
             a_sectors = self.new_reformat(a_sectors, self.venue)

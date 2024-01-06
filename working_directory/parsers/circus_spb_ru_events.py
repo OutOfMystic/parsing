@@ -62,39 +62,39 @@ class CircusSpbRu(AsyncEventParser):
         res = ' '.join([day, month[:3].capitalize()])
         return res
 
-    def _parse_events(self, self_url: str, title: str) -> OutputEvent:
+    async def _parse_events(self, self_url: str, title: str) -> OutputEvent:
         if 'Без границ' in title:
-            soup = self._requests_to_events(self_url)
+            soup = await self._requests_to_events(self_url)
             events = self._get_events_bez_granic(soup)
             a_events = self._parse_events_bez_granic(events, title)
 
         elif 'Балаган' in title:
-            events = self._get_events_balagan_requests()
+            events = await self._get_events_balagan_requests()
             ids = [i.find('a', attrs={'data-tp-event': re.compile(r'\d+')}) for i in events]
             ids = [i.get('data-tp-event') for i in ids]
-            a_events = self.load_events(ids)
+            a_events = await self.load_events(ids)
             #events = self._get_events_balagan_selenium(self_url)
             #a_events = self._parse_events_balagan(events)
 
         elif 'МАСКА' in title:
-            all_events = self._get_events_maska()
+            all_events = await self._get_events_maska()
             ids = [i.find('a', attrs={'data-tp-event': re.compile(r'\d+')}) for i in all_events]
             ids = [i.get('data-tp-event') for i in ids]
-            a_events = self.load_events(ids)
+            a_events = await self.load_events(ids)
 
         else:
-            soup = self._requests_to_events(self_url)
+            soup = await self._requests_to_events(self_url)
             events = self._get_events_from_soup(soup)
             a_events = self._parse_events_from_soup(events, title)
 
         return a_events
     
-    def load_events(self, ids):
+    async def load_events(self, ids):
         a_events = set()
         id_1, id_2 = ids[0], ids[-1]
         for id in (id_1, id_2):
             url = f'https://ticket-place.ru/widget/{id}/similar'
-            all_events_json = self.session.get(url, headers=self.headers)
+            all_events_json = await self.session.get(url, headers=self.headers)
         
             for i in all_events_json.json().get("events"):
                 title = i.get("name")
@@ -115,7 +115,7 @@ class CircusSpbRu(AsyncEventParser):
         return date_to_write
     
 
-    def _get_events_maska(self):
+    async def _get_events_maska(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -137,7 +137,7 @@ class CircusSpbRu(AsyncEventParser):
         all_events = []
         for i in range(1,4):
             url = f'https://ticket-place.ru/calendar-widget/31?showId=152&dateFrom=&dateTo=&page={i}&maxDays=4'
-            r = self.session.get(url, headers=headers)
+            r = await self.session.get(url, headers=headers)
             if r.ok:
                 soup = BeautifulSoup(r.text, 'lxml')
                 events_all = soup.find_all(class_=re.compile(r'calendar__item'))
@@ -224,7 +224,7 @@ class CircusSpbRu(AsyncEventParser):
         events_all = events.find_all('div', id=re.compile(r'w-node'))
         return events_all
     
-    def _get_events_balagan_requests(self):
+    async def _get_events_balagan_requests(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -246,7 +246,7 @@ class CircusSpbRu(AsyncEventParser):
         all_events = []
         for i in range(1,5):
             url = f'https://ticket-place.ru/calendar-widget/31?showId=107&dateFrom=&dateTo=&page={1}&maxDays=4'
-            r = self.session.get(url, headers=headers)
+            r = await self.session.get(url, headers=headers)
             if r.ok:
                 soup = BeautifulSoup(r.text, 'lxml')
                 events_all = soup.find_all(class_=re.compile(r'calendar__item'))
@@ -285,7 +285,7 @@ class CircusSpbRu(AsyncEventParser):
             events_all = events.find_all(class_=re.compile(r'item'))
         return events_all
 
-    def _requests_to_events(self, url: str) -> BeautifulSoup:
+    async def _requests_to_events(self, url: str) -> BeautifulSoup:
         url_strip = re.search(r'(?<=://).+(?=/)', url)[0]
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
@@ -307,14 +307,14 @@ class CircusSpbRu(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         r.encoding = 'utf-8'
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
+    async def body(self) -> None:
         for self_url, title in self.urls.items():
             try:
-                for event in self._parse_events(self_url, title):
+                for event in await self._parse_events(self_url, title):
                     self.register_event(event.title, event.href, 
                                         date=event.date, venue='Цирк на Фонтанке (СПБ)')
             except Exception as ex:

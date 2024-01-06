@@ -39,8 +39,8 @@ class CircusSpbRu(AsyncSeatsParser):
 
         return sector_name
 
-    def _parse_seats(self) -> Optional[Union[OutputData, list]]:
-        json_data = self._request_to_all_place()
+    async def _parse_seats(self) -> Optional[Union[OutputData, list]]:
+        json_data = await self._request_to_all_place()
         if json_data is None:
             return []
 
@@ -76,7 +76,7 @@ class CircusSpbRu(AsyncSeatsParser):
         all_place = json_data['data']['seats']['data']
         return all_place
 
-    def _request_to_all_place(self):
+    async def _request_to_all_place(self):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -94,11 +94,11 @@ class CircusSpbRu(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         try:
-            r = self.session.get(self.url,  headers=headers)
+            r = await self.session.get(self.url,  headers=headers)
         except TooManyRedirects:
             return None
         return r.json()
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)
