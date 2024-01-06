@@ -1,3 +1,4 @@
+import json
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.instances import ProxySession
@@ -36,7 +37,6 @@ class MosGubern(EventParser):
         formatted_date = f"{now.month}.{now.year}"
         
         req = self.session.get(f"https://api.m-g-t.ru/api/get_poster.php", params={"date": formatted_date}, headers=headers)
-        req.raise_for_status()  # Добавляем обработку ошибок
         data = req.json()
         months = data['FILTER_MONTH']
         
@@ -53,29 +53,44 @@ class MosGubern(EventParser):
             return match.group(1)
         return None
 
+    def parse_json(self, data: json) -> list[tuple]:
+        a_events = []
+        
+        events = data['CONTENT']
+        for event_id, event_data in events.items():
+            
+            performances = event_data['PERFORMANCES']
+            for performance_id, performance_data in performances.items():
+                
+                name = performance_data["NAME"]
+                variants = performance_data["POSTER"]
+                for variant_id, variant_data in variants.items():
+                    
+                    date = variant_data["DATE"]     
+                    date_object = datetime.strptime(date, "%d.%m.%Y %H:%M:%S")
+                    link = variant_data["BUTTON_LINK"]
+                    
+                    if link.startswith("javaScript:TLCallWidget"):
+                        extracted_link = self.extract_link_from_js(link)
+                        if extracted_link:
+                            link = extracted_link
+                            a_events.append((name, link, date_object))
+                    else:
+                        a_events.append((name, link, date_object))
+    
+    def get_json(self, date) -> json:
+        
+        req = self.session.get(f"https://api.m-g-t.ru/api/get_poster.php", params={"date": date}, headers=headers)
+        req.raise_for_status()  # Добавляем обработку ошибок
+        data = req.json()
+        
     def body(self):
         dates = self.get_dates_list()
         
         for date in dates:
-            req = self.session.get(f"https://api.m-g-t.ru/api/get_poster.php", params={"date": date}, headers=headers)
-            req.raise_for_status()  # Добавляем обработку ошибок
-            data = req.json()
+            data = self.get_json()
             
-            events = data['CONTENT']
-            for event_id, event_data in events.items():
-                performances = event_data['PERFORMANCES']
-                for performance_id, performance_data in performances.items():
-                    name = performance_data["NAME"]
-                    variants = performance_data["POSTER"]
-                    for variant_id, variant_data in variants.items():
-                        date = variant_data["DATE"]     
-                        date_object = datetime.strptime(date, "%d.%m.%Y %H:%M:%S")
-                        link = variant_data["BUTTON_LINK"]
-                        
-                        if link.startswith("javaScript:TLCallWidget"):
-                            extracted_link = self.extract_link_from_js(link)
-                            if extracted_link:
-                                link = extracted_link
-                                self.register_event(name, link, date_object)
-                        else:
-                            self.register_event(name, link, date_object)
+            a_events = self.parse_json(data)
+            
+            for event in a_events:
+                self.register_event(event[0], event[1], date=event[2])

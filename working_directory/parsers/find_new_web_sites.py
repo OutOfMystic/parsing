@@ -40,7 +40,7 @@ class Check_new_websites(AsyncEventParser):
             a_sites.add(url)
         return sorted(list(a_sites))
 
-    def seo_auditor(self, ip):
+    async def seo_auditor(self, ip):
         url = 'https://tools.seo-auditor.com.ru/tools/ip-site/'
         headers = {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -90,6 +90,6 @@ class Check_new_websites(AsyncEventParser):
                 json.dump(new_urls, file1, indent=4, ensure_ascii=False)
 
     async def body(self):
-        a_urls = self.seo_auditor(self.ip)
+        a_urls = await self.seo_auditor(self.ip)
         self.find_and_check(a_urls)
 

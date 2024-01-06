@@ -17,7 +17,7 @@ class OperettaParser(AsyncEventParser):
         }
         self.url = 'https://mosoperetta.ru/afisha/'
 
-    def main_page_request(self):
+    async def main_page_request(self):
         headers = {
             'Host': 'mosoperetta.ru',
             'User-Agent': self.user_agent,

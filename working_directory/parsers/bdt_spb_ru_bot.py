@@ -1,5 +1,5 @@
 import json
-import time
+import asyncio
 import itertools
 from datetime import datetime
 from typing import NamedTuple, Optional, Union
@@ -135,7 +135,7 @@ class BdtSpbBot(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_free_tickets(self, soup: BeautifulSoup, event_date: str) -> list[TicketData]:
+    async def _parse_free_tickets(self, soup: BeautifulSoup, event_date: str) -> list[TicketData]:
         self.csrf = soup.find('meta', attrs={'name': 'csrf-token'}).get('content')
         data_to_url = soup.select('body script')[0].text
         data_to_url = double_split(data_to_url, 'webPageId: ', ',')
@@ -144,7 +144,7 @@ class BdtSpbBot(AsyncEventParser):
             f'https://spb.ticketland.ru/hallview/map/{data_to_url}/'
             f'?json=1&all=1&isSpecialSale=0&tl-csrf={self.csrf}'
         )
-        json_data = self._request_to_place(url)
+        json_data = await self._request_to_place(url)
         return self._get_free_tickets(json_data, event_date)
 
     def _get_free_tickets(self, json_data: json, event_data: str) -> list[TicketData]:
@@ -198,7 +198,7 @@ class BdtSpbBot(AsyncEventParser):
                 return False
         return True
 
-    def _request_to_place(self, url: str) -> json:
+    async def _request_to_place(self, url: str) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -219,18 +219,18 @@ class BdtSpbBot(AsyncEventParser):
         response = await self.session.get(url, headers=headers)
         return response.json()
 
-    def _find_main_event(self) -> None:
+    async def _find_main_event(self) -> None:
         while True:
-            self._get_href_to_main_event()
+            await self._get_href_to_main_event()
             if len(self.urls) != 0:
                 break
-            time.sleep(15)
+            asyncio.sleep(15)
 
-    def _get_href_to_main_event(self) -> None:
+    async def _get_href_to_main_event(self) -> None:
         urls = []
 
         url = 'https://bdt.spb.ru/afisha'
-        soup = self._requests_to_events(url)
+        soup = await self._requests_to_events(url)
         all_month = soup.select('ul.dirmenu li a[href^="/afisha/?month="]')
         for next_month_href in range(len(all_month) + 1):
             all_event_date = soup.select(
@@ -268,10 +268,10 @@ class BdtSpbBot(AsyncEventParser):
 
             if next_month_href < len(all_month):
                 url = f'https://bdt.spb.ru{all_month[next_month_href].get("href")}'
-                soup = self._requests_to_events(url)
+                soup = await self._requests_to_events(url)
         self.urls = urls
 
-    def _requests_to_events(self, url):
+    async def _requests_to_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -292,7 +292,7 @@ class BdtSpbBot(AsyncEventParser):
         response = await self.session.get(url, headers=headers)
         return BeautifulSoup(response.text, 'lxml')
 
-    def _check_self_url(self, url) -> BeautifulSoup:
+    async def _check_self_url(self, url) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -318,8 +318,8 @@ class BdtSpbBot(AsyncEventParser):
             return BeautifulSoup(response.text, 'lxml')
         else:
             self.error(f'Ссылка на мероприятие для откупки билетов вернула код ответа {response.status_code}')
-            self._find_main_event()
-            return self._check_self_url(url)
+            await self._find_main_event()
+            return await self._check_self_url(url)
 
     def _requests_to_set_ticket_in_basket(self, session: ProxySession, ticket: TicketData, count_tickets_in_basket: int) -> bool:
         headers = {
@@ -570,18 +570,18 @@ class BdtSpbBot(AsyncEventParser):
             if len(free_tickets) <= this_index:
                 break
 
-    def threading_body(self, url: str, event_date: str) -> None:
-        soup = self._check_self_url(url)
-        free_tickets = self._parse_free_tickets(soup, event_date)
+    async def threading_body(self, url: str, event_date: str) -> None:
+        soup = await self._check_self_url(url)
+        free_tickets = await self._parse_free_tickets(soup, event_date)
         self._set_tickets_in_basket(free_tickets, event_date)
 
     async def body(self):
         self.threading_try(self._delete_tickets_in_skip_ticket_dict, raise_exc=False, tries=3)
         while True:
-            self._find_main_event()
+            await self._find_main_event()
             for url, event_date in self.urls:
-                self.threading_try(self.threading_body, args=(url, event_date), raise_exc=False, tries=1)
-            time.sleep(60)
+                self.threading_try(await self.threading_body, args=(url, event_date), raise_exc=False, tries=1)
+            asyncio.sleep(60)
 
     def _output_data(self, ticket_in_basket: list[TicketData], json_data_order: json, event_date: str) -> None:
         datetime_now = datetime.now()
@@ -618,4 +618,4 @@ class BdtSpbBot(AsyncEventParser):
                             ticket_to_del.append(ticket_data)
                     for ticket_data in ticket_to_del:
                         del self.tickets_already_sent[ticket_data_in_event_date][ticket_data]
-            time.sleep(60)
+            asyncio.sleep(60)

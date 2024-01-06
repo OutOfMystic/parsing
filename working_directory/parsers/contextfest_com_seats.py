@@ -67,8 +67,8 @@ class Contextfest(AsyncSeatsParser):
 
         return sector_name, row
 
-    def _parse_seats(self) -> OutputData:
-        json_data = self._request_to_all_place()
+    async def _parse_seats(self) -> OutputData:
+        json_data = await self._request_to_all_place()
 
         places = self._get_place_from_json_data(json_data)
 
@@ -117,7 +117,7 @@ class Contextfest(AsyncSeatsParser):
         places = json_data['tickets']
         return places
 
-    def _request_to_all_place(self) -> json:
+    async def _request_to_all_place(self) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -144,5 +144,5 @@ class Contextfest(AsyncSeatsParser):
         return r.json()
 
     async def body(self):
-        for sector in self._parse_seats():
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

@@ -25,8 +25,8 @@ class TicketsFcdmRu(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        json_data = self._requests_to_events()
+    async def _parse_events(self) -> OutputEvent:
+        json_data = await self._requests_to_events()
 
         return self._parse_events_from_soup(json_data)
 
@@ -48,7 +48,7 @@ class TicketsFcdmRu(AsyncEventParser):
 
         return OutputEvent(title=title, href=href, date=normal_date)
 
-    def _requests_to_events(self) -> json:
+    async def _requests_to_events(self) -> json:
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -68,5 +68,5 @@ class TicketsFcdmRu(AsyncEventParser):
         return r.json()
 
     async def body(self):
-        for event in self._parse_events():
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

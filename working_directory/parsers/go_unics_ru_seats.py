@@ -34,23 +34,23 @@ class MelomanRu(AsyncSeatsParser):
 
         return sector_name
 
-    def _parse_seats(self) -> OutputData:
+    async def _parse_seats(self) -> OutputData:
         soup = self._request_to_soup()
 
         free_sectors = self._get_free_sectors_from_soup(soup)
 
-        output_data = self._get_output_data(free_sectors)
+        output_data = await self._get_output_data(free_sectors)
 
         return output_data
 
-    def _get_output_data(self, free_sectors: ResultSet[Tag]) -> OutputData:
+    async def _get_output_data(self, free_sectors: ResultSet[Tag]) -> OutputData:
         for sector in free_sectors:
             place_sector = sector.find('text').text
             if place_sector == 'СЦЕНА':
                 continue
 
             place_sector_id = sector.get('sector_id')
-            json_data_about_places = self._request_to_json_data(place_sector_id)
+            json_data_about_places = await self._request_to_json_data(place_sector_id)
 
             price_zones, places = self._get_data_from_json_data(json_data_about_places)
             tickets = self._get_place_data(price_zones, places)
@@ -78,7 +78,7 @@ class MelomanRu(AsyncSeatsParser):
         free_sectors = svg.select('g:not([free="0"]):not([id])')
         return free_sectors
 
-    def _request_to_json_data(self, sector_id: str) -> json:
+    async def _request_to_json_data(self, sector_id: str) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -131,5 +131,5 @@ class MelomanRu(AsyncSeatsParser):
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
-        for sector in self._parse_seats():
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

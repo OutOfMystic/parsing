@@ -40,8 +40,8 @@ class MelomanRu(AsyncSeatsParser):
 
         return sector_name
 
-    def _parse_seats(self) -> OutputData:
-        text_data = self._request_to_soup()
+    async def _parse_seats(self) -> OutputData:
+        text_data = await self._request_to_soup()
 
         free_sectors = self._get_free_sectors_from_soup(text_data)
 
@@ -123,7 +123,7 @@ class MelomanRu(AsyncSeatsParser):
                 yield sector
                 break
 
-    def _request_to_soup(self) -> str:
+    async def _request_to_soup(self) -> str:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -142,9 +142,9 @@ class MelomanRu(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return r.text
 
     async def body(self):
-        for sector in self._parse_seats():
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)
