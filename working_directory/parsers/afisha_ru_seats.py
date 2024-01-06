@@ -45,18 +45,19 @@ class AfishaRuSeats(AsyncSeatsParser):
         response = await self.session.get(url_seats, headers=headers)
 
         try:
-            resp = response.json()
+            resp = await response.json()
         except:
             resp = False
+            self.warning(resp)
         if not resp:
-            self.change_proxy()
+            await self.change_proxy()
             raise RuntimeError(f' cannot load {self.url}')
 
-        return response
+        return resp
 
     def get_price(self, scheme):
         dict_price = {}
-        for i in scheme.json().get('levels'):
+        for i in scheme.get('levels'):
             if i.get('seatTypes'):
                 for j in i.get('seatTypes'):
                     dict_price[j.get('id')] = int(j.get('price'))
@@ -76,10 +77,10 @@ class AfishaRuSeats(AsyncSeatsParser):
 
     def get_sectors(self, scheme, dict_price):
         dict_seats = {}
-        for lvl in scheme.json().get('levels'):
+        for lvl in scheme.get('levels'):
             sector = lvl.get('name')
-            id_scene = scheme.json().get("creationId")
-            venue_name = scheme.json().get("name")
+            id_scene = scheme.get("creationId")
+            venue_name = scheme.get("name")
             if id_scene in self.reformat_dict:
                 sector = self.reformat_dict.get(id_scene).get(lvl.get('name'))
                 if not sector:
@@ -105,10 +106,11 @@ class AfishaRuSeats(AsyncSeatsParser):
     async def body(self):
         scheme_json = await self.load_scheme()
         if not scheme_json:
-            self.warning(f'this event has empty json_file!{self.url} ')
+            self.warning(f'this event has an empty json_file!{self.url} ')
             return False
         dict_price = self.get_price(scheme_json)
         a_sectors = self.get_sectors(scheme_json, dict_price)
 
         for sector, tickets in a_sectors.items():
+            self.info(sector, '-> tickets count:', len(tickets))
             self.register_sector(sector, tickets)
