@@ -30,7 +30,7 @@ class HcTractorEventsNew(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def get_json(self):
+    async def get_json(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,'
                       'image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -77,7 +77,7 @@ class HcTractorEventsNew(AsyncEventParser):
                 )
 
     async def body(self):
-        events = chain(*map(self.parse_event, self.get_events_arr(self.get_json())))
+        events = chain(*map(self.parse_event, self.get_events_arr(await self.get_json())))
 
         for event in events:
             self.register_event(

@@ -26,27 +26,27 @@ class WwwMosconsvRu(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        soup = self._requests_to_events(self.url)
+    async def _parse_events(self) -> OutputEvent:
+        soup = await self._requests_to_events(self.url)
 
         count_page = self._get_count_pages_with_events(soup)
 
         events = self._get_events_from_soup(soup)
 
-        return self._parse_events_from_soup(events, count_page)
+        return await self._parse_events_from_soup(events, count_page)
 
-    def _parse_events_from_soup(self, events: ResultSet[Tag], count_page: int) -> OutputEvent:
+    async def _parse_events_from_soup(self, events: ResultSet[Tag], count_page: int) -> OutputEvent:
         for page_number in range(2, count_page+1):
             for event in events:
-                output_data = self._parse_data_from_event(event)
+                output_data = await self._parse_data_from_event(event)
                 if output_data is not None:
                     yield output_data
 
             url = f'http://www.mosconsv.ru/ru/concerts?start={page_number}'
-            soup = self._requests_to_events(url)
+            soup = await self._requests_to_events(url)
             events = self._get_events_from_soup(soup)
 
-    def _parse_data_from_event(self, event: Tag) -> Optional[Union[OutputEvent, None]]:
+    async def _parse_data_from_event(self, event: Tag) -> Optional[Union[OutputEvent, None]]:
         title = event.find('h6').text.strip()
 
         day = event.find('div', class_='dom').text.strip()
@@ -62,7 +62,7 @@ class WwwMosconsvRu(AsyncEventParser):
         href = href.get('href')
         href = f'http://www.mosconsv.ru{href}'
 
-        soup_to_new_href = self._requests_href_to_buy_tickets(href)
+        soup_to_new_href = await self._requests_href_to_buy_tickets(href)
         new_href = self._get_href_to_buy_tickets(soup_to_new_href)
         if new_href is None:
             return None
@@ -88,7 +88,7 @@ class WwwMosconsvRu(AsyncEventParser):
         href_to_buy_tickets = href_to_buy_tickets[0].get('href')
         return href_to_buy_tickets
 
-    def _requests_href_to_buy_tickets(self, url: str) -> BeautifulSoup:
+    async def _requests_href_to_buy_tickets(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -105,7 +105,7 @@ class WwwMosconsvRu(AsyncEventParser):
         r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def _requests_to_events(self, url: str) -> BeautifulSoup:
+    async def _requests_to_events(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -124,5 +124,5 @@ class WwwMosconsvRu(AsyncEventParser):
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
-        for event in self._parse_events():
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date, scene=event.scene)

@@ -25,8 +25,8 @@ class FcUralRu(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        soup = self._requests_to_events(self.url)
+    async def _parse_events(self) -> OutputEvent:
+        soup = await self._requests_to_events(self.url)
 
         events = self._get_events_from_soup(soup)
 
@@ -77,7 +77,7 @@ class FcUralRu(AsyncEventParser):
         events = soup.select('div.game-screen div.container, div.season-games div.games__item_row.future')
         return events
 
-    def _requests_to_events(self, url: str) -> BeautifulSoup:
+    async def _requests_to_events(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -99,5 +99,5 @@ class FcUralRu(AsyncEventParser):
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
-        for event in self._parse_events():
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

@@ -15,7 +15,7 @@ class XKMetalurg(AsyncSeatsParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def parse_seats(self, json_data):
+    async def parse_seats(self, json_data):
         total_sector = []
 
         all_sectors = json_data.get('availSectors')
@@ -37,7 +37,7 @@ class XKMetalurg(AsyncSeatsParser):
                 price_list[price_id] = price_count
 
             url = f'https://tickets.metallurg.ru/webapi/seats/{first_param_for_request}/{param_for_request}/available/list'
-            json_data_for_this_sector = self.request_for_seats_in_sector(url)
+            json_data_for_this_sector = await self.request_for_seats_in_sector(url)
 
             total_seats_row_prices = {}
 
@@ -62,7 +62,7 @@ class XKMetalurg(AsyncSeatsParser):
 
         return total_sector
 
-    def request_for_seats_in_sector(self, url):
+    async def request_for_seats_in_sector(self, url):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -103,7 +103,7 @@ class XKMetalurg(AsyncSeatsParser):
         r = self.session.get(url, headers=headers)
         return r.json()
 
-    def request_parser(self, url, data):
+    async def request_parser(self, url, data):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -125,16 +125,16 @@ class XKMetalurg(AsyncSeatsParser):
         r = await self.session.post(url, headers=headers, json=data, verify=False)
         return r.json()
 
-    def get_seats(self):
+    async def get_seats(self):
         data = {"searchFilter": []}
-        json_data = self.request_parser(url=self.url, data=data)
+        json_data = await self.request_parser(url=self.url, data=data)
 
-        a_events = self.parse_seats(json_data)
+        a_events = await self.parse_seats(json_data)
 
         return a_events
 
     async def body(self):
-        all_sectors = self.get_seats()
+        all_sectors = await self.get_seats()
 
         for sector in all_sectors:
             self.register_sector(sector['name'], sector['tickets'])

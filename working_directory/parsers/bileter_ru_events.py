@@ -101,9 +101,8 @@ class BileterEvent(AsyncEventParser):
         
     async def body(self):
         events_list = []
-        page = 1
         
-        while True:
+        for page in range(100):
             
             for url in self.urls:
                 url += f'&page={page}'

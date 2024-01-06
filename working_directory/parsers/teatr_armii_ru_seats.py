@@ -21,7 +21,7 @@ class ArmyParser(AsyncSeatsParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
     
-    def get_xsrf_token(self, count=0):
+    async def get_xsrf_token(self, count=0):
         url = 'https://www.afisha.ru/wl/29/api?site=teatrarmii.ru'
         headers = {'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                     'Accept-Encoding':'gzip, deflate, br',
@@ -30,7 +30,7 @@ class ArmyParser(AsyncSeatsParser):
                     'Connection':'keep-alive',
                     'User-Agent': self.user_agent}
         
-        get_xsrf_token = self.session.get(url=url, headers=headers)
+        get_xsrf_token = await self.session.get(url=url, headers=headers)
         try:
             # soup = BeautifulSoup(get_xsrf_token.text, 'lxml')
             # XSRF_TOKEN = soup.find(attrs={'name':'csrf-token'}).get('content')
@@ -47,7 +47,7 @@ class ArmyParser(AsyncSeatsParser):
             
         return XSRF_TOKEN
     
-    def get_list_with_all_seats(self, xsrf_token, count=0):
+    async def get_list_with_all_seats(self, xsrf_token, count=0):
         headers = {'Accept':'application/json, text/plain, */*',
                     'Accept-Encoding':'gzip, deflate, br',
                     'Accept-Language':'en-US,en;q=0.9,ru;q=0.8',
@@ -71,7 +71,7 @@ class ArmyParser(AsyncSeatsParser):
                 self.session = AsyncProxySession(self) 
                 self.warning(f' cannot load {url} try +={count}')
                 count += 1
-                return self.get_list_with_all_seats(xsrf_token, count)
+                return await self.get_list_with_all_seats(xsrf_token, count)
             else:
                 return None
     
@@ -106,8 +106,8 @@ class ArmyParser(AsyncSeatsParser):
         return tickets_data
 
     async def body(self):
-        XSRF_TOKEN = self.get_xsrf_token()
-        list_with_all_seats, scene = self.get_list_with_all_seats(XSRF_TOKEN)
+        XSRF_TOKEN = await self.get_xsrf_token()
+        list_with_all_seats, scene = await self.get_list_with_all_seats(XSRF_TOKEN)
         active_seats = self.sorted_list_active_place_only(list_with_all_seats, scene)
         for sector_name, tickets in active_seats.items():
             self.register_sector(sector_name, tickets)

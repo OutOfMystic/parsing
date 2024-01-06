@@ -1,3 +1,4 @@
+import asyncio
 import json
 import datetime
 import time
@@ -110,7 +111,7 @@ class YandexAfishaParser(AsyncEventParser):
 
         return data_dict
 
-    def deception_request(self):
+    async def deception_request(self):
         url = 'https://vk.com/'
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -126,9 +127,9 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
-    def main_page_request(self):
+    async def main_page_request(self):
         url = 'https://afisha.yandex.ru/'
 
         headers = {
@@ -148,10 +149,10 @@ class YandexAfishaParser(AsyncEventParser):
             'user-agent': self.user_agent
         }
 
-        r = self.session.get(url, headers=headers)
-        r = self.check_captcha(r, url, headers)
+        r = await self.session.get(url, headers=headers)
+        r = await self.check_captcha(r, url, headers)
 
-    def get_places(self):
+    async def get_places(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -170,8 +171,8 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
-        r = self.check_captcha(r, self.url, headers)
+        r = await self.session.get(self.url, headers=headers)
+        r = await self.check_captcha(r, self.url, headers)
 
         window_data = self.get_dict_from_body(r.text, "window['__initialState'] = ")
         api_data = self.get_dict_from_body(r.text, "window['__apiParams'] = ")
@@ -190,7 +191,7 @@ class YandexAfishaParser(AsyncEventParser):
 
         return places
 
-    def place_request(self, place_url):
+    async def place_request(self, place_url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -207,8 +208,8 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(place_url, headers=headers)
-        r = self.check_captcha(r, place_url, headers)
+        r = await self.session.get(place_url, headers=headers)
+        r = await self.check_captcha(r, place_url, headers)
 
         window_data = self.get_dict_from_body(r.text, "window['__initialState'] = ")
         api_data = self.get_dict_from_body(r.text, "window['__apiParams'] = ")
@@ -260,7 +261,7 @@ class YandexAfishaParser(AsyncEventParser):
 
         return client_key
 
-    def schedule_events_request(self, request_id, date, period):
+    async def schedule_events_request(self, request_id, date, period):
         # https://afisha.yandex.ru/api/places/561f5a0137753641a354609b/schedule_other?date=2023-01-02&period=30&city=moscow&_=1670503199058
         # БЕЗ ПОСЛЕДНЕГО ПАРАМЕТРА РАБОТАЕТ
         # Это какой-то непонятный счетчик запросов. Увеличивается на единицу после каждого запроса
@@ -284,8 +285,8 @@ class YandexAfishaParser(AsyncEventParser):
             'X-Retpath-Y': self.place['url'],
             'user-agent': self.user_agent,
         }
-        r = self.session.get(url, headers=headers)
-        r = self.check_captcha(r, url, headers)
+        r = await self.session.get(url, headers=headers)
+        r = await self.check_captcha(r, url, headers)
 
         if 'schedule' not in r.text or 'items' not in r.text:
             raise RuntimeError(f'[req_err] schedule_events_request doesnt contain needed parameters: {r.text[:400]}')
@@ -336,19 +337,19 @@ class YandexAfishaParser(AsyncEventParser):
 
         return a_events
 
-    def check_captcha(self, r, old_url, old_headers):
+    async def check_captcha(self, r, old_url, old_headers):
         if '<div class="CheckboxCaptcha" ' not in r.text:
             return r
-        return self.handle_smart_captcha(r.url, old_url, old_headers)
+        return await self.handle_smart_captcha(r.url, old_url, old_headers)
 
-    def handle_smart_captcha(self, url, old_url, old_headers):
+    async def handle_smart_captcha(self, url, old_url, old_headers):
         while True:
-            r = self.selenium_smart_captha(url)
+            r = await self.selenium_smart_captha(url)
             if not ('captcha' in r.url and len(r.url) > 200):
                 break
         return r
 
-    def selenium_smart_captha(self, url: str):
+    async def selenium_smart_captha(self, url: str):
         chrome_options = Options()
         # chrome_options.add_argument("--headless")
         # chrome_options.add_argument('--headless=new')
@@ -356,10 +357,10 @@ class YandexAfishaParser(AsyncEventParser):
 
         try:
             driver.get(url=url)
-            time.sleep(1)
-            r = self.solve_smart_captcha_checkbox(driver)
+            asyncio.sleep(1)
+            r = await self.solve_smart_captcha_checkbox(driver)
             driver.get(url=r.url)
-            r = self.solve_smart_captcha_image(driver)
+            r = await self.solve_smart_captcha_image(driver)
         except TimeoutException as e:
             raise ProxyError(e)
         except Exception as e:
@@ -368,7 +369,7 @@ class YandexAfishaParser(AsyncEventParser):
             driver.quit()
         return r
 
-    def solve_smart_captcha_checkbox(self, driver):
+    async def solve_smart_captcha_checkbox(self, driver):
         body = WebDriverWait(driver, 6).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "body"))
         ).get_attribute('innerHTML')
@@ -406,7 +407,7 @@ class YandexAfishaParser(AsyncEventParser):
         r = await self.session.post(url, timeout=10, headers=headers, data=data)
         return r
 
-    def solve_smart_captcha_image(self, driver):
+    async def solve_smart_captcha_image(self, driver):
         img_captha = WebDriverWait(driver, 4).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.AdvancedCaptcha-View img"))
         )
@@ -417,7 +418,7 @@ class YandexAfishaParser(AsyncEventParser):
 
         textinstructions = driver.find_element(By.CSS_SELECTOR, value='span.Text').text
 
-        r = self.session.get(img_captha_href, stream=True)
+        r = await self.session.get(img_captha_href, stream=True)
         if r.status_code == 200:
             with open('afisha_catcha.png', 'wb') as f:
                 for chunk in r:
@@ -501,7 +502,7 @@ class YandexAfishaParser(AsyncEventParser):
         
         return r
 
-    def _get_total_events(self, url: str) -> tuple[int, str, str]:
+    async def _get_total_events(self, url: str) -> tuple[int, str, str]:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -521,15 +522,15 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
-        r = self.check_captcha(r, url, headers)
+        r = await self.session.get(url, headers=headers)
+        r = await self.check_captcha(r, url, headers)
 
         client_key = self.get_client_key(r.text)
         request_id = double_split(r.text, '"request-id":"', '"')
         total = int(double_split(r.text, '"total":', '}'))
         return total, request_id, client_key
 
-    def _get_card_with_event(self, total_events: int, request_id: str, client_key: str, url: str) -> list:
+    async def _get_card_with_event(self, total_events: int, request_id: str, client_key: str, url: str) -> list:
         headers = {
             'accept': 'application/json, text/javascript, */*; q=0.01',
             'accept-encoding': 'gzip, deflate, br',
@@ -554,8 +555,8 @@ class YandexAfishaParser(AsyncEventParser):
         final_event = []
         while total_events != offset:
             url = f'https://afisha.yandex.ru/api/events/selection/standup?limit={limit}&offset={offset}&hasMixed=0&city=moscow'
-            r = self.session.get(url, headers=headers)
-            r = self.check_captcha(r, url, headers)
+            r = await self.session.get(url, headers=headers)
+            r = await self.check_captcha(r, url, headers)
 
             card_event_from_request = r.json()['data']
             for card in card_event_from_request:
@@ -564,7 +565,7 @@ class YandexAfishaParser(AsyncEventParser):
                 href_to_all_date = card['url']
                 href_to_all_date = 'https://afisha.yandex.ru' + href_to_all_date
                 try:
-                    dates_and_venues_and_hrefs = self._get_all_date_and_venue(href_to_all_date, client_key)
+                    dates_and_venues_and_hrefs = await self._get_all_date_and_venue(href_to_all_date, client_key)
                 except AttributeError:
                     continue
                 for data in dates_and_venues_and_hrefs:
@@ -594,7 +595,7 @@ class YandexAfishaParser(AsyncEventParser):
         event_params = {'client_key': client_key, 'session_id': session_id}
         return normal_date, venue, href, event_params
 
-    def _get_event_data_from_page_with_many_month(
+    async def _get_event_data_from_page_with_many_month(
             self, event: Tag, event_id: str, request_id: str, client_key: str, href_to_all_date: str
     ) -> list[tuple[str, str, str, dict[str, str]]]:
         all_event_data = []
@@ -624,8 +625,8 @@ class YandexAfishaParser(AsyncEventParser):
                 'user-agent': self.user_agent
             }
             url = f'https://afisha.yandex.ru/api/events/{event_id}/schedule_other?date={date}&period={period}&city=moscow'
-            r = self.session.get(url, headers=headers)
-            r = self.check_captcha(r, url, headers)
+            r = await self.session.get(url, headers=headers)
+            r = await self.check_captcha(r, url, headers)
 
             json_data = r.json()
             items = json_data['items']
@@ -649,7 +650,7 @@ class YandexAfishaParser(AsyncEventParser):
                     all_event_data.append((normal_date, venue, href, event_params))
         return all_event_data
 
-    def _get_all_date_and_venue(self, href_to_all_date: str, client_key: str) -> list[tuple]:
+    async def _get_all_date_and_venue(self, href_to_all_date: str, client_key: str) -> list[tuple]:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -669,8 +670,8 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(href_to_all_date, headers=headers)
-        r = self.check_captcha(r, href_to_all_date, headers)
+        r = await self.session.get(href_to_all_date, headers=headers)
+        r = await self.check_captcha(r, href_to_all_date, headers)
 
         dates_and_venues_and_hrefs = []
         soup = BeautifulSoup(r.text, 'lxml')
@@ -685,7 +686,7 @@ class YandexAfishaParser(AsyncEventParser):
         if len(all_events_second) > 0:
             event_id = double_split(r.text, '"event_id":"', '"')
             request_id = double_split(r.text, '"request-id":"', '"')
-            data = self._get_event_data_from_page_with_many_month(
+            data = await self._get_event_data_from_page_with_many_month(
                 all_events_second[0], event_id, request_id, client_key, href_to_all_date
             )
             dates_and_venues_and_hrefs.extend(data)
@@ -707,7 +708,7 @@ class YandexAfishaParser(AsyncEventParser):
 
         return dates_and_venues_and_hrefs
 
-    def _get_url_events_from_special_url__with_one_person(self, url: str) -> list[str]:
+    async def _get_url_events_from_special_url__with_one_person(self, url: str) -> list[str]:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -727,8 +728,8 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
-        r = self.check_captcha(r, url, headers)
+        r = await self.session.get(url, headers=headers)
+        r = await self.check_captcha(r, url, headers)
 
         soup = BeautifulSoup(r.text, 'lxml')
         all_events_url = []
@@ -742,7 +743,7 @@ class YandexAfishaParser(AsyncEventParser):
             all_events_url.append(href)
         return all_events_url
 
-    def _get_events_from_special_url__with_one_person(self, all_events_url: list[str]) -> list[tuple]:
+    async def _get_events_from_special_url__with_one_person(self, all_events_url: list[str]) -> list[tuple]:
         output_data = []
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
@@ -761,8 +762,8 @@ class YandexAfishaParser(AsyncEventParser):
             'user-agent': self.user_agent
         }
         for url in all_events_url:
-            r = self.session.get(url, headers=headers)
-            r = self.check_captcha(r, url, headers)
+            r = await self.session.get(url, headers=headers)
+            r = await self.check_captcha(r, url, headers)
 
             requests_id = double_split(r.text, '"X-Request-Id":"', '"')
             csrf_token = double_split(r.text, '"X-CSRF-Token":"', '"')
@@ -798,8 +799,8 @@ class YandexAfishaParser(AsyncEventParser):
             while json_data is None and count_requests != 50:
                 url = f'https://widget.afisha.yandex.ru/api/tickets/v1/events/{event_id}' \
                       f'?clientKey={client_key}&region_id={reg_id}&req_number={count_requests}'
-                r = self.session.get(url, headers=headers)
-                r = self.check_captcha(r, url, headers)
+                r = await self.session.get(url, headers=headers)
+                r = await self.check_captcha(r, url, headers)
                 json_data = r.json().get('result')
                 count_requests += 1
 
@@ -831,8 +832,8 @@ class YandexAfishaParser(AsyncEventParser):
                 url = f'https://widget.afisha.yandex.ru/api/tickets/v1/events/' \
                       f'{event_id}/venues/sessions?clientKey={client_key}&offset=0&limit=20' \
                       f'&dateFrom={data_sessions[0]}&dateTo={data_sessions[-1]}&regionId={reg_id}&req_number={count_requests}'
-                r = self.session.get(url, headers=headers)
-                r = self.check_captcha(r, url, headers)
+                r = await self.session.get(url, headers=headers)
+                r = await self.check_captcha(r, url, headers)
                 json_data = r.json().get('result', {}).get('venues', {}).get('items')
                 count_requests += 1
                 if count_requests == 25:
@@ -859,17 +860,17 @@ class YandexAfishaParser(AsyncEventParser):
         self.before_body()
 
         for url, venue in self.special_url_with_one_person.items():
-            all_events_url = self._get_url_events_from_special_url__with_one_person(url)
-            for event in self._get_events_from_special_url__with_one_person(all_events_url):
+            all_events_url = await self._get_url_events_from_special_url__with_one_person(url)
+            for event in await self._get_events_from_special_url__with_one_person(all_events_url):
                 event_params = str(event[4]).replace("'", "\"")
                 event_name = event[0].replace("'", '"')
                 self.register_event(event_name, event[1], date=event[2], scene=event[3],
                                     event_params=event_params, venue=venue)
 
-        # places = self.get_places()
+        # places = await self.get_places()
         for url in self.our_urls:
             self.debug(url, 'yandex Events')
-            client_key, request_id, dates = self.place_request(url)
+            client_key, request_id, dates = await self.place_request(url)
             venue = self.place['title']
             if url == 'https://afisha.yandex.ru/kazan/circus_show/places/tsirk-kazan':
                 venue = 'Казанский цирк'
@@ -884,7 +885,7 @@ class YandexAfishaParser(AsyncEventParser):
 
             # date - 2023-01-02; period - 30
             for date, period in dates.items():
-                date_items = self.schedule_events_request(request_id, date, period)
+                date_items = await self.schedule_events_request(request_id, date, period)
                 a_events = self.get_place_events(date_items, client_key)
                 for event in a_events:
                     if 'VK Stadiaum' in venue:
@@ -896,8 +897,8 @@ class YandexAfishaParser(AsyncEventParser):
                                         event_params=event_params, venue=venue)
 
         for url in self.special_url:
-            total_events, request_id, client_key = self._get_total_events(url)
-            final_event = self._get_card_with_event(total_events, request_id, client_key, url)
+            total_events, request_id, client_key = await self._get_total_events(url)
+            final_event = await self._get_card_with_event(total_events, request_id, client_key, url)
             for event in final_event:
                 event_params = str(event[4]).replace("'", "\"")
                 event_name = event[0].replace("'", '"')

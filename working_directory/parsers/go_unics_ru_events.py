@@ -27,8 +27,8 @@ class GoUnicsRu(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_events(self):
-        soup = self._requests_to_events()
+    async def _parse_events(self):
+        soup = await self._requests_to_events()
 
         events = self._get_events_from_soup(soup)
 
@@ -65,7 +65,7 @@ class GoUnicsRu(AsyncEventParser):
         events = soup.select('div.events__item')
         return events
 
-    def _requests_to_events(self) -> BeautifulSoup:
+    async def _requests_to_events(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -87,5 +87,5 @@ class GoUnicsRu(AsyncEventParser):
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
-        for event in self._parse_events():
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

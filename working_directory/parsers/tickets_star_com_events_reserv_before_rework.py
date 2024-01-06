@@ -43,8 +43,8 @@ class Parser(AsyncEventParser):
         p_id = fields['data'].split('=')[1]
         return p_id
 
-    def get_links_events(self):
-        response = self.session.get(self.url, headers={'user-agent': self.user_agent})
+    async def get_links_events(self):
+        response = await self.session.get(self.url, headers={'user-agent': self.user_agent})
         soup = BeautifulSoup(response.text, 'lxml')
         afishes = [afisha.get('href') for afisha in soup.find_all('a', class_='btn')]
         venues = [venue.text for venue in soup.find_all('h2')]
@@ -52,7 +52,7 @@ class Parser(AsyncEventParser):
         url = 'https://www.tickets-star.com'
 
         for circus_url in circus_urls:
-            resp_bt = self.session.get(url + circus_url)
+            resp_bt = await self.session.get(url + circus_url)
             soup = BeautifulSoup(resp_bt.text, 'lxml')
             name = soup.find('h1').get_text()
             edate = self.get_edate(soup)
@@ -67,7 +67,7 @@ class Parser(AsyncEventParser):
             links.append(link)
 
         for afisha, venue in zip(afishes, venues):
-            response_a = self.session.get(url + afisha)
+            response_a = await self.session.get(url + afisha)
             soup_a = BeautifulSoup(response_a.text, 'lxml')
             bt_area = soup_a.find_all('div', class_='bt_area')
             if not bt_area:
@@ -78,7 +78,7 @@ class Parser(AsyncEventParser):
             payload = {'RequestUri': PHPID}
             while bt_area[-1].text == 'Показать еще события' or resp_pr > 0:
                 for bt in bt_area[:-1]:
-                    resp_bt = self.session.get(url + bt.find('a', class_='btn').get('href'))
+                    resp_bt = await self.session.get(url + bt.find('a', class_='btn').get('href'))
                     soup = BeautifulSoup(resp_bt.text, 'lxml')
                     name = soup.find('h1').get_text()
                     edate = self.get_edate(soup)
@@ -102,7 +102,7 @@ class Parser(AsyncEventParser):
                     break
 
             for bt in bt_area:
-                resp_bt2 = self.session.get(url + bt.find('a', class_='btn').get('href'))
+                resp_bt2 = await self.session.get(url + bt.find('a', class_='btn').get('href'))
                 soup2 = BeautifulSoup(resp_bt2.text, 'lxml')
                 name2 = soup2.find('h1').get_text()
                 edate2 = self.get_edate(soup2)
@@ -118,7 +118,7 @@ class Parser(AsyncEventParser):
         return links
 
     async def body(self):
-        for link in self.get_links_events():
+        for link in await self.get_links_events():
             self.register_event(link[0], link[1], date=link[2], scene=link[3], venue=link[4])
 
 

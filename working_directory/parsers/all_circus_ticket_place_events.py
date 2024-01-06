@@ -65,21 +65,21 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
                              f' {date.strftime("%Y")} {date.strftime("%H:%M")}'
         return date_to_write
 
-    def princess_saratov(self):
+    async def princess_saratov(self):
         r = await self.session.get(url='https://princess.circus.team/', headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
         ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
         ids = [i.get('data-tp-event') for i in ids]
         return ids, 'saratov' , 'Цирк им. братьев Никитиных Саратов'
     
-    def sochi(self):
+    async def sochi(self):
         r = await self.session.get(url='https://www.circus-sochi.ru/', headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
         ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
         ids = [i.get('data-tp-event') for i in ids]
         return ids, 'sochi' , 'Сочинский Государственный Цирк'
 
-    def load_all_events_ONE(self, url_strip, url_to_load):
+    async def load_all_events_ONE(self, url_strip, url_to_load):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -142,7 +142,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
                                             date=full_date, venue=venue))
         return a_events
     
-    def load_all_visible_events_TWO(self, url):
+    async def load_all_visible_events_TWO(self, url):
         r = await self.session.get(url=url, headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
         self.debug(r.text)
@@ -151,7 +151,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         return events_ids
 
 
-    def get_info_about_event_TWO(self, id, slug, venue):
+    async def get_info_about_event_TWO(self, id, slug, venue):
         url_to_api = f'https://ticket-place.ru/widget/{id}/data'
         info_about = await self.session.get(url_to_api, headers=self.headers)
         info_about.encoding = 'utf-8'
@@ -166,7 +166,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
                                             date=date, venue=venue)
     
     
-    def load_all_dates_TWO(self, id, slug, venue):
+    async def load_all_dates_TWO(self, id, slug, venue):
         a_events = []
         url = f'https://ticket-place.ru/widget/{id}/similar'
         all_events_json = await self.session.get(url, headers=self.headers)
@@ -191,7 +191,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
                 url_strip = re.search(r'(?<=://).+(?=/)', url)[0]
                 title, slug, venue, url_to_load = info
 
-                all_events = self.load_all_events_ONE(url_strip, url_to_load)
+                all_events = await self.load_all_events_ONE(url_strip, url_to_load)
                 a_events_ONE = self.make_events_ONE(title, slug, venue, all_events)
                 a_events.extend(a_events_ONE)
             except Exception:
@@ -205,24 +205,24 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
 
                 if isinstance(info, tuple):
                     slug, venue = info
-                    events_ids = self.load_all_visible_events_TWO(url)
-                    first_event = self.get_info_about_event_TWO(events_ids[0], slug, venue)
+                    events_ids = await self.load_all_visible_events_TWO(url)
+                    first_event = await self.get_info_about_event_TWO(events_ids[0], slug, venue)
                     events_box.add(first_event)
 
                 elif isinstance(info, list):
                     evnt_id, slug, venue = info
                     try:
-                        first_event = self.get_info_about_event_TWO(evnt_id, slug, venue)
+                        first_event = await self.get_info_about_event_TWO(evnt_id, slug, venue)
                         events_box.add(first_event)
                     except Exception:
                         ...
-                    events_ids = self.load_all_dates_TWO(evnt_id, slug, venue)
+                    events_ids = await self.load_all_dates_TWO(evnt_id, slug, venue)
                     events_box.update(events_ids)
                     
                 elif isinstance(info, str):
                     function = eval(f"self.{info}")
                     events_ids, slug, venue = function()
-                    first_event = self.get_info_about_event_TWO(events_ids[0], slug, venue)
+                    first_event = await self.get_info_about_event_TWO(events_ids[0], slug, venue)
                     events_box.add(first_event)
 
                 count = 10
@@ -234,7 +234,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
                             box = list(set(events_ids) - box_events_id)
                         from random import choice
                         id = choice(box)
-                    to_a_events = self.load_all_dates_TWO(id, slug, venue)
+                    to_a_events = await self.load_all_dates_TWO(id, slug, venue)
                     events_box.update(to_a_events)
                     count -= 1
                 a_events.extend(events_box)

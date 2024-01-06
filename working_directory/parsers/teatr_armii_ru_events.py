@@ -18,7 +18,7 @@ class Parser(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def get_xsrf_token(self, url):
+    async def get_xsrf_token(self, url):
         headers = {'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                     'Accept-Encoding':'gzip, deflate, br',
                     'Accept-Language':'en-US,en;q=0.9,ru;q=0.8',
@@ -38,13 +38,13 @@ class Parser(AsyncEventParser):
                 self.warning(f' try to find XApplication token ArmiiTeatr + {count}')
                 self.proxy = self.controller.proxy_hub.get(self.proxy_check)
                 self.session = AsyncProxySession(self)
-                return self.get_xsrf_token(count)
+                return await self.get_xsrf_token(count)
             else:
                 return None
             
         return XSRF_TOKEN
 
-    def get_all_events(self, xsrf_token, count=0):
+    async def get_all_events(self, xsrf_token, count=0):
         headers = {'Accept':'application/json, text/plain, */*',
                     'Accept-Encoding':'gzip, deflate, br',
                     'Accept-Language':'en-US,en;q=0.9,ru;q=0.8',
@@ -65,7 +65,7 @@ class Parser(AsyncEventParser):
             self.error(f' cannot load {events_url} {ex} try +={count}')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = AsyncProxySession(self)
-            return self.get_all_events(xsrf_token, count)
+            return await self.get_all_events(xsrf_token, count)
     
     @staticmethod
     def work_with_data(date:str):
@@ -87,8 +87,8 @@ class Parser(AsyncEventParser):
         return title, href, date, scene
 
     async def body(self):
-        XSRF_TOKEN = self.get_xsrf_token(self.url)
-        all_events_list = self.get_all_events(XSRF_TOKEN)
+        XSRF_TOKEN = await self.get_xsrf_token(self.url)
+        all_events_list = await self.get_all_events(XSRF_TOKEN)
 
         for event in all_events_list:
             event_to_write = self.make_event(event)

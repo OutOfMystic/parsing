@@ -39,7 +39,7 @@ class XKMetalurg(AsyncEventParser):
 
         return a_events
 
-    def get_events(self):
+    async def get_events(self):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -68,7 +68,7 @@ class XKMetalurg(AsyncEventParser):
         return a_events
 
     async def body(self):
-        a_events = self.get_events()
+        a_events = await self.get_events()
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2])
