@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Coroutine
 
 import aiohttp as aiohttp
 from aiohttp import hdrs, ContentTypeError
@@ -167,30 +167,30 @@ class AsyncProxySession(aiohttp.ClientSession):
                                    response.get_encoding(),
                                    response.status)
 
-    async def get(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any):
+    async def get(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any) -> AwaitedResponse:
         """Perform HTTP GET request."""
         return await self._static_response(super().get, url, allow_redirects=allow_redirects, **kwargs)
 
-    async def options(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any):
+    async def options(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any) -> AwaitedResponse:
         """Perform HTTP OPTIONS request."""
         return await self._static_response(super().options, url, allow_redirects=allow_redirects, **kwargs)
 
-    async def head(self, url: StrOrURL, *, allow_redirects: bool = False, **kwargs: Any):
+    async def head(self, url: StrOrURL, *, allow_redirects: bool = False, **kwargs: Any) -> AwaitedResponse:
         """Perform HTTP HEAD request."""
         return await self._static_response(super().head, url, allow_redirects=allow_redirects, **kwargs)
 
-    async def post(self, url: StrOrURL, *, data: Any = None, **kwargs: Any):
+    async def post(self, url: StrOrURL, *, data: Any = None, **kwargs: Any) -> AwaitedResponse:
         """Perform HTTP POST request."""
         return await self._static_response(super().post, url, data, **kwargs)
 
-    async def put(self, url: StrOrURL, *, data: Any = None, **kwargs: Any):
+    async def put(self, url: StrOrURL, *, data: Any = None, **kwargs: Any) -> AwaitedResponse:
         """Perform HTTP PUT request."""
         return await self._static_response(super().put, url, data, **kwargs)
 
-    async def patch(self, url: StrOrURL, *, data: Any = None, **kwargs: Any):
+    async def patch(self, url: StrOrURL, *, data: Any = None, **kwargs: Any) -> AwaitedResponse:
         """Perform HTTP PATCH request."""
         return await self._static_response(super().patch, url, data, **kwargs)
 
-    async def delete(self, url: StrOrURL, **kwargs: Any):
+    async def delete(self, url: StrOrURL, **kwargs: Any) -> AwaitedResponse:
         """Perform HTTP DELETE request."""
         return await self._static_response(super().delete, url, **kwargs)

@@ -36,7 +36,7 @@ class Mikhailovsky(AsyncEventParser):
 
     async def _parse_events_from_json(
             self, events: list, next_href: BeautifulSoup
-                    ) -> Callable[[BeautifulSoup, str], OutputEvent]:
+    ) -> Callable[[BeautifulSoup, str], OutputEvent]:
         day_old = int(datetime.now().day)
         month_now = month_list[datetime.now().month]
         while True:
