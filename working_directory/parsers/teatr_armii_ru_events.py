@@ -26,7 +26,7 @@ class Parser(AsyncEventParser):
                     'Connection':'keep-alive',
                     'User-Agent': self.user_agent}
 
-        get_xsrf_token = self.session.get(url=url, headers=headers)
+        get_xsrf_token = await self.session.get(url=url, headers=headers)
         count = 0
         try:
             # soup = BeautifulSoup(get_xsrf_token.text, 'lxml')
@@ -56,7 +56,7 @@ class Parser(AsyncEventParser):
 
         events_url = 'https://www.afisha.ru/wl/29/api/events?lang=en-US&sid='
         current_data = {'lang': 'ru'}
-        res = self.session.post(events_url, headers=headers, data=current_data)
+        res = await self.session.post(events_url, headers=headers, data=current_data)
         try:
             json = res.json()
             return json

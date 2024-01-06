@@ -247,4 +247,3 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
             self.register_event(event_name=event.title ,url=event.href,
                                        date=event.date , venue=event.venue)
                 
-            

@@ -27,10 +27,10 @@ class Icetickets(AsyncEventParser):
             'https://icetickets.ru/place/zal-tserkovnykh-soborov-khrama-khrista-spasitelya-zal-tserkovnykh-soborov--000000578'
         ]
 
-    def parse_events(self, url):
+    async def parse_events(self, url):
         a_events = []
 
-        soup = self.get_events(url)
+        soup = await self.get_events(url)
         all_events = soup.find_all('div', class_='col-sm-6')
 
         axaj_button = soup.find('div', class_='refresh-row')
@@ -40,7 +40,7 @@ class Icetickets(AsyncEventParser):
             page = data_to_url.get('href').replace('#', '')
             while True:
                 url = f'https://icetickets.ru/lib/custom_ajax.php?oper=event_list&guid={id_for_requests}&page={page}'
-                axaj_soup = self.get_axaj_events(url)
+                axaj_soup = await self.get_axaj_events(url)
                 all_events_from_axaj = axaj_soup.find_all('div', class_='col-sm-6')
                 if len(all_events_from_axaj) > 0:
                     all_events.extend(all_events_from_axaj)
@@ -80,7 +80,7 @@ class Icetickets(AsyncEventParser):
 
         return a_events
 
-    def get_axaj_events(self, url):
+    async def get_axaj_events(self, url) -> BeautifulSoup:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -94,10 +94,10 @@ class Icetickets(AsyncEventParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def get_events(self, url):
+    async def get_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -113,13 +113,13 @@ class Icetickets(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
         a_events = []
         for url in self.our_places_data:
-            for event in self.parse_events(url):
+            for event in await self.parse_events(url):
                 if event not in a_events:
                     self.register_event(event[0], event[1], date=event[2], venue=event[3])
                     a_events.append(event)

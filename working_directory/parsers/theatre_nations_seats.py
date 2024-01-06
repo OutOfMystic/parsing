@@ -1,3 +1,4 @@
+from parse_module.coroutines.parser import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
@@ -54,7 +55,7 @@ class NationsParser(AsyncSeatsParser):
 
         return sector_name, place_row
 
-    def get_tickets(self):
+    async def get_tickets(self):
         url = ("https://theatreofnations.ru/api/places/?nombilkn="
                f"{self.event_id}&cmd=get_hall_and_places&early_access=")
         headers = {
@@ -75,9 +76,9 @@ class NationsParser(AsyncSeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get('https://theatreofnations.ru/api/token_places/', headers=headers)
+        r = await self.session.get('https://theatreofnations.ru/api/token_places/', headers=headers)
         headers['authorization'] = r.text
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         seats = r.json()['EvailPlaceList']
         a_sectors = []
         for seat in seats:
@@ -97,7 +98,7 @@ class NationsParser(AsyncSeatsParser):
 
     async def body(self):
         a_sectors = []
-        tickets = self.get_tickets()
+        tickets = await self.get_tickets()
         for ticket in tickets:
 
             sector_name = ticket['name']

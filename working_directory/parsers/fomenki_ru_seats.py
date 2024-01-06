@@ -59,7 +59,7 @@ class Fomenko(AsyncSeatsParser):
             )
         return total_sector
 
-    def request_parser(self, url):
+    async def request_parser(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -77,17 +77,17 @@ class Fomenko(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        return self.session.get(url, headers=headers)
+        return await self.session.get(url, headers=headers)
 
-    def get_seats(self):
-        r = self.request_parser(url=self.url)
+    async def get_seats(self):
+        r = await self.request_parser(url=self.url)
 
         a_events = self.parse_seats(r.text)
 
         return a_events
 
     async def body(self):
-        all_sectors = self.get_seats()
+        all_sectors = await self.get_seats()
 
         for sector in all_sectors:
             self.register_sector(sector['name'], sector['tickets'])

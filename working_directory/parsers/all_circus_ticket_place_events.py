@@ -66,14 +66,14 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         return date_to_write
 
     def princess_saratov(self):
-        r = self.session.get(url='https://princess.circus.team/', headers=self.headers)
+        r = await self.session.get(url='https://princess.circus.team/', headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
         ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
         ids = [i.get('data-tp-event') for i in ids]
         return ids, 'saratov' , 'Цирк им. братьев Никитиных Саратов'
     
     def sochi(self):
-        r = self.session.get(url='https://www.circus-sochi.ru/', headers=self.headers)
+        r = await self.session.get(url='https://www.circus-sochi.ru/', headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
         ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
         ids = [i.get('data-tp-event') for i in ids]
@@ -104,7 +104,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         for i in range(1,8):
             #Please note URL may change!!!
             url = f'{url_to_load}{i}'
-            r = self.session.get(url, headers=headers)
+            r = await self.session.get(url, headers=headers)
             if r.ok:
                 soup = BeautifulSoup(r.text, 'lxml')
                 events_all = soup.find_all(class_=re.compile(r'calendar__item'))
@@ -143,7 +143,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         return a_events
     
     def load_all_visible_events_TWO(self, url):
-        r = self.session.get(url=url, headers=self.headers)
+        r = await self.session.get(url=url, headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
         self.debug(r.text)
         events_ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
@@ -153,7 +153,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
 
     def get_info_about_event_TWO(self, id, slug, venue):
         url_to_api = f'https://ticket-place.ru/widget/{id}/data'
-        info_about = self.session.get(url_to_api, headers=self.headers)
+        info_about = await self.session.get(url_to_api, headers=self.headers)
         info_about.encoding = 'utf-8'
         info_about = info_about.json()
 
@@ -169,7 +169,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
     def load_all_dates_TWO(self, id, slug, venue):
         a_events = []
         url = f'https://ticket-place.ru/widget/{id}/similar'
-        all_events_json = self.session.get(url, headers=self.headers)
+        all_events_json = await self.session.get(url, headers=self.headers)
     
         for i in all_events_json.json().get("events"):
             title = i.get("name")

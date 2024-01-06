@@ -162,7 +162,7 @@ class BdtSpb(AsyncSeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        async with self.session.get(url, headers=headers) as r:
+        async with self.session.get_with(url, headers=headers) as r:
             return await r.json()
 
     async def _request_to_csrf(self) -> BeautifulSoup:
@@ -185,7 +185,7 @@ class BdtSpb(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        async with self.session.get(self.url, headers=headers) as r:
+        async with self.session.get_with(self.url, headers=headers) as r:
             return BeautifulSoup(await r.text(), 'lxml')
 
     async def body(self):

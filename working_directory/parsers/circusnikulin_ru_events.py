@@ -62,9 +62,9 @@ class Parser(AsyncEventParser):
             'sec-fetch-site': 'same-site',
             'user-agent': self.user_agent
         }
-        r_json = await self.session.get_json(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
-        return r_json['response']['items']
+        return r.json()['response']['items']
 
     async def get_months_request(self, period_id=0):
         url = f'https://widget.profticket.ru/api/event/list-filter/?company_id={self.company_id}&period_id={period_id}&language=ru-RU'
@@ -84,9 +84,9 @@ class Parser(AsyncEventParser):
             'sec-fetch-site': 'same-site',
             'user-agent': self.user_agent
         }
-        r_json = await self.session.get_json(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
-        return r_json['response']['months']['months_by_year']
+        return r.json()['response']['months']['months_by_year']
 
     def get_dates(self, months_by_year):
         dates = []
@@ -114,7 +114,7 @@ class Parser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r_text = await self.session.get_text(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
 
         # def decode_brotli(text):
         #     from brotli import decompress
@@ -122,9 +122,9 @@ class Parser(AsyncEventParser):
         #
         # r_text = decode_unicode_escape(r.text)
         
-        self.company_id = double_split(r_text, 'https://widget.profticket.ru/customer/', '/shows')
+        self.company_id = double_split(r.text, 'https://widget.profticket.ru/customer/', '/shows')
 
-        return r_text
+        return r.text
 
     async def body(self):
         await self.get_request()

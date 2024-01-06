@@ -215,7 +215,7 @@ class BarvikhaConcertHall(AsyncSeatsParser):
 
         return total_sector
 
-    def request_parser(self, url):
+    async def request_parser(self, url):
         headers = {
             'accept': 'application/json, text/javascript, */*; q=0.01',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -232,10 +232,10 @@ class BarvikhaConcertHall(AsyncSeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return r.json()
 
-    def request_parser_to_index(self, url):
+    async def request_parser_to_index(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -254,11 +254,11 @@ class BarvikhaConcertHall(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def get_seats(self):
-        soup_to_index = self.request_parser_to_index(self.url)
+    async def get_seats(self):
+        soup_to_index = await self.request_parser_to_index(self.url)
         data_to_parse = soup_to_index.find('div', class_='js-event-tickets')
         index = data_to_parse.get('data-code')
         self.svg_width_scene = data_to_parse.get('data-scheme')
@@ -267,14 +267,14 @@ class BarvikhaConcertHall(AsyncSeatsParser):
             raise ValueError(f'Нету данных о схеме: {self.url = }')
 
         url = f'https://barvikhaconcerthall.ru/widget/assets/php/tickets.v3.php?action=event-detail&index={index}'
-        json_data = self.request_parser(url)
+        json_data = await self.request_parser(url)
 
         a_events = self.parse_seats(json_data)
 
         return a_events
 
     async def body(self):
-        all_sectors = self.get_seats()
+        all_sectors = await self.get_seats()
 
         self.reformat(all_sectors)
 

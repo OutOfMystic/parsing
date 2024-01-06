@@ -100,9 +100,10 @@ class BiletServisParser(AsyncSeatsParser):
               f'=get_svg&widget=1&date={self.sec_date}&event_id' \
               f'={self.event_id_cfg}&place_id={self.place_id}&' \
               f'hall_id={self.hall_id}&part_id='
-        r = self.session.get(url, headers=headers)
+              
+        r_text = await self.session.get_text(url, headers=headers)
 
-        elements = lrsplit(r.text, '<circle elem="true"', '/>', generator=True)
+        elements = lrsplit(r_text, '<circle elem="true"', '/>', generator=True)
         a_elements = (elem for elem in elements if 'ticket-id' in elem)
         params = ['place-name', 'row', ' place', 'price']
         parsed_a_elems = (get_params(circle, params) for circle in a_elements)

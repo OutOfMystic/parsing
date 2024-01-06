@@ -4,6 +4,7 @@ from time import sleep
 from bs4 import BeautifulSoup
 from telebot import TeleBot
 from telebot.apihelper import ApiTelegramException
+from parse_module.coroutines.parser import AsyncEventParser
 
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
@@ -60,7 +61,7 @@ class Check_new_websites(AsyncEventParser):
             "X-Requested-With": "XMLHttpRequest"
         }
         data = {'url': ip}
-        res = self.session.post(url, headers=headers, data=data)
+        res = await self.session.post(url, headers=headers, data=data)
         soup = BeautifulSoup(res.text, 'lxml')
 
         table = soup.find(id='Domain')

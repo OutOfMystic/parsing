@@ -85,7 +85,7 @@ class PelmenyNet(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         soup = BeautifulSoup(r.text, 'lxml')
         events = soup.find_all('a', class_='item')
@@ -156,7 +156,7 @@ class PelmenyNet(AsyncEventParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
+    async def body(self):
         all_events = set(self._parse_events())
         for event in all_events:
             self.register_event(

@@ -32,7 +32,7 @@ class OperettaParser(AsyncEventParser):
             'Sec-Fetch-Site': 'none',
             'Sec-Fetch-User': '?1',
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -80,7 +80,7 @@ class OperettaParser(AsyncEventParser):
 
         return f'{d} {m} {y} {time}'
 
-    def get_events(self, date=None):
+    async def get_events(self, date=None):
         url = 'https://mosoperetta.ru/index.php/tools/packages/nd_theme/calendar'
         headers = {
             'Host': 'mosoperetta.ru',
@@ -112,14 +112,14 @@ class OperettaParser(AsyncEventParser):
 
             data.update(month_data)
 
-        r = self.session.post(url, headers=headers, data=data, verify=False)
+        r = await self.session.post(url, headers=headers, data=data, verify=False)
 
         count = 5
         while not r.ok and count > 0:
             self.debug(f'{self.proxy.args = }, {self.session.cookies = } kassir events')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = AsyncProxySession(self)
-            r = self.session.post(url, headers=headers, data=data, verify=False)
+            r = await self.session.post(url, headers=headers, data=data, verify=False)
             count -= 1
 
         soup = BeautifulSoup(r.text, 'lxml')
@@ -134,7 +134,7 @@ class OperettaParser(AsyncEventParser):
         a_events = []
 
         for i in range(3):
-            next_a_events, next_date = self.get_events(date)
+            next_a_events, next_date = await self.get_events(date)
 
             date = next_date
             a_events += next_a_events

@@ -65,8 +65,8 @@ class Mikhailovsky(AsyncSeatsParser):
 
         return sector_name, row, seat
 
-    def _parse_seats(self) -> OutputData:
-        text_data = self._request_to_text_data()
+    async def _parse_seats(self) -> OutputData:
+        text_data = await self._request_to_text_data()
 
         json_data = self._get_json_data_from_text(text_data)
 
@@ -115,7 +115,7 @@ class Mikhailovsky(AsyncSeatsParser):
         json_data_from_script_in_page = double_split(text_data, "var arPlace = JSON.parse('", "');")
         return json.loads(json_data_from_script_in_page)
 
-    def _request_to_text_data(self) -> str:
+    async def _request_to_text_data(self) -> str:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -135,9 +135,9 @@ class Mikhailovsky(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return r.text
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

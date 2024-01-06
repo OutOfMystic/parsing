@@ -18,7 +18,7 @@ class Fomenko(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def parse_events(self):
+    async def parse_events(self):
         a_events = []
 
         datetime_now = datetime.now()
@@ -34,7 +34,7 @@ class Fomenko(AsyncEventParser):
                 year_to_url = datetime_now.year
                 href_to_data = f'/{month_to_url}-{year_to_url}'
             url = self.url + href_to_data
-            soup = self.get_events(url)
+            soup = await self.get_events(url)
 
             all_events = soup.find_all('div', class_='event')
             if len(all_events) == 0:
@@ -67,7 +67,7 @@ class Fomenko(AsyncEventParser):
 
         return a_events
 
-    def get_events(self, url):
+    async def get_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -86,14 +86,14 @@ class Fomenko(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         soup = BeautifulSoup(r.text, 'lxml')
 
         return soup
 
     async def body(self):
-        a_events = self.parse_events()
+        a_events = await self.parse_events()
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2])

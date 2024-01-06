@@ -84,9 +84,9 @@ class Lokobasket(AsyncEventParser):
         data = {
             'organizer_id': '12326'
         }
-        r = self.session.post(self.url, headers=headers, data=data)
+        r = await self.session.post(self.url, headers=headers, data=data)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
+    async def body(self):
         for event in self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

@@ -90,9 +90,9 @@ class IceArenaMsk(AsyncEventParser):
                 'offset': str(offset),
             }
             
-            r_text = await self.session.get_text('https://icearenamsk.ru/afisha-and-tickets/afisha/', params=params, headers=self.headers)
+            r = await self.session.get('https://icearenamsk.ru/afisha-and-tickets/afisha/', params=params, headers=self.headers)
             
-            soup = BeautifulSoup(r_text, 'lxml')
+            soup = BeautifulSoup(r.text, 'lxml')
             
             parsed_events : Optional[list] | None = self._parse_events(soup)
             

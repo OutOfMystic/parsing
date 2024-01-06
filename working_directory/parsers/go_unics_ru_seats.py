@@ -105,7 +105,7 @@ class MelomanRu(AsyncSeatsParser):
             'view_id': sector_id
         }
         url = 'https://go.unics.ru/event/get-prices'
-        r = self.session.post(url, data=data, headers=headers)
+        r = await self.session.post(url, data=data, headers=headers)
         return r.json()
 
     def _request_to_soup(self) -> BeautifulSoup:
@@ -130,6 +130,6 @@ class MelomanRu(AsyncSeatsParser):
         self.csrf_token = double_split(r.text, '"csrf-token" content="', '">')
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
+    async def body(self):
         for sector in self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

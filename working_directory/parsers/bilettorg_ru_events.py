@@ -89,8 +89,8 @@ class Bilettorg(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r_text = await self.session.get_text(url, headers=headers)
-        return BeautifulSoup(r_text, 'lxml')
+        r = await self.session.get(url, headers=headers)
+        return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
         

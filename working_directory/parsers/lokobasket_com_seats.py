@@ -201,10 +201,10 @@ class Lokobasket(AsyncSeatsParser):
             'event_id': self.event_id,
             'widget_session': 'eLdgrITSBV3mAwGoJSD8MlBUIzM5rf0n4hyoJTHz'
         }
-        r = self.session.post(self.url, headers=headers, data=data)
+        r = await self.session.post(self.url, headers=headers, data=data)
         return BeautifulSoup(r.text, 'lxml'), r.text
 
-    def body(self) -> None:
+    async def body(self):
         for sector in self._parse_seats():
             sector = self._reformat(sector)
             self.register_sector(sector.sector_name, sector.tickets)

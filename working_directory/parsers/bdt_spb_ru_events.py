@@ -77,7 +77,7 @@ class BdtSpb(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        async with self.session.get(url, headers=headers) as r:
+        async with self.session.get_with(url, headers=headers) as r:
             return BeautifulSoup(await r.text(), 'lxml')
 
     async def body(self):

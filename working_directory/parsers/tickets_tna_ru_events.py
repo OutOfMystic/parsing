@@ -26,7 +26,7 @@ class TNA(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def parse_events(self, soup):
+    async def parse_events(self, soup):
         a_events = []
 
         items_list = soup.find_all('div', class_='tickets_item')
@@ -71,7 +71,7 @@ class TNA(AsyncEventParser):
 
             parametr_for_get_href = item.find('a').get('href')
             url = f'https://tna-tickets.ru{parametr_for_get_href}'
-            soup = self.request_for_href(url)
+            soup = await self.request_for_href(url)
 
             try:
                 href = soup.select('.event_view_header .border_link')[0].get('href')
@@ -83,7 +83,7 @@ class TNA(AsyncEventParser):
 
         return a_events
 
-    def request_for_href(self, url):
+    async def request_for_href(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/web'
                       'p,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -103,11 +103,11 @@ class TNA(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         return BeautifulSoup(r.text, "lxml")
 
-    def get_events(self, url: str):
+    async def get_events(self, url: str):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/we'
                       'bp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -126,11 +126,11 @@ class TNA(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         soup = BeautifulSoup(r.text, 'lxml')
 
-        a_events = self.parse_events(soup)
+        a_events = await self.parse_events(soup)
 
         return a_events
 
@@ -152,7 +152,7 @@ class TNA(AsyncEventParser):
 
     async def body(self):
         for url in self.urls:
-            a_events = self.get_events(url)
+            a_events = await self.get_events(url)
             
             if url == 'https://tna-tickets.ru/sport/akbars/':
                 try:

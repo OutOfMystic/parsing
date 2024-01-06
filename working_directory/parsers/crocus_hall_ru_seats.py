@@ -313,22 +313,16 @@ class CrocusHall(AsyncSeatsParser):
             'x-widget-key': self.widget_key
         }
         
-        # if r.status_code == 500:
-        #     return None
-        # try:
-        #     return r.json()
-        # except JSONDecodeError:
-        #     message = f"<b>crocus_seats json_error {r.status_code} {self.url = }</b>"
-        #     self.send_message_to_telegram(message)
-        #     return None
-        try:
-            r_json = await self.session.get_text(url, headers=headers)
-        except JSONDecodeError:
-            # message = f"<b>crocus_seats json_error {r.status_code} {self.url = }</b>"
-            message = f"<b>crocus_seats json_error {self.url = }</b>"
-            self.send_message_to_telegram(message)
-            return None
+        r = await self.session.get(url, headers=headers)
         
+        if r.status_code == 500:
+            return None
+        try:
+            return r.json()
+        except JSONDecodeError:
+            message = f"<b>crocus_seats json_error {r.status_code} {self.url = }</b>"
+            self.send_message_to_telegram(message)
+            return None        
 
     async def get_seats(self):
         url = f'https://crocus2.kassir.ru/api/v1/events/{self.event_id}?language=ru'

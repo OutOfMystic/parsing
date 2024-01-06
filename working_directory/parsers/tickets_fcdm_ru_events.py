@@ -64,9 +64,9 @@ class TicketsFcdmRu(AsyncEventParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers, verify=False)
+        r = await self.session.get(self.url, headers=headers, verify=False)
         return r.json()
 
-    def body(self) -> None:
+    async def body(self):
         for event in self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

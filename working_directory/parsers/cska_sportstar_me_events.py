@@ -28,8 +28,8 @@ class CskaSportstar(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        json_data = self._requests_to_events()
+    async def _parse_events(self) -> OutputEvent:
+        json_data = await self._requests_to_events()
 
         events = self._get_events_from_json_data(json_data)
 
@@ -57,7 +57,7 @@ class CskaSportstar(AsyncEventParser):
         events = json_data['data']['allEvents']['edges']
         return events
 
-    def _requests_to_events(self) -> json:
+    async def _requests_to_events(self) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -111,9 +111,9 @@ class CskaSportstar(AsyncEventParser):
                 }
             }
         }
-        r = self.session.post(self.url, json=data, headers=headers)
+        r = await self.session.post(self.url, json=data, headers=headers)
         return r.json()
 
-    def body(self) -> None:
-        for event in self._parse_events():
+    async def body(self):
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

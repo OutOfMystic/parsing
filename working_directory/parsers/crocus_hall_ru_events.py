@@ -107,9 +107,9 @@ class CrocusHall(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r_text = await self.session.get_text(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
-        return BeautifulSoup(r_text, "lxml")
+        return BeautifulSoup(r.text, "lxml")
 
     async def get_events(self):
         headers = {
@@ -128,9 +128,9 @@ class CrocusHall(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r_text = await self.session.get_text(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
 
-        soup = BeautifulSoup(r_text, 'lxml')
+        soup = BeautifulSoup(r.text, 'lxml')
 
         a_events = await self.parse_events(soup)
 

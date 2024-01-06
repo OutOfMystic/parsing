@@ -50,9 +50,9 @@ class CircusKislovodsk(AsyncEventParser):
     
     async def get_info_about_event(self, id):
         url_to_api = f'https://ticket-place.ru/widget/{id}/data'
-        info_about = await self.session.get_json(url_to_api, headers=self.headers)
+        info_about = await self.session.get(url_to_api, headers=self.headers)
 
-        title = info_about.get("data").get("name")
+        title = info_about.json().get("data").get("name")
         id = info_about.get("data").get("id")
         href = f'https://ticket-place.ru/widget/{id}/data|kislovodsk'
         date = self.reformat_date(info_about.get("data").get("datetime"))
@@ -63,9 +63,9 @@ class CircusKislovodsk(AsyncEventParser):
         a_events = []
         
         url = f'https://ticket-place.ru/widget/{id}/similar'
-        all_events_json = await self.session.get_json(url, headers=self.headers)
+        all_events_json = await self.session.get(url, headers=self.headers)
 
-        for i in all_events_json.get("events"):
+        for i in all_events_json.json().get("events"):
             title = i.get("name")
             id = i.get("id")
             href = f'https://ticket-place.ru/widget/{id}/data|kislovodsk'
@@ -76,9 +76,9 @@ class CircusKislovodsk(AsyncEventParser):
 
     async def body(self):
         
-        r_text = await self.session.get_text(self.url, headers=self.headers)
+        r = await self.session.get(self.url, headers=self.headers)
         
-        events_ids = self.find_all_events(r_text)
+        events_ids = self.find_all_events(r.text)
 
         a_events = set()
         first_event = await self.get_info_about_event(events_ids[0])

@@ -1,5 +1,5 @@
+import asyncio
 import json
-import time
 
 from bs4 import BeautifulSoup
 
@@ -139,7 +139,7 @@ class CskaHockeyParser(AsyncSeatsParser):
         for sector in a_sectors:
             sector['name'] = ref_dict.get(sector['name'], sector['name'])
 
-    def skip_queue(self, id_queue):
+    async def skip_queue(self, id_queue):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -160,11 +160,11 @@ class CskaHockeyParser(AsyncSeatsParser):
         ]
         url = 'https://cska-hockey.queue.infomatika.ru/api/users/' + id_queue
         while True:
-            r = self.session.get(url, data=params, headers=headers, verify=False)
+            r = await self.session.get(url, data=params, headers=headers, verify=False)
             get_data = r.json()
             expired_at = get_data.get('expired_at')
             if expired_at is None:
-                time.sleep(10)
+                asyncio.sleep(10)
             else:
                 break
         headers = {
@@ -185,7 +185,7 @@ class CskaHockeyParser(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         url = 'https://tickets.cska-hockey.ru/?queue=' + id_queue
-        r = self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, verify=False)
         if r.url == 'https://tickets.cska-hockey.ru/':
             headers = {
                 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -202,10 +202,10 @@ class CskaHockeyParser(AsyncSeatsParser):
                 'upgrade-insecure-requests': '1',
                 'user-agent': self.user_agent,
             }
-            r = self.session.get(self.url, headers=headers, verify=False)
+            r = await self.session.get(self.url, headers=headers, verify=False)
         return BeautifulSoup(r.text, 'lxml'), r
 
-    def get_event_data(self):
+    async def get_event_data(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -221,12 +221,12 @@ class CskaHockeyParser(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent,
         }
-        r = self.session.get(self.url, headers=headers, verify=False)
+        r = await self.session.get(self.url, headers=headers, verify=False)
         soup = BeautifulSoup(r.text, 'lxml')
         if 'https://cska-hockey.queue.infomatika.ru/' in r.url:
             get_id = soup.select('body script')[0].text
             get_id = double_split(get_id, '}}("', '",')
-            soup, r = self.skip_queue(get_id)
+            soup, r = await self.skip_queue(get_id)
 
         self.csrf = double_split(r.text, '<meta name="csrf-token" content="', '"')
         event_id = self.url.split('=')[-1]
@@ -242,7 +242,7 @@ class CskaHockeyParser(AsyncSeatsParser):
                 })
         return event_id, sectors_info
 
-    def get_all_sector_seats(self, event_id, sector_id):
+    async def get_all_sector_seats(self, event_id, sector_id):
         url = 'https://tickets.cska-hockey.ru/event/get-svg-places'
         headers = {
             'accept': '*/*',
@@ -267,7 +267,7 @@ class CskaHockeyParser(AsyncSeatsParser):
             'view_id': sector_id,
             '_csrf-frontend': self.csrf,
         }
-        r = self.session.post(url, headers=headers, data=data, verify=False)
+        r = await self.session.post(url, headers=headers, data=data, verify=False)
 
         all_seats = {}
         for seat_zone, seats in r.json()['places'].items():
@@ -288,7 +288,7 @@ class CskaHockeyParser(AsyncSeatsParser):
 
         return all_seats
 
-    def get_a_sector_seats(self, sector_id, event_id, sector_price):
+    async def get_a_sector_seats(self, sector_id, event_id, sector_price):
         url = 'https://tickets.cska-hockey.ru/event/get-actual-places'
         headers = {
             'accept': '*/*',
@@ -313,10 +313,10 @@ class CskaHockeyParser(AsyncSeatsParser):
             'clear_cache': 'false',
             '_csrf-frontend': self.csrf,
         }
-        r = self.session.post(url, headers=headers, data=data, verify=False)
+        r = await self.session.post(url, headers=headers, data=data, verify=False)
         type_ = r.json()['places']['type']
 
-        all_seats = self.get_all_sector_seats(event_id, sector_id)
+        all_seats = await self.get_all_sector_seats(event_id, sector_id)
         a_seats = {} if type_ == 'free' else all_seats.copy()
         for seat in r.json()['places']['values']:
             if type_ == 'free':
@@ -327,13 +327,13 @@ class CskaHockeyParser(AsyncSeatsParser):
         return a_seats
 
     async def body(self):
-        event_id, sectors_info = self.get_event_data()
+        event_id, sectors_info = await self.get_event_data()
 
         a_sectors = []
         for sector_id, sector_info in sectors_info.items():
             sector_name = sector_info['name']
             sector_price = sector_info['price']
-            seats = self.get_a_sector_seats(sector_id, event_id, sector_price)
+            seats = await self.get_a_sector_seats(sector_id, event_id, sector_price)
 
             for ticket in seats.values():
                 row = str(ticket['row'])

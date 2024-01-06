@@ -47,24 +47,24 @@ class CskaBasket(AsyncSeatsParser):
 
         return sector_name
 
-    def _parse_seats(self) -> OutputData:
-        soup = self._request_to_get_free_sectors()
+    async def _parse_seats(self) -> OutputData:
+        soup = await self._request_to_get_free_sectors()
 
         self._set_csrf_frontend(soup)
 
         free_sectors = self._get_free_sectors_from_soup(soup)
 
-        output_data = self._get_output_data(free_sectors)
+        output_data = await self._get_output_data(free_sectors)
 
         return output_data
 
-    def _get_output_data(self, free_sectors: ResultSet[Tag]) -> OutputData:
+    async def _get_output_data(self, free_sectors: ResultSet[Tag]) -> OutputData:
         for sector in free_sectors:
             sector_name = sector.get('sector_name')
             sector_name = self._reformat(sector_name)
 
             sector_id = sector.get('view_id')
-            json_data = self._request_to_place(sector_id)
+            json_data = await self._request_to_place(sector_id)
 
             all_price_zones = self._get_price_zones_from_json(json_data)
 
@@ -106,7 +106,7 @@ class CskaBasket(AsyncSeatsParser):
     def _set_csrf_frontend(self, soup: BeautifulSoup) -> None:
         self.csrf_frontend = soup.select('meta[name="csrf-token"]')[0].get('content')
 
-    def _request_to_place(self, sector_id: str) -> json:
+    async def _request_to_place(self, sector_id: str) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -132,10 +132,10 @@ class CskaBasket(AsyncSeatsParser):
             '_csrf-frontend': self.csrf_frontend
         }
         url = 'https://tickets.cskabasket.ru/event/get-prices'
-        r = self.session.post(url, data=data, headers=headers)
+        r = await self.session.post(url, data=data, headers=headers)
         return r.json()
 
-    def _request_to_get_free_sectors(self) -> BeautifulSoup:
+    async def _request_to_get_free_sectors(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -153,9 +153,9 @@ class CskaBasket(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

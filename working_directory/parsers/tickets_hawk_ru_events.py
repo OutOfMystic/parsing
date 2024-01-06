@@ -54,7 +54,7 @@ class XKAvangarg(AsyncEventParser):
     def get_all_event_dates(self, event_url):
         pass
 
-    def get_events(self):
+    async def get_events(self):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -77,14 +77,14 @@ class XKAvangarg(AsyncEventParser):
             "isSeason": 0,
             "withoutActionType": 93
         }
-        r = self.session.post(self.url, headers=headers, json=data, verify=False)
+        r = await self.session.post(self.url, headers=headers, json=data, verify=False)
 
         a_events = self.parse_events(r.json())
 
         return a_events
 
     async def body(self):
-        a_events = self.get_events()
+        a_events = await self.get_events()
 
         if a_events is None:
             return

@@ -16,13 +16,13 @@ class Vakhtakassa(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def parse_events(self):
+    async def parse_events(self):
         a_events = []
 
         count_page = 1
         while True:
             url = self.url + f'?page={count_page}'
-            r = self.request_events(url)
+            r = await self.request_events(url)
             soup = BeautifulSoup(r.text, "lxml")
 
             all_cart_events = soup.select('a[data-selenium="event-preview"]')
@@ -46,7 +46,7 @@ class Vakhtakassa(AsyncEventParser):
 
         return a_events
 
-    def request_events(self, url):
+    async def request_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -66,13 +66,13 @@ class Vakhtakassa(AsyncEventParser):
             'user-agent': self.user_agent
         }
         try:
-            r = self.session.get(url, headers=headers)
+            r = await self.session.get(url, headers=headers)
         except SSLError:
-            r = self.session.get(url, headers=headers, verify=False)
+            r = await self.session.get(url, headers=headers, verify_ssl=False)
         return r
 
     async def body(self):
-        a_events = self.parse_events()
+        a_events = await self.parse_events()
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2])
