@@ -561,8 +561,8 @@ class StarParser(AsyncSeatsParser):
 
         return seats
 
-    def get_places(self):
-        resp = self.session.get(self.url, headers={'user-agent': 'Custom'})
+    async def get_places(self):
+        resp = await self.session.get(self.url, headers={'user-agent': 'Custom'})
         soup = BeautifulSoup(resp.text, 'lxml')
         map_s = soup.find_all('div', class_='Map')
         if map_s:
@@ -581,7 +581,7 @@ class StarParser(AsyncSeatsParser):
             return None
 
         sector = []
-        places, theatre = self.get_places()
+        places, theatre = await self.get_places()
 
         for place in places:
             if place[0] not in sector:

@@ -53,7 +53,7 @@ class Parser(AsyncEventParser):
 
         return places
 
-    def get_events(self, soup):
+    async def get_events(self, soup):
         a_events = []
 
         all_events_soups = [soup]
@@ -67,7 +67,7 @@ class Parser(AsyncEventParser):
             r_str = self.r_str()
 
             while True:
-                more_soup, resp_pr = self.load_more_events(php_id, r_str)
+                more_soup, resp_pr = await self.load_more_events(php_id, r_str)
                 all_events_soups.append(more_soup)
 
                 if resp_pr <= 0:
@@ -112,13 +112,13 @@ class Parser(AsyncEventParser):
         p_id = double_split(soup_txt, "RequestUri=", "'")
         return p_id
 
-    def load_more_events(self, php_id, r_str):
+    async def load_more_events(self, php_id, r_str):
         url_p = 'https://biletcentr.com/Scripts/LoadMoreRepertoire.script.php'
         url_pr = 'https://biletcentr.com/Scripts/LoadMoreRepertoireNextCount.script.php'
         headers = {'cookie': 'PHPSESSID='f'{r_str}'}
         payload = {'RequestUri': php_id}
-        resp_p = self.session.post(url_p, data=payload, headers=headers)
-        resp_pr = self.session.post(url_pr, data=payload, headers=headers)
+        resp_p = await self.session.post(url_p, data=payload, headers=headers)
+        resp_pr = await self.session.post(url_pr, data=payload, headers=headers)
         more_soup = BeautifulSoup(resp_p.text, 'lxml')
         resp_pr = int(resp_pr.text)
 
@@ -141,15 +141,15 @@ class Parser(AsyncEventParser):
         if len(all_places):
             return True
 
-    def url_request(self, url):
-        r = self.session.get(url, headers={'user-agent': self.user_agent})
+    async def url_request(self, url):
+        r = await self.session.get(url, headers={'user-agent': self.user_agent})
         soup = BeautifulSoup(r.text, 'lxml')
 
         return soup
 
-    def get_afisha_urls(self, our_url, our_places):
+    async def get_afisha_urls(self, our_url, our_places):
         afisha_urls = []
-        soup = self.url_request(our_url)
+        soup = await self.url_request(our_url)
 
         if self.is_places_page(soup):
             places = self.get_places(soup)
@@ -171,12 +171,12 @@ class Parser(AsyncEventParser):
     async def body(self):
         afisha_urls = []
         for our_url, our_places in self.our_urls.items():
-            afisha_urls += self.get_afisha_urls(our_url, our_places)
+            afisha_urls += await self.get_afisha_urls(our_url, our_places)
 
         a_events = []
         for url in afisha_urls:
-            soup = self.url_request(url)
-            a_events += self.get_events(soup)
+            soup = await self.url_request(url)
+            a_events += await self.get_events(soup)
 
         a_events = list(set(a_events))
 

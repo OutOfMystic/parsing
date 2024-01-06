@@ -49,7 +49,7 @@ class Parser(AsyncEventParser):
 
         return a_events
 
-    def parse_show_list(self, month_params='', return_soup=False):
+    async def parse_show_list(self, month_params='', return_soup=False):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip,deflate,br',
@@ -66,7 +66,7 @@ class Parser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url + month_params, headers=headers)
+        r = await self.session.get(self.url + month_params, headers=headers)
 
         soup = BeautifulSoup(r.text, 'lxml')
         products_about = soup.find_all('div', class_='product__about')
@@ -85,14 +85,14 @@ class Parser(AsyncEventParser):
         return months_params
 
     async def body(self):
-        init_month_soup, init_products = self.parse_show_list(return_soup=True)
+        init_month_soup, init_products = await self.parse_show_list(return_soup=True)
         months_params = self.get_months_params(init_month_soup)
         init_year = months_params[0].split('_')[-1].strip()
         months_params = months_params[1:]
 
         a_events = self.get_events(init_products, init_year)
         for month_params in months_params:
-            products_about = self.parse_show_list(month_params)
+            products_about = await self.parse_show_list(month_params)
             year = month_params.split('_')[-1].strip()
             month_events = self.get_events(products_about, year)
             a_events += month_events

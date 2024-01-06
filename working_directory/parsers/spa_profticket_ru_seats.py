@@ -119,7 +119,7 @@ class ProfticketParser(AsyncSeatsParser):
             elif 'цирк никулина' in place_name:
                 sector['name'] = reformat_dict_nikulina.get(sector['name'], sector['name'])
 
-    def get_show_info(self):
+    async def get_show_info(self):
         url = f'https://widget.profticket.ru/api/event/show/?company_id={self.company_id}&show_id={self.show_id}&language=ru-RU'
         headers = {
             'accept': 'application/json, text/plain, */*',
@@ -137,7 +137,7 @@ class ProfticketParser(AsyncSeatsParser):
             'sec-fetch-site': 'same-site',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         try:
             global_show_id = r.json()['response']['show']['id']
@@ -149,7 +149,7 @@ class ProfticketParser(AsyncSeatsParser):
 
         return global_show_id, place_name
 
-    def get_tickets(self, global_show_id):
+    async def get_tickets(self, global_show_id):
         url = f'https://widget.profticket.ru/api/event/scheme/?' \
               f'company_id={self.company_id}&' \
               f'global_show_id={global_show_id}&' \
@@ -171,7 +171,7 @@ class ProfticketParser(AsyncSeatsParser):
             'sec-fetch-site': 'same-site',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         try:
             data = r.json()['response']['items']
@@ -182,11 +182,11 @@ class ProfticketParser(AsyncSeatsParser):
         return data
 
     async def body(self):
-        data_or_none = self.get_show_info()
+        data_or_none = await self.get_show_info()
         if data_or_none is None:
             return
         global_show_id, place_name = data_or_none
-        seat_data = self.multi_try(self.get_tickets, args=(global_show_id,))
+        seat_data = self.multi_try(await self.get_tickets, args=(global_show_id,))
 
         a_sectors = []
         for ticket in seat_data:

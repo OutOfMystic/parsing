@@ -63,7 +63,7 @@ class StanmusParser(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
 
         count = 10
         if r.status_code != 200 and count > 0:
@@ -72,7 +72,7 @@ class StanmusParser(AsyncSeatsParser):
             self.session = AsyncProxySession(self)
             sleep(60)
             count -= 1
-            r = self.session.get(self.url, headers=headers)
+            r = await self.session.get(self.url, headers=headers)
         try:
             seat_data = json.loads(double_split(r.text, 'window.seatData = ', '};') + '}')
         except Exception as ex:

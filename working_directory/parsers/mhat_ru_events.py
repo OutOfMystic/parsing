@@ -16,7 +16,7 @@ class Parser(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def get_request(self, month_params=''):
+    async def get_request(self, month_params=''):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -34,7 +34,7 @@ class Parser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url + month_params, headers=headers, verify=False)
+        r = await self.session.get(self.url + month_params, headers=headers, verify=False)
         return r.text
 
     def get_months_params(self, months_container):
@@ -81,8 +81,8 @@ class Parser(AsyncEventParser):
 
         return a_events
 
-    def parse_month_events(self, month_params=''):
-        resp = self.get_request(month_params)
+    async def parse_month_events(self, month_params=''):
+        resp = await self.get_request(month_params)
         soup = BeautifulSoup(resp, 'lxml')
         month = soup.find('div', class_='submenu').find('td', class_='active').find('a').text[:3].capitalize()
         year = soup.find('td', class_='month')['style'].split('/')[-1].split('-')[0]
@@ -95,11 +95,11 @@ class Parser(AsyncEventParser):
             return events, months
 
     async def body(self):
-        events, months_params = self.parse_month_events()
+        events, months_params = await self.parse_month_events()
         a_events = events
 
         for month_params in months_params:
-            a_events += self.parse_month_events(month_params)
+            a_events += await self.parse_month_events(month_params)
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2], scene=event[3],
