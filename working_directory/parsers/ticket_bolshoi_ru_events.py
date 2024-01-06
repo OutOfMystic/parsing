@@ -2,14 +2,15 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 from parse_module.utils.date import month_list
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://ticket.bolshoi.ru/shows')
 
     def __init__(self, controller, name):
@@ -19,10 +20,10 @@ class Parser(EventParser):
         self.url = 'https://ticket.bolshoi.ru/shows'
         self.csrf = ''
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def deception_request(self):
+    async def deception_request(self):
         url = 'https://vk.com/'
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -38,11 +39,11 @@ class Parser(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         self.debug(r.text)
         self.debug(r.cookies.get_dict())
 
-    def main_page_request(self):
+    async def main_page_request(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
             'accept-encoding': 'gzip, deflate, br',
@@ -57,11 +58,11 @@ class Parser(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/109.0'
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         self.debug(r.text)
         self.debug(r.cookies)
 
-    def get_csrf(self):
+    async def get_csrf(self):
         url = 'https://ticket.bolshoi.ru/api/csrfToken'
         headers = {
             'accept': 'application/json, text/plain, */*',
@@ -78,12 +79,12 @@ class Parser(EventParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         self.debug(r.text)
 
         return r.json()['_csrf']
 
-    def get_events(self):
+    async def get_events(self):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -100,7 +101,7 @@ class Parser(EventParser):
             'user-agent': self.user_agent,
             'X-CSRF-Token': self.csrf
         }
-        r = self.session.get('https://ticket.bolshoi.ru/api/v1/client/shows', headers=headers)
+        r = await self.session.get('https://ticket.bolshoi.ru/api/v1/client/shows', headers=headers)
         self.debug(self.csrf)
         self.debug(r.text)
         a_events = []
@@ -114,11 +115,11 @@ class Parser(EventParser):
             a_events.append([event['description'], url, full_date, event['hallName']])
         return a_events
 
-    def body(self):
-        self.deception_request()
-        self.main_page_request()
-        self.csrf = self.get_csrf()
-        a_events = self.get_events()
+    async def body(self):
+        await self.deception_request()
+        await self.main_page_request()
+        self.csrf = await self.get_csrf()
+        a_events = await self.get_events()
 
         for event in a_events:
             self.debug(event)

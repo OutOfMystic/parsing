@@ -5,9 +5,10 @@ import json
 
 from dateutil import relativedelta
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -16,7 +17,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class CskaSportstar(EventParser):
+class CskaSportstar(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -24,11 +25,11 @@ class CskaSportstar(EventParser):
         self.driver_source = None
         self.url: str = 'https://cska.sportstar.me/graphql'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        json_data = self._requests_to_events()
+    async def _parse_events(self) -> OutputEvent:
+        json_data = await self._requests_to_events()
 
         events = self._get_events_from_json_data(json_data)
 
@@ -56,7 +57,7 @@ class CskaSportstar(EventParser):
         events = json_data['data']['allEvents']['edges']
         return events
 
-    def _requests_to_events(self) -> json:
+    async def _requests_to_events(self) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -110,9 +111,9 @@ class CskaSportstar(EventParser):
                 }
             }
         }
-        r = self.session.post(self.url, json=data, headers=headers)
+        r = await self.session.post(self.url, json=data, headers=headers)
         return r.json()
 
-    def body(self) -> None:
-        for event in self._parse_events():
+    async def body(self):
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

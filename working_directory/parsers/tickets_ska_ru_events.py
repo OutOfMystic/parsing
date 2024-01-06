@@ -1,19 +1,20 @@
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Cska(EventParser):
+class Cska(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://tickets.ska.ru'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -50,7 +51,7 @@ class Cska(EventParser):
     def get_all_event_dates(self, event_url):
         pass
 
-    def get_events(self):
+    async def get_events(self):
         url = self.url
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -69,15 +70,15 @@ class Cska(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         soup = BeautifulSoup(r.text, 'lxml')
 
         a_events = self.parse_events(soup)
 
         return a_events
 
-    def body(self):
-        a_events = self.get_events()
+    async def body(self):
+        a_events = await self.get_events()
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2], venue=event[3])

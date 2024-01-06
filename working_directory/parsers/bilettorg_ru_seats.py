@@ -2,15 +2,15 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class Bilettorg(SeatsParser):
+class Bilettorg(AsyncSeatsParser):
     proxy_check = NormalConditions()
-    event = 'bilettorg.ru'
     url_filter = lambda url: 'www.bilettorg.ru' in url
 
     def __init__(self, *args, **extra):
@@ -18,8 +18,8 @@ class Bilettorg(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         bolshoi_tickets_reformat_dict = {
@@ -665,12 +665,12 @@ class Bilettorg(SeatsParser):
         return new_a_sectors
 
 
-    def parse_seats(self):
+    async def parse_seats(self):
         total_sector = []
 
         anons_id = self.url.split('/')[-2]
         url = f'https://www.bilettorg.ru/ajax/tickets.php?anons_id={anons_id}'
-        soup = self.requests_to_seats(url)
+        soup = await self.requests_to_seats(url)
 
         all_sector = {}
         all_row_in_event = soup.select('li.buy-tickets__places-row')
@@ -750,7 +750,7 @@ class Bilettorg(SeatsParser):
 
         return total_sector
 
-    def requests_to_seats(self, url):
+    async def requests_to_seats(self, url):
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -767,11 +767,11 @@ class Bilettorg(SeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers)
-        return BeautifulSoup(r.text, 'lxml')
+        r_text = await self.session.get_text(url, headers=headers)
+        return BeautifulSoup(r_text, 'lxml')
 
-    def body(self):
-        a_sectors = self.parse_seats()
+    async def body(self):
+        a_sectors = await self.parse_seats()
 
         if self.venue in ['Большой театр']:
             self.reformat(a_sectors)

@@ -8,10 +8,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.drivers.proxelenium import ProxyWebDriver
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -20,7 +21,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class TktGe(SeatsParser):
+class TktGe(AsyncSeatsParser):
     event = 'tkt.ge'
     url_filter = lambda url: 'tkt.ge' in url
     proxy_check = NormalConditions()
@@ -33,8 +34,8 @@ class TktGe(SeatsParser):
         self.url = f'https://tkt.ge/api/v2/shows/get?itemId={self.event_id}&category=Event&previewKey=&queueItTkn=e_brunomars~q_7f49ffa3-14cc-4b2a-9799-12578a5ecac5~ts_1689595300~ce_true~rt_safetynet~h_02039ce52a856df442b56c3583793dafcf6a856d67bd8c428ae7eea4be419abe&urlWithoutQueueITTkn=https%3A%2F%2Ftkt.ge%2Fevent%2F355735&api_key=7d8d34d1-e9af-4897-9f0f-5c36c179be77'
         self.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         return sector_name
@@ -185,6 +186,6 @@ class TktGe(SeatsParser):
         r = self.session.get(self.url, headers=headers)
         return r.json()
 
-    def body(self) -> None:
+    async def body(self):
         for sector in self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

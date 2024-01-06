@@ -1,15 +1,17 @@
 import json
 import requests
 from bs4 import BeautifulSoup
+
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 from parse_module.utils.date import month_list
 from parse_module.utils.parse_utils import lrsplit, double_split
 from itertools import groupby
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -18,8 +20,8 @@ class Parser(EventParser):
         self.url = 'https://www.circusnikulin.ru/tickets'
         self.company_id = ''
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_events(self, events_data):
         a_events = []
@@ -41,7 +43,7 @@ class Parser(EventParser):
 
         return a_events
 
-    def get_events_request(self, date, page=1, period_id=4):
+    async def get_events_request(self, date, page=1, period_id=4):
         # date - 2023.01
         url = f'https://widget.profticket.ru/api/event/list/?company_id={self.company_id}&type=events&page={page}&period_id={period_id}&date={date}&language=ru-RU'
         headers = {
@@ -60,11 +62,11 @@ class Parser(EventParser):
             'sec-fetch-site': 'same-site',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         return r.json()['response']['items']
 
-    def get_months_request(self, period_id=0):
+    async def get_months_request(self, period_id=0):
         url = f'https://widget.profticket.ru/api/event/list-filter/?company_id={self.company_id}&period_id={period_id}&language=ru-RU'
         headers = {
             'accept': 'application/json, text/plain, */*',
@@ -82,7 +84,7 @@ class Parser(EventParser):
             'sec-fetch-site': 'same-site',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         return r.json()['response']['months']['months_by_year']
 
@@ -96,7 +98,7 @@ class Parser(EventParser):
                 dates.append(date)
         return dates
 
-    def get_request(self):
+    async def get_request(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -112,25 +114,25 @@ class Parser(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
 
         # def decode_brotli(text):
         #     from brotli import decompress
         #     return decode(text.encode('UTF-8'), 'unicode-escape')
         #
         # r_text = decode_unicode_escape(r.text)
-        r_text = r.text
-        self.company_id = double_split(r_text, 'https://widget.profticket.ru/customer/', '/shows')
+        
+        self.company_id = double_split(r.text, 'https://widget.profticket.ru/customer/', '/shows')
 
-        return r_text
+        return r.text
 
-    def body(self):
-        self.get_request()
-        dates = self.get_dates(self.get_months_request())
+    async def body(self):
+        await self.get_request()
+        dates = self.get_dates(await self.get_months_request())
 
         a_events = []
         for date in dates:
-            a_events += self.get_events(self.get_events_request(date))
+            a_events += self.get_events(await self.get_events_request(date))
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2], scene=event[3], company_id=event[4], event_id=event[5], show_id=event[6])

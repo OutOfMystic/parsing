@@ -3,8 +3,9 @@ import re
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -14,7 +15,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class Lokobasket(EventParser):
+class Lokobasket(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -22,11 +23,11 @@ class Lokobasket(EventParser):
         self.driver_source = None
         self.url: str = 'https://hk-spartak.qtickets.ru/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def _parse_events(self):
-        soup = self._requests_to_events()
+    async def _parse_events(self):
+        soup = await self._requests_to_events()
         events = self._get_events_from_soup(soup)
         output_data = self._parse_events_from_soup(events)
 
@@ -66,7 +67,7 @@ class Lokobasket(EventParser):
         return events
     
 
-    def _requests_to_events(self) -> BeautifulSoup:
+    async def _requests_to_events(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -84,10 +85,10 @@ class Lokobasket(EventParser):
             'upgrade-insecure-requests': '1',
                 'user-agent': self.user_agent
             }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
-        for event in self._parse_events():
+    async def body(self) -> None:
+        for event in await self._parse_events():
             self.register_event(event.title, event.href,
                                  date=event.date, venue='Дворец Спорта «Мегаспорт»')

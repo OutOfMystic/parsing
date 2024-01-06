@@ -3,8 +3,9 @@ from typing import NamedTuple
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -12,7 +13,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class CskaBasket(SeatsParser):
+class CskaBasket(AsyncSeatsParser):
     event = 'tickets.cskabasket.ru'
     url_filter = lambda url: 'tickets.cskabasket.ru' in url
 
@@ -23,8 +24,8 @@ class CskaBasket(SeatsParser):
         self.event_id = self.url.split('=')[-1]
         self.csrf_frontend = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'Сектор B4' in sector_name:
@@ -46,24 +47,24 @@ class CskaBasket(SeatsParser):
 
         return sector_name
 
-    def _parse_seats(self) -> OutputData:
-        soup = self._request_to_get_free_sectors()
+    async def _parse_seats(self) -> OutputData:
+        soup = await self._request_to_get_free_sectors()
 
         self._set_csrf_frontend(soup)
 
         free_sectors = self._get_free_sectors_from_soup(soup)
 
-        output_data = self._get_output_data(free_sectors)
+        output_data = await self._get_output_data(free_sectors)
 
         return output_data
 
-    def _get_output_data(self, free_sectors: ResultSet[Tag]) -> OutputData:
+    async def _get_output_data(self, free_sectors: ResultSet[Tag]) -> OutputData:
         for sector in free_sectors:
             sector_name = sector.get('sector_name')
             sector_name = self._reformat(sector_name)
 
             sector_id = sector.get('view_id')
-            json_data = self._request_to_place(sector_id)
+            json_data = await self._request_to_place(sector_id)
 
             all_price_zones = self._get_price_zones_from_json(json_data)
 
@@ -105,7 +106,7 @@ class CskaBasket(SeatsParser):
     def _set_csrf_frontend(self, soup: BeautifulSoup) -> None:
         self.csrf_frontend = soup.select('meta[name="csrf-token"]')[0].get('content')
 
-    def _request_to_place(self, sector_id: str) -> json:
+    async def _request_to_place(self, sector_id: str) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -131,10 +132,10 @@ class CskaBasket(SeatsParser):
             '_csrf-frontend': self.csrf_frontend
         }
         url = 'https://tickets.cskabasket.ru/event/get-prices'
-        r = self.session.post(url, data=data, headers=headers)
+        r = await self.session.post(url, data=data, headers=headers)
         return r.json()
 
-    def _request_to_get_free_sectors(self) -> BeautifulSoup:
+    async def _request_to_get_free_sectors(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -152,9 +153,9 @@ class CskaBasket(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

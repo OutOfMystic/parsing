@@ -2,8 +2,9 @@ from typing import NamedTuple, Optional, Union
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -12,7 +13,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class CircusSochiRu(EventParser):
+class CircusSochiRu(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -20,11 +21,11 @@ class CircusSochiRu(EventParser):
         self.driver_source = None
         self.url: str = 'https://www.circus-sochi.ru/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        soup = self._requests_to_events(self.url)
+    async def _parse_events(self) -> OutputEvent:
+        soup = await self._requests_to_events(self.url)
 
         events = self._get_events_from_soup(soup)
 
@@ -60,7 +61,7 @@ class CircusSochiRu(EventParser):
         events = soup.select('div.ticket_item')
         return events
 
-    def _requests_to_events(self, url: str) -> BeautifulSoup:
+    async def _requests_to_events(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -81,9 +82,9 @@ class CircusSochiRu(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
-        for event in self._parse_events():
+    async def body(self) -> None:
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

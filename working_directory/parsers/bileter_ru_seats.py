@@ -1,11 +1,12 @@
 import json
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from bs4 import BeautifulSoup
 from parse_module.utils.parse_utils import decode_unicode_escape, double_split
 
-class BileterSeats(SeatsParser):
-    event = 'bileter.ru'
+
+class BileterSeats(AsyncSeatsParser):
     url_filter = lambda url: 'bileter.ru' in url
     proxy_check_url = 'https://www.bileter.ru/'
 
@@ -15,10 +16,10 @@ class BileterSeats(SeatsParser):
         self.driver_source = None
         self.event_id = self.url.split('/')[-1]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def get_seats(self, url_seats):
+    async def get_seats(self, url_seats):
         headers = {
             "accept": "*/*",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",
@@ -34,7 +35,7 @@ class BileterSeats(SeatsParser):
             "user-agent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
         }
 
-        r = self.session.get(url_seats, headers=headers)
+        r = await self.session.get(url_seats, headers=headers)
 
         activePlaces = double_split(r.json()['html'], '"activePlaces":', '],') + ']'
         activePlaces = decode_unicode_escape(activePlaces)
@@ -70,9 +71,9 @@ class BileterSeats(SeatsParser):
                     )    
         return a_sectors
 
-    def body(self):
+    async def body(self):
         url_seats = f'https://www.bileter.ru/performance/hall-scheme?IdPerformance={self.event_id}'
-        activePlaces = self.get_seats(url_seats)
+        activePlaces = await self.get_seats(url_seats)
         a_sectors = self.reformat(activePlaces)
 
         for sector_name, tickets in a_sectors.items():

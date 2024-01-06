@@ -1,9 +1,10 @@
+from parse_module.coroutines.parser import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class NationsParser(SeatsParser):
+class NationsParser(AsyncSeatsParser):
     event = 'theatreofnations.ru'
     url_filter = lambda url: 'theatreofnations.ru' in url
     proxy_check = SpecialConditions(url='https://theatreofnations.ru/events/')
@@ -14,8 +15,8 @@ class NationsParser(SeatsParser):
         self.driver_source = None
         self.event_id = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
         self.event_id = self.url.split('/')[-2]
 
     def reformat(self, a_sectors):
@@ -54,7 +55,7 @@ class NationsParser(SeatsParser):
 
         return sector_name, place_row
 
-    def get_tickets(self):
+    async def get_tickets(self):
         url = ("https://theatreofnations.ru/api/places/?nombilkn="
                f"{self.event_id}&cmd=get_hall_and_places&early_access=")
         headers = {
@@ -75,9 +76,9 @@ class NationsParser(SeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get('https://theatreofnations.ru/api/token_places/', headers=headers)
+        r = await self.session.get('https://theatreofnations.ru/api/token_places/', headers=headers)
         headers['authorization'] = r.text
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         seats = r.json()['EvailPlaceList']
         a_sectors = []
         for seat in seats:
@@ -95,9 +96,9 @@ class NationsParser(SeatsParser):
             a_sectors.append(formatted)
         return a_sectors
 
-    def body(self):
+    async def body(self):
         a_sectors = []
-        tickets = self.get_tickets()
+        tickets = await self.get_tickets()
         for ticket in tickets:
 
             sector_name = ticket['name']

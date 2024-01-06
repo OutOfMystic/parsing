@@ -4,7 +4,8 @@ from typing import NamedTuple
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -13,7 +14,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class VDNHRu(SeatsParser):
+class VDNHRu(AsyncSeatsParser):
     event = 'vdnh.ru'
     url_filter = lambda url: 'vdnh.ru' in url
 
@@ -25,8 +26,8 @@ class VDNHRu(SeatsParser):
         self.token = double_split(self.url, '&token=', '&')
         self.fid = double_split(self.url, '&frontendId=', '&')
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'Амфитеатр' in sector_name:
@@ -141,6 +142,6 @@ class VDNHRu(SeatsParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'xml')
 
-    def body(self) -> None:
+    async def body(self):
         sector = self._parse_seats()
         self.register_sector(sector.sector_name, sector.tickets)

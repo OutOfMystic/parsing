@@ -1,8 +1,9 @@
 import json
 from typing import NamedTuple
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -10,8 +11,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class Contextfest(SeatsParser):
-    event = 'contextfest.com'
+class Contextfest(AsyncSeatsParser):
     url_filter = lambda url: 'ticketscloud.com' in url
 
     def __init__(self, *args, **extra) -> None:
@@ -19,8 +19,8 @@ class Contextfest(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str, row: str, seat: str) -> tuple[str, str]:
         if_seat_in_parter = [
@@ -143,6 +143,6 @@ class Contextfest(SeatsParser):
         r = self.session.post(self.url, headers=headers, json=data)
         return r.json()
 
-    def body(self) -> None:
+    async def body(self):
         for sector in self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

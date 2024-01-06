@@ -7,7 +7,8 @@ from threading import Lock
 
 from . import pooling
 from .router import SchemeRouterFrontend, wait_until
-from ..manager.pooling import ScheduledExecutor, Task
+from ..connection import db_manager
+from ..manager.pooling import ScheduledExecutor
 from ..models import scheme
 from ..utils import provision
 from ..utils.logger import logger
@@ -80,9 +81,22 @@ class SchemeRouterBackend:
         self.group_schemes = {}
         self.event_lockers = defaultdict(Lock)
         self.conn = conn
-        self._pool = ScheduledExecutor(stats='scheme_router_stats.csv')
+        self._pool = ScheduledExecutor(stats='scheme_router_stats.csv', max_threads=5)
         self._locked_queues = {}
         self._postponer = Postponer(self.parser_schemes, self._locked_queues)
+
+    def _get_group_scheme(self, scheme_id):
+        if scheme_id not in self.group_schemes:
+            new_scheme = scheme.Scheme(scheme_id)
+            add_result = new_scheme.setup_sectors(wait_mode=True)
+            if add_result is False:
+                if not wait_until(lambda: scheme_id in self.group_schemes):
+                    logger.error(f'Scheme distribution corrupted! Backend. Scheme id {scheme_id}',
+                                 name='Controller')
+                    self.group_schemes[scheme_id] = new_scheme
+            else:
+                self.group_schemes[scheme_id] = new_scheme
+        return self.group_schemes[scheme_id]
 
     def create_scheme(self, event_id, scheme_id, name):
         try:
@@ -135,24 +149,11 @@ class SchemeRouterBackend:
         scheme = self.parser_schemes[event_id]
         scheme.release_sectors(*args)
 
-    def _get_group_scheme(self, scheme_id):
-        if scheme_id not in self.group_schemes:
-            new_scheme = scheme.Scheme(scheme_id)
-            add_result = new_scheme.setup_sectors()
-            if add_result is False:
-                if not wait_until(lambda: scheme_id in self.group_schemes):
-                    logger.error(f'Scheme distribution corrupted! Backend. Scheme id {scheme_id}',
-                                 name='Controller')
-                    self.group_schemes[scheme_id] = new_scheme
-            else:
-                self.group_schemes[scheme_id] = new_scheme
-        return self.group_schemes[scheme_id]
-
     def run(self) -> None:
         logger.info('Backend started', name='Controller')
         while True:
             got_data = multi_try(self.conn.recv, tries=20, name='Controller',
-                                 raise_exc=False, multiplier=1.00)
+                                 raise_exc=False)
             if got_data is provision.TryError:
                 sys.exit()
             else:
@@ -161,7 +162,17 @@ class SchemeRouterBackend:
             provision.just_try(method, args=args, name='Controller')
 
 
+def change_connection(login, password):
+    while not db_manager.connection:
+        time.sleep(0.1)
+    db_manager.connection.close()
+    db_manager.user = login
+    db_manager.password = password
+    db_manager.connect_db()
+
+
 def process_function(inner_conn):
+    change_connection('parsing_main', 'cnwhUCJMIIrF2g')
     backend_ = SchemeRouterBackend(inner_conn)
     backend_.run()
 

@@ -1,8 +1,9 @@
 import json
 from typing import NamedTuple
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -11,7 +12,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class Mikhailovsky(SeatsParser):
+class Mikhailovsky(AsyncSeatsParser):
     event = 'mikhailovsky.ru'
     url_filter = lambda url: 'mikhailovsky.ru' in url
 
@@ -20,8 +21,8 @@ class Mikhailovsky(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str, row: str, seat: str) -> tuple[str, ...]:
         if 'ярус' in sector_name:
@@ -64,8 +65,8 @@ class Mikhailovsky(SeatsParser):
 
         return sector_name, row, seat
 
-    def _parse_seats(self) -> OutputData:
-        text_data = self._request_to_text_data()
+    async def _parse_seats(self) -> OutputData:
+        text_data = await self._request_to_text_data()
 
         json_data = self._get_json_data_from_text(text_data)
 
@@ -114,7 +115,7 @@ class Mikhailovsky(SeatsParser):
         json_data_from_script_in_page = double_split(text_data, "var arPlace = JSON.parse('", "');")
         return json.loads(json_data_from_script_in_page)
 
-    def _request_to_text_data(self) -> str:
+    async def _request_to_text_data(self) -> str:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -134,9 +135,9 @@ class Mikhailovsky(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return r.text
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

@@ -1,10 +1,11 @@
 import json
 from bs4 import BeautifulSoup
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Cska(SeatsParser):
+class Cska(AsyncSeatsParser):
     event = 'tickets.hclokomotiv.ru'
     url_filter = lambda url: 'tickets.hclokomotiv.ru' in url
 
@@ -13,8 +14,8 @@ class Cska(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_seats(self, soup):
         get_all_view_id = soup.find_all('g', attrs={'mode': '1'})
@@ -119,7 +120,7 @@ class Cska(SeatsParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         all_sectors = self.get_seats()
 
         for sector in all_sectors:

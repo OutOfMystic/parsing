@@ -3,14 +3,15 @@ from datetime import datetime
 from time import sleep
 
 from bs4 import BeautifulSoup
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
 
-class Redkassa(EventParser):
+class Redkassa(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -39,8 +40,8 @@ class Redkassa(EventParser):
             'user-agent': self.user_agent
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def get_date_from_url(href):
@@ -56,8 +57,8 @@ class Redkassa(EventParser):
         return f"{formatted_day} {month_text} {year} {formatted_time}"
     
 
-    def take_all_events(self, url):
-        r = self.session.get(url, headers=self.headers)
+    async def take_all_events(self, url):
+        r = await self.session.get(url, headers=self.headers)
 
         venue_id = double_split(r.text, '"venueId":', ',')
         venue_id = venue_id.strip(' "')
@@ -98,7 +99,7 @@ class Redkassa(EventParser):
                 'IsPushkinCardOnly': 'false',
                 'sortingAlias': 'bydate'
                 }
-            res = self.session.get(url_post, headers=headers2, data=data)
+            res = await self.session.get(url_post, headers=headers2, data=data)
             soup = BeautifulSoup(res.text, 'lxml')
             all_events = soup.find_all('li', {'class':'theatre-list__item'})
             a_events.extend(all_events)
@@ -170,12 +171,12 @@ class Redkassa(EventParser):
 
         return a_events
 
-    def requests_to_events(self, url):
-        r = self.session.get(url, headers=self.headers)
+    async def requests_to_events(self, url):
+        r = await self.session.get(url, headers=self.headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def new_get_all_events(self, url):
-        soup = self.requests_to_events(url)
+    async def new_get_all_events(self, url):
+        soup = await self.requests_to_events(url)
 
         all_mounth = soup.find_all('div', class_=re.compile(r'dates-slider__item'))
         all_mounth_url = [ f"{self.KASSA}{i.find('a').get('href')}" for i in all_mounth if i.find('a') ]
@@ -201,14 +202,14 @@ class Redkassa(EventParser):
         return a_events
 
 
-    def body(self):
+    async def body(self):
         a_events = []
         for url in self.urls:
             # Неверные url для seats парсера, если 2 или более ивента в 1 день
-            #all_events = self.take_all_events(url)
+            #all_events = await self.take_all_events(url)
             #a_events = self.parse_events(all_events)
 
-            a_events += self.new_get_all_events(url)
+            a_events += await self.new_get_all_events(url)
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2], venue=event[3])

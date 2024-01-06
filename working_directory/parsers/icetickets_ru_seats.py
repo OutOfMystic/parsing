@@ -1,12 +1,13 @@
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class Icetickets(SeatsParser):
+class Icetickets(AsyncSeatsParser):
     proxy_check = NormalConditions()
     event = 'icetickets.ru'
     url_filter = lambda url: 'icetickets.ru' in url
@@ -16,8 +17,8 @@ class Icetickets(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         kreml_reformat_dict = {
@@ -53,7 +54,7 @@ class Icetickets(SeatsParser):
             else:
                 sector['name'] = ref_dict.get(sector['name'], sector['name'])
 
-    def parse_seats(self, soup):
+    async def parse_seats(self, soup):
         total_sector = []
 
         all_sectors = soup.select('#sectors_list li')
@@ -78,7 +79,7 @@ class Icetickets(SeatsParser):
                 'sid': sid,
                 's': '1'
             }
-            soup_for_sector = self.get_data(url, data)
+            soup_for_sector = await self.get_data(url, data)
 
             all_place_in_sector = {}
             all_free_seats = soup_for_sector.find_all('div', class_='ticlist')
@@ -100,7 +101,7 @@ class Icetickets(SeatsParser):
 
         return total_sector
 
-    def get_data(self, url, data):
+    async def get_data(self, url, data):
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -117,10 +118,10 @@ class Icetickets(SeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.post(url, data=data, headers=headers, verify=False)
+        r = await self.session.post(url, data=data, headers=headers, verify=False)
         return BeautifulSoup(r.text, 'lxml')
 
-    def second_requests_parser(self, url):
+    async def second_requests_parser(self, url):
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -135,10 +136,10 @@ class Icetickets(SeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, verify=False)
         return BeautifulSoup(r.text, 'lxml')
 
-    def request_parser(self, url):
+    async def request_parser(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -154,18 +155,18 @@ class Icetickets(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, verify=False)
         return BeautifulSoup(r.text, 'lxml')
 
-    def get_seats(self):
-        soup = self.request_parser(url=self.url)
+    async def get_seats(self):
+        soup = await self.request_parser(url=self.url)
 
-        a_events = self.parse_seats(soup)
+        a_events = await self.parse_seats(soup)
 
         return a_events
 
-    def body(self):
-        all_sectors = self.get_seats()
+    async def body(self):
+        all_sectors = await self.get_seats()
 
         self.reformat(all_sectors)
 

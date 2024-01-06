@@ -1,14 +1,16 @@
 from datetime import datetime
 from typing import Optional
 
+from parse_module.coroutines import AsyncEventParser
 from bs4 import BeautifulSoup
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
-class BileterEvent(EventParser):
+class BileterEvent(AsyncEventParser):
+    
     proxy_check_url = "https://www.bileter.ru/"
-    def __init__(self, controller):
-        super().__init__(controller)
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 1800
         self.driver_source = None
         self.headers = {
@@ -47,8 +49,8 @@ class BileterEvent(EventParser):
             'Сентября': 9, 'Октября': 10, 'Ноября': 11, 'Декабря': 12
         }[month]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
         
         
     def str_to_datetime(self, date : str) -> datetime:
@@ -97,8 +99,7 @@ class BileterEvent(EventParser):
             self.register_event(event_name=event[0], url=event[1], date=event[2], venue=event[3])
             
         
-    def body(self):
-        
+    async def body(self):
         events_list = []
         page = 1
         
@@ -107,16 +108,16 @@ class BileterEvent(EventParser):
             for url in self.urls:
                 url += f'&page={page}'
                 
-                r = self.session.get(url, headers=self.headers)
+                r = await self.session.gett(url, headers=self.headers)
 
                 page += 1
                 
-                soup = BeautifulSoup(r.text, 'lxml')
+                soup = BeautifulSoup(r.text(), 'lxml')
                 
                 p = soup.find('p', class_='uppercase')
                 
                 if p is not None:
-                    print("Done")
+                    self.info("Done")
                     return
 
                 events = soup.find_all('div', class_='afishe-item')
@@ -130,14 +131,12 @@ class BileterEvent(EventParser):
                         link = self.get_link(event)
                         date = self.get_date(event)
                         
-                        print((title, link, date, venue))
                         events_list.append((title, link, date, venue))
                     else:
                         for ticket in tickets:
                             link = self.get_link_from_list(ticket)
                             date = self.get_date_from_list(ticket)
                             
-                            print((title, link, date, venue))
                             events_list.append((title, link, date, venue))
         
-        # self.put_db(events_list)
+            self.put_db(events_list)

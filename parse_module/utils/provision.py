@@ -54,8 +54,7 @@ def threading_try(to_try,
                   tries=3,
                   args=None,
                   kwargs=None,
-                  print_errors=True,
-                  multiplier=1.14):
+                  print_errors=True):
     """
     The same as multi_try, but executes ``to_try`` code
     into a new thread. After the new thread is started,
@@ -73,7 +72,6 @@ def threading_try(to_try,
         args: arguments sent to ``to_try``
         kwargs: keyword arguments sent to ``to_try``
         print_errors: log errors on each try
-        multiplier: wait ratio, increase up to 1.5
 
     Returns: created ``threading.Thread`` object
     """
@@ -84,8 +82,7 @@ def threading_try(to_try,
         'args': args,
         'kwargs': kwargs,
         'raise_exc': False,
-        'print_errors': print_errors,
-        'multiplier': multiplier
+        'print_errors': print_errors
     }
     thread = threading.Thread(target=multi_try, args=(to_try,), kwargs=kwargs)
     thread.start()
@@ -100,8 +97,7 @@ def multi_try(to_try: Callable,
               args: Iterable = None,
               kwargs: dict = None,
               print_errors=True,
-              use_logger=True,
-              multiplier=1.14):
+              use_logger=True):
     """
     Try to execute smth ``tries`` times.
     If all attempts are unsuccessful and ``raise_exc``
@@ -118,7 +114,6 @@ def multi_try(to_try: Callable,
         raise_exc: raise exception or not after all
         print_errors: log errors on each try
         use_logger: log errors via the custom logger
-        multiplier: wait ratio, increase up to 1.5
 
     Returns: value from a last successful attempt.
     If all attempts fail, exception is raised or
@@ -130,13 +125,11 @@ def multi_try(to_try: Callable,
         args = tuple()
     if handle_error is None:
         handle_error = fpass
-    seconds = 3.0
     if tries == 1 and raise_exc is True:
         raise RuntimeError('If tries == 1, exception should not be raised.'
                            ' Set raise_exc argument to False')
 
     for i in range(tries):
-        seconds = seconds ** multiplier
         level = logger.error if i == tries - 1 else logger.warning
         result, exc = _tryfunc(to_try,
                                name,
@@ -162,6 +155,38 @@ def multi_try(to_try: Callable,
             raise TryError(f'Превышено число попыток ({tries})')
         else:
             return TryError
+
+
+def just_try(to_try,
+             name='Main',
+             args=None,
+             kwargs=None,
+             print_errors=True):
+    """
+    A simplified multi_try statement.
+    The same as multi_try, but executes ``to_try`` code
+    only once and doesn't raise an exception.
+
+    Args:
+        to_try: main function
+        name: name to identify logs
+        args: arguments sent to ``to_try``
+        kwargs: keyword arguments sent to ``to_try``
+        print_errors: log errors on each try
+
+    Returns: value from a last successful attempt.
+    If all attempts fail, exception is raised or
+    provision.TryError is returned.
+    """
+    kwargs = {
+        'name': name,
+        'tries': 1,
+        'args': args,
+        'kwargs': kwargs,
+        'raise_exc': False,
+        'print_errors': print_errors
+    }
+    return multi_try(to_try, **kwargs)
 
 
 def _tryfunc(func,
@@ -205,18 +230,18 @@ def _tryfunc(func,
         return result, None
 
 
-def just_try(to_try,
-             name='Main',
-             args=None,
-             kwargs=None,
-             print_errors=True):
+async def async_just_try(to_try,
+                         name='Main',
+                         args=None,
+                         kwargs=None,
+                         print_errors=True):
     """
-    A simplified multi_try statement.
-    The same as multi_try, but executes ``to_try`` code
+    A simplified async_try statement.
+    The same as async_try, but executes ``to_try`` code
     only once and doesn't raise an exception.
 
     Args:
-        to_try: main function
+        to_try: main async function
         name: name to identify logs
         args: arguments sent to ``to_try``
         kwargs: keyword arguments sent to ``to_try``
@@ -234,7 +259,94 @@ def just_try(to_try,
         'raise_exc': False,
         'print_errors': print_errors
     }
-    return multi_try(to_try, **kwargs)
+    return await async_try(to_try, **kwargs)
+
+
+async def async_try(to_try: Callable,
+                    handle_error: Callable = None,
+                    tries=3,
+                    raise_exc=True,
+                    name='Main',
+                    args: Iterable = None,
+                    kwargs: dict = None,
+                    print_errors=True,
+                    use_logger=True):
+    if kwargs is None:
+        kwargs = {}
+    if args is None:
+        args = tuple()
+    if handle_error is None:
+        handle_error = fpass
+    if tries == 1 and raise_exc is True:
+        raise RuntimeError('If tries == 1, exception should not be raised.'
+                           ' Set raise_exc argument to False')
+
+    for i in range(tries):
+        result, exc = await _asynctry(to_try,
+                                      name,
+                                      print_errors=print_errors,
+                                      use_logger=use_logger,
+                                      args=args,
+                                      kwargs=kwargs,
+                                      from_multi_try=(i, tries),
+                                      level=logger.error)
+        if result is not TryError:
+            return result
+        else:
+            error_prefix = '[Exception during `handle_error`]\n'
+            exc_args = None if len(inspect.signature(handle_error).parameters) == 0 else (exc, *args,)
+            exc_kwargs = None if len(inspect.signature(handle_error).parameters) == 0 else kwargs
+            await _asynctry(handle_error,
+                            name,
+                            args=exc_args,
+                            kwargs=exc_kwargs,
+                            error_prefix=error_prefix)
+    else:
+        if raise_exc:
+            raise TryError(f'Превышено число попыток ({tries})')
+        else:
+            return TryError
+
+
+async def _asynctry(func,
+                    name='',
+                    error_prefix='',
+                    print_errors=True,
+                    use_logger=True,
+                    level=logger.error,
+                    args=None,
+                    kwargs=None,
+                    from_multi_try=None):
+    if kwargs is None:
+        kwargs = {}
+    if args is None:
+        args = tuple()
+    try:
+        result = await func(*args, **kwargs)
+    except Exception as exc:
+        if print_errors:
+            tried_overall = ''
+            if level == logger.error:
+                color_switcher1, color_switcher2 = utils.Fore.YELLOW, utils.Fore.RED
+            else:
+                color_switcher1, color_switcher2 = utils.Fore.RED, utils.Fore.YELLOW
+
+            if from_multi_try is not None:
+                tried, overall = from_multi_try
+                if overall != 1:
+                    tried_overall = f' {color_switcher1}[{tried + 1}/{overall}]{color_switcher2}'
+            str_exception = str(exc).split('\n')[0]
+            error = f'({type(exc).__name__}){tried_overall} {str_exception}'
+            error_with_prefix = error_prefix + error
+
+            if use_logger:
+                level(error_with_prefix, name=name)
+            else:
+                name_part = f'{name} | ' if name else ''
+                print(f'{name_part}{color_switcher2}{error_with_prefix}{utils.Fore.RESET}')
+        return TryError, exc
+    else:
+        return result, None
 
 
 def get_script_dir(follow_symlinks=True):

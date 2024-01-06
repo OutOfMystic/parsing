@@ -3,8 +3,9 @@ import json
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.date import month_list
 
 
@@ -16,7 +17,7 @@ class OutputEvent(NamedTuple):
     venue: str
 
 
-class HelikonRu(EventParser):
+class HelikonRu(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -24,21 +25,21 @@ class HelikonRu(EventParser):
         self.driver_source = None
         self.url: str = 'https://www.helikon.ru/ru/playbill'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        soup = self._requests_to_events()
+    async def _parse_events(self) -> OutputEvent:
+        soup = await self._requests_to_events()
 
         events = self._get_events_from_soup(soup)
 
         all_events = self._parse_events_from_soup(events)
 
-        return self._filters_events(all_events)
+        return await self._filters_events(all_events)
 
-    def _filters_events(self, all_events: list[OutputEvent]) -> OutputEvent:
+    async def _filters_events(self, all_events: list[OutputEvent]) -> OutputEvent:
         all_events_id = [event.href.split('/')[-1] for event in all_events]
-        data_about_all_event_id = self._requests_to_data_about_all_event_id(all_events_id)
+        data_about_all_event_id = await self._requests_to_data_about_all_event_id(all_events_id)
         sold_out = [str(event['id']) 
                         for event in data_about_all_event_id .values() 
                                 if event and event['salesAvailable'] is False]
@@ -82,7 +83,7 @@ class HelikonRu(EventParser):
         events = soup.select('table.sticky-enabled tbody tr')
         return events
 
-    def _requests_to_data_about_all_event_id(self, all_events_id: list[str]) -> json:
+    async def _requests_to_data_about_all_event_id(self, all_events_id: list[str]) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -105,10 +106,10 @@ class HelikonRu(EventParser):
             'ids': all_events_id
         }
         url = 'https://helikon.core.ubsystem.ru/uiapi/event/sale-status'
-        r = self.session.post(url, headers=headers, json=data)
+        r = await self.session.post(url, headers=headers, json=data)
         return r.json()
 
-    def _requests_to_events(self) -> BeautifulSoup:
+    async def _requests_to_events(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -127,10 +128,10 @@ class HelikonRu(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
-        for event in self._parse_events():
+    async def body(self) -> None:
+        for event in await self._parse_events():
             self.register_event(event.title, event.href,
                                  date=event.date, venue=event.venue)

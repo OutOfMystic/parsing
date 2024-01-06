@@ -1,8 +1,9 @@
 import json
 from typing import NamedTuple
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -10,8 +11,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class CircusSochiRu(SeatsParser):
-    event = 'circus-sochi.ru'
+class CircusSochiRu(AsyncSeatsParser):
     url_filter = lambda url: 'ticket-place.ru' in url and '|sochi' in url
 
     def __init__(self, *args, **extra) -> None:
@@ -20,14 +20,14 @@ class CircusSochiRu(SeatsParser):
         self.driver_source = None
         self.url = self.url[:self.url.index('|')]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         ...
 
-    def _parse_seats(self) -> OutputData:
-        json_data = self._request_to_all_place()
+    async def _parse_seats(self) -> OutputData:
+        json_data = await self._request_to_all_place()
 
         all_place = self._get_all_place_from_json_data(json_data)
 
@@ -60,7 +60,7 @@ class CircusSochiRu(SeatsParser):
         all_place = json_data['data']['seats']['data']
         return all_place
 
-    def _request_to_all_place(self) -> json:
+    async def _request_to_all_place(self) -> json:
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -77,12 +77,12 @@ class CircusSochiRu(SeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return r.json()
 
-    def body(self) -> None:
+    async def body(self) -> None:
         self.debug('Starting body')
-        for sector in self._parse_seats():
+        for sector in await self._parse_seats():
             if 'Ложа' in sector.sector_name:
                 continue
             self.register_sector(sector.sector_name, sector.tickets)

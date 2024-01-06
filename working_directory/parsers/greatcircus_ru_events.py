@@ -1,9 +1,11 @@
+
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.date import month_list
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -11,12 +13,12 @@ class Parser(EventParser):
         self.driver_source = None
         self.url = 'https://www.greatcircus.ru/#!events'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def get_events(self, events_data):
+    async def get_events(self, events_data):
         a_events = []
-        set_pres = self.get_set_pres()
+        set_pres = await self.get_set_pres()
 
         for month_data in events_data:
             month = month_list[month_data['month']]
@@ -42,7 +44,7 @@ class Parser(EventParser):
 
         return a_events
 
-    def get_request(self):
+    async def get_request(self):
         url = 'https://www.greatcircus.ru/api/tickets/calendardata/0?lang=ru'  # &set=1, непонятно надо или нет
         headers = {
             'accept': 'application/json, text/javascript, */*; q=0.01',
@@ -60,13 +62,13 @@ class Parser(EventParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers)
-
+        
+        r = await self.session.get(url, headers=headers)
         return r.json()
 
-    def get_set_pres(self):
+    async def get_set_pres(self):
         url = 'https://www.greatcircus.ru/app/events/show.js'
-        r = self.session.get(url, headers={})
+        r = await self.session.get(url, headers={})
 
         set_pres = {
             1: 'pre4073',
@@ -82,9 +84,9 @@ class Parser(EventParser):
 
         return set_pres
 
-    def body(self):
-        events_data = self.get_request()
-        a_events = self.get_events(events_data)
+    async def body(self):
+        events_data = await self.get_request()
+        a_events = await self.get_events(events_data)
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2])

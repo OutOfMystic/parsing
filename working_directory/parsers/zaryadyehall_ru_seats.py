@@ -4,8 +4,9 @@ from typing import NamedTuple, Optional, Union
 
 from requests.exceptions import JSONDecodeError
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -13,7 +14,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class ZaryadyeHall(SeatsParser):
+class ZaryadyeHall(AsyncSeatsParser):
     event = 'zaryadyehall.ru'
     url_filter = lambda url: 'listim.com' in url
 
@@ -25,8 +26,8 @@ class ZaryadyeHall(SeatsParser):
         # self.user_token: str = double_split(self.url, 'gclid=', '#')
         self.user_token: str = f'1404449{randint(100, 999)}'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'Бельэтаж сцена' in sector_name:
@@ -48,8 +49,8 @@ class ZaryadyeHall(SeatsParser):
 
         return sector_name
 
-    def _parse_seats(self) -> Optional[Union[OutputData, list]]:
-        json_data = self._request_to_json_data()
+    async def _parse_seats(self) -> Optional[Union[OutputData, list]]:
+        json_data = await self._request_to_json_data()
         if json_data is None:
             return []
 
@@ -97,7 +98,7 @@ class ZaryadyeHall(SeatsParser):
         }
         return places
 
-    def _request_to_json_data(self, count_error=0):
+    async def _request_to_json_data(self, count_error=0):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -123,14 +124,14 @@ class ZaryadyeHall(SeatsParser):
             'event_id': self.event_id,
             'user_token': self.user_token
         }
-        r = self.session.post(url, data=data, headers=headers)
+        r = await self.session.post(url, data=data, headers=headers)
         try:
             return r.json()
         except JSONDecodeError:
             if count_error == 5:
                 return None
-            return self._request_to_json_data(count_error=count_error+1)
+            return await self._request_to_json_data(count_error=count_error+1)
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

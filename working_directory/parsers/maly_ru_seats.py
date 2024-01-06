@@ -2,12 +2,13 @@ import re
 
 from requests.exceptions import ProxyError
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class MalyParser(SeatsParser):
+class MalyParser(AsyncSeatsParser):
     event = 'maly.ru'
     url_filter = lambda url: 'maly.ru' in url
 
@@ -21,8 +22,8 @@ class MalyParser(SeatsParser):
         elif 'select-seat' in self.url:
             self.event_id = self.url.split('=')[-1]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, sectors):
         if self.name_of_scene == 'Историческая сцена':
@@ -78,7 +79,7 @@ class MalyParser(SeatsParser):
                 
                 sector['name'] = sector_name
 
-    def get_csrf(self):
+    async def get_csrf(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -90,7 +91,7 @@ class MalyParser(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         if r.status_code == 407:
             raise ProxyError(f'{r.status_code = }, {self.proxy.args = }')
         try:
@@ -99,7 +100,7 @@ class MalyParser(SeatsParser):
             return None
         return csrf
 
-    def get_occupied_ticket_ids(self, csrf):
+    async def get_occupied_ticket_ids(self, csrf):
         url = f'http://www.maly.ru/halls/occupied-seats?event_id={self.event_id}'
         headers = {
             'accept': '*/*',
@@ -112,7 +113,7 @@ class MalyParser(SeatsParser):
             'x-requested-with': 'XMLHttpRequest',
             'x-csrf-token': csrf
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return r.json()
 
     def _get_sectors_data(self, seat_data, occupied_ticket_ids=None):
@@ -141,9 +142,9 @@ class MalyParser(SeatsParser):
                 })
         return a_sectors
 
-    def body(self):
+    async def body(self):
         for _ in range(10):
-            csrf = self.get_csrf()
+            csrf = await self.get_csrf()
             if csrf is not None:
                 break
         else:
@@ -151,7 +152,7 @@ class MalyParser(SeatsParser):
             return
 
         if 'select-seat' in self.url:
-            occupied_ticket_ids = self.get_occupied_ticket_ids(csrf)
+            occupied_ticket_ids = await self.get_occupied_ticket_ids(csrf)
             headers = {
                 'accept': '*/*',
                 'accept-encoding': 'gzip, deflate',

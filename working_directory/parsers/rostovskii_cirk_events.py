@@ -3,11 +3,12 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class CircusRostov(EventParser):
+class CircusRostov(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
@@ -26,8 +27,8 @@ class CircusRostov(EventParser):
             "user-agent": self.user_agent
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_date(date):
@@ -48,10 +49,9 @@ class CircusRostov(EventParser):
         events_id = list(filter(lambda x: x is not None, events_id))
         return events_id
     
-    def get_info_about_event(self, id):
+    async def get_info_about_event(self, id):
         url_to_api = f'https://ticket-place.ru/widget/{id}/data'
-        info_about = self.session.get(url_to_api, headers=self.headers)
-        info_about.encoding = 'utf-8'
+        info_about = await self.session.get(url_to_api, headers=self.headers)
         info_about = info_about.json()
 
         title = info_about.get("data").get("name")
@@ -61,10 +61,10 @@ class CircusRostov(EventParser):
 
         return title, href, date
 
-    def load_all_dates(self, id):
+    async def load_all_dates(self, id):
         a_events = []
         url = f'https://ticket-place.ru/widget/{id}/similar'
-        all_events_json = self.session.get(url, headers=self.headers)
+        all_events_json = await self.session.get(url, headers=self.headers)
 
         for i in all_events_json.json().get("events"):
             title = i.get("name")
@@ -75,18 +75,18 @@ class CircusRostov(EventParser):
 
         return a_events
 
-    def body(self):
-        page = self.session.get(self.url, headers=self.headers)
+    async def body(self):
+        page = await self.session.get(self.url, headers=self.headers)
         events_ids = self.find_all_events(page)
 
         a_events = set()
-        first_event = self.get_info_about_event(events_ids[0])
+        first_event = await self.get_info_about_event(events_ids[0])
         a_events.add(first_event)
 
         count = 10
         while len(a_events) < len(events_ids) and count > 1:
             id = events_ids[len(a_events)-1]
-            to_a_events = self.load_all_dates(id)
+            to_a_events = await self.load_all_dates(id)
             a_events.update(to_a_events)
             count -= 1
 

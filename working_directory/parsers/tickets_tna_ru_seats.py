@@ -1,13 +1,14 @@
 import re
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class TNA(SeatsParser):
+class TNA(AsyncSeatsParser):
     proxy_check = NormalConditions()
     event = 'tna-tickets.ru'
     url_filter = lambda url: 'tna-tickets.ru' in url
@@ -17,8 +18,8 @@ class TNA(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, all_sectors):
         for sector in all_sectors:
@@ -26,7 +27,7 @@ class TNA(SeatsParser):
                 split_sector_name = sector['name'].split()
                 sector['name'] = split_sector_name[0] + ', ' + ' '.join(split_sector_name[1:])
 
-    def parse_seats(self, soup):
+    async def parse_seats(self, soup):
         total_sector = []
 
         event_id = self.url.split('=')[-1]
@@ -37,7 +38,7 @@ class TNA(SeatsParser):
         except IndexError:
             access_token = 'f82ClAPmEt2QvK66XPzZgzbAMfh1WlR_'
         url_to_data = f'https://api.tna-tickets.ru/api/v1/booking/{event_id}/sectors?access-token={access_token}'
-        json_data = self.get_price_list_or_seats_or_sectors(url_to_data)
+        json_data = await self.get_price_list_or_seats_or_sectors(url_to_data)
 
         all_sectors = json_data.get('result')
         for sector in all_sectors:
@@ -46,7 +47,7 @@ class TNA(SeatsParser):
                 sector_id = sector.get('sector_id')
 
                 url = f'https://api.tna-tickets.ru/api/v1/booking/{event_id}/seats-price?access-token={access_token}&sector_id={sector_id}'
-                get_price_list = self.get_price_list_or_seats_or_sectors(url)
+                get_price_list = await self.get_price_list_or_seats_or_sectors(url)
 
                 price_data = {}
 
@@ -58,7 +59,7 @@ class TNA(SeatsParser):
 
 
                 url = f'https://api.tna-tickets.ru/api/v1/booking/{event_id}/seats?access-token={access_token}&sector_id={sector_id}'
-                get_seats_list = self.get_price_list_or_seats_or_sectors(url)
+                get_seats_list = await self.get_price_list_or_seats_or_sectors(url)
 
                 total_seats_row_prices = {}
 
@@ -88,7 +89,7 @@ class TNA(SeatsParser):
 
         return total_sector
 
-    def get_price_list_or_seats_or_sectors(self, url):
+    async def get_price_list_or_seats_or_sectors(self, url):
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -105,10 +106,10 @@ class TNA(SeatsParser):
             'sec-fetch-site': 'same-site',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return r.json()
 
-    def request_parser(self, url):
+    async def request_parser(self, url):
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -124,18 +125,18 @@ class TNA(SeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def get_seats(self):
-        soup = self.request_parser(url=self.url)
+    async def get_seats(self):
+        soup = await self.request_parser(url=self.url)
 
-        a_events = self.parse_seats(soup)
+        a_events = await self.parse_seats(soup)
 
         return a_events
 
-    def body(self):
-        all_sectors = self.get_seats()
+    async def body(self):
+        all_sectors = await self.get_seats()
 
         self.reformat(all_sectors)
 

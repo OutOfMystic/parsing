@@ -3,8 +3,9 @@ from typing import NamedTuple
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -13,7 +14,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class WwwMosconsvRu(SeatsParser):
+class WwwMosconsvRu(AsyncSeatsParser):
     event = 'mosconsv.ru'
     url_filter = lambda url: 'api.zapomni.systems' in url
 
@@ -22,8 +23,8 @@ class WwwMosconsvRu(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'Амфитеатр' in sector_name:
@@ -148,6 +149,6 @@ class WwwMosconsvRu(SeatsParser):
         r = self.session.get(url_to_data, headers=headers)
         return r.json()
 
-    def body(self) -> None:
+    async def body(self):
         for sector in self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

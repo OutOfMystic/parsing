@@ -1,10 +1,11 @@
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.captcha import yandex_smart_captcha
 
 
-class OperettaParser(SeatsParser):
+class OperettaParser(AsyncSeatsParser):
     event = 'mosoperetta.ru'
     url_filter = lambda event: 'mosoperetta.ru' in event
 
@@ -15,8 +16,8 @@ class OperettaParser(SeatsParser):
 
         self.csrf = ''
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors, place_name):
         operetta_reformat_dict = {
@@ -42,7 +43,7 @@ class OperettaParser(SeatsParser):
         for sector in a_sectors:
             sector['name'] = ref_dict.get(sector['name'], sector['name'])
 
-    def get_event_data(self):
+    async def get_event_data(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -61,14 +62,14 @@ class OperettaParser(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers, verify=False)
+        r = await self.session.get(self.url, headers=headers, verify=False)
 
         count = 8
         while not r.ok and count > 0:
             self.debug(f'{self.proxy.args = }, {self.session.cookies = } mosoperetta 505 bad gateway')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
-            r = self.session.get(self.url, headers=headers, verify=False)
+            self.session = AsyncProxySession(self)
+            r = await self.session.get(self.url, headers=headers, verify=False)
             count -= 1
 
         sitekey = double_split(r.text, 'data-sitekey="', '"')
@@ -106,7 +107,7 @@ class OperettaParser(SeatsParser):
             'smart-token': token,
         }
 
-        r = self.session.post(self.url, headers=headers, data=data, verify=False)
+        r = await self.session.post(self.url, headers=headers, data=data, verify=False)
         try:
             svg_url = double_split(r.text, "url_svg = '", "'")
         except:
@@ -115,7 +116,7 @@ class OperettaParser(SeatsParser):
 
         return seats_url
 
-    def get_a_sector_seats(self, seats_url):
+    async def get_a_sector_seats(self, seats_url):
         headers = {
             'accept': 'application/json, text/javascript, */*; q=0.01',
             'accept-encoding': 'gzip, deflate, br',
@@ -133,7 +134,7 @@ class OperettaParser(SeatsParser):
             'x-requested-with': 'XMLHttpRequest'
         }
         url = seats_url
-        r = self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, verify=False)
         if not r.json().get('FreePlacesQty'):
             return []
 
@@ -158,9 +159,9 @@ class OperettaParser(SeatsParser):
 
         return a_seats
 
-    def body(self):
-        seats_url = self.get_event_data()
-        seats = self.get_a_sector_seats(seats_url)
+    async def body(self):
+        seats_url = await self.get_event_data()
+        seats = await self.get_a_sector_seats(seats_url)
 
         a_sectors = []
         for ticket in seats:

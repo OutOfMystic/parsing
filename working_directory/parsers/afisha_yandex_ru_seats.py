@@ -13,17 +13,18 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from PIL import Image, ImageOps
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.utils.captcha import afisha_recaptcha
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils import utils
 from parse_module.drivers.proxelenium import ProxyWebDriver
 from parse_module.utils.captcha import yandex_afisha_coordinates_captha
 
 
-class YandexAfishaParser(SeatsParser):
+class YandexAfishaParser(AsyncSeatsParser):
     proxy_check = SpecialConditions(url='https://afisha.yandex.ru/')
     event = 'afisha.yandex.ru'
     url_filter = lambda url: 'afisha.yandex.ru' in url
@@ -52,8 +53,8 @@ class YandexAfishaParser(SeatsParser):
         }
         self.session_key = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, sectors):
         if 'ВТБ Арена' == self.venue and 'Динамо' in self.event_name : #Если матчи ХК Динамо
@@ -1062,7 +1063,7 @@ class YandexAfishaParser(SeatsParser):
         return True
 
 
-    def body(self):
+    async def body(self):
         skip_events = [
             'https://widget.afisha.yandex.ru/w/sessions/MTE2NXwzODkxMzJ8Mjc4ODgzfDE2ODI2MTMwMDAwMDA%3D?widgetName=w2&lang=ru',  # ЦСКА — Ак Барс 27.04
         ]
@@ -1098,7 +1099,7 @@ class YandexAfishaParser(SeatsParser):
             except ProxyError as ex:
                 self.error(f'Catch(change_proxy): {ex} \n url:{self.url}')
                 self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-                #self.session = ProxySession(self)
+                #self.session = AsyncProxySession(self)
                 time.sleep(1)
             except Exception as ex:
                 self.error(f'Catch: {ex} \nurl:{self.url}')
@@ -1119,7 +1120,7 @@ class YandexAfishaParser(SeatsParser):
             self.default_headers = {}
             time.sleep(40)
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
+            self.session = AsyncProxySession(self)
             
             while self.req_number < 50 and r_sectors is None:
                 time.sleep(0.5)

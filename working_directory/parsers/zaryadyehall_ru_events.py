@@ -2,10 +2,11 @@ from typing import NamedTuple, Optional, Union
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -14,7 +15,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class ZaryadyeHall(EventParser):
+class ZaryadyeHall(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -22,19 +23,19 @@ class ZaryadyeHall(EventParser):
         self.driver_source = None
         self.url: str = 'https://zaryadyehall.ru/event/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        soup = self._requests_to_events()
+    async def _parse_events(self) -> OutputEvent:
+        soup = await self._requests_to_events()
 
         new_page = self._next_page_with_events(soup)
 
         events = self._get_events_from_soup(soup)
 
-        return self._parse_events_from_json(events, new_page)
+        return await self._parse_events_from_json(events, new_page)
 
-    def _parse_events_from_json(
+    async def _parse_events_from_json(
             self, events: ResultSet[Tag], new_page: Optional[Union[BeautifulSoup, None]]
     ) -> OutputEvent:
         count_page = 1
@@ -48,7 +49,7 @@ class ZaryadyeHall(EventParser):
                 break
             url = f'https://zaryadyehall.ru/event/?PAGEN_1={count_page}'
             count_page += 1
-            soup = self._requests_to_axaj_data(url)
+            soup = await self._requests_to_axaj_data(url)
             new_page = self._next_page_with_events(soup)
             events = self._get_events_from_soup(soup)
 
@@ -84,7 +85,7 @@ class ZaryadyeHall(EventParser):
         events = soup.select('ul.zh-c-list > li.zh-c-list__item.zh-c-item div.zh-c-item__content')
         return events
 
-    def _requests_to_axaj_data(self, url: str) -> BeautifulSoup:
+    async def _requests_to_axaj_data(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': 'text/html, */*; q=0.01',
             'accept-encoding': 'gzip, deflate, br',
@@ -101,10 +102,10 @@ class ZaryadyeHall(EventParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def _requests_to_events(self) -> BeautifulSoup:
+    async def _requests_to_events(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -122,9 +123,9 @@ class ZaryadyeHall(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
-        for event in self._parse_events():
+    async def body(self) -> None:
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

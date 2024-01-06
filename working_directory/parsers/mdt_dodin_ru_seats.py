@@ -1,8 +1,9 @@
 import json
 from typing import NamedTuple
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -10,7 +11,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class MdtDodin(SeatsParser):
+class MdtDodin(AsyncSeatsParser):
     event = 'mdt-dodin.ru'
     url_filter = lambda url: 'mdt-dodin.ru' in url
 
@@ -19,8 +20,8 @@ class MdtDodin(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'Ложа' in sector_name:
@@ -30,8 +31,8 @@ class MdtDodin(SeatsParser):
 
         return sector_name
 
-    def _parse_seats(self) -> OutputData:
-        json_data = self._request_to_json_data()
+    async def _parse_seats(self) -> OutputData:
+        json_data = await self._request_to_json_data()
 
         output_data = self._get_output_data(json_data)
 
@@ -69,7 +70,7 @@ class MdtDodin(SeatsParser):
 
         return place_sector, place_row, place_seat, place_price
 
-    def _request_to_json_data(self) -> json:
+    async def _request_to_json_data(self) -> json:
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -86,9 +87,9 @@ class MdtDodin(SeatsParser):
             'user-agent': self.user_agent
         }
         url = 'https://mdtdodin.core.ubsystem.ru/uiapi/event/scheme?id=' + self.url.split('/')[-1]
-        r = self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, verify=False)
         return r.json()['seats']
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

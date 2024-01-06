@@ -3,19 +3,20 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class VtbArena(EventParser):
+class VtbArena(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://vtb-arena.com/poster/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -74,7 +75,7 @@ class VtbArena(EventParser):
                 a1_events.append((title, href, date_to_write))
         return a1_events
 
-    def get_events(self, url):
+    async def get_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -91,12 +92,12 @@ class VtbArena(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         soup = BeautifulSoup(r.text, 'lxml')
         return soup
 
-    def body(self):
-        soup = self.get_events(self.url)
+    async def body(self):
+        soup = await self.get_events(self.url)
         a_events = self.parse_events(soup)
 
         for event in a_events:

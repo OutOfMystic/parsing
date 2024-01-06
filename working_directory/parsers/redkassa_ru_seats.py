@@ -1,10 +1,11 @@
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from bs4 import BeautifulSoup
 from parse_module.utils.parse_utils import double_split
 
 
-class Redkassa(SeatsParser):
+class Redkassa(AsyncSeatsParser):
     event = 'redkassa.ru'
     url_filter = lambda url: 'redkassa.ru' in url
 
@@ -13,8 +14,8 @@ class Redkassa(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         gubernskii = {
@@ -80,11 +81,11 @@ class Redkassa(SeatsParser):
             else:
                 sector['name'] = ref_dict.get(sector['name'], sector['name'])
 
-    def parse_seats(self):
+    async def parse_seats(self):
         total_sector = []
 
-        seance_id = self.get_seance_id()
-        json_data = self.request_ro_json_data(seance_id)
+        seance_id = await self.get_seance_id()
+        json_data = await self.request_ro_json_data(seance_id)
         if json_data is None:
             return []
         json_data = json_data.get('entrances')
@@ -129,7 +130,7 @@ class Redkassa(SeatsParser):
 
         return total_sector
 
-    def request_ro_json_data(self, seance_id):
+    async def request_ro_json_data(self, seance_id):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -151,12 +152,12 @@ class Redkassa(SeatsParser):
             "seanceId": seance_id,
             "rowId": None
         }
-        r = self.session.post(url, headers=headers, json=data)
+        r = await self.session.post(url, headers=headers, json=data)
         if r.status_code != 200:
             return None
         return r.json()
 
-    def get_seance_id(self):
+    async def get_seance_id(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'accept-encoding': 'gzip, deflate, br',
@@ -172,14 +173,14 @@ class Redkassa(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         soup = BeautifulSoup(r.text, 'lxml')
         script_with_seance_id = soup.select('body main script')[1].text
         seance_id = double_split(script_with_seance_id, '{"seanceId":"', '","eventId"')
         return seance_id
 
-    def body(self):
-        a_sectors = self.parse_seats()
+    async def body(self):
+        a_sectors = await self.parse_seats()
 
         self.reformat(a_sectors)
 

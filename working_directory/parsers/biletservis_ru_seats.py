@@ -2,13 +2,13 @@ import json
 import time
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split, lrsplit, contains_class, class_names_to_xpath
 from parse_module.utils import utils
 
 
-class BiletServisParser(SeatsParser):
-    event = 'biletservis.ru'
+class BiletServisParser(AsyncSeatsParser):
     url_filter = lambda url: 'biletservis.ru' in url
 
     def __init__(self, *args, **extra):
@@ -16,8 +16,8 @@ class BiletServisParser(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, sectors):
         for sector in sectors:
@@ -77,7 +77,7 @@ class BiletServisParser(SeatsParser):
                         loz_row = '2'
         return loz_row
 
-    def body(self):
+    async def body(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,i'
                       'mage/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -100,9 +100,10 @@ class BiletServisParser(SeatsParser):
               f'=get_svg&widget=1&date={self.sec_date}&event_id' \
               f'={self.event_id_cfg}&place_id={self.place_id}&' \
               f'hall_id={self.hall_id}&part_id='
-        r = self.session.get(url, headers=headers)
+              
+        r_text = await self.session.get_text(url, headers=headers)
 
-        elements = lrsplit(r.text, '<circle elem="true"', '/>', generator=True)
+        elements = lrsplit(r_text, '<circle elem="true"', '/>', generator=True)
         a_elements = (elem for elem in elements if 'ticket-id' in elem)
         params = ['place-name', 'row', ' place', 'price']
         parsed_a_elems = (get_params(circle, params) for circle in a_elements)

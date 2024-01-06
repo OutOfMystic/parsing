@@ -3,8 +3,9 @@ from typing import NamedTuple
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -12,8 +13,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class CskaSportstar(SeatsParser):
-    event = 'cska.sportstar.me'
+class CskaSportstar(AsyncSeatsParser):
     url_filter = lambda url: 'cska.sportstar.me' in url
 
     def __init__(self, *args, **extra) -> None:
@@ -22,8 +22,8 @@ class CskaSportstar(SeatsParser):
         self.driver_source = None
         self.event_id = int(self.url.split('/')[-1])
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'ПСБ' in sector_name:
@@ -41,16 +41,16 @@ class CskaSportstar(SeatsParser):
 
         return sector_name
 
-    def _parse_seats(self) -> OutputData:
-        json_data = self._request_to_get_free_sectors()
+    async def _parse_seats(self) -> OutputData:
+        json_data = await self._request_to_get_free_sectors()
 
         sectors = self._get_sectors_from_json_data(json_data)
 
-        output_data = self._get_output_data(sectors)
+        output_data = await self._get_output_data(sectors)
 
         return output_data
 
-    def _get_output_data(self, sectors: list[dict]) -> OutputData:
+    async def _get_output_data(self, sectors: list[dict]) -> OutputData:
         for sector in sectors:
             is_busy = sector['quantity']
             if is_busy is None:
@@ -60,7 +60,7 @@ class CskaSportstar(SeatsParser):
             sector_id = sector['sectorId']
             sector_key = sector['key']
 
-            json_data_about_places = self._request_to_places(sector_id, sector_key)
+            json_data_about_places = await self._request_to_places(sector_id, sector_key)
 
             yield self._get_output_data_from_json(sector_name, json_data_about_places)
 
@@ -92,7 +92,7 @@ class CskaSportstar(SeatsParser):
         sectors = json_data['data']['eventSectors']
         return sectors
 
-    def _request_to_places(self, sector_id: int, sector_key: str) -> BeautifulSoup:
+    async def _request_to_places(self, sector_id: int, sector_key: str) -> BeautifulSoup:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -123,10 +123,10 @@ class CskaSportstar(SeatsParser):
             }
         }
         url = 'https://cska.sportstar.me/graphql'
-        r = self.session.post(url, json=data, headers=headers)
+        r = await self.session.post(url, json=data, headers=headers)
         return r.json()
 
-    def _request_to_get_free_sectors(self) -> json:
+    async def _request_to_get_free_sectors(self) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -153,9 +153,9 @@ class CskaSportstar(SeatsParser):
             'variables': {'eventId': self.event_id}
         }
         url = 'https://cska.sportstar.me/graphql'
-        r = self.session.post(url, json=data, headers=headers)
+        r = await self.session.post(url, json=data, headers=headers)
         return r.json()
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

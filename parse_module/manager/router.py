@@ -53,13 +53,12 @@ class SchemeProxy:
         self._margins[priority] = margin_func
         self.conn.send(operation)
 
-    def unbind(self, *args):
-        priority, force = args if len(args) == 2 else args[0], False
+    def unbind(self, priority, force=False):
         if force:
             if priority not in self._margins:
                 return
         operation = ['unbind', [self.event_id, priority]]
-        del self._margins[args[0]]
+        del self._margins[priority]
         self.conn.send(operation)
 
     def release_sectors(self, parsed_sectors, parsed_dancefloors,
@@ -70,28 +69,6 @@ class SchemeProxy:
 
     def restore_margin(self, priority):
         return self._margins[priority]
-
-
-class GroupRouter:
-
-    def __init__(self, groups):
-        self.groups = groups
-        self._assignments = {}
-
-    def route_group(self, url, event_id):
-        scheme_id = db_manager.get_scheme_id(event_id)
-        if scheme_id in self._assignments:
-            return self._assignments[scheme_id]
-        groups = [group for group in self.groups if group.url_filter(url)]
-        self._assign(scheme_id, groups)
-        return self._assignments[scheme_id]
-
-    """def route_scheme(self, url, event_id, scheme_id):
-        group = self.route_group(url, event_id)
-        return group.router.get_parser_scheme(event_id, scheme_id)"""
-
-    def _assign(self, scheme_id, groups):
-        self._assignments[scheme_id] = groups[0]
 
 
 def wait_until(condition, timeout=300, step=0.1):

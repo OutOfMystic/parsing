@@ -2,13 +2,14 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class KassirParser(SeatsParser):
+class KassirParser(AsyncSeatsParser):
     proxy_check = NormalConditions()
     event = 'kassir.ru'
     url_filter = lambda event: 'kassir.ru' in event and 'crocus2' not in event and 'frame' not in event \
@@ -41,8 +42,8 @@ class KassirParser(SeatsParser):
             'user-agent': self.user_agent
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_megasport(a_sectors):
@@ -1602,7 +1603,7 @@ class KassirParser(SeatsParser):
         else: 
             return a_sectors
 
-    def new_get_sectors(self, url):
+    async def new_get_sectors(self, url):
         self.new_headers = {
             "accept": "*/*",
             'accept-encoding': 'gzip, deflate, br',
@@ -1618,12 +1619,12 @@ class KassirParser(SeatsParser):
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'user-agent': self.user_agent
         }
-        response = self.session.get(url, headers=self.new_headers)
+        response = await self.session.get(url, headers=self.new_headers)
 
         count = 10
         if (not response.ok or response.text == '[]') and count > 0:
             self.change_proxy()
-            self.session = ProxySession(self)
+            self.session = AsyncProxySession(self)
             self.debug(url, response.text)
             raise RuntimeError(f'{count} {self.proxy.args}, {url}, {self.session.cookies} this IP is block')
 
@@ -1647,7 +1648,7 @@ class KassirParser(SeatsParser):
         for sector in avalible_sectors:
             res.setdefault(sector[1], {})
             url_load_cheme = f'https://api.kassir.ru/api/orders/sectors/scheme/{self.id}/{sector[0]}?domain={self.domain}'
-            r = self.session.get(url=url_load_cheme, headers=self.new_headers)
+            r = await self.session.get(url=url_load_cheme, headers=self.new_headers)
             s = BeautifulSoup(r.text, 'lxml-xml')
 
             polygon =  [i for i in s.find_all('polygon') if 'kh:tariff-group-id' in i.attrs]
@@ -1661,7 +1662,7 @@ class KassirParser(SeatsParser):
 
         return res
 
-    def body(self):
+    async def body(self):
         list_to_reformat = ['Кремлёвский дворец', 'Театр «Современник»',
                             'Театр Сатиры', 'Казанский цирк', 'Театр Маяковского'] #venue will need to reformat 
         if 'widget.kassir.ru' in self.url:
@@ -1672,13 +1673,13 @@ class KassirParser(SeatsParser):
         else:
             url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?domain={self.domain}'
         try:
-            self.session.get(url=self.url, headers=self.headers, timeout=10)
+            await self.session.get(url=self.url, headers=self.headers, timeout=10)
         except Exception as ex:
             self.warning(f'Cannot load {self.url} {ex}')
         else:
             self.debug(f'load succes {self.url}')
 
-        a_sectors = self.new_get_sectors(url)
+        a_sectors = await self.new_get_sectors(url)
         
         if self.venue in list_to_reformat:
             a_sectors = self.new_reformat(a_sectors, self.venue)

@@ -1,14 +1,15 @@
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Bilettorg(EventParser):
+class Bilettorg(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -30,8 +31,8 @@ class Bilettorg(EventParser):
             
         }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -70,7 +71,7 @@ class Bilettorg(EventParser):
             a_events.append([title, href, normal_date, scene, venue])
         return a_events
 
-    def get_all_events(self, url):
+    async def get_all_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -88,17 +89,17 @@ class Bilettorg(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self):
+    async def body(self):
         
         self.reformat_venue = {
             'Главный театр России': 'Большой театр'
         }
 
         for url in self.urls:
-            soup = self.get_all_events(url)
+            soup = await self.get_all_events(url)
             a_events = self.parse_events(soup)
 
             for event in a_events:
@@ -120,5 +121,3 @@ class Bilettorg(EventParser):
                     
                 self.register_event(event[0], event[1], date=event[2], 
                                     scene=event[3], venue=event[4])
-            
-

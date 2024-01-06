@@ -67,7 +67,7 @@ class DBConnection:
             pickle.dump(self._saved_selects, fp)
 
     def connect_db(self):
-        multi_try(self._connect_db, name='Controller', tries=5, multiplier=1.01)
+        multi_try(self._connect_db, name='Controller', tries=5)
 
     def _connect_db(self):
         self.connection = psycopg2.connect(user=self.user,
@@ -105,7 +105,7 @@ class DBConnection:
     def execute(self, request):
         return provision.multi_try(self.cursor_wrapper, args=('execute', request,),
                                    handle_error=self._connect_db, name='Controller',
-                                   multiplier=1.05, tries=5)
+                                   tries=5)
 
     def select(self, request):
         if request in self._saved_selects:
@@ -121,12 +121,12 @@ class DBConnection:
     def fetchall(self):
         return provision.multi_try(self.cursor_wrapper, args=('fetchall',),
                                    handle_error=self._connect_db,
-                                   multiplier=1.05, tries=5, name='Controller')
+                                   tries=5, name='Controller')
 
     def commit(self):
         return provision.multi_try(self.connection_wrapper, args=('commit',),
                                    handle_error=self._connect_db,
-                                   multiplier=1.05, tries=5, name='Controller')
+                                   tries=5, name='Controller')
 
 
 class ParsingDB(DBConnection):
@@ -166,7 +166,6 @@ class ParsingDB(DBConnection):
         finally:
             for event_locker in event_lockers:
                 event_locker.set()
-        saved_schemes.dump()
 
     @locker
     def get_scheme_names(self):

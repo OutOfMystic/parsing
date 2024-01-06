@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -11,10 +12,10 @@ class Parser(EventParser):
         self.driver_source = None
         self.url = 'https://www.maly.ru/tickets'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def get_request(self, month_params=''):
+    async def get_request(self, month_params=''):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate',
@@ -26,7 +27,7 @@ class Parser(EventParser):
             'user-agent': self.user_agent
         }
 
-        r = self.session.get(self.url + month_params, headers=headers)
+        r = await self.session.get(self.url + month_params, headers=headers)
 
         return r.text
 
@@ -67,12 +68,12 @@ class Parser(EventParser):
 
         return a_events
 
-    def body(self):
+    async def body(self):
         not_events_to_skip = 0
         a_events = []
         month_params = ''
         while True:
-            soup = BeautifulSoup(self.get_request(month_params), 'lxml')
+            soup = BeautifulSoup(await self.get_request(month_params), 'lxml')
             month_params = self.get_next_month_params(soup.find('div', class_='poster-dates'))
             year = soup.find('h2', class_='page__title').text.strip().split()[0]
             events = self.get_events(soup.find('div', class_='poster-tables'), year)

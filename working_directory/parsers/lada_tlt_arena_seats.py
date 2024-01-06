@@ -1,13 +1,14 @@
 import re
 import json
-from time import sleep
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
-class HcLadaHockeyTLTarena_seats(SeatsParser):
+
+class HcLadaHockeyTLTarena_seats(AsyncSeatsParser):
     event = 'tickets.tlt-arena.ru'
     url_filter = lambda url: 'tickets.tlt-arena.ru' in url
  
@@ -17,8 +18,8 @@ class HcLadaHockeyTLTarena_seats(SeatsParser):
         self.driver_source = None
         self.event_id = self.url.split('/')[-1]
        
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def double_split(source, lstr, rstr, x=1, n=0):
@@ -31,7 +32,7 @@ class HcLadaHockeyTLTarena_seats(SeatsParser):
     def reformat_sector(sector):
         return sector
         
-    def get_seats_list(self, url):
+    async def get_seats_list(self, url):
         headers = {
             "accept": "*/*",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",
@@ -47,14 +48,13 @@ class HcLadaHockeyTLTarena_seats(SeatsParser):
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'user-agent': self.user_agent
         }
-        r1 = self.session.get(url=url, headers=headers, verify=False)
-        soup1 = BeautifulSoup(r1.text, 'lxml')
+        r1 = await self.session.get(url=url, headers=headers, verify_ssl=False)
         zones = self.double_split(r1.text, 'CORE.data.zones = ', ';')
         json_data = json.loads(zones)
-        ids = [ i.get('id') for i in json_data]
+        ids = [i.get('id') for i in json_data]
         return ids
     
-    def make_zones_dict(self, id):
+    async def make_zones_dict(self, id):
         url = f'https://tickets.tlt-arena.ru/seats-list/{self.event_id}/{id}'
         headers = {
             "accept": "*/*",
@@ -70,7 +70,7 @@ class HcLadaHockeyTLTarena_seats(SeatsParser):
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'user-agent': self.user_agent
             }   
-        r = self.session.get(url=url, headers=headers, verify=False)
+        r = await self.session.get(url=url, headers=headers, verify=False)
 
         self.prices.update(
             {i["pricezoneId"]: i["value"] for i in r.json()['prices']}
@@ -86,14 +86,13 @@ class HcLadaHockeyTLTarena_seats(SeatsParser):
                 (row, place) : price
             })
 
-
-    def body(self):
-        all_zones = self.get_seats_list(self.url)
+    async def body(self):
+        all_zones = await self.get_seats_list(self.url)
         self.prices = {}
         self.a_sectors = {}
 
         for zone in all_zones:
-            self.make_zones_dict(zone)
+            await self.make_zones_dict(zone)
         
         for sector, tickets in self.a_sectors.items():
             self.register_sector(sector, tickets)

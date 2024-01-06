@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Vakhtakassa(SeatsParser):
+class Vakhtakassa(AsyncSeatsParser):
     event = 'vakhtakassa.com'
     url_filter = lambda url: 'vakhtakassa.com' in url
 
@@ -13,12 +14,12 @@ class Vakhtakassa(SeatsParser):
         self.driver_source = None
         self.count_request = 0
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def get_href(self, url, received_date, received_time):
+    async def get_href(self, url, received_date, received_time):
         try:
-            r = self.request_for_get_href(url)
+            r = await self.request_for_get_href(url)
             soup_for_href = BeautifulSoup(r.text, "lxml")
 
             json_text = soup_for_href.select('script#__NEXT_DATA__')[0].text
@@ -46,11 +47,11 @@ class Vakhtakassa(SeatsParser):
         except Exception:
             if self.count_request < 5:
                 self.count_request += 1
-                return self.get_href(url, received_date, received_time)
+                return await self.get_href(url, received_date, received_time)
             else:
                 return None
 
-    def parse_seats(self):
+    async def parse_seats(self):
         month_num_by_str = {
             "Янв": '01', "Фев": '02', "Мар": '03', "Апр": '04',
             "Май": '05', "Июн": '06', "Июл": '07', "Авг": '08',
@@ -60,12 +61,12 @@ class Vakhtakassa(SeatsParser):
 
         self.count_request = 0
         int_month = month_num_by_str.get(month)
-        href = self.get_href(self.url, f'2023-{int_month}-{day}', f'{time}:00')
+        href = await self.get_href(self.url, f'2023-{int_month}-{day}', f'{time}:00')
         if href is None:
             self.error(f'Парсер vakhtakassa: c url {self.url} не вернул ссылку')
             return None
 
-        json_data = self.request_parser(url=href)
+        json_data = await self.request_parser(url=href)
         total_sector = []
 
         all_sector = json_data.get('sectors')
@@ -93,7 +94,7 @@ class Vakhtakassa(SeatsParser):
 
         return total_sector
 
-    def request_for_get_href(self, url):
+    async def request_for_get_href(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -112,10 +113,10 @@ class Vakhtakassa(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return r
 
-    def request_parser(self, url):
+    async def request_parser(self, url):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -130,11 +131,11 @@ class Vakhtakassa(SeatsParser):
             'sec-fetch-site': 'same-site',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return r.json()
 
-    def body(self):
-        all_sectors = self.parse_seats()
+    async def body(self):
+        all_sectors = await self.parse_seats()
 
         for sector in all_sectors:
             self.register_sector(sector['name'], sector['tickets'])

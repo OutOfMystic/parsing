@@ -5,14 +5,15 @@ import requests
 from bs4 import BeautifulSoup, PageElement
 from loguru import logger
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 import re
 
 
-class BolTheaterParser(EventParser):
+class BolTheaterParser(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
@@ -21,8 +22,8 @@ class BolTheaterParser(EventParser):
         }
         self.url = 'https://bol-theater.ru/afisha.html'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         month_years = [month_year.text.split() for month_year in soup.find_all('div', class_='afisha_month_link')]
@@ -38,11 +39,15 @@ class BolTheaterParser(EventParser):
             # href_wlink = double_split(href_elem.get('onclick'), 'wlink=', "&")
             # href_date = double_split(href_elem.get('onclick'), 'date=', "';")
             # href = f'https://bol-theater.ru/{href_elem.get("href")}?wlink={href_wlink}&date={href_date}'
-            href = 'https://bol-theater.ru/' + double_split(href_elem.get('onclick'), "document.location.href='", "';")
+            
+            href_onclick = href_elem.get('onclick')
+            if href_onclick is not None:
+                
+                href = 'https://bol-theater.ru/' + double_split(href_onclick, "document.location.href='", "';")
 
-            scene = event_blocks[2].find('div', class_='concert-descr').text
+                scene = event_blocks[2].find('div', class_='concert-descr').text
 
-            a_events.append([title, href, date, scene])
+                a_events.append([title, href, date, scene])
 
         return a_events
 
@@ -59,7 +64,7 @@ class BolTheaterParser(EventParser):
 
         return f'{day} {month} {year} {time}'
 
-    def get_events(self):
+    async def get_events(self):
         headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'Accept-Encoding': 'gzip, deflate, br',
@@ -76,15 +81,15 @@ class BolTheaterParser(EventParser):
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         soup = BeautifulSoup(r.text, 'lxml')
 
         a_events = self.parse_events(soup)
 
         return a_events
 
-    def body(self):
-        a_events = self.get_events()
+    async def body(self):
+        a_events = await self.get_events()
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2], scene=event[3])

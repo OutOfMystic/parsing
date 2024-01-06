@@ -2,13 +2,14 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
-class Hc_Salavat_Seats(SeatsParser): 
+class Hc_Salavat_Seats(AsyncSeatsParser): 
     proxy_check = NormalConditions()
     event = 'https://tickets.hcsalavat.ru/ru'
     url_filter = lambda url: 'hcsalavat.ru' in url
@@ -36,8 +37,8 @@ class Hc_Salavat_Seats(SeatsParser):
             'user-agent': self.user_agent
             }
        
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def reformat_seats(name):
@@ -51,7 +52,7 @@ class Hc_Salavat_Seats(SeatsParser):
             name = f'Ложа №{num}'
         return name
 
-    def load_zones(self, csrf_token):
+    async def load_zones(self, csrf_token):
         headers2 =  {
             "accept": "*/*",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",
@@ -71,7 +72,7 @@ class Hc_Salavat_Seats(SeatsParser):
             }
         
         url_zones = f"https://tickets.hcsalavat.ru/event/get-zones?event_id={self.id}"
-        r2 = self.session.get(url=url_zones, headers=headers2, verify=False)
+        r2 = await self.session.get(url=url_zones, headers=headers2, verify_ssl=False)
 
         zones = {}
         for i in r2.json()['zones'].items():
@@ -80,7 +81,7 @@ class Hc_Salavat_Seats(SeatsParser):
         #{64: 400, 65: 450, 75: 450, 69: 450, ...}
         return zones
 
-    def load_one_zone_tickets(self, zone, csrf_token):
+    async def load_one_zone_tickets(self, zone, csrf_token):
         headers3 = {
             "accept": "*/*",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",
@@ -103,7 +104,7 @@ class Hc_Salavat_Seats(SeatsParser):
            'view_id': zone,
            'clear_cache':'false',
            'csrf-frontend': csrf_token}
-        r3 = self.session.post(url=url_post, headers=headers3, data=data, verify=False)
+        r3 = await self.session.post(url=url_post, headers=headers3, data=data, verify_ssl=False)
 
         status = r3.json()['places']['type']
         seat_name = self.reformat_seats(self.sectors_info[zone])
@@ -135,21 +136,21 @@ class Hc_Salavat_Seats(SeatsParser):
             self.a_sectors.setdefault(seat_name, {}).update(tickets)
 
         
-    def body(self) -> None:
+    async def body(self) -> None:
         self.id = self.url.split('=')[-1]
-        r1 = self.session.get(url=self.url, headers=self.headers1, verify=False)
+        r1 = await self.session.get(url=self.url, headers=self.headers1, verify_ssl=False)
         soup = BeautifulSoup(r1.text, 'lxml')
         csrf_token = soup.find('meta', {'name':'csrf-token'}).get('content')
 
         g = soup.find_all('g', {'free':lambda s: s and int(s) > 0})
         self.sectors_info = {int(i.get('view_id')): i.get('sector_name') for i in g}
 
-        self.zones = self.load_zones(csrf_token)
+        self.zones = await self.load_zones(csrf_token)
 
         self.a_sectors = {}
         for zone in self.sectors_info.keys():
             try:
-                self.load_one_zone_tickets(zone, csrf_token)
+                await self.load_one_zone_tickets(zone, csrf_token)
             except Exception as ex:
                 self.error(f"{ex}cannot load one of the sectors")
 

@@ -3,8 +3,9 @@ from typing import NamedTuple, Optional, Union
 from requests.exceptions import ProxyError
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -14,7 +15,7 @@ class OutputEvent(NamedTuple):
     scene: str
 
 
-class WwwMosconsvRu(EventParser):
+class WwwMosconsvRu(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -22,8 +23,8 @@ class WwwMosconsvRu(EventParser):
         self.driver_source = None
         self.url: str = 'http://www.mosconsv.ru/ru/concerts'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self) -> OutputEvent:
         soup = self._requests_to_events(self.url)
@@ -122,6 +123,6 @@ class WwwMosconsvRu(EventParser):
             raise ProxyError()
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
+    async def body(self):
         for event in self._parse_events():
             self.register_event(event.title, event.href, date=event.date, scene=event.scene)

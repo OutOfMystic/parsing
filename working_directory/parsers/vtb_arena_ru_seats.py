@@ -1,13 +1,14 @@
 from requests.exceptions import ProxyError, JSONDecodeError
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class VtbArena(SeatsParser):
+class VtbArena(AsyncSeatsParser):
     event = 'newticket.vtb-arena.com'
     url_filter = lambda url: 'newticket.vtb-arena.com' in url or 'schematr.kassir.ru/widget' in url
     proxy_check = SpecialConditions(url='https://schematr.kassir.ru/')
@@ -22,8 +23,8 @@ class VtbArena(SeatsParser):
         self.get_configuration_id = None
         self.count_error = 0
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, all_sectors):
         if 'динамо' in self.name.lower():
@@ -497,7 +498,7 @@ class VtbArena(SeatsParser):
 
         return total_sector
 
-    def request_parser(self, url, data):
+    async def request_parser(self, url, data):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -516,22 +517,22 @@ class VtbArena(SeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.post(url, headers=headers, json=data, verify=False)
+        r = await self.session.post(url, headers=headers, json=data, verify=False)
         return r.json()
 
-    def get_seats(self):
+    async def get_seats(self):
         url = 'https://newticket.vtb-arena.com/api/scheme'
         data = {
             "id": self.url.split('/')[-1],
             "lang": "ru"
         }
-        json_data = self.request_parser(url=url, data=data)
+        json_data = await self.request_parser(url=url, data=data)
 
         a_events = self.parse_seats(json_data)
 
         return a_events
 
-    def parse_seats_kassir(self, json_data):
+    async def parse_seats_kassir(self, json_data):
         total_sector = []
 
         sectors_data = []
@@ -551,7 +552,7 @@ class VtbArena(SeatsParser):
             tariffs_data[tariff_id] = (tariff_price, tariff_available_seats,)
 
         url = f'https://schematr.kassir.ru/api/v1/halls/configurations/{self.get_configuration_id}?language=ru&phpEventId={self.event_id}'
-        get_all_seats = self.request_parser_kassir(url)
+        get_all_seats = await self.request_parser_kassir(url)
         if get_all_seats is None:
             return []
 
@@ -597,7 +598,7 @@ class VtbArena(SeatsParser):
 
         return total_sector
 
-    def request_parser_kassir(self, url):
+    async def request_parser_kassir(self, url):
         headers = {
             'accept': 'application/json',
             'accept-encoding': 'gzip, deflate, br',
@@ -613,7 +614,7 @@ class VtbArena(SeatsParser):
             'user-agent': self.user_agent,
             'x-widget-key': self.widget_key
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         if r.status_code == 500:
             return None
         try:
@@ -623,9 +624,9 @@ class VtbArena(SeatsParser):
             self.send_message_to_telegram(message)
             return None
 
-    def get_seats_from_kassir(self):
+    async def get_seats_from_kassir(self):
         url = f'https://schematr.kassir.ru/api/v1/events/{self.event_id}?language=ru'
-        get_configuration_id = self.request_parser_kassir(url)
+        get_configuration_id = await self.request_parser_kassir(url)
         if get_configuration_id is None:
             return []
         self.get_configuration_id = get_configuration_id.get('meta')
@@ -634,7 +635,7 @@ class VtbArena(SeatsParser):
         self.get_configuration_id = self.get_configuration_id.get('trHallConfigurationId')
 
         url = f'https://schematr.kassir.ru/api/v1/events/{self.event_id}/seats?language=ru&phpEventId={self.event_id}'
-        json_data = self.request_parser_kassir(url)
+        json_data = await self.request_parser_kassir(url)
         if json_data is None:
             return []
 
@@ -647,15 +648,15 @@ class VtbArena(SeatsParser):
             raise Exception('crocus_seats error: json_data is None')
         self.count_error = 0
 
-        all_sectors = self.parse_seats_kassir(json_data)
+        all_sectors = await self.parse_seats_kassir(json_data)
 
         return all_sectors
 
-    def body(self):
+    async def body(self):
         if 'newticket' in self.url:
-            all_sectors = self.get_seats()
+            all_sectors = await self.get_seats()
         else:
-            all_sectors = self.get_seats_from_kassir()
+            all_sectors = await self.get_seats_from_kassir()
 
         all_sectors = self.reformat(all_sectors)
 

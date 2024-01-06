@@ -2,33 +2,34 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Gorkovo(EventParser):
+class Gorkovo(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://art-theatre.ru/afisha'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_day_and_month(self, all_data_in_day):
         date = all_data_in_day.find('div', class_='data')
         date = double_split(str(date), '>', '<').strip()
         return date
 
-    def ajax_request_for_data(self, month_to_url, year_to_url, origin_month_for_request, all_event_in_month, page=2):
+    async def ajax_request_for_data(self, month_to_url, year_to_url, origin_month_for_request, all_event_in_month, page=2):
         timestamp_for_request = datetime(day=1, month=int(month_to_url), year=year_to_url)
         timestamp_for_request = datetime.timestamp(timestamp_for_request)
         timestamp_for_request = int(timestamp_for_request * 1000)
 
         url = f'https://art-theatre.ru/ajax/poster.php?date={timestamp_for_request}&page={page}'
-        data_json = self.get_ajax(url)
+        data_json = await self.get_ajax(url)
         text_for_soup = data_json.get('content')
         if text_for_soup:
             soup_from_request = BeautifulSoup(text_for_soup, 'lxml')
@@ -42,12 +43,12 @@ class Gorkovo(EventParser):
                 month_last_date_in_ajax = self.get_day_and_month(all_event_in_soup_from_request[-1]).split()[1]
                 if month_first_date_in_ajax == origin_month_for_request and month_last_date_in_ajax == origin_month_for_request:
                     page += 1
-                    all_event_in_month = self.ajax_request_for_data(month_to_url, year_to_url,
+                    all_event_in_month = await self.ajax_request_for_data(month_to_url, year_to_url,
                                                                     origin_month_for_request, all_event_in_month)
 
         return all_event_in_month
 
-    def parse_events(self):
+    async def parse_events(self):
         a_events = []
         datetime_now = datetime.now()
 
@@ -60,7 +61,7 @@ class Gorkovo(EventParser):
             href_to_data = f'/{year_to_url}/{month_to_url}'
 
             url = self.url + href_to_data
-            soup = self.get_events(url, href_to_data)
+            soup = await self.get_events(url, href_to_data)
 
             all_event_in_month = soup.find_all('div', class_='day-items')
             if len(all_event_in_month) == 0:
@@ -68,7 +69,7 @@ class Gorkovo(EventParser):
 
             origin_month_for_request = self.get_day_and_month(all_event_in_month[0]).split()[1]
 
-            all_event_in_month = self.ajax_request_for_data(month_to_url, year_to_url, origin_month_for_request, all_event_in_month)
+            all_event_in_month = await self.ajax_request_for_data(month_to_url, year_to_url, origin_month_for_request, all_event_in_month)
 
             for all_data_in_day in all_event_in_month:
                 date = self.get_day_and_month(all_data_in_day)
@@ -99,7 +100,7 @@ class Gorkovo(EventParser):
 
         return a_events
 
-    def get_ajax(self, url):
+    async def get_ajax(self, url):
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -113,10 +114,10 @@ class Gorkovo(EventParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return r.json()
 
-    def get_events(self, url, href_to_data):
+    async def get_events(self, url, href_to_data):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -132,15 +133,15 @@ class Gorkovo(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         soup = BeautifulSoup(r.text, 'lxml')
 
         return soup
 
-    def body(self):
+    async def body(self):
         events_is_complite = []
-        a_events = self.parse_events()
+        a_events = await self.parse_events()
 
         for event in a_events:
             if event not in events_is_complite:

@@ -1,7 +1,8 @@
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
-class CircusRostov(SeatsParser):
+class CircusRostov(AsyncSeatsParser):
     event = 'circus-rostov.ru'
     url_filter = lambda url: 'ticket-place.ru' in url and '|rostov' in url
 
@@ -23,8 +24,8 @@ class CircusRostov(SeatsParser):
             "user-agent": self.user_agent
         }
 
-    def work_with_json(self, session):
-        places = session.json().get("data").get("seats").get("data")
+    def work_with_json(self, r_json):
+        places = r_json.get("data").get("seats").get("data")
 
         reformat = {
             'Левый балкон': 'Балкон (левая сторона)',
@@ -47,13 +48,13 @@ class CircusRostov(SeatsParser):
 
         return a_sectors
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def body(self):
-        session = self.session.get(self.url, headers=self.headers)
+    async def body(self):
+        r = await self.session.get(self.url, headers=self.headers)
 
-        a_sectors = self.work_with_json(session)
+        a_sectors = self.work_with_json(r.json())
 
         for sector, tickets in a_sectors.items():
             self.register_sector(sector, tickets)

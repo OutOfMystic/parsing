@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Cska(SeatsParser):
+class Cska(AsyncSeatsParser):
     event = 'tickets.ska.ru'
     url_filter = lambda url: 'tickets.ska.ru' in url
 
@@ -12,8 +13,8 @@ class Cska(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         cska_arena_reformat_dict = {
@@ -190,7 +191,7 @@ class Cska(SeatsParser):
 
         return total_sector
 
-    def request_parser(self, url):
+    async def get_html(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -208,18 +209,19 @@ class Cska(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        return self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
+        return r.text
 
-    def get_seats(self):
-        r = self.request_parser(url=self.url)
-        soup = BeautifulSoup(r.text, 'lxml')
+    async def get_seats(self):
+        r_text = await self.get_html(url=self.url)
+        soup = BeautifulSoup(r_text, 'lxml')
 
         a_events = self.parse_seats(soup)
 
         return a_events
 
-    def body(self):
-        all_sectors = self.get_seats()
+    async def body(self):
+        all_sectors = await self.get_seats()
 
         self.reformat(all_sectors)
 

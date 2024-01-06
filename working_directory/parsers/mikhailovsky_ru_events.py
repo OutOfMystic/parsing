@@ -3,9 +3,10 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
@@ -15,7 +16,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class Mikhailovsky(EventParser):
+class Mikhailovsky(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -23,17 +24,17 @@ class Mikhailovsky(EventParser):
         self.driver_source = None
         self.url: str = 'https://mikhailovsky.ru/afisha/performances/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> Callable[[BeautifulSoup, str], OutputEvent]:
-        soup = self._requests_to_events()
+    async def _parse_events(self) -> Callable[[BeautifulSoup, str], OutputEvent]:
+        soup = await self._requests_to_events()
 
         events, next_href = self._get_events_from_soup(soup)
 
-        return self._parse_events_from_json(events, next_href)
+        return await self._parse_events_from_json(events, next_href)
 
-    def _parse_events_from_json(
+    async def _parse_events_from_json(
             self, events: list, next_href: BeautifulSoup
                     ) -> Callable[[BeautifulSoup, str], OutputEvent]:
         day_old = int(datetime.now().day)
@@ -61,7 +62,7 @@ class Mikhailovsky(EventParser):
             else:
                 url = next_href.get('href')
                 url = f'https://mikhailovsky.ru{url}'
-                soup = self._requests_to_axaj_events(url)
+                soup = await self._requests_to_axaj_events(url)
                 events, next_href = self._get_events_from_soup(soup)
 
     def _parse_data_from_event(self, event: BeautifulSoup, month_now: str) -> Optional[Union[OutputEvent, None]]:
@@ -87,7 +88,7 @@ class Mikhailovsky(EventParser):
         else:
             return None
         # else:
-        #     href = self.session.get(href).url
+        #     href = # await self.session.get(href).url
         #     href = href[:href.index('?')].replace('=', '%3D') + '?widgetName=w2&lang=ru'
 
         return OutputEvent(title=title, href=href, date=normal_date)
@@ -99,7 +100,7 @@ class Mikhailovsky(EventParser):
         next_href = soup.find('a', class_='load-more')
         return events, next_href
 
-    def _requests_to_axaj_events(self, url: str) -> BeautifulSoup:
+    async def _requests_to_axaj_events(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -118,10 +119,10 @@ class Mikhailovsky(EventParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def _requests_to_events(self) -> BeautifulSoup:
+    async def _requests_to_events(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -141,9 +142,9 @@ class Mikhailovsky(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
-        for event in self._parse_events():
+    async def body(self) -> None:
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

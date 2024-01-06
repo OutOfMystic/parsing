@@ -3,13 +3,14 @@ from typing import Optional, Union
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class KremlInPalace(SeatsParser):
+class KremlInPalace(AsyncSeatsParser):
     event = 'kremlinpalace.org'
     url_filter = lambda url: 'kremlinpalace.org' in url
     proxy_check = SpecialConditions(url='https://kremlinpalace.org/')
@@ -24,8 +25,8 @@ class KremlInPalace(SeatsParser):
                            ' AppleWebKit/537.36 (KHTML, like Gecko)'
                            ' Chrome/111.0.0.0 Safari/537.36')
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, a_sectors):
         scheme_main = {
@@ -101,7 +102,7 @@ class KremlInPalace(SeatsParser):
 
         return total_sector
 
-    def requests_to_json(self, url):
+    async def requests_to_json(self, url):
         headers = {
             'accept': 'application/json',
             'accept-encoding': 'gzip, deflate, br',
@@ -122,10 +123,10 @@ class KremlInPalace(SeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return r.json()
 
-    def request_to_id(self, url):
+    async def request_to_id(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -144,10 +145,10 @@ class KremlInPalace(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def _get_js_code_and__js_p__from_main_site(self) -> tuple[str, str, str]:
+    async def _get_js_code_and__js_p__from_main_site(self) -> tuple[str, str, str]:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -165,7 +166,7 @@ class KremlInPalace(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         js_code = double_split(r.text, '<script>', '</script>')
         return js_code, self.session.cookies.get('__js_p_'), r.text
 
@@ -209,8 +210,8 @@ class KremlInPalace(SeatsParser):
             secure='False'
         )
 
-    def _set_cookie_for_bypassing_protection(self) -> Optional[Union[None, BeautifulSoup]]:
-        js_code, cookie__js_p_, r_text = self._get_js_code_and__js_p__from_main_site()
+    async def _set_cookie_for_bypassing_protection(self) -> Optional[Union[None, BeautifulSoup]]:
+        js_code, cookie__js_p_, r_text = await self._get_js_code_and__js_p__from_main_site()
         if cookie__js_p_ is None or 'var code = get_param("__js_p_", "int", 0);' not in js_code:
             return BeautifulSoup(r_text, 'lxml')
         self._processing_js_code_to_generate_cookie(js_code, cookie__js_p_)
@@ -231,32 +232,32 @@ class KremlInPalace(SeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        self.session.get(self.url, headers=headers)
+        await self.session.get(self.url, headers=headers)
 
-    def get_seats(self):
-        soup = self._set_cookie_for_bypassing_protection()
+    async def get_seats(self):
+        soup = await self._set_cookie_for_bypassing_protection()
         if soup is None:
-            soup = self.request_to_id(self.url)
+            soup = await self.request_to_id(self.url)
         self.id_event = soup.find('div', attrs={'id': 'app'}).get('data-performance')
 
         url = f'https://gw-ts.kremlinpalace.org/api/v1/places?event_id={self.id_event}'
-        json_data = self.requests_to_json(url)
+        json_data = await self.requests_to_json(url)
 
         all_sectors = self.parse_seats(json_data)
 
         return all_sectors
 
-    def body(self):
+    async def body(self):
         for count_error in range(10):
             try:
-                all_sectors = self.get_seats()
+                all_sectors = await self.get_seats()
                 break
             except AttributeError as error:
                 if count_error == 9:
                     raise AttributeError(error)
                 if count_error >= 5:
                     self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-                    self.session = ProxySession(self)
+                    self.session = AsyncProxySession(self)
                 continue
         else:
             all_sectors = {}

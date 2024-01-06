@@ -1,13 +1,13 @@
 from bs4 import BeautifulSoup
-from time import sleep
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
-class AfishaRuSeats(SeatsParser):
-    event = 'mapi.afisha.ru'
+
+class AfishaRuSeats(AsyncSeatsParser):
     url_filter = lambda event: 'mapi.afisha.ru' in event
     proxy_check = SpecialConditions(url='https://www.afisha.ru/')
     
@@ -23,10 +23,10 @@ class AfishaRuSeats(SeatsParser):
                 },
             }
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def load_scheme(self):
+    async def load_scheme(self):
         headers = {
             "accept": "application/json",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",
@@ -42,7 +42,7 @@ class AfishaRuSeats(SeatsParser):
             'User-Agent': self.user_agent
         }
         url_seats = f'https://mapi.afisha.ru/api/v21/hall/{self.sessionID}?withSubstrate=true'
-        response = self.session.get(url_seats, headers=headers)
+        response = await self.session.get(url_seats, headers=headers)
 
         try:
             resp = response.json()
@@ -102,8 +102,8 @@ class AfishaRuSeats(SeatsParser):
                             })
         return dict_seats
 
-    def body(self):
-        scheme_json = self.load_scheme()
+    async def body(self):
+        scheme_json = await self.load_scheme()
         if not scheme_json:
             self.warning(f'this event has empty json_file!{self.url} ')
             return False

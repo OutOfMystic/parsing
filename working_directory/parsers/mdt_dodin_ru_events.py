@@ -3,9 +3,10 @@ from typing import NamedTuple, Optional, Union
 import json
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -15,7 +16,7 @@ class OutputEvent(NamedTuple):
     id_event: str
 
 
-class MdtDodin(EventParser):
+class MdtDodin(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -23,11 +24,11 @@ class MdtDodin(EventParser):
         self.driver_source = None
         self.url: str = 'https://mdt-dodin.ru/plays/afisha/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def _parse_events(self):
-        soup = self._requests_to_events(self.url)
+    async def _parse_events(self):
+        soup = await self._requests_to_events(self.url)
 
         links_with_all_events_pages = self._get_href_with_all_events_pages(soup)
 
@@ -35,12 +36,12 @@ class MdtDodin(EventParser):
 
         all_events = self._parse_events_from_json(events, links_with_all_events_pages)
 
-        return self._get_filtered_events(all_events)
+        return await self._get_filtered_events(all_events)
 
-    def _get_filtered_events(self, all_events: list[OutputEvent]) -> OutputEvent:
+    async def _get_filtered_events(self, all_events: list[OutputEvent]) -> OutputEvent:
         all_id_event = [event.id_event for event in all_events]
 
-        data_status_event = self._requests_to_check_tickets(all_id_event)
+        data_status_event = await self._requests_to_check_tickets(all_id_event)
         for event in all_events:
             if self._get_status_event(data_status_event, event.id_event):
                 yield event
@@ -94,7 +95,7 @@ class MdtDodin(EventParser):
         events = soup.select('ul.ui-list > li ul.pack-list')
         return events
 
-    def _requests_to_check_tickets(self, data: list) -> json:
+    async def _requests_to_check_tickets(self, data: list) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -116,10 +117,10 @@ class MdtDodin(EventParser):
         data = {
             "ids": data
         }
-        r = self.session.post(url, headers=headers, json=data, verify=False)
+        r = await self.session.post(url, headers=headers, json=data, verify=False)
         return r.json()
 
-    def _requests_to_events(self, url: str) -> BeautifulSoup:
+    async def _requests_to_events(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -137,9 +138,9 @@ class MdtDodin(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
-        for event in self._parse_events():
+    async def body(self) -> None:
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

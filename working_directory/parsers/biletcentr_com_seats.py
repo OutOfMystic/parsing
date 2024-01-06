@@ -1,12 +1,12 @@
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 from bs4 import BeautifulSoup
 import re
 
 
-class StarParser(SeatsParser):
-    event = 'biletcentr.com.com'
+class StarParser(AsyncSeatsParser):
     url_filter = lambda event: 'biletcentr.com' in event
 
     def __init__(self, *args, **extra):
@@ -14,8 +14,8 @@ class StarParser(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_f_sectors(self, sectors, get_f_name=None, add_sec=False):
         to_del = []
@@ -561,8 +561,8 @@ class StarParser(SeatsParser):
 
         return seats
 
-    def get_places(self):
-        resp = self.session.get(self.url, headers={'user-agent': 'Custom'})
+    async def get_places(self):
+        resp = await self.session.get(self.url, headers={'user-agent': 'Custom'})
         soup = BeautifulSoup(resp.text, 'lxml')
         map_s = soup.find_all('div', class_='Map')
         if map_s:
@@ -574,14 +574,14 @@ class StarParser(SeatsParser):
 
         return s, theatre
 
-    def body(self):
+    async def body(self):
         skip_events = []
 
         if self.url in skip_events:
             return None
 
         sector = []
-        places, theatre = self.get_places()
+        places, theatre = await self.get_places()
 
         for place in places:
             if place[0] not in sector:

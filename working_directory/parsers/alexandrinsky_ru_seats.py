@@ -3,16 +3,16 @@ from typing import NamedTuple, Optional, Union
 
 from requests.exceptions import JSONDecodeError
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 class OutputData(NamedTuple):
     sector_name: str
     tickets: dict[tuple[str, str], int]
 
 
-class AlexandrinskyRu(SeatsParser):
-    event = 'alexandrinsky.ru'
+class AlexandrinskyRu(AsyncSeatsParser):
     url_filter = lambda url: 'afisha.ru/wl/402' in url
 
     def __init__(self, *args, **extra) -> None:
@@ -20,8 +20,8 @@ class AlexandrinskyRu(SeatsParser):
         self.delay = 1200
         self.driver_source = None
         
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str, place_row: str) -> tuple[str, str]:
         if 'Ложа бельэтажа' in sector_name:
@@ -51,8 +51,8 @@ class AlexandrinskyRu(SeatsParser):
 
         return sector_name, place_row
 
-    def _parse_seats(self) -> Optional[Union[OutputData, list]]:
-        json_data = self._request_to_all_place()
+    async def _parse_seats(self) -> Optional[Union[OutputData, list]]:
+        json_data = await self._request_to_all_place()
         if json_data is None:
             return []
 
@@ -85,7 +85,7 @@ class AlexandrinskyRu(SeatsParser):
         for sector_name, tickets in sectors_data.items():
             yield OutputData(sector_name=sector_name, tickets=tickets)
 
-    def _request_to_all_place(self, count_error=0):
+    async def _request_to_all_place(self, count_error=0):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -109,14 +109,14 @@ class AlexandrinskyRu(SeatsParser):
             "event_id": self.event_id,
             "user_token": f"167644{random.randint(1000000, 9999999)}-{random.randint(100000, 999999)}"
         }
-        r = self.session.post(self.url, data=data, headers=headers)
+        r = await self.session.post(self.url, data=data, headers=headers)
         try:
             return r.json()
         except JSONDecodeError:
             if count_error == 5:
                 return None
-            return self._request_to_all_place(count_error=count_error+1)
+            return await self._request_to_all_place(count_error=count_error+1)
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

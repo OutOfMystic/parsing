@@ -1,11 +1,12 @@
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.provision import multi_try
 from parse_module.utils import utils
 
 
-class ProfticketParser(SeatsParser):
+class ProfticketParser(AsyncSeatsParser):
     event = 'spa.profticket.ru'
     url_filter = lambda url: 'spa.profticket.ru' in url
     proxy_check = SpecialConditions(url='https://spa.profticket.ru/')
@@ -15,8 +16,8 @@ class ProfticketParser(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat_tickets(self, sector, f_row=None, f_seat=None):
         tickets_f = {}
@@ -118,7 +119,7 @@ class ProfticketParser(SeatsParser):
             elif 'цирк никулина' in place_name:
                 sector['name'] = reformat_dict_nikulina.get(sector['name'], sector['name'])
 
-    def get_show_info(self):
+    async def get_show_info(self):
         url = f'https://widget.profticket.ru/api/event/show/?company_id={self.company_id}&show_id={self.show_id}&language=ru-RU'
         headers = {
             'accept': 'application/json, text/plain, */*',
@@ -136,7 +137,7 @@ class ProfticketParser(SeatsParser):
             'sec-fetch-site': 'same-site',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         try:
             global_show_id = r.json()['response']['show']['id']
@@ -148,7 +149,7 @@ class ProfticketParser(SeatsParser):
 
         return global_show_id, place_name
 
-    def get_tickets(self, global_show_id):
+    async def get_tickets(self, global_show_id):
         url = f'https://widget.profticket.ru/api/event/scheme/?' \
               f'company_id={self.company_id}&' \
               f'global_show_id={global_show_id}&' \
@@ -170,7 +171,7 @@ class ProfticketParser(SeatsParser):
             'sec-fetch-site': 'same-site',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         try:
             data = r.json()['response']['items']
@@ -180,12 +181,12 @@ class ProfticketParser(SeatsParser):
 
         return data
 
-    def body(self):
-        data_or_none = self.get_show_info()
+    async def body(self):
+        data_or_none = await self.get_show_info()
         if data_or_none is None:
             return
         global_show_id, place_name = data_or_none
-        seat_data = self.multi_try(self.get_tickets, args=(global_show_id,))
+        seat_data = self.multi_try(await self.get_tickets, args=(global_show_id,))
 
         a_sectors = []
         for ticket in seat_data:

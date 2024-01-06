@@ -1,12 +1,13 @@
 import datetime
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.date import month_num_by_str
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class OperettaParser(EventParser):
+class OperettaParser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -33,8 +34,8 @@ class OperettaParser(EventParser):
         }
         r = self.session.get(self.url, headers=headers)
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -79,7 +80,7 @@ class OperettaParser(EventParser):
 
         return f'{d} {m} {y} {time}'
 
-    def get_events(self, date=None):
+    async def get_events(self, date=None):
         url = 'https://mosoperetta.ru/index.php/tools/packages/nd_theme/calendar'
         headers = {
             'Host': 'mosoperetta.ru',
@@ -111,14 +112,14 @@ class OperettaParser(EventParser):
 
             data.update(month_data)
 
-        r = self.session.post(url, headers=headers, data=data, verify=False)
+        r = await self.session.post(url, headers=headers, data=data, verify=False)
 
         count = 5
         while not r.ok and count > 0:
             self.debug(f'{self.proxy.args = }, {self.session.cookies = } kassir events')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
-            r = self.session.post(url, headers=headers, data=data, verify=False)
+            self.session = AsyncProxySession(self)
+            r = await self.session.post(url, headers=headers, data=data, verify=False)
             count -= 1
 
         soup = BeautifulSoup(r.text, 'lxml')
@@ -128,12 +129,12 @@ class OperettaParser(EventParser):
 
         return a_events, date
 
-    def body(self):
+    async def body(self):
         date = None
         a_events = []
 
         for i in range(3):
-            next_a_events, next_date = self.get_events(date)
+            next_a_events, next_date = await self.get_events(date)
 
             date = next_date
             a_events += next_a_events

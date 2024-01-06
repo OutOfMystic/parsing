@@ -9,9 +9,10 @@ from telebot import TeleBot
 from telebot.apihelper import ApiTelegramException
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.date import month_list
 
@@ -28,7 +29,7 @@ class UserData(NamedTuple):
     last_name: str
 
 
-class BdtSpbBot(EventParser):
+class BdtSpbBot(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://spb.ticketland.ru/')
 
     def __init__(self, *args: list, **extra: dict) -> None:
@@ -130,8 +131,8 @@ class BdtSpbBot(EventParser):
         self.all_ticket_in_event = {}
         self.tickets_already_sent = {}
 
-    def before_body(self) -> None:
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_free_tickets(self, soup: BeautifulSoup, event_date: str) -> list[TicketData]:
         self.csrf = soup.find('meta', attrs={'name': 'csrf-token'}).get('content')
@@ -573,7 +574,7 @@ class BdtSpbBot(EventParser):
         free_tickets = self._parse_free_tickets(soup, event_date)
         self._set_tickets_in_basket(free_tickets, event_date)
 
-    def body(self) -> None:
+    async def body(self):
         self.threading_try(self._delete_tickets_in_skip_ticket_dict, raise_exc=False, tries=3)
         while True:
             self._find_main_event()

@@ -4,8 +4,9 @@ import json
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -14,7 +15,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class Lokobasket(SeatsParser):
+class Lokobasket(AsyncSeatsParser):
     event = 'lokobasket.qtickets.ru'
     url_filter = lambda url: 'lokobasket.qtickets.ru' in url
 
@@ -24,8 +25,8 @@ class Lokobasket(SeatsParser):
         self.driver_source = None
         self.event_id = self.url.split('/')[-1]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector: OutputData) -> OutputData:
         reformat = {
@@ -203,7 +204,7 @@ class Lokobasket(SeatsParser):
         r = self.session.post(self.url, headers=headers, data=data)
         return BeautifulSoup(r.text, 'lxml'), r.text
 
-    def body(self) -> None:
+    async def body(self):
         for sector in self._parse_seats():
             sector = self._reformat(sector)
             self.register_sector(sector.sector_name, sector.tickets)

@@ -1,10 +1,10 @@
 from bs4 import BeautifulSoup
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class XKAvangarg(SeatsParser):
-    event = 'tickets.hawk.ru'
+class XKAvangarg(AsyncSeatsParser):
     url_filter = lambda url: 'tickets.hawk.ru' in url
 
     def __init__(self, *args, **extra):
@@ -12,8 +12,8 @@ class XKAvangarg(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, all_sectors):
         for sector in all_sectors:
@@ -35,7 +35,7 @@ class XKAvangarg(SeatsParser):
             if 'Сектор FONBET Бизнес-клуб' in sector['name']:
                 sector['name'] = 'Сектор FONBET Бизнес клуб'
 
-    def parse_seats(self, json_data):
+    async def parse_seats(self, json_data):
         total_sector = []
 
         all_sectors = json_data.get('availSectors')
@@ -47,7 +47,7 @@ class XKAvangarg(SeatsParser):
             first_param_for_request = self.url.split('/')[-3]
             if 'Ложа' in sector_name:
                 url = f'https://tickets.hawk.ru/webapi/seats/schema/{first_param_for_request}/{param_for_request}/lounge'
-                json_data_for_this_sector = self.request_for_seats_in_sector(url)
+                json_data_for_this_sector = await self.request_for_seats_in_sector(url)
 
                 count_seats = json_data_for_this_sector.get('quant')
                 if count_seats > 0:
@@ -102,7 +102,7 @@ class XKAvangarg(SeatsParser):
 
         return total_sector
 
-    def request_for_seats_in_sector(self, url):
+    async def request_for_seats_in_sector(self, url):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -117,10 +117,10 @@ class XKAvangarg(SeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, verify=False)
         return r.json()
 
-    def request_parser(self, url, data):
+    async def request_parser(self, url, data):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -139,19 +139,19 @@ class XKAvangarg(SeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.post(url, headers=headers, json=data, verify=False)
+        r = await self.session.post(url, headers=headers, json=data, verify=False)
         return r.json()
 
-    def get_seats(self):
+    async def get_seats(self):
         data = {"seasonIds":[]}
-        json_data = self.request_parser(url=self.url, data=data)
+        json_data = await self.request_parser(url=self.url, data=data)
 
-        a_events = self.parse_seats(json_data)
+        a_events = await self.parse_seats(json_data)
 
         return a_events
 
-    def body(self):
-        all_sectors = self.get_seats()
+    async def body(self):
+        all_sectors = await self.get_seats()
 
         self.reformat(all_sectors)
 

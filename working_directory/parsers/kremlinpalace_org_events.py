@@ -3,13 +3,14 @@ from typing import Optional, Union
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class KremlInPalace(EventParser):
+class KremlInPalace(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://kremlinpalace.org/')
 
     def __init__(self, controller, name):
@@ -21,10 +22,10 @@ class KremlInPalace(EventParser):
                            ' AppleWebKit/537.36 (KHTML, like Gecko)'
                            ' Chrome/111.0.0.0 Safari/537.36')
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def parse_events(self, soup):
+    async def parse_events(self, soup):
         a_events = []
 
         def parse_items():
@@ -51,13 +52,13 @@ class KremlInPalace(EventParser):
         page_number = 2
         for page in range(len(list_page) - 2):
             url = f'https://kremlinpalace.org/?page={page_number}#events'
-            soup = self.request_for_href(url)
+            soup = await self.request_for_href(url)
             parse_items()
             page_number += 1
 
         return a_events
 
-    def request_for_href(self, url):
+    async def request_for_href(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -75,11 +76,11 @@ class KremlInPalace(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         return BeautifulSoup(r.text, "lxml")
 
-    def request_to_soup(self):
+    async def request_to_soup(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -98,11 +99,11 @@ class KremlInPalace(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
 
         return BeautifulSoup(r.text, 'lxml')
 
-    def _get_js_code_and__js_p__from_main_site(self) -> tuple[str, str, str]:
+    async def _get_js_code_and__js_p__from_main_site(self) -> tuple[str, str, str]:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -120,7 +121,7 @@ class KremlInPalace(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         js_code = double_split(r.text, '<script>', '</script>')
         return js_code, self.session.cookies.get('__js_p_'), r.text
 
@@ -164,8 +165,8 @@ class KremlInPalace(EventParser):
             secure='False'
         )
 
-    def _set_cookie_for_bypassing_protection(self) -> Optional[Union[None, BeautifulSoup]]:
-        js_code, cookie__js_p_, r_text = self._get_js_code_and__js_p__from_main_site()
+    async def _set_cookie_for_bypassing_protection(self) -> Optional[Union[None, BeautifulSoup]]:
+        js_code, cookie__js_p_, r_text = await self._get_js_code_and__js_p__from_main_site()
         if cookie__js_p_ is None or 'var code = get_param("__js_p_", "int", 0);' not in js_code:
             return BeautifulSoup(r_text, 'lxml')
         self._processing_js_code_to_generate_cookie(js_code, cookie__js_p_)
@@ -186,25 +187,25 @@ class KremlInPalace(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        self.session.get(self.url, headers=headers)
+        await self.session.get(self.url, headers=headers)
 
-    def get_events(self):
-        soup = self._set_cookie_for_bypassing_protection()
+    async def get_events(self):
+        soup = await self._set_cookie_for_bypassing_protection()
         if soup is None:
-            soup = self.request_to_soup()
+            soup = await self.request_to_soup()
 
-        a_events = self.parse_events(soup)
+        a_events = await self.parse_events(soup)
 
         return a_events
 
-    def body(self):
+    async def body(self):
         count_error = 0
         for i in range(10):
-            a_events = self.get_events()
+            a_events = await self.get_events()
             if a_events is None:
                 if count_error >= 5:
                     self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-                    self.session = ProxySession(self)
+                    self.session = AsyncProxySession(self)
                 count_error += 1
             else:
                 break

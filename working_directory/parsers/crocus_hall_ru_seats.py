@@ -1,14 +1,14 @@
 from requests.exceptions import ProxyError, JSONDecodeError
 import re
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
-class CrocusHall(SeatsParser):
-    event = 'crocus-hall.ru'
+class CrocusHall(AsyncSeatsParser):
     url_filter = lambda url: 'crocus2.kassir.ru' in url
     #proxy_check = SpecialConditions(url='https://crocus2.kassir.ru/')
 
@@ -21,8 +21,8 @@ class CrocusHall(SeatsParser):
         self.get_configuration_id = None
         self.count_error = 0
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, all_sectors):
         for sector in all_sectors:
@@ -213,7 +213,7 @@ class CrocusHall(SeatsParser):
                     sector_name = 'Бельэтаж 5'
         return sector_name
 
-    def parse_seats(self, json_data):
+    async def parse_seats(self, json_data):
         total_sector = []
 
         sector_dance_floor = {}
@@ -246,7 +246,7 @@ class CrocusHall(SeatsParser):
             self.register_dancefloor(sector_name, price, amount)
 
         url = f'https://crocus2.kassir.ru/api/v1/halls/configurations/{self.get_configuration_id}?language=ru&phpEventId={self.event_id}'
-        get_all_seats = self.request_parser(url)
+        get_all_seats = await self.request_parser(url)
         if get_all_seats is None:
             return []
 
@@ -296,7 +296,7 @@ class CrocusHall(SeatsParser):
 
         return total_sector
 
-    def request_parser(self, url):
+    async def request_parser(self, url):
         headers = {
             'accept': 'application/json',
             'accept-encoding': 'gzip, deflate, br',
@@ -312,7 +312,9 @@ class CrocusHall(SeatsParser):
             'user-agent': self.user_agent,
             'x-widget-key': self.widget_key
         }
-        r = self.session.get(url, headers=headers)
+        
+        r = await self.session.get(url, headers=headers)
+        
         if r.status_code == 500:
             return None
         try:
@@ -320,11 +322,11 @@ class CrocusHall(SeatsParser):
         except JSONDecodeError:
             message = f"<b>crocus_seats json_error {r.status_code} {self.url = }</b>"
             self.send_message_to_telegram(message)
-            return None
+            return None        
 
-    def get_seats(self):
+    async def get_seats(self):
         url = f'https://crocus2.kassir.ru/api/v1/events/{self.event_id}?language=ru'
-        get_configuration_id = self.request_parser(url)
+        get_configuration_id = await self.request_parser(url)
         if get_configuration_id is None:
             return []
         self.get_configuration_id = get_configuration_id.get('meta')
@@ -333,7 +335,7 @@ class CrocusHall(SeatsParser):
         self.get_configuration_id = self.get_configuration_id.get('trHallConfigurationId')
 
         url = f'https://crocus2.kassir.ru/api/v1/events/{self.event_id}/seats?language=ru&phpEventId={self.event_id}'
-        json_data = self.request_parser(url)
+        json_data = await self.request_parser(url)
         if json_data is None:
             return []
 
@@ -346,12 +348,12 @@ class CrocusHall(SeatsParser):
             raise Exception('crocus_seats error: json_data is None')
         self.count_error = 0
 
-        all_sectors = self.parse_seats(json_data)
+        all_sectors = await self.parse_seats(json_data)
 
         return all_sectors
 
-    def body(self):
-        all_sectors = self.get_seats()
+    async def body(self):
+        all_sectors = await self.get_seats()
 
         self.reformat(all_sectors)
 

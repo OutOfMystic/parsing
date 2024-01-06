@@ -1,19 +1,20 @@
 from bs4 import BeautifulSoup
 import datetime
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class DynamoParser(EventParser):
+class DynamoParser(AsyncEventParser):
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 1800
         self.driver_source = None
         self.url = 'https://tickets.dynamo.ru/?_ga=2.193174821.947964618.1675930069-641847379.1675930069'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self, soup):
         a_events = []
@@ -74,7 +75,7 @@ class DynamoParser(EventParser):
                 normal_date = day + ' ' + month + ' ' + next_year_in_season + ' ' + time
         return normal_date
 
-    def get_events(self):
+    async def get_events(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -92,15 +93,15 @@ class DynamoParser(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         soup = BeautifulSoup(r.text, 'lxml')
 
         a_events = self.parse_events(soup)
 
         return a_events
 
-    def body(self):
-        a_events = self.get_events()
+    async def body(self):
+        a_events = await self.get_events()
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2])

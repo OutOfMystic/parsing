@@ -1,7 +1,8 @@
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from dataclasses import dataclass
 from json import loads
 from datetime import datetime as dt
@@ -17,7 +18,7 @@ class Event:
     parent_id: int
 
 
-class HcTractorEventsNew(EventParser):
+class HcTractorEventsNew(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -26,8 +27,8 @@ class HcTractorEventsNew(EventParser):
         self.url = 'https://tractor-arena.com/events'
         self.event_format = "https://tractor-arena.com/events/{id}"
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_json(self):
         headers = {
@@ -75,7 +76,7 @@ class HcTractorEventsNew(EventParser):
                     parent_id=item['id']
                 )
 
-    def body(self):
+    async def body(self):
         events = chain(*map(self.parse_event, self.get_events_arr(self.get_json())))
 
         for event in events:

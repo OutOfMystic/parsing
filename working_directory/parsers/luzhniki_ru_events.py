@@ -1,10 +1,11 @@
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Luzhniki(EventParser):
+class Luzhniki(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -12,8 +13,8 @@ class Luzhniki(EventParser):
         self.driver_source = None
         self.url = 'https://www.luzhniki.ru/afisha/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def parse_events(self):
         a_events = []
@@ -68,7 +69,7 @@ class Luzhniki(EventParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self):
+    async def body(self):
         a_events = self.parse_events()
 
         for event in a_events:

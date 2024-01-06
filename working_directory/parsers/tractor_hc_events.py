@@ -3,14 +3,15 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
-class HcTractorEvents(EventParser):
+class HcTractorEvents(AsyncEventParser):
     proxy_check = NormalConditions()
 
     def __init__(self, controller, name):
@@ -19,10 +20,10 @@ class HcTractorEvents(EventParser):
         self.driver_source = None
         self.url = 'https://hctraktor.org/'
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def get_html(self):
+    async def get_html(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'accept-encoding': 'gzip, deflate, br',
@@ -40,8 +41,8 @@ class HcTractorEvents(EventParser):
             'user-agent': self.user_agent
         }
         url = 'https://hctraktor.org/'
-        r = self.session.get(url=url, headers=headers)
-        return r
+        r = await self.session.get(url=url, headers=headers)
+        return r.text
 
 
     @staticmethod
@@ -70,11 +71,11 @@ class HcTractorEvents(EventParser):
 
         return title, href, date_final, clientkey, session
 
-    def body(self):
-        r = self.get_html()
-        clientkey = double_split(r.text, "setDefaultClientKey',", '])', n=0).strip(" '")
+    async def body(self):
+        r = await self.get_html()
+        clientkey = double_split(r, "setDefaultClientKey',", '])', n=0).strip(" '")
 
-        soup = BeautifulSoup(r.text, 'lxml')
+        soup = BeautifulSoup(r, 'lxml')
         box = soup.find_all(class_='t-list__row')
         a_events = []
 

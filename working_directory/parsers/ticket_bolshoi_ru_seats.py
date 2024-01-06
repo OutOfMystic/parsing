@@ -6,10 +6,11 @@ import threading
 import requests
 from loguru import logger
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager import authorize
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import parse_utils, captcha
 
 MAX_TRIES = 20
@@ -267,7 +268,7 @@ class BolshoiQueue(authorize.AccountsQueue):
         super().run()
 
 
-class BtParser(SeatsParser):
+class BtParser(AsyncSeatsParser):
     event = 'ticket.bolshoi.ru'
     url_filter = lambda url: 'bolshoi.ru' in url
     proxy_check = SpecialConditions(url='https://ticket.bolshoi.ru/api/csrfToken')
@@ -280,9 +281,9 @@ class BtParser(SeatsParser):
         self.event_id = None
         self._lock = Lock()
 
-    def before_body(self):
+    async def before_body(self):
         self.account = self.get_account()
-        self.session = ProxySession(self)
+        self.session = AsyncProxySession(self)
         self.event_id = self.url.split('/')[-1]
 
     def get_account(self):
@@ -374,7 +375,7 @@ class BtParser(SeatsParser):
             return []
         return r.json()
 
-    def body(self):
+    async def body(self):
         a_sectors = []
         tickets_data = self.get_tickets()
         for ticket in tickets_data:

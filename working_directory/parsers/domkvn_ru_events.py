@@ -2,13 +2,14 @@ import re
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
-class KVNParser(EventParser):
+class KVNParser(AsyncEventParser):
     proxy_check = NormalConditions()
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -16,8 +17,8 @@ class KVNParser(EventParser):
         self.driver_source = None
         self.url = 'https://domkvn.ru/afisha-1.html'
     
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     @staticmethod
     def date_reformat(date):
@@ -25,7 +26,7 @@ class KVNParser(EventParser):
         day, month, nothing, time = date.split()
         return f"{day} {month[:3].capitalize()} {time}"
 
-    def get_url(self, url):
+    async def get_html(self, url):
         headers = {
                 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                 'accept-encoding': 'gzip, deflate, br',
@@ -42,8 +43,8 @@ class KVNParser(EventParser):
                 'upgrade-insecure-requests': '1',
                 'user-agent': self.user_agent
             }
-        r = self.session.get(url=url, headers=headers)
-        return r
+        r = await self.session.get(url=url, headers=headers)
+        return r.text
     
     def find_all_events(self, soup):
         kvn = soup.find_all(class_=re.compile(r'cat-Билеты-на-КВН'))
@@ -68,8 +69,8 @@ class KVNParser(EventParser):
 
         return a_events
 
-    def body(self):
-        r = self.get_url(self.url)
+    async def body(self):
+        r = await self.get_html(self.url)
         soup = BeautifulSoup(r.text, 'lxml')
 
         a_events = self.find_all_events(soup)

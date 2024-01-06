@@ -7,12 +7,12 @@ from typing import Union, Iterable
 import requests
 from loguru import logger
 
+from ..manager import telecore
 from ..manager.backstage import tasker
 from ..manager.core import ThreadedBot
 from ..manager.proxy import check
 from ..manager.proxy.instances import UniProxy
 from ..manager.proxy.loader import ProxyHub
-from ..manager.telecore import tele_core
 from ..utils import utils
 from ..utils.provision import try_open
 
@@ -21,6 +21,7 @@ class Notifier(ThreadedBot, ABC):
     proxy_check = check.NormalConditions()
 
     def __init__(self,
+                 tele_core: telecore.TeleCore,
                  proxy: UniProxy = None,
                  proxy_hub: ProxyHub = None,
                  tele_profiles: Iterable = None):
@@ -29,6 +30,7 @@ class Notifier(ThreadedBot, ABC):
         elif proxy_hub:
             proxy = proxy_hub.get(self.proxy_check)
         super().__init__(proxy=proxy)
+        self.tele_core = tele_core
         self.proxy_hub = proxy_hub
         self.tele_bool = True
         self.tele_profiles = tele_profiles if tele_profiles else []
@@ -46,7 +48,7 @@ class Notifier(ThreadedBot, ABC):
     def tprint(self,
                message: str,
                tele_name: str = 'notifications'):
-        tele_core.send_message(str(message), self.tele_ids, tele_name)
+        self.tele_core.send_message(str(message), self.tele_ids, tele_name)
 
     def cprint(self,
                message: str):

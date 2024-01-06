@@ -3,8 +3,9 @@ from typing import NamedTuple, Iterable
 
 from bs4 import BeautifulSoup
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -13,7 +14,7 @@ class OutputEvent(NamedTuple):
     date: str
 
 
-class TicketsFcZenit(EventParser):
+class TicketsFcZenit(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -25,8 +26,8 @@ class TicketsFcZenit(EventParser):
             'https://tickets.fc-zenit.ru/events/concerts/',
         )
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _parse_events(self, url: str) -> OutputEvent:
         soup = self._requests_to_events(url)
@@ -79,7 +80,7 @@ class TicketsFcZenit(EventParser):
         r = self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def body(self) -> None:
+    async def body(self):
         for url in self.urls:
             for event in self._parse_events(url):
                 self.register_event(event.title, event.href, date=event.date)

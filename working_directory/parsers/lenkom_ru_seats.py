@@ -1,11 +1,12 @@
 import random
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
-class Lenkom(SeatsParser):
+class Lenkom(AsyncSeatsParser):
     event = 'tickets.afisha.ru'
     url_filter = lambda url: 'wl/54' in url and 'tickets.afisha.ru' in url
     proxy_check = SpecialConditions(url='https://tickets.afisha.ru/')
@@ -15,8 +16,8 @@ class Lenkom(SeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def reformat(self, all_sectors):
         for sector in all_sectors:
@@ -54,7 +55,7 @@ class Lenkom(SeatsParser):
 
         return total_sector
 
-    def request_parser(self, data):
+    async def request_parser(self, data):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -73,7 +74,7 @@ class Lenkom(SeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.post(self.url, headers=headers, data=data)
+        r = await self.session.post(self.url, headers=headers, data=data)
         if r.status_code == 499:
             return None
         elif r.status_code != 200:
@@ -81,22 +82,22 @@ class Lenkom(SeatsParser):
             self.send_message_to_telegram(message)
         return r.json()
 
-    def get_seats(self):
+    async def get_seats(self):
         data = {
             "event_id": self.event_id,
             "user_token": f"167644{random.randint(1000000, 9999999)}-{random.randint(100000, 999999)}"
             # "user_token": "1676449721616-847937"
         }
 
-        json_data = self.request_parser(data=data)
+        json_data = await self.request_parser(data=data)
         if json_data is None:
             return []
         a_events = self.parse_seats(json_data)
 
         return a_events
 
-    def body(self):
-        all_sectors = self.get_seats()
+    async def body(self):
+        all_sectors = await self.get_seats()
 
         self.reformat(all_sectors)
 

@@ -1,8 +1,9 @@
 import json
 from typing import NamedTuple
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -10,7 +11,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class HelikonRu(SeatsParser):
+class HelikonRu(AsyncSeatsParser):
     event = 'helikon.ru'
     url_filter = lambda url: 'helikon.ru' in url
 
@@ -20,8 +21,8 @@ class HelikonRu(SeatsParser):
         self.driver_source = None
         self.url = 'https://core.helikon.ubsystem.ru/uiapi/event/scheme?id=' + self.url.split('/')[-1]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if 'Стол' in sector_name:
@@ -35,8 +36,8 @@ class HelikonRu(SeatsParser):
 
         return sector_name
 
-    def _parse_seats(self) -> OutputData:
-        json_data = self._request_to_all_place()
+    async def _parse_seats(self) -> OutputData:
+        json_data = await self._request_to_all_place()
 
         all_place = self._get_all_place_from_json_data(json_data)
 
@@ -70,7 +71,7 @@ class HelikonRu(SeatsParser):
         all_place = json_data['seats']
         return all_place
 
-    def _request_to_all_place(self) -> json:
+    async def _request_to_all_place(self) -> json:
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -87,9 +88,9 @@ class HelikonRu(SeatsParser):
             'sec-fetch-site': 'cross-site',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers, verify=False)
+        r = await self.session.get(self.url, headers=headers, verify=False)
         return r.json()
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

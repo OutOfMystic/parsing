@@ -3,8 +3,9 @@ from typing import NamedTuple, Optional, Union
 
 from requests.exceptions import TooManyRedirects
 
+from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -12,8 +13,7 @@ class OutputData(NamedTuple):
     tickets: dict[tuple[str, str], int]
 
 
-class CircusSpbRu(SeatsParser):
-    event = 'circus.spb.ru'
+class CircusSpbRu(AsyncSeatsParser):
     url_filter = lambda url: 'ticket-place.ru' in url and '|spb' in url
 
     def __init__(self, *args, **extra) -> None:
@@ -22,8 +22,8 @@ class CircusSpbRu(SeatsParser):
         self.driver_source = None
         self.url = self.url[:self.url.index('|')]
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def _reformat(self, sector_name: str) -> str:
         if '(' in sector_name:
@@ -39,8 +39,8 @@ class CircusSpbRu(SeatsParser):
 
         return sector_name
 
-    def _parse_seats(self) -> Optional[Union[OutputData, list]]:
-        json_data = self._request_to_all_place()
+    async def _parse_seats(self) -> Optional[Union[OutputData, list]]:
+        json_data = await self._request_to_all_place()
         if json_data is None:
             return []
 
@@ -76,7 +76,7 @@ class CircusSpbRu(SeatsParser):
         all_place = json_data['data']['seats']['data']
         return all_place
 
-    def _request_to_all_place(self):
+    async def _request_to_all_place(self):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -94,11 +94,11 @@ class CircusSpbRu(SeatsParser):
             'user-agent': self.user_agent
         }
         try:
-            r = self.session.get(self.url,  headers=headers)
+            r = await self.session.get(self.url,  headers=headers)
         except TooManyRedirects:
             return None
         return r.json()
 
-    def body(self) -> None:
-        for sector in self._parse_seats():
+    async def body(self) -> None:
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

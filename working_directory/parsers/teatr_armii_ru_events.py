@@ -1,12 +1,13 @@
 from datetime import datetime
 import locale
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils import utils
 
 
-class Parser(EventParser):
+class Parser(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -14,8 +15,8 @@ class Parser(EventParser):
         self.driver_source = None
         self.url = 'https://www.afisha.ru/wl/29/api?site=teatrarmii.ru'
     
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
     def get_xsrf_token(self, url):
         headers = {'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -36,7 +37,7 @@ class Parser(EventParser):
                 count += 1
                 self.warning(f' try to find XApplication token ArmiiTeatr + {count}')
                 self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-                self.session = ProxySession(self)
+                self.session = AsyncProxySession(self)
                 return self.get_xsrf_token(count)
             else:
                 return None
@@ -63,7 +64,7 @@ class Parser(EventParser):
             count += 1
             self.error(f' cannot load {events_url} {ex} try +={count}')
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = ProxySession(self)
+            self.session = AsyncProxySession(self)
             return self.get_all_events(xsrf_token, count)
     
     @staticmethod
@@ -85,7 +86,7 @@ class Parser(EventParser):
         
         return title, href, date, scene
 
-    def body(self):
+    async def body(self):
         XSRF_TOKEN = self.get_xsrf_token(self.url)
         all_events_list = self.get_all_events(XSRF_TOKEN)
 

@@ -2,8 +2,9 @@ from typing import NamedTuple, Optional, Union
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
+from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -14,37 +15,38 @@ class OutputEvent(NamedTuple):
     event_id: str
 
 
-class AlexandrinskyRu(EventParser):
+class AlexandrinskyRu(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url: str = 'https://alexandrinsky.ru/afisha-i-bilety/'
+        self.session = None  # Инициализация переменной сеанса
 
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        soup = self._requests_to_events()
+    async def _parse_events(self):
+        soup = await self._requests_to_events()
 
-        all_axaj_pages = self._get_all_ajax_pages(soup)
+        all_ajax_pages = self._get_all_ajax_pages(soup)
 
         events = self._get_events_from_soup(soup)
 
-        return self._parse_events_from_soup(events, all_axaj_pages)
+        async for event in await self._parse_events_from_soup(events, all_ajax_pages):
+            yield event
 
-    def _parse_events_from_soup(self, events: ResultSet[Tag], all_axaj_pages: int) -> OutputEvent:
-        for count_page in range(2, all_axaj_pages+2):
+    async def _parse_events_from_soup(self, events: ResultSet[Tag], all_ajax_pages: int):
+        for count_page in range(2, all_ajax_pages + 2):
             for event in events:
                 output_data = self._parse_data_from_event(event)
                 if output_data is not None:
                     for data in output_data:
                         yield data
 
-            soup = self._requests_to_axaj_events(str(count_page))
+            soup = await self._requests_to_axaj_events(str(count_page))
             events = self._get_events_from_soup(soup)
-            count_page += 1
 
     def _parse_data_from_event(self, event: Tag) -> Optional[Union[OutputEvent, None]]:
         title = event.find('a').text.strip()
@@ -71,7 +73,7 @@ class AlexandrinskyRu(EventParser):
         all_pages = all_pages.get('value')
         return int(all_pages)
 
-    def _requests_to_axaj_events(self, next_page: str) -> BeautifulSoup:
+    async def _requests_to_axaj_events(self, next_page: str) -> BeautifulSoup:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -98,10 +100,10 @@ class AlexandrinskyRu(EventParser):
             "PAGEN_2": next_page
         }
         url = 'https://alexandrinsky.ru/afisha-i-bilety/'
-        r = self.session.post(url, headers=headers, data=data)
+        r = await self.session.get(url, headers=headers, data=data)
         return BeautifulSoup(r.text, 'lxml')
 
-    def _requests_to_events(self) -> BeautifulSoup:
+    async def _requests_to_events(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -122,9 +124,10 @@ class AlexandrinskyRu(EventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
-
-    def body(self) -> None:
-        for event in self._parse_events():
+    
+    async def body(self) -> None:
+        async for event in self._parse_events():
             self.register_event(event.title, event.href, date=event.date, event_id=event.event_id)
+            self.debug(f'{event.title}, {event.href}, {event.date}, {event.event_id}')
