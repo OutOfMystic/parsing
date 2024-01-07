@@ -149,6 +149,10 @@ class AsyncProxySession(aiohttp.ClientSession):
         super().__init__()
         self.bot = bot
 
+    @property
+    def cookies(self):
+        return super().cookie_jar
+
     async def _request(self, *args, **kwargs):
         kwargs['proxy'] = self.bot.proxy.async_proxy
         kwargs['proxy_auth'] = self.bot.proxy.async_proxy_auth

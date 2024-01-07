@@ -252,7 +252,7 @@ class Mmdm(AsyncEventParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent,
         }
-        asyncio.sleep(1 + delay_to_requests)
+        await asyncio.sleep(1 + delay_to_requests)
         url = f'https://check.ddos-guard.net/set/id/{self.session.cookies.get("ddg2")}'
         r = await self.session.get(url, headers=headers)
         requests_to_image_1_status = r.status_code
@@ -270,7 +270,7 @@ class Mmdm(AsyncEventParser):
             'sec-fetch-site': 'cross-site',
             'user-agent': self.user_agent,
         }
-        asyncio.sleep(1 + delay_to_requests)
+        await asyncio.sleep(1 + delay_to_requests)
         url = f'https://www.mmdm.ru/.well-known/ddos-guard/id/{self.session.cookies.get("__ddg2_")}'
         r = await self.session.get(url, headers=headers)
         requests_to_image_2_status = r.status_code

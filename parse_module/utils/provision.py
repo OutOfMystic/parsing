@@ -142,7 +142,7 @@ def multi_try(to_try: Callable,
         if result is not TryError:
             return result
         else:
-            error_prefix = '[Exception during `handle_error`]\n'
+            error_prefix = '[Exception during `handle_error`] '
             exc_args = None if len(inspect.signature(handle_error).parameters) == 0 else (exc, *args,)
             exc_kwargs = None if len(inspect.signature(handle_error).parameters) == 0 else kwargs
             _tryfunc(handle_error,
@@ -293,7 +293,7 @@ async def async_try(to_try: Callable,
         if result is not TryError:
             return result
         else:
-            error_prefix = '[Exception during `handle_error`]\n'
+            error_prefix = '[Exception during `handle_error`] '
             exc_args = None if len(inspect.signature(handle_error).parameters) == 0 else (exc, *args,)
             exc_kwargs = None if len(inspect.signature(handle_error).parameters) == 0 else kwargs
             await _asynctry(handle_error,

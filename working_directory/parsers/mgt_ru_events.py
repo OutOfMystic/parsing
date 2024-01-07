@@ -88,7 +88,7 @@ class MosGubern(EventParser):
         dates = self.get_dates_list()
         
         for date in dates:
-            data = self.get_json()
+            data = self.get_json(date)
             
             a_events = self.parse_json(data)
             
