@@ -200,7 +200,7 @@ class LenkomParser(AsyncSeatsParser):
 
         self.reformat(a_sectors, self.get_scene())
         for sector in a_sectors:
-            self.info(sector['name'], len(sector['tickets']) )
+            #self.info(sector['name'], len(sector['tickets']) )
             self.register_sector(sector['name'], sector['tickets'])
         #self.check_sectors()
 
