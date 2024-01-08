@@ -3,6 +3,7 @@ import sys
 import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from parse_module.manager import backend
 

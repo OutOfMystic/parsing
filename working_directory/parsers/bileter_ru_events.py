@@ -97,7 +97,6 @@ class BileterEvent(AsyncEventParser):
     def put_db(self, events : list[tuple]) -> None: 
         for event in events:
             self.register_event(event_name=event[0], url=event[1], date=event[2], venue=event[3])
-            self.debug(event)
             
         
     async def body(self):

@@ -42,8 +42,8 @@ class TicketsFcdmRu(AsyncSeatsParser):
             sector_name = 'Сектор ' + sector_name
         return sector_name
 
-    def _parse_seats(self) -> OutputData:
-        json_data = self._requests_to_json_data()
+    async def _parse_seats(self) -> OutputData:
+        json_data = await self._requests_to_json_data()
 
         free_place = self._get_free_place_from_json_data(json_data)
 
@@ -73,7 +73,7 @@ class TicketsFcdmRu(AsyncSeatsParser):
         free_place = json_data['seats']
         return free_place
 
-    def _requests_to_json_data(self) -> json:
+    async def _requests_to_json_data(self) -> json:
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -90,9 +90,9 @@ class TicketsFcdmRu(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         url = f'https://tickets.fcdm.ru/api/event-show/sale/{self.url.split("/")[-1]}/available-seats/full'
-        r = self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, verify=False)
         return r.json()
 
     async def body(self):
-        for sector in self._parse_seats():
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)
