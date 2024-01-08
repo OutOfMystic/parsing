@@ -22,14 +22,16 @@ class ParserBase(core.Bot, ABC):
         self.last_state = None
         self._notifier = None
 
-    def change_proxy(self, report=False):
-        if report:
-            self.controller.proxy_hub.report(self.proxy_check, self.proxy)
-        # logger.debug('change_proxy start')
+    def _get_proxy(self):
         self.proxy = self.controller.proxy_hub.get(self.proxy_check)
         if not self.proxy:
             raise ProxyHubError(f'Out of proxies!')
-        # logger.debug('change_proxy finish')
+
+    def change_proxy(self, report=False):
+        if report:
+            self.controller.proxy_hub.report(self.proxy_check, self.proxy)
+        self._get_proxy()
+        self.before_body()
 
     def set_notifier(self, notifier):
         if self._notifier:
@@ -50,7 +52,7 @@ class ParserBase(core.Bot, ABC):
         next_step_delay = min(self.get_delay() / 15, 120)
         if self.proxy is None:
             self._debug_only('changing proxy', int((time.time() - start_time) * 10) / 10)
-            provision.just_try(self.change_proxy)
+            provision.just_try(self._get_proxy)
             self._debug_only('changed proxy', int((time.time() - start_time) * 10) / 10)
 
         if self.proxy is not None:

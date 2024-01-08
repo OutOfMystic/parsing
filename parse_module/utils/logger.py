@@ -7,6 +7,7 @@ import time
 import traceback
 from datetime import datetime
 
+from aiodebug import log_slow_callbacks
 from colorama import Fore, Back
 
 from parse_module.utils.date import readable_datetime
@@ -31,7 +32,9 @@ class Logger(threading.Thread):
                             'utils.logger.error',
                             'utils.logger.critical',
                             'utils.provision._tryfunc',
-                            'models.parser._debug_only']
+                            'models.parser._debug_only',
+                            'utils.provision.async_try',
+                            'utils.provision._asynctry']
         self.release = release
         self.log_path = log_path
         self.ignore_files = ignore_files
@@ -265,12 +268,13 @@ def parse_traceback(traceback_string, ignore_files=None,
                     drop_path_level=0, project_name='parsing'):
     if ignore_files is None:
         ignore_files = []
+    methods_are_not_shown = ['multi_try', 'async_try', 'just_try', 'async_just_try']
     matches = re.findall(rf'File "([^"]*\\working_directory[^"]+)", line (\d+), in (\w+)\n', traceback_string)
-    not_mult_matches = [match for match in matches if 'multi_try.py' not in match]
+    not_mult_matches = [match for match in matches if match[2] not in methods_are_not_shown]
     if not matches:
         matches = re.findall(r'File "([^"]*\\parse_module[^"]+)", line (\d+), in (\w+)\n', traceback_string)
-        not_mult_matches = [match for match in matches if 'multi_try.py' not in match]
-    if not matches:
+        not_mult_matches = [match for match in matches if 'utils\\provision.py' not in match[0]]
+    if not not_mult_matches:
         return get_current_stack(ignore_files=ignore_files, drop_path_level=drop_path_level)
     file_path, line_number, func_name = not_mult_matches[-1]
     file_path = file_path.split(project_name, 1)[-1]
@@ -280,6 +284,16 @@ def parse_traceback(traceback_string, ignore_files=None,
     file_parts = file_path_prep.split('.')[1 + drop_path_level:]
     file_path_formatted = '.'.join(file_parts)
     return f'(Traceback) {file_path_formatted}.{func_name}:{line_number}'
+
+
+def start_async_logger():
+    log_slow_callbacks.enable(
+        0.05,
+        on_slow_callback=lambda task_name, duration: logger.warning(
+            f'Task blocked async loop for too long ({duration:.3f} sec), task {task_name}',
+            name='Controller'
+        )
+    )
 
 
 COLORS = {

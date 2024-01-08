@@ -6,7 +6,7 @@ from requests.exceptions import ProxyError
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 

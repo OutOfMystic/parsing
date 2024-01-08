@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -34,19 +34,20 @@ class MdtDodin(AsyncEventParser):
 
         events = self._get_events_from_soup(soup)
 
-        all_events = self._parse_events_from_json(events, links_with_all_events_pages)
+        all_events = await self._parse_events_from_json(events, links_with_all_events_pages)
 
         return await self._get_filtered_events(all_events)
 
     async def _get_filtered_events(self, all_events: list[OutputEvent]) -> OutputEvent:
+        events = []
         all_id_event = [event.id_event for event in all_events]
 
         data_status_event = await self._requests_to_check_tickets(all_id_event)
         for event in all_events:
             if self._get_status_event(data_status_event, event.id_event):
-                yield event
+                events.append(event)
 
-    def _parse_events_from_json(self, events: list, links_with_all_events_pages: list[str]) -> list[OutputEvent]:
+    async def _parse_events_from_json(self, events: list, links_with_all_events_pages: list[str]) -> list[OutputEvent]:
         output_list = []
         for index, link_with_events in enumerate(links_with_all_events_pages):
             for event in events:
@@ -56,7 +57,7 @@ class MdtDodin(AsyncEventParser):
 
             if index == len(links_with_all_events_pages) - 1:
                 break
-            soup = self._requests_to_events(links_with_all_events_pages[index + 1])
+            soup = await self._requests_to_events(links_with_all_events_pages[index + 1])
             events = self._get_events_from_soup(soup)
         return output_list
 

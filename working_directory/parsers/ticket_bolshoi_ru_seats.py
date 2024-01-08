@@ -10,7 +10,7 @@ from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager import authorize
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils import parse_utils, captcha
 
 MAX_TRIES = 20

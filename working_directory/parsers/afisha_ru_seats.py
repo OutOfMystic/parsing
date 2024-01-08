@@ -1,6 +1,6 @@
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
-from parse_module.manager.proxy.instances import AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class AfishaRuSeats(AsyncSeatsParser):

@@ -5,7 +5,7 @@ from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class CskaHockeyParser(AsyncEventParser):
@@ -74,7 +74,7 @@ class CskaHockeyParser(AsyncEventParser):
             get_data = r.json()
             expired_at = get_data.get('expired_at')
             if expired_at is None:
-                asyncio.sleep(10)
+                await asyncio.sleep(10)
             else:
                 break
         headers = {

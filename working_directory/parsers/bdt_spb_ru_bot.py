@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.date import month_list
 from parse_module.coroutines import AsyncEventParser
@@ -224,7 +224,7 @@ class BdtSpbBot(AsyncEventParser):
             await self._get_href_to_main_event()
             if len(self.urls) != 0:
                 break
-            asyncio.sleep(15)
+            await asyncio.sleep(15)
 
     async def _get_href_to_main_event(self) -> None:
         urls = []
@@ -581,7 +581,7 @@ class BdtSpbBot(AsyncEventParser):
             await self._find_main_event()
             for url, event_date in self.urls:
                 self.threading_try(await self.threading_body, args=(url, event_date), raise_exc=False, tries=1)
-            asyncio.sleep(60)
+            await asyncio.sleep(60)
 
     def _output_data(self, ticket_in_basket: list[TicketData], json_data_order: json, event_date: str) -> None:
         datetime_now = datetime.now()
@@ -607,7 +607,7 @@ class BdtSpbBot(AsyncEventParser):
             except ApiTelegramException:
                 continue
 
-    def _delete_tickets_in_skip_ticket_dict(self) -> None:
+    async def _delete_tickets_in_skip_ticket_dict(self) -> None:
         while True:
             if len(self.tickets_already_sent) > 0:
                 ticket_to_del = []
@@ -618,4 +618,4 @@ class BdtSpbBot(AsyncEventParser):
                             ticket_to_del.append(ticket_data)
                     for ticket_data in ticket_to_del:
                         del self.tickets_already_sent[ticket_data_in_event_date][ticket_data]
-            asyncio.sleep(60)
+            await asyncio.sleep(60)

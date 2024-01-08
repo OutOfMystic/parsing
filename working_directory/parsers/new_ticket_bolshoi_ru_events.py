@@ -12,7 +12,7 @@ from parse_module.drivers.proxelenium import ProxyWebDriver
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class BolshoiParser(AsyncEventParser):

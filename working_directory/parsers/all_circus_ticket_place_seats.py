@@ -4,7 +4,7 @@ from requests.exceptions import TooManyRedirects
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -110,9 +110,4 @@ class VladivostokCirkParser(SochiCirkParser):
         elif 'Левая ложа' in sector:
              sector = 'Ложа 3'
         return sector
-    
-    async def body(self):
-        super().body()
-   
-   
 

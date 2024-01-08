@@ -3,7 +3,7 @@ import re
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.manager.proxy.instances import AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class BiletovedParsSeats(AsyncSeatsParser):

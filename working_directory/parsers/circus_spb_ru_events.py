@@ -15,7 +15,8 @@ from selenium.common.exceptions import TimeoutException
 from parse_module.coroutines import AsyncEventParser
 from parse_module.drivers.proxelenium import ProxyWebDriver
 from parse_module.manager.proxy.check import NormalConditions
-from parse_module.manager.proxy.instances import AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
+
 
 class OutputEvent(NamedTuple):
     title: str

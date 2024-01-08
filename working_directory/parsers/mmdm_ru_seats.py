@@ -1,5 +1,6 @@
 import json
 import asyncio
+from http.cookies import SimpleCookie
 from pathlib import Path
 from typing import NamedTuple
 
@@ -7,7 +8,7 @@ from requests.exceptions import ProxyError, JSONDecodeError
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession, add_cookie_to_cookies
 
 
 class OutputData(NamedTuple):
@@ -31,20 +32,26 @@ class Mmdm(AsyncSeatsParser):
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
-        self.session.cookies.set('__ddgid_', 'yuEsc7A7O3KpYzHw', domain='www.mmdm.ru')
-        self.session.cookies.set('__ddg1_', 'vm5OlV40vtdtUMkebHon', domain='.mmdm.ru')
-        self.session.cookies.set('__ddg2_', 'k3wy1Spd29SBOfv7', domain='.mmdm.ru')
-        self.session.cookies.set('ddg2', 'k3wy1Spd29SBOfv7', domain='.mmdm.ru')
-        self.session.cookies.set('__ddg5_', 'DlNIMY8IBLJvt2Hh', domain='.mmdm.ru')
-        self.session.cookies.set('__ddgmark_', 'u3MhHHdpAbRxnr4x', domain='www.mmdm.ru')
-        self.session.cookies.set('sessionid', self.session_id, domain='www.mmdm.ru')
-        self.session.cookies.set(
-            'csrftoken', 'tkiCzbt7mj2WVEvZW33VNFgonoVtSdzyyUiWQLu1FbAcaME4Myq1Kpc875pTjhZg', domain='www.mmdm.ru'
-        )
-        self.session.cookies.set('_ym_d', '1682084959', domain='.mmdm.ru')
-        self.session.cookies.set('_ym_uid', '1681998721619246323', domain='.mmdm.ru')
-        self.session.cookies.set('_ym_isad', '1', domain='.mmdm.ru')
-        self.session.cookies.set('_ym_visorc', 'w', domain='.mmdm.ru')
+
+        to_cookies = [
+            ('__ddgid_', 'yuEsc7A7O3KpYzHw', 'www.mmdm.ru',),
+            ('__ddg1_', 'vm5OlV40vtdtUMkebHon', '.mmdm.ru',),
+            ('__ddg2_', 'k3wy1Spd29SBOfv7', '.mmdm.ru',),
+            ('ddg2', 'k3wy1Spd29SBOfv7', '.mmdm.ru',),
+            ('__ddg5_', 'DlNIMY8IBLJvt2Hh', '.mmdm.ru',),
+            ('__ddgmark_', 'u3MhHHdpAbRxnr4x', 'www.mmdm.ru',),
+            ('sessionid', self.session_id, 'www.mmdm.ru',),
+            ('csrftoken', 'tkiCzbt7mj2WVEvZW33VNFgonoVtSdzyyUiWQLu1FbAcaME4Myq1Kpc875pTjhZg', 'www.mmdm.ru',),
+            ('_ym_d', '1682084959', '.mmdm.ru',),
+            ('_ym_uid', '1681998721619246323', '.mmdm.ru',),
+            ('_ym_isad', '1', '.mmdm.ru',),
+            ('_ym_visorc', 'w', '.mmdm.ru',),
+        ]
+
+        cookies = SimpleCookie()
+        for cookie in to_cookies:
+            add_cookie_to_cookies(cookies, *cookie)
+        self.session.cookies.update_cookies(cookies)
 
     def _reformat(self, sector_name: str) -> str:
         if 'Светлановский зал' in self.scene:
@@ -178,7 +185,7 @@ class Mmdm(AsyncSeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent,
         }
-        asyncio.sleep(1 + delay_to_requests)
+        await asyncio.sleep(1 + delay_to_requests)
         url = 'https://www.mmdm.ru/.well-known/ddos-guard/check?context=free_splash'
         r = await self.session.get(url, headers=headers)
         requests_to_js_1_status = r.status_code
@@ -196,7 +203,7 @@ class Mmdm(AsyncSeatsParser):
             'sec-fetch-site': 'cross-site',
             'user-agent': self.user_agent,
         }
-        asyncio.sleep(1 + delay_to_requests)
+        await asyncio.sleep(1 + delay_to_requests)
         url = 'https://check.ddos-guard.net/check.js'
         r = await self.session.get(url, headers=headers)
         requests_to_js_2_status = r.status_code
@@ -217,8 +224,9 @@ class Mmdm(AsyncSeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent,
         }
-        asyncio.sleep(1 + delay_to_requests)
-        url = f'https://check.ddos-guard.net/set/id/{self.session.cookies.get("ddg2")}'
+        await asyncio.sleep(1 + delay_to_requests)
+        cookies = self.session.cookies.filter_cookies('https://check.ddos-guard.net/check.js')
+        url = f'https://check.ddos-guard.net/set/id/{cookies["ddg2"]}'
         r = await self.session.get(url, headers=headers)
         requests_to_image_1_status = r.status_code
 
@@ -235,8 +243,8 @@ class Mmdm(AsyncSeatsParser):
             'sec-fetch-site': 'cross-site',
             'user-agent': self.user_agent,
         }
-        asyncio.sleep(1 + delay_to_requests)
-        url = f'https://www.mmdm.ru/.well-known/ddos-guard/id/{self.session.cookies.get("__ddg2_")}'
+        await asyncio.sleep(1 + delay_to_requests)
+        url = f'https://www.mmdm.ru/.well-known/ddos-guard/id/{cookies["ddg2"]}'
         r = await self.session.get(url, headers=headers)
         requests_to_image_2_status = r.status_code
 
@@ -266,7 +274,7 @@ class Mmdm(AsyncSeatsParser):
         with open(file, 'r', encoding='utf-8') as f:
             data = f.read()
 
-        asyncio.sleep(1 + delay_to_requests)
+        await asyncio.sleep(1 + delay_to_requests)
         url = 'https://www.mmdm.ru/.well-known/ddos-guard/mark/'
         r = await self.session.post(url, headers=headers, data=data)
         requests_to_send_data_status = r.status_code

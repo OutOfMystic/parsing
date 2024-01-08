@@ -6,9 +6,8 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
-
 
 
 class Redkassa(AsyncEventParser):
@@ -104,10 +103,9 @@ class Redkassa(AsyncEventParser):
             all_events = soup.find_all('li', {'class':'theatre-list__item'})
             a_events.extend(all_events)
             sleep(4)
-        return a_events 
+        return a_events
 
-
-    def parse_events(self, all_events):
+    async def parse_events(self, all_events):
         a_events = []
 
         # count_page = 1
@@ -135,7 +133,7 @@ class Redkassa(AsyncEventParser):
             date = event.find('span', class_='event-snippet__info-item').text.strip()
 
             if 'с' in date and 'по' in date:
-                soup = self.requests_to_events(href)
+                soup = await self.requests_to_events(href)
                 dates_and_venues = soup.select('tr.event-tickets__row')
                 
                 for date_and_venue in dates_and_venues:
@@ -157,7 +155,7 @@ class Redkassa(AsyncEventParser):
                 date = date.split('.')
                 date[1] = month_list[int(date[1])]
                 normal_date = ' '.join(date)
-                soup = self.requests_to_events(href)
+                soup = await self.requests_to_events(href)
  
                 venue = soup.find('a', class_='event-header__location-link')
                 if venue is None:
@@ -187,7 +185,7 @@ class Redkassa(AsyncEventParser):
         a_events = []
         for month_url in all_mounth_url:
             try:
-                soup2 = self.requests_to_events(month_url)
+                soup2 = await self.requests_to_events(month_url)
                 events = soup2.find_all('div', class_='afisha__row')
                 for event in events:
                     events_box = event.find_all('div', class_='afisha__event-row')

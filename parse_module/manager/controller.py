@@ -5,6 +5,8 @@ import os
 import random
 import time
 
+from aiodebug import log_slow_callbacks
+
 from . import pooling
 from .inspect import run_inspection
 from .proxy import loader
@@ -45,7 +47,7 @@ class Controller:
         self.debug = self._debug_event_id or self._debug_url
         self.release = release
 
-        self._prepare_workdir()
+        self._async_logger_started = False
         self.schemes_on_event = {}
         self.event_parsers = []
         self.seats_groups = []
@@ -56,6 +58,7 @@ class Controller:
         self._already_warned_on_collect = set()
 
         self.router = router
+        self._prepare_workdir()
         self.tele_core = get_telecore()
         self._console = run_inspection(self, release=True)
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
@@ -224,6 +227,11 @@ class Controller:
         elif self._debug_event_id:
             for group, connections in self.get_debug_ev_id_conns(all_connections):
                 group.update(connections)
+
+        # Start async logger
+        if not self._async_logger_started:
+            logger.start_async_logger()
+            self._async_logger_started = True
 
         # Do some database work at the end of step
         lock_time = time.time()

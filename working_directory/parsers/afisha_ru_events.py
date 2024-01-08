@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
-from parse_module.manager.proxy.instances import AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -49,7 +49,6 @@ class AfishaEvents(AsyncEventParser):
             date.strftime("%b ").capitalize() + \
             date.strftime("%Y %H:%M")
         return date_to_write
-    
 
     async def get_x_token(self, x_ath_url, count=0):
         headers = {

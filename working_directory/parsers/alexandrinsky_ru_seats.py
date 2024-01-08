@@ -5,7 +5,8 @@ from requests.exceptions import JSONDecodeError
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+
 
 class OutputData(NamedTuple):
     sector_name: str
@@ -82,8 +83,11 @@ class AlexandrinskyRu(AsyncSeatsParser):
             except KeyError:
                 sectors_data[sector_name] = tickets
 
+        events = []
         for sector_name, tickets in sectors_data.items():
-            yield OutputData(sector_name=sector_name, tickets=tickets)
+            event = OutputData(sector_name=sector_name, tickets=tickets)
+            events.append(event)
+        return events
 
     async def _request_to_all_place(self, count_error=0):
         headers = {

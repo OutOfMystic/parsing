@@ -17,7 +17,7 @@ from PIL import Image, ImageOps
 from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils import utils
 from parse_module.utils.date import month_list
 from parse_module.utils.parse_utils import double_split
@@ -357,7 +357,7 @@ class YandexAfishaParser(AsyncEventParser):
 
         try:
             driver.get(url=url)
-            asyncio.sleep(1)
+            await asyncio.sleep(1)
             r = await self.solve_smart_captcha_checkbox(driver)
             driver.get(url=r.url)
             r = await self.solve_smart_captcha_image(driver)
@@ -856,7 +856,9 @@ class YandexAfishaParser(AsyncEventParser):
         return output_data
 
     async def body(self):
-        self.before_body()
+        if self.session:
+            await self.session.close()
+        await self.before_body()
 
         for url, venue in self.special_url_with_one_person.items():
             all_events_url = await self._get_url_events_from_special_url__with_one_person(url)

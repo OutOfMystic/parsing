@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
-from parse_module.manager.proxy.instances import AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils import utils
 
 

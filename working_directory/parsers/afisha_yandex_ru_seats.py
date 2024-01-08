@@ -17,7 +17,7 @@ from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.utils.captcha import afisha_recaptcha
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils import utils
 from parse_module.drivers.proxelenium import ProxyWebDriver
@@ -761,7 +761,7 @@ class YandexAfishaParser(AsyncSeatsParser):
 
         try:
             driver.get(url=url)
-            asyncio.sleep(1)
+            await asyncio.sleep(1)
             r = await self.solve_smart_captcha_checkbox(driver)
             driver.get(url=r.url)
             r = await self.solve_smart_captcha_image(driver)
@@ -825,8 +825,7 @@ class YandexAfishaParser(AsyncSeatsParser):
         r = await self.session.get(img_captha_href, stream=True)
         if r.status_code == 200:
             with open('afisha_catcha.png', 'wb') as f:
-                for chunk in r:
-                    f.write(chunk)
+                f.write(r.content)
 
 
         with Image.open('afisha_catcha.png') as img:
@@ -1062,7 +1061,6 @@ class YandexAfishaParser(AsyncSeatsParser):
             return False
         return True
 
-
     async def body(self):
         skip_events = [
             'https://widget.afisha.yandex.ru/w/sessions/MTE2NXwzODkxMzJ8Mjc4ODgzfDE2ODI2MTMwMDAwMDA%3D?widgetName=w2&lang=ru',  # ЦСКА — Ак Барс 27.04
@@ -1094,16 +1092,16 @@ class YandexAfishaParser(AsyncSeatsParser):
 
         while self.req_number < 50 and r_sectors is None:
             try:
-                asyncio.sleep(0.5)
+                await asyncio.sleep(0.5)
                 r_sectors, r = await self.hallplan_request(event_params, default_headers)
             except ProxyError as ex:
                 self.error(f'Catch(change_proxy): {ex} \n url:{self.url}')
-                self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+                await self.change_proxy()
                 #self.session = AsyncProxySession(self)
-                asyncio.sleep(1)
+                await asyncio.sleep(1)
             except Exception as ex:
                 self.error(f'Catch: {ex} \nurl:{self.url}')
-                asyncio.sleep(1)
+                await asyncio.sleep(1)
             finally:
                 self.req_number += 1
         if r_sectors == 'no-seats' or r_sectors == 'not-available' or r_sectors == 'closed':
@@ -1118,12 +1116,12 @@ class YandexAfishaParser(AsyncSeatsParser):
             self.warning(f'Changing proxy... load 40..sec')
             self.req_number = 0
             self.default_headers = {}
-            asyncio.sleep(40)
+            await asyncio.sleep(40)
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = AsyncProxySession(self)
             
             while self.req_number < 50 and r_sectors is None:
-                asyncio.sleep(0.5)
+                await asyncio.sleep(0.5)
                 try:
                     r_sectors, r = await self.hallplan_request(event_params, default_headers)
                 except Exception as ex:

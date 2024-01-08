@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -44,6 +44,7 @@ class MelomanRu(AsyncSeatsParser):
         return output_data
 
     async def _get_output_data(self, free_sectors: ResultSet[Tag]) -> OutputData:
+        datas = []
         for sector in free_sectors:
             place_sector = sector.find('text').text
             if place_sector == 'СЦЕНА':
@@ -56,7 +57,9 @@ class MelomanRu(AsyncSeatsParser):
             tickets = self._get_place_data(price_zones, places)
             place_sector = self._reformat(place_sector)
 
-            yield OutputData(sector_name=place_sector, tickets=tickets)
+            data = OutputData(sector_name=place_sector, tickets=tickets)
+            datas.append(data)
+        return datas
 
     def _get_place_data(self, price_zones: dict[int, int], places: list) -> dict[tuple[str, str], int]:
         tickets = {}
