@@ -1,6 +1,6 @@
 from parse_module.models.parser import SeatsParser
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from bs4 import BeautifulSoup
 import re
 
@@ -251,7 +251,4 @@ class MkhtParser(Parser):
 
         for i in to_del[::-1]:
             del sectors[i]
-
-    async def body(self):
-        super().body()
 

@@ -1,7 +1,7 @@
 import json
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.sessions import ProxySession
 
 from datetime import datetime
 import re
@@ -88,7 +88,7 @@ class MosGubern(EventParser):
         dates = self.get_dates_list()
         
         for date in dates:
-            data = self.get_json()
+            data = self.get_json(date)
             
             a_events = self.parse_json(data)
             

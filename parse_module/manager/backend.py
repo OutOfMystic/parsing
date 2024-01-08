@@ -171,14 +171,15 @@ def change_connection(login, password):
     db_manager.connect_db()
 
 
-def process_function(inner_conn):
-    change_connection('parsing_main', 'cnwhUCJMIIrF2g')
+def process_starting(inner_conn, login, password):
+    change_connection(login, password)
     backend_ = SchemeRouterBackend(inner_conn)
     backend_.run()
 
 
-def get_router():
+def get_router(db_login, db_password):
     outer_conn, inner_conn = multiprocessing.Pipe()
-    process = multiprocessing.Process(target=process_function, args=(inner_conn,))
+    process = multiprocessing.Process(target=process_starting,
+                                      args=(inner_conn, db_login, db_password,))
     process.start()
     return SchemeRouterFrontend(outer_conn), process

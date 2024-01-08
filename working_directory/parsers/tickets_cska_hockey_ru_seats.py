@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -164,7 +164,7 @@ class CskaHockeyParser(AsyncSeatsParser):
             get_data = r.json()
             expired_at = get_data.get('expired_at')
             if expired_at is None:
-                asyncio.sleep(10)
+                await asyncio.sleep(10)
             else:
                 break
         headers = {

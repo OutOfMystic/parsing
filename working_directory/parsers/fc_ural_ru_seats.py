@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -37,7 +37,8 @@ class FcUralRu(AsyncSeatsParser):
 
         return output_data
 
-    async def _get_output_data(self, links_to_sector_data: ResultSet[Tag]) -> OutputData:
+    async def _get_output_data(self, links_to_sector_data: ResultSet[Tag]):
+        datas = []
         for link_to_sector_data in links_to_sector_data:
             url = 'https://ticket.fc-ural.ru' + link_to_sector_data.get('href')
             soup = await self._request_to_place(url)
@@ -49,7 +50,8 @@ class FcUralRu(AsyncSeatsParser):
 
             output_data = self._get_output_data_from_json(sector_name, json_data_place, all_price_zones)
 
-            yield output_data
+            datas.append(output_data)
+        return datas
 
     def _get_output_data_from_json(self, sector_name: str, json_data_place: json, all_price_zones: dict[str, int]) -> OutputData:
         tickets = {}

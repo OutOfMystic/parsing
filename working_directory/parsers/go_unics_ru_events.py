@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -36,11 +36,13 @@ class GoUnicsRu(AsyncEventParser):
 
         return output_data
 
-    def _parse_events_from_soup(self, events: ResultSet[Tag]) -> OutputEvent:
+    def _parse_events_from_soup(self, events: ResultSet[Tag]):
+        datas = []
         for event in events:
             output_data = self._parse_data_from_event(event)
             if output_data is not None:
-                yield output_data
+                datas.append(output_data)
+        return datas
 
     def _parse_data_from_event(self, event: Tag) -> Optional[Union[OutputEvent, None]]:
         title = event.findAll('div', class_='teams__name')

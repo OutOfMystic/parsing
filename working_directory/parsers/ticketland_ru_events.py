@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class Parser(AsyncEventParser):
@@ -61,6 +61,7 @@ class Parser(AsyncEventParser):
         self.session = AsyncProxySession(self)
 
     async def get_events(self, link, places_url, venue):
+        events = []
         number_page = 0
         achtung = None
         while achtung == None:
@@ -99,10 +100,12 @@ class Parser(AsyncEventParser):
                 href = card.find('a', class_='card__image-link').get('href')
                 link_ = link.split('w')[0] + places_url.split('/')[2] + href
                 for event in await self.get_cards(link_, venue):
-                    yield event
+                    events.append(event)
             number_page += 1
+        return events
 
     async def get_cards(self, url, venue):
+        collected = []
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -163,7 +166,9 @@ class Parser(AsyncEventParser):
                 url = 'https://sochi.ticketland.ru' + url
             else:
                 url = 'https://www.ticketland.ru' + url
-            yield event_name, url, formatted_date
+            card_ = [event_name, url, formatted_date]
+            collected.append(card_)
+        return collected
 
     async def get_links_teatrs(self, pagecount, places_url, our_places):
         links_venues = []
@@ -250,7 +255,8 @@ class Parser(AsyncEventParser):
                 pagecount = last_paper.get('data-page-count')
             else:
                 pagecount = 1
-            for link, venue in await self.get_links_teatrs(pagecount, places_url, our_places).items():
+            teatr_links = await self.get_links_teatrs(pagecount, places_url, our_places)
+            for link, venue in teatr_links.items():
                 for event in await self.get_events(link, places_url, venue):
                     if 'gosudarstvennyy-kremlevskiy-dvorec' in our_places:
                         venue = 'Кремлёвский Дворец'

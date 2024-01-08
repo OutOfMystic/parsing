@@ -5,7 +5,7 @@ import time
 import json
 import inspect
 import concurrent.futures
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Awaitable, Coroutine, Optional
 
 from . import utils
 import colorama
@@ -123,8 +123,6 @@ def multi_try(to_try: Callable,
         kwargs = {}
     if args is None:
         args = tuple()
-    if handle_error is None:
-        handle_error = fpass
     if tries == 1 and raise_exc is True:
         raise RuntimeError('If tries == 1, exception should not be raised.'
                            ' Set raise_exc argument to False')
@@ -141,8 +139,8 @@ def multi_try(to_try: Callable,
                                level=logger.error)
         if result is not TryError:
             return result
-        else:
-            error_prefix = '[Exception during `handle_error`]\n'
+        elif handle_error:
+            error_prefix = '[Exception during `handle_error`] '
             exc_args = None if len(inspect.signature(handle_error).parameters) == 0 else (exc, *args,)
             exc_kwargs = None if len(inspect.signature(handle_error).parameters) == 0 else kwargs
             _tryfunc(handle_error,
@@ -262,8 +260,8 @@ async def async_just_try(to_try,
     return await async_try(to_try, **kwargs)
 
 
-async def async_try(to_try: Callable,
-                    handle_error: Callable = None,
+async def async_try(to_try: Callable[..., Awaitable],
+                    handle_error: Optional[Callable[..., Awaitable]] = None,
                     tries=3,
                     raise_exc=True,
                     name='Main',
@@ -271,12 +269,31 @@ async def async_try(to_try: Callable,
                     kwargs: dict = None,
                     print_errors=True,
                     use_logger=True):
+    """
+    Try to execute smth ``tries`` times sequentially.
+    If all attempts are unsuccessful and ``raise_exc``
+    is True, raise an exception. ``handle_error`` is called
+    every time attempt was not succeeded.
+
+    Args:
+        to_try: main function
+        name: name to identify logs
+        handle_error: called if attempt was not succeeded
+        tries: number of attempts to execute ``to_try``
+        args: arguments sent to ``to_try``
+        kwargs: keyword arguments sent to ``to_try``
+        raise_exc: raise exception or not after all
+        print_errors: log errors on each try
+        use_logger: log errors via the custom logger
+
+    Returns: value from a last successful attempt.
+    If all attempts fail, exception is raised or
+    provision.TryError is returned.
+    """
     if kwargs is None:
         kwargs = {}
     if args is None:
         args = tuple()
-    if handle_error is None:
-        handle_error = fpass
     if tries == 1 and raise_exc is True:
         raise RuntimeError('If tries == 1, exception should not be raised.'
                            ' Set raise_exc argument to False')
@@ -292,8 +309,8 @@ async def async_try(to_try: Callable,
                                       level=logger.error)
         if result is not TryError:
             return result
-        else:
-            error_prefix = '[Exception during `handle_error`]\n'
+        elif handle_error:
+            error_prefix = '[Exception during `handle_error`] '
             exc_args = None if len(inspect.signature(handle_error).parameters) == 0 else (exc, *args,)
             exc_kwargs = None if len(inspect.signature(handle_error).parameters) == 0 else kwargs
             await _asynctry(handle_error,
@@ -308,7 +325,7 @@ async def async_try(to_try: Callable,
             return TryError
 
 
-async def _asynctry(func,
+async def _asynctry(func: Callable[..., Awaitable],
                     name='',
                     error_prefix='',
                     print_errors=True,
@@ -321,8 +338,11 @@ async def _asynctry(func,
         kwargs = {}
     if args is None:
         args = tuple()
+    coroutine = func(*args, **kwargs)
+    if not isinstance(coroutine, Coroutine):\
+        raise TypeError('first argument should be an awaitable function')
     try:
-        result = await func(*args, **kwargs)
+        result = await coroutine
     except Exception as exc:
         if print_errors:
             tried_overall = ''
@@ -386,10 +406,6 @@ def delete_module(modname, paranoid=None):
                     delattr(mod, symbol)
                 except AttributeError:
                     pass
-
-
-def fpass():
-    pass
 
 
 def load_data(source, json_=True):

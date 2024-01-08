@@ -1,4 +1,5 @@
 import asyncio
+from http.cookies import SimpleCookie
 from typing import NamedTuple, Optional, Union
 from pathlib import Path
 import json
@@ -9,7 +10,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession, add_cookie_to_cookies
 
 
 class OutputEvent(NamedTuple):
@@ -32,20 +33,25 @@ class Mmdm(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-        self.session.cookies.set('__ddgid_', 'yuEsc7A7O3KpYzHw', domain='www.mmdm.ru')
-        self.session.cookies.set('__ddg1_', 'vm5OlV40vtdtUMkebHon', domain='.mmdm.ru')
-        self.session.cookies.set('__ddg2_', 'k3wy1Spd29SBOfv7', domain='.mmdm.ru')
-        self.session.cookies.set('ddg2', 'k3wy1Spd29SBOfv7', domain='.mmdm.ru')
-        self.session.cookies.set('__ddg5_', 'DlNIMY8IBLJvt2Hh', domain='.mmdm.ru')
-        self.session.cookies.set('__ddgmark_', 'u3MhHHdpAbRxnr4x', domain='www.mmdm.ru')
-        self.session.cookies.set(
-            'csrftoken', 'tkiCzbt7mj2WVEvZW33VNFgonoVtSdzyyUiWQLu1FbAcaME4Myq1Kpc875pTjhZg', domain='www.mmdm.ru'
-        )
-        self.session.cookies.set('_ym_d', '1682084959', domain='.mmdm.ru')
-        self.session.cookies.set('_ym_uid', '1681998721619246323', domain='.mmdm.ru')
-        self.session.cookies.set('_ym_isad', '1', domain='.mmdm.ru')
-        self.session.cookies.set('_ym_visorc', 'w', domain='.mmdm.ru')
-        # self.session.cookies.set('sessionid', 'ydoqrzaigouasn5pmwzlq7liaztdg2n4', domain='www.mmdm.ru')
+        to_cookies = [
+            ('__ddgid_', 'yuEsc7A7O3KpYzHw', 'www.mmdm.ru',),
+            ('__ddg1_', 'vm5OlV40vtdtUMkebHon', '.mmdm.ru',),
+            ('__ddg2_', 'k3wy1Spd29SBOfv7', '.mmdm.ru',),
+            ('ddg2', 'k3wy1Spd29SBOfv7', '.mmdm.ru',),
+            ('__ddg5_', 'DlNIMY8IBLJvt2Hh', '.mmdm.ru',),
+            ('__ddgmark_', 'u3MhHHdpAbRxnr4x', 'www.mmdm.ru',),
+            ('csrftoken', 'tkiCzbt7mj2WVEvZW33VNFgonoVtSdzyyUiWQLu1FbAcaME4Myq1Kpc875pTjhZg', 'www.mmdm.ru',),
+            ('_ym_d', '1682084959', '.mmdm.ru',),
+            ('_ym_uid', '1681998721619246323', '.mmdm.ru',),
+            ('_ym_isad', '1', '.mmdm.ru',),
+            ('_ym_visorc', 'w', '.mmdm.ru',),
+            # ('sessionid', 'ydoqrzaigouasn5pmwzlq7liaztdg2n4', 'www.mmdm.ru',),
+        ]
+
+        cookies = SimpleCookie()
+        for cookie in to_cookies:
+            add_cookie_to_cookies(cookies, *cookie)
+        self.session.cookies.update_cookies(cookies)
 
     async def _get_session_id(self) -> None:
         headers = {
@@ -66,7 +72,7 @@ class Mmdm(AsyncEventParser):
         }
         url = 'https://www.mmdm.ru/api/cart/'
         r = await self.session.get(url, headers=headers)
-        self.session_id = r.cookies['sessionid']
+        self.session_id = self.session.cookies.filter_cookies(url)['sessionid']
 
     async def _parse_events(self):
         soup = await self._requests_to_events()
@@ -75,7 +81,8 @@ class Mmdm(AsyncEventParser):
 
         return await self._parse_events_from_soup(events)
 
-    async def _parse_events_from_soup(self, events: list) -> OutputEvent:
+    async def _parse_events_from_soup(self, events):
+        collected = []
         link_to_get_next_events = True
         count_request_to_axaj = 2
 
@@ -83,13 +90,14 @@ class Mmdm(AsyncEventParser):
             for event in events:
                 output_data = self._parse_data_from_event(event)
                 if output_data is not None:
-                    yield output_data
+                    collected.append(output_data)
 
             if link_to_get_next_events is False:
                 break
             json_data = await self._requests_to_axaj_events(count_request_to_axaj)
             events, link_to_get_next_events = self._get_events_from_json(json_data)
             count_request_to_axaj += 1
+        return collected
 
     def _parse_data_from_event(self, event: BeautifulSoup) -> Optional[Union[OutputEvent, None]]:
         title = event.find('a', class_='egi_title').text.strip().replace("'", '"')
@@ -213,7 +221,7 @@ class Mmdm(AsyncEventParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent,
         }
-        asyncio.sleep(1 + delay_to_requests)
+        await asyncio.sleep(1 + delay_to_requests)
         url = 'https://www.mmdm.ru/.well-known/ddos-guard/check?context=free_splash'
         r = await self.session.get(url, headers=headers)
         requests_to_js_1_status = r.status_code
@@ -231,7 +239,7 @@ class Mmdm(AsyncEventParser):
             'sec-fetch-site': 'cross-site',
             'user-agent': self.user_agent,
         }
-        asyncio.sleep(1 + delay_to_requests)
+        await asyncio.sleep(1 + delay_to_requests)
         url = 'https://check.ddos-guard.net/check.js'
         r = await self.session.get(url, headers=headers)
         requests_to_js_2_status = r.status_code
@@ -252,8 +260,10 @@ class Mmdm(AsyncEventParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent,
         }
-        asyncio.sleep(1 + delay_to_requests)
-        url = f'https://check.ddos-guard.net/set/id/{self.session.cookies.get("ddg2")}'
+        await asyncio.sleep(1 + delay_to_requests)
+
+        cookies = self.session.cookies.filter_cookies('https://check.ddos-guard.net/check.js')
+        url = f'https://check.ddos-guard.net/set/id/{cookies["ddg2"]}'
         r = await self.session.get(url, headers=headers)
         requests_to_image_1_status = r.status_code
 
@@ -270,8 +280,8 @@ class Mmdm(AsyncEventParser):
             'sec-fetch-site': 'cross-site',
             'user-agent': self.user_agent,
         }
-        asyncio.sleep(1 + delay_to_requests)
-        url = f'https://www.mmdm.ru/.well-known/ddos-guard/id/{self.session.cookies.get("__ddg2_")}'
+        await asyncio.sleep(1 + delay_to_requests)
+        url = f'https://www.mmdm.ru/.well-known/ddos-guard/id/{cookies["ddg2"]}'
         r = await self.session.get(url, headers=headers)
         requests_to_image_2_status = r.status_code
 
@@ -301,7 +311,7 @@ class Mmdm(AsyncEventParser):
         with open(file, 'r', encoding='utf-8') as f:
             data = f.read()
 
-        asyncio.sleep(1 + delay_to_requests)
+        await asyncio.sleep(1 + delay_to_requests)
         url = 'https://www.mmdm.ru/.well-known/ddos-guard/mark/'
         r = await self.session.post(url, headers=headers, data=data)
         requests_to_send_data_status = r.status_code

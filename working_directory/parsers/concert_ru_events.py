@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class Concert(AsyncEventParser):
@@ -26,6 +26,7 @@ class Concert(AsyncEventParser):
         ]
 
     async def parse_page(self, soup):
+        rows = []
         events = soup.find_all('div', class_='event')
         for event in events:
             title_and_href = event.find('a', class_='event__name')
@@ -57,19 +58,25 @@ class Concert(AsyncEventParser):
                     normal_venue = venue
                 else:
                     normal_venue = new_venue[-1].text.strip()
-                yield [title, url_to_tickets, normal_date, normal_venue]
+                row = [title, url_to_tickets, normal_date, normal_venue]
+                rows.append(row)
+        return rows
 
     async def parse_events(self, url):
+        pages = []
         soup = await self.get_all_events_in_this_event(url)
         new_page = soup.find('a', class_='pagination__next').get('href')
-        yield self.parse_page(soup)
+        page = self.parse_page(soup)
+        pages.append(page)
         while True:
             if new_page == '#':
                 break
             url = 'https://www.concert.ru' + new_page
             soup = await self.get_all_events_in_this_event(url)
-            yield self.parse_page(soup)
+            page = self.parse_page(soup)
+            pages.append(page)
             new_page = soup.find('a', class_='pagination__next').get('href')
+        return pages
 
     async def get_all_events_in_this_event(self, url):
         headers = {

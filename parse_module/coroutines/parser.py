@@ -5,7 +5,7 @@ from . import core, pooling
 from ..connection import db_manager
 from ..manager.backstage import tasker
 from ..manager.proxy import check
-from ..manager.proxy.instances import AsyncProxySession
+from ..manager.proxy.sessions import AsyncProxySession
 from ..models import parser
 from ..utils import provision
 from ..utils.exceptions import ProxyHubError
@@ -22,15 +22,19 @@ class AsyncParserBase(core.CoroutineBot, ABC):
         self.last_state = None
         self._notifier = None
 
+    async def _get_proxy(self):
+        self.proxy = await self.controller.proxy_hub.get_async(self.proxy_check)
+        if not self.proxy:
+            raise ProxyHubError(f'Out of proxies!')
+
     async def change_proxy(self, report=False):
         if report:
             self.controller.proxy_hub.report(self.proxy_check, self.proxy)
         # logger.debug('change_proxy start')
-        self.proxy = await self.controller.proxy_hub.get_async(self.proxy_check)
-        if not self.proxy:
-            raise ProxyHubError(f'Out of proxies!')
+        await self._get_proxy()
         if isinstance(self.session, AsyncProxySession):
             await self.session.close()
+        await self.before_body()
         # logger.debug('change_proxy finish')
 
     def set_notifier(self, notifier):
@@ -56,7 +60,7 @@ class AsyncParserBase(core.CoroutineBot, ABC):
         next_step_delay = min(self.get_delay() / 15, 120)
         if self.proxy is None:
             self._debug_only('changing proxy', int((time.time() - start_time) * 10) / 10)
-            await provision.async_just_try(self.change_proxy)
+            await provision.async_just_try(self._get_proxy)
             self._debug_only('changed proxy', int((time.time() - start_time) * 10) / 10)
 
         if self.proxy is not None:

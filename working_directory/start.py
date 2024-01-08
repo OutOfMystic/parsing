@@ -14,7 +14,7 @@ DEBUG_DATA = 26411
 
 
 if __name__ == '__main__':
-    router, process = backend.get_router()
+    router, process = backend.get_router('parsing_main', 'cnwhUCJMIIrF2g')
     time.sleep(1)
     release = 'release' in sys.argv
     debug_url, debug_event_id = None, None

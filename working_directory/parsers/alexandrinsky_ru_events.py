@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -34,23 +34,25 @@ class AlexandrinskyRu(AsyncEventParser):
 
         events = self._get_events_from_soup(soup)
 
-        async for event in await self._parse_events_from_soup(events, all_ajax_pages):
-            yield event
+        return await self._parse_events_from_soup(events, all_ajax_pages)
 
     async def _parse_events_from_soup(self, events: ResultSet[Tag], all_ajax_pages: int):
+        datas = []
         for count_page in range(2, all_ajax_pages + 2):
             for event in events:
                 output_data = self._parse_data_from_event(event)
                 if output_data is not None:
                     for data in output_data:
-                        yield data
+                        datas.append(data)
 
             soup = await self._requests_to_axaj_events(str(count_page))
             events = self._get_events_from_soup(soup)
+        return data
 
     def _parse_data_from_event(self, event: Tag) -> Optional[Union[OutputEvent, None]]:
         title = event.find('a').text.strip()
 
+        events = []
         all_href_and_date = event.select('a[onclick^="listim"]')
         for href_and_date in all_href_and_date:
             day = href_and_date.find('span', class_='repertoire-date-list__day').text
@@ -61,8 +63,8 @@ class AlexandrinskyRu(AsyncEventParser):
             href = 'https://www.afisha.ru/wl/402/api/events/info?lang=ru&sid='
             event_id = href_and_date.get('onclick')
             event_id = double_split(event_id, 'event_id: ', '})')
-
-            yield OutputEvent(title=title, href=href, date=normal_date, event_id=event_id)
+            event = OutputEvent(title=title, href=href, date=normal_date, event_id=event_id)
+            events.append(event)
 
     def _get_events_from_soup(self, soup: BeautifulSoup) -> ResultSet[Tag]:
         events = soup.select('div.box-poster-tickets div.box-poster-tickets-description')

@@ -6,7 +6,7 @@ from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -37,13 +37,14 @@ class ZaryadyeHall(AsyncEventParser):
 
     async def _parse_events_from_json(
             self, events: ResultSet[Tag], new_page: Optional[Union[BeautifulSoup, None]]
-    ) -> OutputEvent:
+    ):
+        datas = []
         count_page = 1
         while True:
             for event in events:
                 output_data = self._parse_data_from_event(event)
                 if output_data is not None:
-                    yield output_data
+                    datas.append(output_data)
 
             if new_page is None:
                 break
@@ -52,6 +53,7 @@ class ZaryadyeHall(AsyncEventParser):
             soup = await self._requests_to_axaj_data(url)
             new_page = self._next_page_with_events(soup)
             events = self._get_events_from_soup(soup)
+        return datas
 
     def _parse_data_from_event(self, event: Tag) -> Optional[Union[OutputEvent, None]]:
         title = event.find('a', class_='zh-c-item__name').text.strip().replace("'", '"')
