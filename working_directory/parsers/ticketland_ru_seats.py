@@ -5,10 +5,9 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.parse_utils import double_split
-from parse_module.utils import utils, provision
+from parse_module.utils import provision
 
 
 class LenkomParser(AsyncSeatsParser):
@@ -28,8 +27,9 @@ class LenkomParser(AsyncSeatsParser):
         self.count_error = 0
 
     async def get_tl_csrf_and_data(self):
-        result = await self.multi_try(self._get_tl_csrf_and_data, tries=5, raise_exc=False)
+        result = await provision.async_try(self._get_tl_csrf_and_data, tries=5, raise_exc=False)
         if result == provision.TryError:
+            print(' provision.TryError:')
             result = None
         return result
 
@@ -51,10 +51,11 @@ class LenkomParser(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         # r = self.session.get(self.url, headers=headers)
-        r_text, r_json = await self.multi_try(self.request_to_ticketland, tries=5, args=[self.url, headers])
+        r_text, r_json = await provision.async_try(self.request_to_ticketland, tries=5, args=[self.url, headers])
         if r_text is None and r_json is None or 'CDbException' in r_text: 
             self.count_error += 1
             if self.count_error == 50:
+                await self.change_proxy(report=True)
                 raise ProxyError('ticketland seats parser except ProxyError')
             await self.change_proxy()
             return await self._get_tl_csrf_and_data()
@@ -64,6 +65,9 @@ class LenkomParser(AsyncSeatsParser):
             #tl_csrf = double_split(r_text, '<meta name="csrf-token" content="', '"')
         except Exception as ex:
             self.error(f'Error finding csrf-token {ex} {r_text} {self.url}  {r_json}')
+            self.count_error += 1
+            await self.change_proxy()
+            return await self._get_tl_csrf_and_data()
             #tl_csrf = double_split(r_text, '<meta name="csrf-token" content="', '"')
 
         if 'performanceId:' not in r_text:
@@ -101,7 +105,7 @@ class LenkomParser(AsyncSeatsParser):
             raise Exception('Запрос с загрузкой')
         try:
             return r.text, r.json()
-        except JSONDecodeError:
+        except:
             return r.text, None
 
     def get_scene(self):
@@ -141,33 +145,32 @@ class LenkomParser(AsyncSeatsParser):
             'x-requested-with': 'XMLHttpRequest'
         }
         # r = self.session.get(url, headers=headers)
-        r_text, r_json = await self.multi_try(self.request_to_ticketland, tries=5, args=[url, headers])
+        r_text, r_json = await provision.async_try(self.request_to_ticketland, tries=5, args=[url, headers])
         if r_text is None and r_json is None or 'CDbException' in r_text or 'Технические работы' in r_text:
             self.count_error += 1
             if self.count_error == 50:
+                await self.change_proxy(report=True)
                 raise ProxyError('ticketland seats parser except ProxyError')
             await self.change_proxy()
             return await self._get_tl_csrf_and_data()
 
         if '"Unable to verify your data submission."' in r_text:
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            await self.before_body()
+            await self.change_proxy()
         if 'CDbException' in r_text:
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            await self.before_body()
+            await self.change_proxy()
         if '""' in r_text:
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            await self.before_body()
+            await self.change_proxy()
         if isinstance(r_json, str):
             self.error(f'Error {r_json} {self.url} {r_text} ')
             return
         if r_json is None:
-            self.error(f'r_json is None == True {r_json} {self.url}')
+            self.error(f'(1-st step)r_json is None == True {r_json} {self.url}')
             try:
-                self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-                await self.before_body()
+                self.count_error += 1
+                await self.change_proxy()
+                return await self._get_tl_csrf_and_data()
             except:
-                self.error(f'r_json is None == True {r_json} {self.url}')
+                self.error(f'(2-nd step r_json is None == True {r_json} {self.url}')
             return
         try:
             all_tickets = r_json.get('places')
@@ -197,6 +200,7 @@ class LenkomParser(AsyncSeatsParser):
 
         self.reformat(a_sectors, self.get_scene())
         for sector in a_sectors:
+            #self.info(sector['name'], len(sector['tickets']) )
             self.register_sector(sector['name'], sector['tickets'])
         #self.check_sectors()
 
