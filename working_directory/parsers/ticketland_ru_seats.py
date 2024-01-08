@@ -97,13 +97,12 @@ class LenkomParser(AsyncSeatsParser):
             r = await self.session.get(url, headers=headers, verify=False)
         except ProxyError:
             return None, None
-        r_text = r.text
-        if '<div id="id_spinner" class="container"><div class="load">Loading...</div>' in r_text:
+        if '<div id="id_spinner" class="container"><div class="load">Loading...</div>' in r.text:
             raise Exception('Запрос с загрузкой')
         try:
-            return r_text, r.json()
+            return r.text, r.json()
         except JSONDecodeError:
-            return r_text, None
+            return r.text, None
 
     def get_scene(self):
         pass
