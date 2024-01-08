@@ -93,9 +93,7 @@ class AfishaEvents(AsyncEventParser):
         if not js_to_parsing and count < 8:
             count += 1
             self.warning(f' try to find XApplication token + {count}')
-            self.proxy = await self.controller.proxy_hub.get(self.proxy_check)
-            await self.session.close()
-            self.session = AsyncProxySession(self)
+            await self.change_proxy()
             return await self.get_x_token(x_ath_url, count)
         
         try:
@@ -160,9 +158,10 @@ class AfishaEvents(AsyncEventParser):
     
 
     async def make_new_session(self):
-        self.proxy = await self.controller.proxy_hub.get_async(self.proxy_check)
-        await self.session.close()
-        self.session = AsyncProxySession(self)
+        await self.change_proxy()
+        # self.proxy = await self.controller.proxy_hub.get_async(self.proxy_check)
+        # await self.session.close()
+        # self.session = AsyncProxySession(self)
         
     
     async def get_pages(self, url, count=0):
