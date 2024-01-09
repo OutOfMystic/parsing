@@ -29,7 +29,7 @@ class BotBase:
         self.url = ''
 
         self.user_agent = user_agent.random()
-        self.error_timer = float('inf')
+        self._error_timer = float('inf')
         self.step = 0
         self.driver = None
         self.fully_inited = False
@@ -126,10 +126,6 @@ class BotBase:
                                    raise_exc=raise_exc,
                                    print_errors=print_errors)
 
-    def slide_tab(self):
-        self.warning('Max waste time elapsed, but nothing '
-                     'has been changed. Configure slide_tab method')
-
     def except_on_main(self):
         if self.driver:
             self.driver.get('http://httpbin.org/ip')
@@ -166,14 +162,12 @@ class BotBase:
 
     def run_except(self):
         try:
-            if (time.time() - self.error_timer) >= self.max_waste_time:
+            if (time.time() - self._error_timer) >= self.max_waste_time:
                 mes = ('--max_waste_time elapsed '
                        f'({self.max_waste_time} сек)--')
                 self.error(mes)
-                self.error_timer = time.time()
+                self._error_timer = time.time()
                 self.change_proxy(report=True)
-                self.before_body()
-                self.slide_tab()
             self.except_on_main()
         except Exception as error:
             self.error(f'Except on exception: {error}')

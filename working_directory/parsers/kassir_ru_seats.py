@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -1623,8 +1623,7 @@ class KassirParser(AsyncSeatsParser):
 
         count = 10
         if (not response.ok or response.text == '[]') and count > 0:
-            self.change_proxy()
-            self.session = AsyncProxySession(self)
+            await self.change_proxy()
             self.debug(url, response.text)
             raise RuntimeError(f'{count} {self.proxy.args}, {url}, {self.session.cookies} this IP is block')
 

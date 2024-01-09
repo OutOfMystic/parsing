@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils import utils
 from parse_module.utils.date import month_list
 
@@ -41,7 +41,7 @@ class Parser(AsyncEventParser):
         }
         r = await self.session.get(url, headers=headers)
         self.debug(r.text)
-        self.debug(r.cookies.get_dict())
+        self.debug(self.session.cookies.filter_cookies(url))
 
     async def main_page_request(self):
         headers = {
@@ -60,7 +60,7 @@ class Parser(AsyncEventParser):
         }
         r = await self.session.get(self.url, headers=headers)
         self.debug(r.text)
-        self.debug(r.cookies)
+        self.debug(self.session.cookies.filter_cookies(self.url))
 
     async def get_csrf(self):
         url = 'https://ticket.bolshoi.ru/api/csrfToken'

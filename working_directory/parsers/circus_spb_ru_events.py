@@ -15,9 +15,7 @@ from selenium.common.exceptions import TimeoutException
 from parse_module.coroutines import AsyncEventParser
 from parse_module.drivers.proxelenium import ProxyWebDriver
 from parse_module.manager.proxy.check import NormalConditions
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
-from parse_module.utils import utils
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -36,6 +34,7 @@ class CircusSpbRu(AsyncEventParser):
         self.urls = {
             #'https://www.circus.spb.ru/': 'Страшная сила',
             'https://www.circus.spb.ru/novogodnee-predstavlenie.html': 'МАСКА',
+            'https://circus.spb.ru/princ-cirka.html': 'ПРИНЦ ЦИРКА',
             #'https://circus.spb.ru/balagan.html': 'Балаган',
             #'https://bezgranits.circus.team/': 'Фестиваль циркового искусства «Без границ»',
             #'https://circus.spb.ru/bolshaja-otkrytaja-repetitsija-legendarnyh-bratev-zapashnyh-v-tsirke-na-fontanke-.html': 'БОЛЬШАЯ ОТКРЫТАЯ РЕПЕТИЦИЯ БРАТЬЕВ ЗАПАШНЫХ',
@@ -81,6 +80,12 @@ class CircusSpbRu(AsyncEventParser):
             ids = [i.find('a', attrs={'data-tp-event': re.compile(r'\d+')}) for i in all_events]
             ids = [i.get('data-tp-event') for i in ids]
             a_events = await self.load_events(ids)
+        
+        elif 'ПРИНЦ ЦИРКА' in title:
+            all_events = await self._get_events_princ_cirka()
+            ids = [i.find('a', attrs={'data-tp-event': re.compile(r'\d+')}) for i in all_events]
+            ids = [i.get('data-tp-event') for i in ids]
+            a_events = await self.load_events(ids)    
 
         else:
             soup = await self._requests_to_events(self_url)
@@ -114,6 +119,38 @@ class CircusSpbRu(AsyncEventParser):
                              f' {date.strftime("%Y")} {date.strftime("%H:%M")}'
         return date_to_write
     
+    async def _get_events_princ_cirka(self):
+        headers = {
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
+                      'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'accept-encoding': 'gzip, deflate, br',
+            'accept-language': 'ru,en;q=0.9',
+            'cache-control': 'no-cache',
+            'pragma': 'no-cache',
+            'referer': 'https://circus.spb.ru/',
+            'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"',
+            'sec-fetch-dest': 'document',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'cross-site',
+            'sec-fetch-user': '?1',
+            'upgrade-insecure-requests': '1',
+            'user-agent': self.user_agent
+        }
+        all_events = []
+        for i in range(1,5):
+            url = f'https://ticket-place.ru/calendar-widget/31?showId=174&dateFrom=&dateTo=&page={i}&maxDays=4'
+            r = await self.session.get(url, headers=headers)
+            if r.status_code == 200:
+                soup = BeautifulSoup(r.text, 'lxml')
+                events_all = soup.find_all(class_=re.compile(r'calendar__item'))
+                if len(events_all) > 0:
+                    all_events.extend(events_all)
+                    return all_events
+            else:
+                break
+        return all_events
 
     async def _get_events_maska(self):
         headers = {
@@ -138,7 +175,7 @@ class CircusSpbRu(AsyncEventParser):
         for i in range(1,4):
             url = f'https://ticket-place.ru/calendar-widget/31?showId=152&dateFrom=&dateTo=&page={i}&maxDays=4'
             r = await self.session.get(url, headers=headers)
-            if r.ok:
+            if r.status_code == 200:
                 soup = BeautifulSoup(r.text, 'lxml')
                 events_all = soup.find_all(class_=re.compile(r'calendar__item'))
                 if len(events_all) > 0:
@@ -247,7 +284,7 @@ class CircusSpbRu(AsyncEventParser):
         for i in range(1,5):
             url = f'https://ticket-place.ru/calendar-widget/31?showId=107&dateFrom=&dateTo=&page={1}&maxDays=4'
             r = await self.session.get(url, headers=headers)
-            if r.ok:
+            if r.status_code == 200:
                 soup = BeautifulSoup(r.text, 'lxml')
                 events_all = soup.find_all(class_=re.compile(r'calendar__item'))
                 if len(events_all) == 0:
@@ -313,10 +350,11 @@ class CircusSpbRu(AsyncEventParser):
 
     async def body(self) -> None:
         for self_url, title in self.urls.items():
+            #self.info(self_url, title)
             try:
                 for event in await self._parse_events(self_url, title):
+                    #self.info(event)
                     self.register_event(event.title, event.href, 
                                         date=event.date, venue='Цирк на Фонтанке (СПБ)')
             except Exception as ex:
-                self.error(f'{self_url} {title} {ex}' f'cannot load! maybe it dont have event?')
-                raise
+                self.warning(f'{self_url} {title} {ex}' f'cannot load! maybe it dont have event?')

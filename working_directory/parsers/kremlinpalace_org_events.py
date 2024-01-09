@@ -1,12 +1,14 @@
 import datetime
+from http.cookies import SimpleCookie
 from typing import Optional, Union
+from urllib.parse import urlparse, urlunparse
 
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession, add_cookie_to_cookies
 from parse_module.utils.parse_utils import double_split
 
 
@@ -15,6 +17,7 @@ class KremlInPalace(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
+        self.base_url = None
         self.delay = 3600
         self.driver_source = None
         self.url = 'https://kremlinpalace.org/'
@@ -123,7 +126,8 @@ class KremlInPalace(AsyncEventParser):
         }
         r = await self.session.get(self.url, headers=headers)
         js_code = double_split(r.text, '<script>', '</script>')
-        return js_code, self.session.cookies.get('__js_p_'), r.text
+        cookies = self.session.cookies.filter_cookies(self.url)
+        return js_code, cookies['__js_p_'], r.text
 
     def _generate_jhash_from_js_code(self, js_code: str, var_code: int) -> int:
         function_get_jhash = double_split(js_code, 'function get_jhash(b) {', ';}')
@@ -148,22 +152,24 @@ class KremlInPalace(AsyncEventParser):
         expires = int(expires)
 
         var_jhash = self._generate_jhash_from_js_code(js_code, var_code)
-        self.session.cookies.set(
-            '__jhash_',
-            str(var_jhash),
-            expires=expires,
-            domain='kremlinpalace.org',
-            path='/',
-            secure='False'
-        )
-        self.session.cookies.set(
-            '__jua_',
-            'Mozilla%2F5.0%20%28Windows%20NT%2010.0%3B%20Win64%3B%20x64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F111.0.0.0%20Safari%2F537.36',
-            expires=expires,
-            domain='kremlinpalace.org',
-            path='/',
-            secure='False'
-        )
+
+        cookies = SimpleCookie()
+        add_cookie_to_cookies(cookies,
+                              '__jhash_',
+                              str(var_jhash),
+                              expires=expires,
+                              domain='kremlinpalace.org',
+                              path='/',
+                              secure=False)
+        add_cookie_to_cookies(cookies,
+                              '__jua_',
+                              'Mozilla%2F5.0%20%28Windows%20NT%2010.0%3B%20Win64%3B%20x64%29%20AppleWebKit%2F'
+                              '537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F111.0.0.0%20Safari%2F537.36',
+                              expires=expires,
+                              domain='kremlinpalace.org',
+                              path='/',
+                              secure=False)
+        self.session.cookies.update_cookies(cookies)
 
     async def _set_cookie_for_bypassing_protection(self) -> Optional[Union[None, BeautifulSoup]]:
         js_code, cookie__js_p_, r_text = await self._get_js_code_and__js_p__from_main_site()

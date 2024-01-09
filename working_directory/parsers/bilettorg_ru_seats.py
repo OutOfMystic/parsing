@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -664,7 +664,6 @@ class Bilettorg(AsyncSeatsParser):
                 })
         return new_a_sectors
 
-
     async def parse_seats(self):
         total_sector = []
 
@@ -767,8 +766,8 @@ class Bilettorg(AsyncSeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r_text = await self.session.get_text(url, headers=headers)
-        return BeautifulSoup(r_text, 'lxml')
+        r = await self.session.get(url, headers=headers)
+        return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
         a_sectors = await self.parse_seats()

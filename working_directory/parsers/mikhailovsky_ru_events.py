@@ -1,4 +1,4 @@
-from typing import NamedTuple, Callable, Optional, Union
+from typing import NamedTuple, Optional, Union
 from datetime import datetime
 
 from bs4 import BeautifulSoup
@@ -6,8 +6,7 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
-from parse_module.utils import utils
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -27,43 +26,45 @@ class Mikhailovsky(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    async def _parse_events(self) -> Callable[[BeautifulSoup, str], OutputEvent]:
+    async def _parse_events(self) -> list[OutputEvent]:
         soup = await self._requests_to_events()
-
         events, next_href = self._get_events_from_soup(soup)
-
-        return await self._parse_events_from_json(events, next_href)
+        output_events = await self._parse_events_from_json(events, next_href)
+        return output_events
 
     async def _parse_events_from_json(
             self, events: list, next_href: BeautifulSoup
-                    ) -> Callable[[BeautifulSoup, str], OutputEvent]:
+                    ) -> list[OutputEvent]:
+        output_events = []
         day_old = int(datetime.now().day)
         month_now = month_list[datetime.now().month]
-        while True:
-            for event in events:
-                if event.name == 'h3':
-                    month_now = event.text[:3]
-                    continue
-                try:
-                    day_now = int(event.find('div', class_='day').text)
-                    if day_old > day_now:
-                        month_now = month_list.index(month_now)
-                        month_now = month_list[(month_now+1) % len(month_list)][:3] or 'Янв'
-                    day_old = day_now
-                except Exception as ex:
-                    self.debug(ex, month_now, month_list, day_now, day_old)
 
-                output_data = self._parse_data_from_event(event, month_now)
-                if output_data is not None:
-                    yield output_data
+        for event in events:
+            if event.name == 'h3':
+                month_now = event.text[:3]
+                continue
+            try:
+                day_now = int(event.find('div', class_='day').text)
+                if day_old > day_now:
+                    month_now = month_list.index(month_now)
+                    month_now = month_list[(month_now+1) % len(month_list)][:3] or 'Янв'
+                day_old = day_now
+            except Exception as ex:
+                self.debug(ex, month_now, month_list, day_now, day_old)
 
-            if next_href is None:
-                break
-            else:
-                url = next_href.get('href')
-                url = f'https://mikhailovsky.ru{url}'
-                soup = await self._requests_to_axaj_events(url)
-                events, next_href = self._get_events_from_soup(soup)
+            output_data = self._parse_data_from_event(event, month_now)
+            if output_data is not None:
+                output_events.append(output_data)
+
+        if next_href is None:
+            return
+        else:
+            url = next_href.get('href')
+            url = f'https://mikhailovsky.ru{url}'
+            soup = await self._requests_to_axaj_events(url)
+            events, next_href = self._get_events_from_soup(soup)
+
+        return output_events
 
     def _parse_data_from_event(self, event: BeautifulSoup, month_now: str) -> Optional[Union[OutputEvent, None]]:
         month_current = datetime.now().month
@@ -87,15 +88,11 @@ class Mikhailovsky(AsyncEventParser):
             href = f'https://mikhailovsky.ru{href}'
         else:
             return None
-        # else:
-        #     href = # await self.session.get(href).url
-        #     href = href[:href.index('?')].replace('=', '%3D') + '?widgetName=w2&lang=ru'
 
         return OutputEvent(title=title, href=href, date=normal_date)
 
     def _get_events_from_soup(self, soup: BeautifulSoup) -> tuple[list, BeautifulSoup]:
         id_to_find_elements = '#afisha_performance_list_container'
-        # events = soup.select(f'{id_to_find_elements} h3, {id_to_find_elements} div.item:not([style])')
         events = soup.select(f'{id_to_find_elements} div.item:not([style])')
         next_href = soup.find('a', class_='load-more')
         return events, next_href
@@ -146,5 +143,6 @@ class Mikhailovsky(AsyncEventParser):
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self) -> None:
-        for event in await self._parse_events():
+        output_events = await self._parse_events()
+        for event in output_events:
             self.register_event(event.title, event.href, date=event.date)

@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -26,8 +26,8 @@ class Contextfest(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        soup = self._requests_to_events(self.url)
+    async def _parse_events(self) -> OutputEvent:
+        soup = await self._requests_to_events(self.url)
 
         title = soup.select('section h3')[0].text
         events = self._get_events_from_soup(soup)
@@ -57,7 +57,7 @@ class Contextfest(AsyncEventParser):
         events = soup.find_all('div', class_='list-item')
         return events
 
-    def _requests_to_events(self, url: str) -> BeautifulSoup:
+    async def _requests_to_events(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -76,9 +76,9 @@ class Contextfest(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
-        for event in self._parse_events():
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date, event_id=event.event_id, token=event.token)

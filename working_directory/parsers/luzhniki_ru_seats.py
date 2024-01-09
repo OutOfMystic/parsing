@@ -6,7 +6,7 @@ from requests.exceptions import ProxyError
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -52,10 +52,10 @@ class Luzhniki(AsyncSeatsParser):
                     sector_name = sector['name'][:sector['name'].index(' Вход')].replace('Сектор ', '')
                     sector['name'] = sector_name.replace('№', '')
 
-    def parse_seats(self):
+    async def parse_seats(self):
         total_sector = []
 
-        soup = self.request_parser_to_all_sectors()
+        soup = await self.request_parser_to_all_sectors()
         id_to_requests = soup.find_all('script')[-1].text
         id_to_requests = double_split(id_to_requests, '"event_id":', ',"')
         sessid_and_key = soup.find('div', class_='site-wrapper')
@@ -67,7 +67,7 @@ class Luzhniki(AsyncSeatsParser):
             sector_name = sector.find('span', class_='name').text.strip()
             sector_data = sector.get('data-sector-id')
 
-            json_data = self.request_to_seats(sessid, key, id_to_requests, sector_data)
+            json_data = await self.request_to_seats(sessid, key, id_to_requests, sector_data)
 
             r_text = json_data.get('view')
             soup = BeautifulSoup(r_text, 'lxml')
@@ -119,7 +119,7 @@ class Luzhniki(AsyncSeatsParser):
 
         return total_sector
 
-    def request_to_seats(self, sessid, key, id_to_requests, sector_data):
+    async def request_to_seats(self, sessid, key, id_to_requests, sector_data):
         headers = {
             'accept': 'application/json, text/javascript, */*; q=0.01',
             'accept-encoding': 'gzip, deflate, br',
@@ -138,10 +138,10 @@ class Luzhniki(AsyncSeatsParser):
         }
         url = ('https://msk.kassir.ru/ru/frame/scheme/'
                f'sector?{sessid}&key={key}&id={id_to_requests}&sector={sector_data}&key={key}')
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return r.json()
 
-    def request_parser_to_all_sectors(self):
+    async def request_parser_to_all_sectors(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -159,11 +159,11 @@ class Luzhniki(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def main_body(self):
-        all_sectors = self.parse_seats()
+    async def main_body(self):
+        all_sectors = await self.parse_seats()
 
         self.reformat(all_sectors)
 
@@ -179,7 +179,7 @@ class Luzhniki(AsyncSeatsParser):
         if self.url in skip_url:
             return
         try:
-            self.main_body()
+            await self.main_body()
             self.count_error = 0
         except Exception as error:
             if self.count_error == 10:

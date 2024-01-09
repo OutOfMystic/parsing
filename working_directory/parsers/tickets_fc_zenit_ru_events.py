@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -29,15 +29,16 @@ class TicketsFcZenit(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_events(self, url: str) -> OutputEvent:
-        soup = self._requests_to_events(url)
+    async def _parse_events(self, url: str):
+        soup = await self._requests_to_events(url)
 
         json_data = self._get_json_data_from_soup(soup)
 
         return self._parse_event_from_json(json_data)
 
-    def _parse_event_from_json(self, json_data: json) -> OutputEvent:
+    def _parse_event_from_json(self, json_data: json):
         all_events_in_json_data: Iterable = json_data.get('events')
+        events = []
         for event in all_events_in_json_data:
             title = event.get('name')
 
@@ -50,7 +51,9 @@ class TicketsFcZenit(AsyncEventParser):
             href = event.get('bitrixId')
             href = f'https://tickets.fc-zenit.ru/stadium.php?MATCH_ID={href}'
 
-            yield OutputEvent(title=title, href=href, date=normal_date)
+            event = OutputEvent(title=title, href=href, date=normal_date)
+            events.append(event)
+        return events
 
     def _get_json_data_from_soup(self, soup: BeautifulSoup) -> json:
         js_data_from_script_in_page = soup.select('main script')[0].text
@@ -58,7 +61,7 @@ class TicketsFcZenit(AsyncEventParser):
         json_data_from_script_in_page = js_data_from_script_in_page[index_start:]
         return json.loads(json_data_from_script_in_page)
 
-    def _requests_to_events(self, url: str) -> BeautifulSoup:
+    async def _requests_to_events(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'accept-encoding': 'gzip, deflate, br',
@@ -77,10 +80,10 @@ class TicketsFcZenit(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
         for url in self.urls:
-            for event in self._parse_events(url):
+            for event in await self._parse_events(url):
                 self.register_event(event.title, event.href, date=event.date)

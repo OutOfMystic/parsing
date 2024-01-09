@@ -1,7 +1,7 @@
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.provision import multi_try
 from parse_module.utils import utils
 
@@ -186,7 +186,7 @@ class ProfticketParser(AsyncSeatsParser):
         if data_or_none is None:
             return
         global_show_id, place_name = data_or_none
-        seat_data = self.multi_try(await self.get_tickets, args=(global_show_id,))
+        seat_data = await self.multi_try(self.get_tickets, args=(global_show_id,))
 
         a_sectors = []
         for ticket in seat_data:

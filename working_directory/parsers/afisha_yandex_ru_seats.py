@@ -1,5 +1,5 @@
 import json
-import time
+import asyncio
 import re
 import base64
 
@@ -17,7 +17,7 @@ from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.utils.captcha import afisha_recaptcha
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils import utils
 from parse_module.drivers.proxelenium import ProxyWebDriver
@@ -738,22 +738,22 @@ class YandexAfishaParser(AsyncSeatsParser):
                     r_sector_name = 'Балкон 5'
         return r_sector_name, row
 
-    def check_captcha(self, r, old_url, old_headers):
+    async def check_captcha(self, r, old_url, old_headers):
         if '<div class="CheckboxCaptcha" ' not in r.text:
             return r
-        return self.handle_smart_captcha(r.url, old_url, old_headers)
+        return await self.handle_smart_captcha(r.url, old_url, old_headers)
 
-    def handle_smart_captcha(self, url, old_url, old_headers):
+    async def handle_smart_captcha(self, url, old_url, old_headers):
         while True:
-            r = self.selenium_smart_captha(url)
+            r = await self.selenium_smart_captha(url)
             if not ('captcha' in r.url and len(r.url) > 200):
                 break
         return r
-        r = self.selenium_smart_captha(url)
-        # r = self.session.get(old_url, headers=old_headers)
+        r = await self.selenium_smart_captha(url)
+        # r = await self.session.get(old_url, headers=old_headers)
         return r
 
-    def selenium_smart_captha(self, url: str):
+    async def selenium_smart_captha(self, url: str):
         chrome_options = Options()
         # chrome_options.add_argument("--headless")
         # chrome_options.add_argument('--headless=new')
@@ -761,10 +761,10 @@ class YandexAfishaParser(AsyncSeatsParser):
 
         try:
             driver.get(url=url)
-            time.sleep(1)
-            r = self.solve_smart_captcha_checkbox(driver)
+            await asyncio.sleep(1)
+            r = await self.solve_smart_captcha_checkbox(driver)
             driver.get(url=r.url)
-            r = self.solve_smart_captcha_image(driver)
+            r = await self.solve_smart_captcha_image(driver)
         except TimeoutException as e:
             raise ProxyError(e)
         except Exception as e:
@@ -773,7 +773,7 @@ class YandexAfishaParser(AsyncSeatsParser):
             driver.quit()
         return r
 
-    def solve_smart_captcha_checkbox(self, driver):
+    async def solve_smart_captcha_checkbox(self, driver):
         body = WebDriverWait(driver, 6).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "body"))
         ).get_attribute('innerHTML')
@@ -808,10 +808,10 @@ class YandexAfishaParser(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         url = f'https://afisha.yandex.ru{href}'
-        r = self.session.post(url, timeout=10, headers=headers, data=data)
+        r = await self.session.post(url, timeout=10, headers=headers, data=data)
         return r
 
-    def solve_smart_captcha_image(self, driver):
+    async def solve_smart_captcha_image(self, driver):
         img_captha = WebDriverWait(driver, 4).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.AdvancedCaptcha-View img"))
         )
@@ -822,11 +822,10 @@ class YandexAfishaParser(AsyncSeatsParser):
 
         textinstructions = driver.find_element(By.CSS_SELECTOR, value='span.Text').text
 
-        r = self.session.get(img_captha_href, stream=True)
+        r = await self.session.get(img_captha_href, stream=True)
         if r.status_code == 200:
             with open('afisha_catcha.png', 'wb') as f:
-                for chunk in r:
-                    f.write(chunk)
+                f.write(r.content)
 
 
         with Image.open('afisha_catcha.png') as img:
@@ -896,7 +895,7 @@ class YandexAfishaParser(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         url = f'https://afisha.yandex.ru{href}&rep={rep}'
-        r = self.session.post(url, timeout=10, headers=headers, data=data)
+        r = await self.session.post(url, timeout=10, headers=headers, data=data)
 
         if not '<div class="CheckboxCaptcha' in r.text:
             self.info(f'Yandex captcha success solved bro!')
@@ -904,7 +903,7 @@ class YandexAfishaParser(AsyncSeatsParser):
             self.warning(f'Yandex captcha DIDNT solved!!!')
         return r
 
-    def hallplan_request(self, event_params, default_headers):
+    async def hallplan_request(self, event_params, default_headers):
         if not self.session_key:
             self.session_key = event_params.get("session_id", '')
         url = f'https://widget.afisha.yandex.ru/api/tickets/v1/sessions/{self.session_key}/hallplan/async?clientKey={event_params["client_key"]}&req_number={self.req_number}'
@@ -928,11 +927,11 @@ class YandexAfishaParser(AsyncSeatsParser):
             default_headers = {}
         headers.update(default_headers)
         try:
-            r = self.session.get(url, headers=headers)
+            r = await self.session.get(url, headers=headers)
         except ContentDecodingError as ex:
             self.error(f"{url} {ex} failed to decode it! wrong sessinon_id or client_key")
             raise
-        r = self.check_captcha(r, url, headers)
+        r = await self.check_captcha(r, url, headers)
 
         if 'result' not in r.text:
             self.info(f'[req_err] request doesnt contain result: {r.text[:400]}')
@@ -1024,14 +1023,14 @@ class YandexAfishaParser(AsyncSeatsParser):
             return 4
         return 4
     
-    def load_default_headers(self):
-        r = self.session.get(url=self.url, headers=self.headers)
+    async def load_default_headers(self):
+        r = await self.session.get(url=self.url, headers=self.headers)
         box = double_split(r.text, 'defaultHeaders":', '}')
         box = json.loads( box + '}')
         return box
 
 
-    def check_availible_seats_and_session_key(self, default_headers, event_params):
+    async def check_availible_seats_and_session_key(self, default_headers, event_params):
         headers2 = {
             "accept": "*/*",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",
@@ -1050,7 +1049,7 @@ class YandexAfishaParser(AsyncSeatsParser):
         headers2.update(default_headers)
 
         url2 = f'https://widget.afisha.yandex.ru/api/tickets/v1/sessions/{event_params["session_id"]}?clientKey={event_params["client_key"]}&req_number={self.req_number}'
-        r2 = self.session.get(url=url2, headers=headers2)
+        r2 = await self.session.get(url=url2, headers=headers2)
         self.req_number += 1
         
         try:
@@ -1062,7 +1061,6 @@ class YandexAfishaParser(AsyncSeatsParser):
             return False
         return True
 
-
     async def body(self):
         skip_events = [
             'https://widget.afisha.yandex.ru/w/sessions/MTE2NXwzODkxMzJ8Mjc4ODgzfDE2ODI2MTMwMDAwMDA%3D?widgetName=w2&lang=ru',  # ЦСКА — Ак Барс 27.04
@@ -1071,7 +1069,7 @@ class YandexAfishaParser(AsyncSeatsParser):
             return None
         
         try:
-            default_headers = self.load_default_headers()
+            default_headers = await self.load_default_headers()
         except Exception as ex:
             default_headers = {}
             self.error(f' cannot load Default_headers {self.url} {ex} continue')
@@ -1079,7 +1077,7 @@ class YandexAfishaParser(AsyncSeatsParser):
         event_params = eval(self.event_params)
         
         try:
-            if_seats = self.check_availible_seats_and_session_key(default_headers, event_params)
+            if_seats = await self.check_availible_seats_and_session_key(default_headers, event_params)
         except Exception as ex:
             self.error(f' Seats not found {self.url} Trouble to find tickets in this event')
         else:
@@ -1094,16 +1092,16 @@ class YandexAfishaParser(AsyncSeatsParser):
 
         while self.req_number < 50 and r_sectors is None:
             try:
-                time.sleep(0.5)
-                r_sectors, r = self.hallplan_request(event_params, default_headers)
+                await asyncio.sleep(0.5)
+                r_sectors, r = await self.hallplan_request(event_params, default_headers)
             except ProxyError as ex:
                 self.error(f'Catch(change_proxy): {ex} \n url:{self.url}')
-                self.proxy = self.controller.proxy_hub.get(self.proxy_check)
+                await self.change_proxy()
                 #self.session = AsyncProxySession(self)
-                time.sleep(1)
+                await asyncio.sleep(1)
             except Exception as ex:
                 self.error(f'Catch: {ex} \nurl:{self.url}')
-                time.sleep(1)
+                await asyncio.sleep(1)
             finally:
                 self.req_number += 1
         if r_sectors == 'no-seats' or r_sectors == 'not-available' or r_sectors == 'closed':
@@ -1118,14 +1116,14 @@ class YandexAfishaParser(AsyncSeatsParser):
             self.warning(f'Changing proxy... load 40..sec')
             self.req_number = 0
             self.default_headers = {}
-            time.sleep(40)
+            await asyncio.sleep(40)
             self.proxy = self.controller.proxy_hub.get(self.proxy_check)
             self.session = AsyncProxySession(self)
             
             while self.req_number < 50 and r_sectors is None:
-                time.sleep(0.5)
+                await asyncio.sleep(0.5)
                 try:
-                    r_sectors, r = self.hallplan_request(event_params, default_headers)
+                    r_sectors, r = await self.hallplan_request(event_params, default_headers)
                 except Exception as ex:
                     self.error(f'Catch(2-nd while): {ex} \n url:{self.url}')
                 finally:

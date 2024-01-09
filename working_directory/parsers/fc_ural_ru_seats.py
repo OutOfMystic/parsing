@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -28,19 +28,20 @@ class FcUralRu(AsyncSeatsParser):
     def _reformat(self, sector_name: str) -> str:
         ...
 
-    def _parse_seats(self) -> OutputData:
-        soup = self._request_to_get_free_sectors()
+    async def _parse_seats(self) -> OutputData:
+        soup = await self._request_to_get_free_sectors()
 
         links_to_sector_data = self._get_free_sectors_from_soup(soup)
 
-        output_data = self._get_output_data(links_to_sector_data)
+        output_data = await self._get_output_data(links_to_sector_data)
 
         return output_data
 
-    def _get_output_data(self, links_to_sector_data: ResultSet[Tag]) -> OutputData:
+    async def _get_output_data(self, links_to_sector_data: ResultSet[Tag]):
+        datas = []
         for link_to_sector_data in links_to_sector_data:
             url = 'https://ticket.fc-ural.ru' + link_to_sector_data.get('href')
-            soup = self._request_to_place(url)
+            soup = await self._request_to_place(url)
             sector_name = soup.find('div', class_='zone-name').text.strip()
 
             json_data_place, json_data_price = self._get_json_data_about_palce_from_soup(soup)
@@ -49,7 +50,8 @@ class FcUralRu(AsyncSeatsParser):
 
             output_data = self._get_output_data_from_json(sector_name, json_data_place, all_price_zones)
 
-            yield output_data
+            datas.append(output_data)
+        return datas
 
     def _get_output_data_from_json(self, sector_name: str, json_data_place: json, all_price_zones: dict[str, int]) -> OutputData:
         tickets = {}
@@ -75,7 +77,7 @@ class FcUralRu(AsyncSeatsParser):
 
         return all_price_zones
 
-    def _get_json_data_about_palce_from_soup(self, soup: BeautifulSoup) -> tuple[json, ...]:
+    def _get_json_data_about_palce_from_soup(self, soup: BeautifulSoup) -> tuple:
         script_with_json = soup.select('div.content script')[0]
         json_data_place = double_split(script_with_json.text, 'CORE.data.seats = ', ';')
         json_data_place = json.loads(json_data_place)
@@ -87,7 +89,7 @@ class FcUralRu(AsyncSeatsParser):
         links_to_sector_data = soup.select('table.tickets__list a')
         return links_to_sector_data
 
-    def _request_to_place(self, url: str) -> BeautifulSoup:
+    async def _request_to_place(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -108,10 +110,10 @@ class FcUralRu(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    def _request_to_get_free_sectors(self) -> BeautifulSoup:
+    async def _request_to_get_free_sectors(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -131,9 +133,9 @@ class FcUralRu(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
-        for sector in self._parse_seats():
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

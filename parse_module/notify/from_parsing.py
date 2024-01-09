@@ -32,7 +32,7 @@ class ParsingNotifier(Notifier, ABC):
             self.parser.delay = delay
 
         self.parser.set_notifier(self)
-        if self.parser.last_state is not None and self.parser.error_timer == float('inf'):
+        if self.parser.last_state is not None and self.parser._error_timer == float('inf'):
             self.body(with_state=self.parser.last_state)
 
     def stop(self):
@@ -65,8 +65,8 @@ class EventNotifier(ParsingNotifier, ABC):
                         f'Настолько много, что в сообщение не помещается')
             skip_sending = True
 
-        self.change_ticket_state(f'**{self.parser.name}**', [], url=self.parser.url,
-                                 appeared='События')
+        # self.change_ticket_state(f'**{self.parser.name}**', [], url=self.parser.url,
+        #                          appeared='События')
         self.change_ticket_state(f'**{self.parser.name}**', parsed_event_names,
                                  url=self.parser.url,
                                  appeared='События',

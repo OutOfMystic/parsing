@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
 from parse_module.utils.date import month_num_by_str
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class OperettaParser(AsyncEventParser):
@@ -17,7 +17,7 @@ class OperettaParser(AsyncEventParser):
         }
         self.url = 'https://mosoperetta.ru/afisha/'
 
-    def main_page_request(self):
+    async def main_page_request(self):
         headers = {
             'Host': 'mosoperetta.ru',
             'User-Agent': self.user_agent,
@@ -32,7 +32,7 @@ class OperettaParser(AsyncEventParser):
             'Sec-Fetch-Site': 'none',
             'Sec-Fetch-User': '?1',
         }
-        r = self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers)
 
     async def before_body(self):
         self.session = AsyncProxySession(self)

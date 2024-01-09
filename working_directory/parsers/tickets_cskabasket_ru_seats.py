@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class OutputData(NamedTuple):
@@ -58,7 +58,8 @@ class CskaBasket(AsyncSeatsParser):
 
         return output_data
 
-    async def _get_output_data(self, free_sectors: ResultSet[Tag]) -> OutputData:
+    async def _get_output_data(self, free_sectors: ResultSet[Tag]):
+        datas = []
         for sector in free_sectors:
             sector_name = sector.get('sector_name')
             sector_name = self._reformat(sector_name)
@@ -72,7 +73,8 @@ class CskaBasket(AsyncSeatsParser):
 
             output_data = self._get_output_data_from_json(sector_name, all_place_in_sector, all_price_zones)
 
-            yield output_data
+            datas.append(output_data)
+        return datas
 
     def _get_output_data_from_json(
             self, sector_name: str, all_place_in_sector: json, all_price_zones: dict[int, int]

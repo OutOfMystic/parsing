@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.date import month_list
 
@@ -27,46 +27,52 @@ class PelmenyNet(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        soup = self._requests_to_events(self.url)
+    async def _parse_events(self):
+        soup = await self._requests_to_events(self.url)
 
         events = self._get_events_from_soup(soup)
 
-        return self._parse_events_from_soup(events)
+        return await self._parse_events_from_soup(events)
 
-    def _parse_events_from_soup(self, events: ResultSet[Tag]) -> OutputEvent:
+    async def _parse_events_from_soup(self, events: ResultSet[Tag]):
+        output_events = []
         for event in events:
-            output_data = self._parse_data_from_event(event)
+            output_data = await self._parse_data_from_event(event)
             for data in output_data:
                 if data is not None:
-                    yield data
+                    output_events.append(data)
+        return output_events
 
-    def _parse_data_from_event(self, event: Tag) -> Optional[Union[OutputEvent, None]]:
+    async def _parse_data_from_event(self, event: Tag):
         title = event.select('div.spoiler-poster__show-name a')[0].text
         venue = event.find('div', class_='spoiler-poster__place').text
 
         href = event.find('a', class_='btn').get('href')
+        events = []
         if 'widget.afisha.yandex.ru' in href:
-            normal_date = self._get_normal_date_from_yandex_afisha(href)
+            normal_date = await self._get_normal_date_from_yandex_afisha(href)
             client_key = double_split(href, '?', '&')
             session_id = double_split(href, 'sessions/', '?')
             event_params = str({'client_key': client_key, 'session_id': session_id}).replace("'", '"')
             href = href[:href.index('?')]
-            yield OutputEvent(title=title, href=href, date=normal_date, venue=venue, event_params=event_params)
+            event_ = OutputEvent(title=title, href=href, date=normal_date, venue=venue, event_params=event_params)
+            events.append(event_)
         elif 'kassir' in href:
-            events_from_kassir = self._get_events_from_kassir(href)
+            events_from_kassir = await self._get_events_from_kassir(href)
             for event_from_kassir in events_from_kassir:
-                yield OutputEvent(
+                event_ = OutputEvent(
                     title=title, href=event_from_kassir[1], date=event_from_kassir[0], venue=venue, event_params=''
                 )
+                events.append(event_)
         else:
-            yield None
+            events.append(None)
+        return events
 
     def _get_events_from_soup(self, soup: BeautifulSoup) -> ResultSet[Tag]:
         events = soup.select('div.spoiler-poster-item')
         return events
 
-    def _get_events_from_kassir(self, url: str) -> tuple[str, str]:
+    async def _get_events_from_kassir(self, url: str) -> tuple[str, str]:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -85,10 +91,11 @@ class PelmenyNet(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         soup = BeautifulSoup(r.text, 'lxml')
         events = soup.find_all('a', class_='item')
+        rows = []
         for event in events:
             day = event.find('span', class_='day-m').text
             mouth = event.find('span', class_='mouth').text
@@ -97,9 +104,11 @@ class PelmenyNet(AsyncEventParser):
 
             href = event.get('href')
             href = url[:url.index('/f')] + href
-            yield normal_date, href
+            row = [normal_date, href]
+            rows.append(row)
+        return rows
 
-    def _get_normal_date_from_yandex_afisha(self, href: str) -> str:
+    async def _get_normal_date_from_yandex_afisha(self, href: str) -> str:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -124,7 +133,7 @@ class PelmenyNet(AsyncEventParser):
         }
         event_id = double_split(href, 'sessions/', '?')
         url = 'https://widget.afisha.yandex.ru/api/tickets/v1/sessions/' + event_id
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
 
         date_datetime = r.json()['result']['session']['sessionDate']
         date, time = date_datetime.split('T')
@@ -134,7 +143,7 @@ class PelmenyNet(AsyncEventParser):
         normal_date = ' '.join(date) + ' ' + time
         return normal_date
 
-    def _requests_to_events(self, url: str) -> BeautifulSoup:
+    async def _requests_to_events(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -153,11 +162,11 @@ class PelmenyNet(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
-        all_events = set(self._parse_events())
+        all_events = set(await self._parse_events())
         for event in all_events:
             self.register_event(
                 event.title, event.href, date=event.date, venue=event.venue, event_params=event.event_params

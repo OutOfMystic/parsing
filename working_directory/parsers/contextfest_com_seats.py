@@ -3,7 +3,7 @@ from typing import NamedTuple
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class OutputData(NamedTuple):
@@ -67,8 +67,8 @@ class Contextfest(AsyncSeatsParser):
 
         return sector_name, row
 
-    def _parse_seats(self) -> OutputData:
-        json_data = self._request_to_all_place()
+    async def _parse_seats(self) -> OutputData:
+        json_data = await self._request_to_all_place()
 
         places = self._get_place_from_json_data(json_data)
 
@@ -117,7 +117,7 @@ class Contextfest(AsyncSeatsParser):
         places = json_data['tickets']
         return places
 
-    def _request_to_all_place(self) -> json:
+    async def _request_to_all_place(self) -> json:
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -140,9 +140,9 @@ class Contextfest(AsyncSeatsParser):
         data = {
             'event': self.event_id
         }
-        r = self.session.post(self.url, headers=headers, json=data)
+        r = await self.session.post(self.url, headers=headers, json=data)
         return r.json()
 
     async def body(self):
-        for sector in self._parse_seats():
+        for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

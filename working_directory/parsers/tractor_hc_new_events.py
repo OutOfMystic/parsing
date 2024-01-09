@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from dataclasses import dataclass
 from json import loads
 from datetime import datetime as dt
@@ -30,7 +30,7 @@ class HcTractorEventsNew(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def get_json(self):
+    async def get_json(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,'
                       'image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -48,7 +48,7 @@ class HcTractorEventsNew(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url=self.url, headers=headers)
+        r = await self.session.get(url=self.url, headers=headers)
         return loads(BeautifulSoup(r.text, 'lxml').select_one("#__NEXT_DATA__").text)
 
     @staticmethod
@@ -77,7 +77,7 @@ class HcTractorEventsNew(AsyncEventParser):
                 )
 
     async def body(self):
-        events = chain(*map(self.parse_event, self.get_events_arr(self.get_json())))
+        events = chain(*map(self.parse_event, self.get_events_arr(await self.get_json())))
 
         for event in events:
             self.register_event(

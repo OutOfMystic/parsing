@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -66,8 +66,8 @@ class Lokobasket(AsyncSeatsParser):
 
         return sector
 
-    def _parse_seats(self) -> OutputData:
-        soup, reuqest_text = self._request_to_soup()
+    async def _parse_seats(self) -> OutputData:
+        soup, reuqest_text = await self._request_to_soup()
 
         link_to_js, link_to_busy_seats = self._get_link_to_js_and_to_busy_seats_from_soup(soup, reuqest_text)
 
@@ -179,7 +179,7 @@ class Lokobasket(AsyncSeatsParser):
         r = self.session.get(url, headers=headers)
         return r.text
 
-    def _request_to_soup(self) -> tuple[BeautifulSoup, str]:
+    async def _request_to_soup(self) -> tuple[BeautifulSoup, str]:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -201,10 +201,10 @@ class Lokobasket(AsyncSeatsParser):
             'event_id': self.event_id,
             'widget_session': 'eLdgrITSBV3mAwGoJSD8MlBUIzM5rf0n4hyoJTHz'
         }
-        r = self.session.post(self.url, headers=headers, data=data)
+        r = await self.session.post(self.url, headers=headers, data=data)
         return BeautifulSoup(r.text, 'lxml'), r.text
 
     async def body(self):
-        for sector in self._parse_seats():
+        for sector in await self._parse_seats():
             sector = self._reformat(sector)
             self.register_sector(sector.sector_name, sector.tickets)

@@ -5,7 +5,7 @@ import json
 from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -25,8 +25,8 @@ class TicketsFcdmRu(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_events(self) -> OutputEvent:
-        json_data = self._requests_to_events()
+    async def _parse_events(self) -> OutputEvent:
+        json_data = await self._requests_to_events()
 
         return self._parse_events_from_soup(json_data)
 
@@ -48,7 +48,7 @@ class TicketsFcdmRu(AsyncEventParser):
 
         return OutputEvent(title=title, href=href, date=normal_date)
 
-    def _requests_to_events(self) -> json:
+    async def _requests_to_events(self) -> json:
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -64,9 +64,9 @@ class TicketsFcdmRu(AsyncEventParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = self.session.get(self.url, headers=headers, verify=False)
+        r = await self.session.get(self.url, headers=headers, verify=False)
         return r.json()
 
     async def body(self):
-        for event in self._parse_events():
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

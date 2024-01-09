@@ -4,8 +4,7 @@ from typing import NamedTuple, Optional, Union
 from requests.exceptions import TooManyRedirects
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -101,4 +100,5 @@ class CircusSpbRu(AsyncSeatsParser):
 
     async def body(self) -> None:
         for sector in await self._parse_seats():
+            #self.info(sector.sector_name, len(sector.tickets))
             self.register_sector(sector.sector_name, sector.tickets)

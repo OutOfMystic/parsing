@@ -1,7 +1,7 @@
 from parse_module.models.parser import EventParser
 from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class XKMetalurg(AsyncEventParser):
@@ -39,7 +39,7 @@ class XKMetalurg(AsyncEventParser):
 
         return a_events
 
-    def get_events(self):
+    async def get_events(self):
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -59,7 +59,7 @@ class XKMetalurg(AsyncEventParser):
             'user-agent': self.user_agent
         }
         data = {"isSeason": -1}
-        r = self.session.post(self.url, headers=headers, json=data, verify=False)
+        r = await self.session.post(self.url, headers=headers, json=data, verify=False)
 
         if not r.json():
             return []
@@ -68,7 +68,7 @@ class XKMetalurg(AsyncEventParser):
         return a_events
 
     async def body(self):
-        a_events = self.get_events()
+        a_events = await self.get_events()
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2])

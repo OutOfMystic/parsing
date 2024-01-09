@@ -461,4 +461,3 @@ def int_keys(dict_):
 
 
 lock = Lock()
-db_manager = ParsingDB()

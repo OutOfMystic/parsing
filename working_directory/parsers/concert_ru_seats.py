@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from parse_module.models.parser import SeatsParser
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -86,9 +86,9 @@ class Concert(AsyncSeatsParser):
             else:
                 sector['name'] = ref_dict.get(sector['name'], sector['name'])
 
-    def parse_seats(self):
+    async def parse_seats(self):
         total_sector = []
-        soup = self.request_parser(url=self.url)
+        soup = await self.request_parser(url=self.url)
 
         all_sector = {}
         all_row = soup.select('tr[id^="ticketGroup"]')
@@ -101,7 +101,7 @@ class Concert(AsyncSeatsParser):
             data_to_seats = row.find('a', class_='chooseTicketButton').get('onclick')
             data_to_seats = double_split(data_to_seats, '(', ', this)')
             data_to_seats = data_to_seats.replace("'", '').split(', ')
-            seats_soup = self.request_to_seats(data_to_seats)
+            seats_soup = await self.request_to_seats(data_to_seats)
 
             all_seats = seats_soup.find_all('tr', class_='ticketsTable__item')
             for seat in all_seats:
@@ -123,7 +123,7 @@ class Concert(AsyncSeatsParser):
 
         return total_sector
 
-    def request_to_seats(self, data):
+    async def request_to_seats(self, data):
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
@@ -153,10 +153,10 @@ class Concert(AsyncSeatsParser):
             'X-Requested-With': 'XMLHttpRequest'
         }
         url = 'https://www.concert.ru/SubTickets'
-        r = self.session.post(url, headers=headers, data=data)
+        r = await self.session.post(url, headers=headers, data=data)
         return BeautifulSoup(r.text, 'lxml')
 
-    def request_parser(self, url):
+    async def request_parser(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'accept-encoding': 'gzip, deflate, br',
@@ -174,11 +174,11 @@ class Concert(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
-        all_sectors = self.parse_seats()
+        all_sectors = await self.parse_seats()
 
         self.reformat(all_sectors)
 

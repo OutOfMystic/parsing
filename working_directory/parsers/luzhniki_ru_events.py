@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 
 class Luzhniki(AsyncEventParser):
@@ -16,10 +16,10 @@ class Luzhniki(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def parse_events(self):
+    async def parse_events(self):
         a_events = []
 
-        soup = self.requests_to_events(self.url)
+        soup = await self.requests_to_events(self.url)
         all_event = soup.select('div.feed__item')
         for event in all_event:
             href_to_data = event.find('a', class_='card__link')
@@ -50,7 +50,7 @@ class Luzhniki(AsyncEventParser):
 
         return a_events
 
-    def requests_to_events(self, url):
+    async def requests_to_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -66,11 +66,11 @@ class Luzhniki(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
-        a_events = self.parse_events()
+        a_events = await self.parse_events()
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2])

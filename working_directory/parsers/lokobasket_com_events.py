@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -25,8 +25,8 @@ class Lokobasket(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    def _parse_events(self):
-        soup = self._requests_to_events()
+    async def _parse_events(self):
+        soup = await self._requests_to_events()
 
         events = self._get_events_from_soup(soup)
 
@@ -59,7 +59,7 @@ class Lokobasket(AsyncEventParser):
         events = soup.select('div.item')
         return events
 
-    def _requests_to_events(self) -> BeautifulSoup:
+    async def _requests_to_events(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -84,9 +84,9 @@ class Lokobasket(AsyncEventParser):
         data = {
             'organizer_id': '12326'
         }
-        r = self.session.post(self.url, headers=headers, data=data)
+        r = await self.session.post(self.url, headers=headers, data=data)
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self):
-        for event in self._parse_events():
+        for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

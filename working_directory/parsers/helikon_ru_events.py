@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.date import month_list
 
 
@@ -28,7 +28,7 @@ class HelikonRu(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    async def _parse_events(self) -> OutputEvent:
+    async def _parse_events(self):
         soup = await self._requests_to_events()
 
         events = self._get_events_from_soup(soup)
@@ -37,7 +37,8 @@ class HelikonRu(AsyncEventParser):
 
         return await self._filters_events(all_events)
 
-    async def _filters_events(self, all_events: list[OutputEvent]) -> OutputEvent:
+    async def _filters_events(self, all_events: list[OutputEvent]):
+        events = []
         all_events_id = [event.href.split('/')[-1] for event in all_events]
         data_about_all_event_id = await self._requests_to_data_about_all_event_id(all_events_id)
         sold_out = [str(event['id']) 
@@ -45,7 +46,8 @@ class HelikonRu(AsyncEventParser):
                                 if event and event['salesAvailable'] is False]
         for event in all_events:
             if event.event_id not in sold_out:
-                yield event
+                events.append(event)
+        return events
 
     def _parse_events_from_soup(self, events: ResultSet[Tag]) -> list[OutputEvent]:
         all_events = []

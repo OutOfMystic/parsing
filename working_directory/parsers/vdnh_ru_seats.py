@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.models.parser import SeatsParser
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -37,12 +37,12 @@ class VDNHRu(AsyncSeatsParser):
                 sector_name = 'Второй амфитеатр, ' + ' '.join(sector_name.split()[2:])
         return sector_name
 
-    def _parse_seats(self) -> OutputData:
-        json_data = self._requests_to_json_data_action_event_id()
+    async def _parse_seats(self) -> OutputData:
+        json_data = await self._requests_to_json_data_action_event_id()
 
         action_event_id = self._get_action_event_id_from_json_data(json_data)
 
-        soup = self._request_to_get_svg_with_place(action_event_id)
+        soup = await self._request_to_get_svg_with_place(action_event_id)
 
         all_row = self._get_row_from_soup(soup)
 
@@ -85,7 +85,7 @@ class VDNHRu(AsyncSeatsParser):
         action_event_id = json_data['action']['venueList'][0]['actionEventList'][0]['actionEventId']
         return action_event_id
 
-    def _requests_to_json_data_action_event_id(self) -> json:
+    async def _requests_to_json_data_action_event_id(self) -> json:
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -116,10 +116,10 @@ class VDNHRu(AsyncSeatsParser):
             "actionId": self.action_id
         }
         url = 'https://api.bil24.pro/json'
-        r = self.session.post(url, headers=headers, json=data)
+        r = await self.session.post(url, headers=headers, json=data)
         return r.json()
 
-    def _request_to_get_svg_with_place(self, action_event_id: str) -> BeautifulSoup:
+    async def _request_to_get_svg_with_place(self, action_event_id: str) -> BeautifulSoup:
         headers = {
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
@@ -139,9 +139,9 @@ class VDNHRu(AsyncSeatsParser):
         url = (f'https://api.bil24.pro/image'
                f'?type=seatingPlan&actionEventId={action_event_id}'
                f'&userId=0&fid={self.fid}&locale=ru&rnd=0.628378540899625')
-        r = self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'xml')
 
     async def body(self):
-        sector = self._parse_seats()
+        sector = await self._parse_seats()
         self.register_sector(sector.sector_name, sector.tickets)

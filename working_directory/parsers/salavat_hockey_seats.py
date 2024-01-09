@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession, AsyncProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils import utils
 
 
@@ -111,7 +111,7 @@ class Hc_Salavat_Seats(AsyncSeatsParser):
         if status == 'busy':
             busy_seats =  set(i['id'] for i in r3.json()['places']['values'])
             get_svg = 'https://tickets.hcsalavat.ru/event/get-svg-places'
-            r4 = self.session.post(url=get_svg, headers=headers3, data=data, verify=False)
+            r4 = await self.session.post(url=get_svg, headers=headers3, data=data, verify=False)
             for i in r4.json()["places"].items():
                 places = set(i[1]).difference(busy_seats)
                 price = self.zones.get(int(i[0]))
