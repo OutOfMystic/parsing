@@ -14,7 +14,9 @@
  - apply [condition] [expression]
 """
 import sys
+import os
 sys.path.append("/home/lon8/python/parsing/")
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from parse_module.connection import db_manager
 from parse_module.console.command import CustomPrompt
