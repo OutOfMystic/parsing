@@ -23,7 +23,7 @@ from ..models.parser import SeatsParser, EventParser
 from parse_module.manager.group import SeatsParserGroup
 from ..utils import provision, utils
 from ..utils.date import Date
-from ..utils.logger import logger
+from ..utils.logger import logger, start_async_logger
 from ..utils.utils import differences
 
 PREDEFINED = True
@@ -230,7 +230,7 @@ class Controller:
 
         # Start async logger
         if not self._async_logger_started:
-            logger.start_async_logger()
+            start_async_logger()
             self._async_logger_started = True
 
         # Do some database work at the end of step
