@@ -20,6 +20,7 @@ class ParserBase(core.Bot, ABC):
         self.controller = controller
         self.session = None
         self.last_state = None
+        self.spreading = 0.2
         self._notifier = None
 
     def _get_proxy(self):
@@ -79,8 +80,8 @@ class ParserBase(core.Bot, ABC):
         if self.controller.debug:
             self.debug(mes, *args)
 
-    def start(self):
-        task = pooling.Task(self.proceed, self.name, 0)
+    def start(self, start_delay):
+        task = pooling.Task(self.proceed, self.name, start_delay)
         self.controller.pool.add_task(task)
 
 

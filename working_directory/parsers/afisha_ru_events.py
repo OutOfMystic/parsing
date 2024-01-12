@@ -160,7 +160,6 @@ class AfishaEvents(AsyncEventParser):
     async def make_new_session(self):
         await self.change_proxy()
         # self.proxy = await self.controller.proxy_hub.get_async(self.proxy_check)
-        # await self.session.close()
         # self.session = AsyncProxySession(self)
         
     

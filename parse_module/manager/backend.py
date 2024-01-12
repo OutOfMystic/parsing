@@ -150,6 +150,7 @@ class SchemeRouterBackend:
         scheme.release_sectors(*args)
 
     def run(self) -> None:
+        self.conn.send('Started')
         logger.info('Backend started', name='Controller')
         while True:
             got_data = multi_try(self.conn.recv, tries=20, name='Controller',
@@ -159,6 +160,7 @@ class SchemeRouterBackend:
             else:
                 command, args = got_data
             method = getattr(self, command)
+            # logger.debug(method, args, name='Backend')
             provision.just_try(method, args=args, name='Controller')
 
 

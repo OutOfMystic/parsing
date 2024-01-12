@@ -80,13 +80,14 @@ class BotBase:
         """
         kwargs = {
             'handle_error': handle_error,
+            'name': self.name,
             'tries': tries,
             'args': args,
             'kwargs': kwargs,
             'raise_exc': raise_exc,
             'print_errors': print_errors
         }
-        thread = threading.Thread(target=self.multi_try, args=(to_try,), kwargs=kwargs)
+        thread = threading.Thread(target=provision.multi_try, args=(to_try,), kwargs=kwargs)
         thread.start()
         return thread
 

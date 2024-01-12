@@ -1,3 +1,4 @@
+import functools
 import inspect
 import json
 import re
@@ -5,13 +6,18 @@ import sys
 import threading
 import time
 import traceback
+from asyncio import Task
 from datetime import datetime
 
-from aiodebug import log_slow_callbacks
+from aiodebug import log_slow_callbacks, hang_inspection
 from colorama import Fore, Back
 
 from parse_module.utils.date import readable_datetime
+from parse_module.utils.parse_utils import double_split
 from parse_module.utils.utils import lprint, default_fore, default_back
+
+active_coroutines = set()
+current_coro = None
 
 
 class Logger(threading.Thread):
@@ -20,9 +26,9 @@ class Logger(threading.Thread):
                  release=True,
                  ignore_files=None,
                  drop_path_level=0,
-                 test=False):
+                 test=False,
+                 dont_start=False):
         super().__init__()
-
         if ignore_files is None:
             ignore_files = ['manager.core.debug',
                             'manager.core.error',
@@ -47,8 +53,11 @@ class Logger(threading.Thread):
         self._debug_buffer = []
         self._stub_buffer = []
         self._print_locker = False
+        self._terminated = not dont_start
+        self._terminator = False
 
-        self.start()
+        if not dont_start:
+            self.start()
         if not test:
             self.info('Logger started', name='Controller')
 
@@ -201,7 +210,6 @@ class Logger(threading.Thread):
                 rows.append(line)
                 if '"message":"Logger started"' in line:
                     rows.clear()
-        print(time.time() - start_time)
 
         start_time = time.time()
         for row in rows:
@@ -210,11 +218,9 @@ class Logger(threading.Thread):
                 self.filter_and_print(log)
             except Exception as err:
                 self.warning(f'Lost log: {err}')
-        print(time.time() - start_time)
 
         start_time = time.time()
         self.resume()
-        print(time.time() - start_time)
 
     def pause(self):
         self._print_locker = True
@@ -235,6 +241,9 @@ class Logger(threading.Thread):
                     self.send_logs()
             except Exception as err:
                 logger.error(f'logger thread error: {err}', name='Logger')
+            if self._terminator:
+                self._terminated = True
+                return
             time.sleep(1)
 
 
@@ -286,14 +295,26 @@ def parse_traceback(traceback_string, ignore_files=None,
     return f'(Traceback) {file_path_formatted}.{func_name}:{line_number}'
 
 
-def start_async_logger():
+def error_handler(task, duration):
+    message = f'Task blocked async loop for too long ({duration:.3f} sec), task '
+    name = 'Controller'
+    postfix = str(task)
+    if "name='" in task:
+        from_thread = double_split(task, "name='", "' ")
+        if not from_thread.startswith('Task-'):
+            name = from_thread
+            postfix = double_split(task, 'coro=', ' wait_for=')
+    message += postfix
+    logger.warning(message, name=name)
+
+
+def start_async_logger(event_loop=None):
     log_slow_callbacks.enable(
-        0.05,
-        on_slow_callback=lambda task_name, duration: logger.warning(
-            f'Task blocked async loop for too long ({duration:.3f} sec), task {task_name}',
-            name='Controller'
-        )
+        0.5,
+        on_slow_callback=error_handler
     )
+    if event_loop:
+        hang_inspection.start('screen', interval=2, loop=event_loop)
 
 
 COLORS = {
@@ -306,3 +327,17 @@ COLORS = {
 }
 colors_reversed = {value: key for key, value in COLORS.items()}
 logger = Logger(release='release' in sys.argv, drop_path_level=1, test=True)
+
+
+def track_coroutine(func):
+
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        coro = func(*args, **kwargs)
+        active_coroutines.add(coro)
+        try:
+            # print(func, args, kwargs)
+            return await coro
+        finally:
+            active_coroutines.remove(coro)
+    return wrapper

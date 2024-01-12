@@ -7,6 +7,7 @@ from typing import NamedTuple
 from requests.exceptions import ProxyError, JSONDecodeError
 
 from parse_module.coroutines import AsyncSeatsParser
+from parse_module.utils.logger import track_coroutine
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession, add_cookie_to_cookies
 
@@ -30,6 +31,7 @@ class Mmdm(AsyncSeatsParser):
         self.user_agent: str = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' \
                                'Chrome/110.0.0.0 YaBrowser/23.3.2.806 Yowser/2.5 Safari/537.36'
 
+    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
@@ -83,6 +85,7 @@ class Mmdm(AsyncSeatsParser):
 
         return sector_name
 
+    @track_coroutine
     async def _parse_seats(self) -> OutputData:
         json_data = await self._request_to_json_data()
 
@@ -123,6 +126,7 @@ class Mmdm(AsyncSeatsParser):
         places_is_not_busy = json_data['EvailPlaceList']
         return places_is_not_busy
 
+    @track_coroutine
     async def _request_to_json_data(self, count_error_bypassing: int = 0) -> json:
         if count_error_bypassing == 10:
             raise ProxyError(f'------ bypassing protection ddos-guard is failed {count_error_bypassing = } --------')
@@ -156,6 +160,7 @@ class Mmdm(AsyncSeatsParser):
         else:
             raise ProxyError(f'{self.url = } status_code {r.status_code = }')
 
+    @track_coroutine
     async def bypassing_protection(self, count_error_bypassing: int) -> None:
         delay_to_requests = 0
         if count_error_bypassing > 6:
@@ -171,6 +176,7 @@ class Mmdm(AsyncSeatsParser):
                 requests_to_image_2_status != 200 or requests_to_send_data_status != 200:
             self.error('---------- seats_parser bypassing protection ddos-guard is failed ----------')
 
+    @track_coroutine
     async def requests_to_js_ddos_guard(self, delay_to_requests: int) -> tuple[int, int]:
         headers = {
             'accept': '*/*',
@@ -210,6 +216,7 @@ class Mmdm(AsyncSeatsParser):
 
         return requests_to_js_1_status, requests_to_js_2_status
 
+    @track_coroutine
     async def requests_to_image_ddos_guard(self, delay_to_requests: int) -> tuple[int, int]:
         headers = {
             'accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
@@ -250,6 +257,7 @@ class Mmdm(AsyncSeatsParser):
 
         return requests_to_image_1_status, requests_to_image_2_status
 
+    @track_coroutine
     async def requests_post_to_send_device_data(self, delay_to_requests: int) -> int:
         headers = {
             'accept': '*/*',
@@ -281,6 +289,7 @@ class Mmdm(AsyncSeatsParser):
 
         return requests_to_send_data_status
 
+    @track_coroutine
     async def body(self) -> None:
         skip_urls = [
             'https://www.mmdm.ru/reserve-ticket/7003/',

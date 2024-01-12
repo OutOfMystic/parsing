@@ -1,3 +1,4 @@
+from parse_module.utils.logger import track_coroutine
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.coroutines import AsyncSeatsParser
@@ -16,6 +17,7 @@ class ProfticketParser(AsyncSeatsParser):
         self.delay = 1200
         self.driver_source = None
 
+    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
@@ -119,6 +121,7 @@ class ProfticketParser(AsyncSeatsParser):
             elif 'цирк никулина' in place_name:
                 sector['name'] = reformat_dict_nikulina.get(sector['name'], sector['name'])
 
+    @track_coroutine
     async def get_show_info(self):
         url = f'https://widget.profticket.ru/api/event/show/?company_id={self.company_id}&show_id={self.show_id}&language=ru-RU'
         headers = {
@@ -149,6 +152,7 @@ class ProfticketParser(AsyncSeatsParser):
 
         return global_show_id, place_name
 
+    @track_coroutine
     async def get_tickets(self, global_show_id):
         url = f'https://widget.profticket.ru/api/event/scheme/?' \
               f'company_id={self.company_id}&' \

@@ -1,13 +1,18 @@
+from typing import Union, Callable
 from urllib.parse import urlparse
 from threading import Lock
 
-from parse_module.utils.date import Date
-from parse_module.utils import utils, provision
-from parse_module.utils.logger import logger
+from ..coroutines import AsyncSeatsParser
+from ..models.parser import SeatsParser
+from ..utils.date import Date
+from ..utils import utils, provision
+from ..utils.logger import logger
 
 
 class SeatsParserGroup:
-    def __init__(self, controller, parser_class, module_name):
+    def __init__(self, controller,
+                 parser_class: Union[AsyncSeatsParser, SeatsParser, Callable],
+                 module_name: str):
         self.controller = controller
         self.parser_class = parser_class
         self.name = f'SeatsGroup ({module_name}.{self.parser_class.__name__})'
@@ -15,6 +20,7 @@ class SeatsParserGroup:
         self.parsers = []
         self.start_lock = Lock()
         self.going_to_start = 0
+        self._delay_gathered = 0
 
     def bprint(self, mes, color=utils.Fore.LIGHTGREEN_EX):
         logger.bprint_compatible(mes, self.name, color)
@@ -106,6 +112,7 @@ class SeatsParserGroup:
             self.start_lock.release()
             return
 
+        # Preparing to launch
         prepared_data = []
         for event_data in parsing_initials:
             if 'parsing_id' in event_data:
@@ -123,6 +130,8 @@ class SeatsParserGroup:
             message = f'{len(prepared_data)} parsers will be launched'
             self.bprint(message)
 
+        # Starting parsers
+        self._delay_gathered = 0
         self.going_to_start = len(prepared_data)
         for event_data in prepared_data:
             provision.multi_try(self._start_parser, handle_error=self.handle_error, tries=3,
@@ -132,10 +141,12 @@ class SeatsParserGroup:
         self.start_lock.release()
 
     def _start_parser(self, event_data):
+        # logger.debug('1. Group: getting scheme', event_data['event_id'], name=self.name)
         scheme = self.controller.router.get_parser_scheme(event_data['event_id'],
                                                           event_data['scheme_id'],
                                                           name=self.name)
         margin_rules = self.controller.margins[event_data['margin']]
+        # logger.debug('2. Group: binding scheme', event_data['event_id'], name=self.name)
         scheme.bind(event_data['priority'], margin_rules)
         event_data = event_data.copy()
         event_data['scheme'] = scheme
@@ -143,10 +154,13 @@ class SeatsParserGroup:
         extra = event_data.pop('extra')
         event_data.update(extra)
 
+        # logger.debug('3. Group: parser.__init__', event_data['event_id'], name=self.name)
         parser = self.parser_class(self.controller, **event_data)
         if self.controller.debug:
             parser.delay = 10
-        parser.start()
+        # logger.debug('4. Group: parser.start()', event_data['event_id'], name=self.name)
+        parser.start(start_delay=self._delay_gathered)
+        self._delay_gathered += parser.spreading
         self.bprint(f'SEATS parser ({event_data["event_name"]}'
                     f' {event_data["date"]}) has started ({event_data["event_id"]})')
         self.parsers.append(parser)

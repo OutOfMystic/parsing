@@ -42,24 +42,24 @@ class HcAvtomobilistHockey(AsyncEventParser):
         return f"{day} {month} {year} {time}"
 
     async def body(self):
-            r = await self.session.get(url=self.url, headers=self.headers)
-            soup = BeautifulSoup(r.text, 'lxml')
+        r = await self.session.get(url=self.url, headers=self.headers)
+        soup = BeautifulSoup(r.text, 'lxml')
 
-            tickets = soup.select_one('#tickets')
-            tr = tickets.find_all('tr', attrs={'data-type': re.compile(r'\d+')})
-            a_events = []
-            for i in tr:
-                try:
-                    title, date, venue, url1 = i.find_all('td')
-                    title = title.text
-                    date = self.date_reformat(date.text)
-                    venue = venue.text
-                    url1 = url1.find('a').get('href')
-                    url1 = f"{self.url}{url1}"
-                    a_events.append((title, url1, date, venue))
-                except Exception as ex:
-                    continue
-            
-            for event in a_events:
-                self.register_event(event_name=event[0], url=event[1],
-                                                 date=event[2], venue=event[3])
+        tickets = soup.select_one('#tickets')
+        tr = tickets.find_all('tr', attrs={'data-type': re.compile(r'\d+')})
+        a_events = []
+        for i in tr:
+            try:
+                title, date, venue, url1 = i.find_all('td')
+                title = title.text
+                date = self.date_reformat(date.text)
+                venue = venue.text
+                url1 = url1.find('a').get('href')
+                url1 = f"{self.url}{url1}"
+                a_events.append((title, url1, date, venue))
+            except Exception as ex:
+                continue
+
+        for event in a_events:
+            self.register_event(event_name=event[0], url=event[1],
+                                date=event[2], venue=event[3])

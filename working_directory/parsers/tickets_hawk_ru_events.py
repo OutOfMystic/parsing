@@ -1,3 +1,4 @@
+from parse_module.utils.logger import track_coroutine
 from parse_module.models.parser import EventParser
 from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
@@ -11,6 +12,7 @@ class XKAvangarg(AsyncEventParser):
         self.driver_source = None
         self.url = 'https://tickets.hawk.ru/webapi/calendars/available/list/grouped-by-types'
 
+    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
@@ -54,6 +56,7 @@ class XKAvangarg(AsyncEventParser):
     def get_all_event_dates(self, event_url):
         pass
 
+    @track_coroutine
     async def get_events(self):
         headers = {
             'accept': 'application/json, text/plain, */*',
@@ -83,6 +86,7 @@ class XKAvangarg(AsyncEventParser):
 
         return a_events
 
+    @track_coroutine
     async def body(self):
         a_events = await self.get_events()
 

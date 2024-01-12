@@ -18,7 +18,7 @@ from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils import utils
+from parse_module.utils import utils, async_captcha
 from parse_module.utils.date import month_list
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.captcha import yandex_afisha_coordinates_captha
@@ -438,7 +438,9 @@ class YandexAfishaParser(AsyncEventParser):
         with open('afisha_catcha_order.jpg', 'rb') as img:
             image_with_order = base64.b64encode(img.read())
 
-        coordinates = yandex_afisha_coordinates_captha(image_with_elements, image_with_order, textinstructions)
+        coordinates = await async_captcha.yandex_afisha_coordinates_captha(image_with_elements,
+                                                                           image_with_order,
+                                                                           textinstructions)
         self.debug(coordinates)
        
         for coordinate in coordinates:
@@ -856,8 +858,7 @@ class YandexAfishaParser(AsyncEventParser):
         return output_data
 
     async def body(self):
-        if self.session:
-            await self.session.close()
+        await self.session.close()
         await self.before_body()
 
         for url, venue in self.special_url_with_one_person.items():

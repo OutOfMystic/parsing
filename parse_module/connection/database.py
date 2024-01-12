@@ -110,7 +110,7 @@ class DBConnection:
     def select(self, request):
         if request in self._saved_selects:
             fetched = self._saved_selects[request]
-            logger.debug(f'LOADED request with len {len(str(fetched))} {request}')
+            logger.info(f'LOADED request with len {len(str(fetched))} {request}')
         else:
             self.execute(request)
             fetched = self.fetchall()
