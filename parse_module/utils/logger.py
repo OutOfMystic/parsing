@@ -40,7 +40,8 @@ class Logger(threading.Thread):
                             'utils.provision._tryfunc',
                             'models.parser._debug_only',
                             'utils.provision.async_try',
-                            'utils.provision._asynctry']
+                            'utils.provision._asynctry',
+                            'utils.logger.wrapper']
         self.release = release
         self.log_path = log_path
         self.ignore_files = ignore_files
