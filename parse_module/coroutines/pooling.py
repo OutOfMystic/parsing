@@ -97,7 +97,7 @@ class ScheduledExecutor:
                 """args = task.args if task.args else []
                 coroutine = task.to_proceed(*args)"""
 
-                await self._semaphore.acquire()
+                # await self._semaphore.acquire()
                 apply_result = asyncio.create_task(coroutine)
                 # name = task.to_proceed.__name__ if hasattr(task.to_proceed, '__name__') else str(task.to_proceed)
                 apply_result.set_name(task.from_thread)
@@ -147,7 +147,7 @@ class ScheduledExecutor:
     def create_coroutine_from_task(self, task):
         return provision.async_just_try(task.to_proceed,
                                         name=task.from_thread,
-                                        args=task.args,
-                                        semaphore=self._semaphore)
+                                        args=task.args,)
+                                        #semaphore=self._semaphore)
 
 
