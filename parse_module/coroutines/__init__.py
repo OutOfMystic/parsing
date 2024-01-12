@@ -16,8 +16,8 @@ def create_thread_with_event_loop() -> AbstractEventLoop:
         nonlocal loop
         #if platform.system() == 'Windows':
         #    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        #loop = asyncio.new_event_loop()
-        loop = asyncio.ProactorEventLoop()
+        loop = asyncio.new_event_loop()
+        #loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
         loop.run_forever()
 
