@@ -67,7 +67,7 @@ class Parser(AsyncEventParser):
                 a_events.append([title, href, date, scene])
 
         return a_events
-
+    
     async def body(self):
         not_events_to_skip = 0
         a_events = []
