@@ -19,7 +19,6 @@ DEBUG_DATA = 19309
 if __name__ == '__main__':
     event_loop = create_thread_with_event_loop()
     router, process = backend.get_router('parsing_main', 'cnwhUCJMIIrF2g')
-    router.conn.recv()
 
     release = 'release' in sys.argv
     debug_url, debug_event_id = None, None

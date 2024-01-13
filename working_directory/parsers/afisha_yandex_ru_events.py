@@ -1,4 +1,3 @@
-import asyncio
 import json
 import datetime
 import time
@@ -14,96 +13,98 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from PIL import Image, ImageOps
 
-from parse_module.coroutines import AsyncEventParser
-from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils import utils, async_captcha
+from parse_module.manager.proxy.sessions import ProxySession
 from parse_module.utils.date import month_list
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.captcha import yandex_afisha_coordinates_captha
 from parse_module.drivers.proxelenium import ProxyWebDriver
 
 
-class YandexAfishaParser(AsyncEventParser):
-    proxy_check = SpecialConditions(url='https://afisha.yandex.ru/')
+class YandexAfishaParser(EventParser):
+    proxy_check_url = 'https://afisha.yandex.ru/'
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 7200
         self.driver_source = None
         self.our_urls = {
-           #'https://afisha.yandex.ru/moscow/concert/places/vk-stadium': '*',                    # Вк Арена
-            'https://afisha.yandex.ru/moscow/concert/places/tsska-arena': '*',                   # ЦСКА Арена
-           #'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*',                          # Уфа Арена
-           # 'https://afisha.yandex.ru/vladivostok/concert/places/fetisov-arena': '*',            # Фетисов Арена
-           #'https://afisha.yandex.ru/khabarovsk/other/places/platinum-arena': '*',              # Платинум Арена
-            'https://afisha.yandex.ru/saint-petersburg/concert/places/iubileinyi-spb': '*',      # Юбилейный
-            'https://afisha.yandex.ru/moscow/concert/places/vtb-arena': '*',                     # ВТБ Арена
-            'https://afisha.yandex.ru/moscow/other/places/megasport': '*',                       # Мегаспорт
-           #'https://afisha.yandex.ru/novosibirsk/other/places/ledovyi-dvorets-sibir': '*',      # ЛД Сибирь
-           # 'https://afisha.yandex.ru/omsk/other/places/g-drive-arena': '*',                     # G-Drive Арена
-            'https://afisha.yandex.ru/kazan/concert/places/tatneft-arena': '*',                  # Татнефть Арена
-            #'https://afisha.yandex.ru/moscow/concert/places/crocus-city-hall': '*',              # Крокус !нужно фиксить сектора
-            'https://afisha.yandex.ru/moscow/concert/places/vegas-city-hall-msk': '*',           # Vegas City Hall
-            'https://afisha.yandex.ru/moscow/concert/places/backstage': '*',                     # Ресторан Backstage
-            #'https://afisha.yandex.ru/moscow/sport/places/bolshaia-sportivnaia-arena-luzhniki': '*',  # Лужники
-           # 'https://afisha.yandex.ru/moscow/sport/places/dvorets-gimnastiki-iriny-viner-usmanovoi': '*',  # Лужники Дворец гимнастики Ирины Винер-Усмановой
+            # 'https://afisha.yandex.ru/moscow/concert/places/vk-stadium': '*',                    # Вк Арена
+            'https://afisha.yandex.ru/moscow/concert/places/tsska-arena': '*',  # ЦСКА Арена
+            # 'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*',                          # Уфа Арена
+            # 'https://afisha.yandex.ru/vladivostok/concert/places/fetisov-arena': '*',            # Фетисов Арена
+            # 'https://afisha.yandex.ru/khabarovsk/other/places/platinum-arena': '*',              # Платинум Арена
+            'https://afisha.yandex.ru/saint-petersburg/concert/places/iubileinyi-spb': '*',  # Юбилейный
+            'https://afisha.yandex.ru/moscow/concert/places/vtb-arena': '*',  # ВТБ Арена
+            'https://afisha.yandex.ru/moscow/other/places/megasport': '*',  # Мегаспорт
+            # 'https://afisha.yandex.ru/novosibirsk/other/places/ledovyi-dvorets-sibir': '*',      # ЛД Сибирь
+            # 'https://afisha.yandex.ru/omsk/other/places/g-drive-arena': '*',                     # G-Drive Арена
+            'https://afisha.yandex.ru/kazan/concert/places/tatneft-arena': '*',  # Татнефть Арена
+            # 'https://afisha.yandex.ru/moscow/concert/places/crocus-city-hall': '*',              # Крокус !нужно фиксить сектора
+            'https://afisha.yandex.ru/moscow/concert/places/vegas-city-hall-msk': '*',  # Vegas City Hall
+            'https://afisha.yandex.ru/moscow/concert/places/backstage': '*',  # Ресторан Backstage
+            # 'https://afisha.yandex.ru/moscow/sport/places/bolshaia-sportivnaia-arena-luzhniki': '*',  # Лужники
+            # 'https://afisha.yandex.ru/moscow/sport/places/dvorets-gimnastiki-iriny-viner-usmanovoi': '*',  # Лужники Дворец гимнастики Ирины Винер-Усмановой
             'https://afisha.yandex.ru/saint-petersburg/concert/places/bkz-oktiabrskii': '*',  # БКЗ «Октябрьский»
-           # 'https://afisha.yandex.ru/moscow/concert/places/kremlevskii-dvorets': '*',  # Кремльвский дворец
-           # 'https://afisha.yandex.ru/moscow/concert/places/mts-live-holl': '*',  # MTC Live Холл
+            # 'https://afisha.yandex.ru/moscow/concert/places/kremlevskii-dvorets': '*',  # Кремльвский дворец
+            # 'https://afisha.yandex.ru/moscow/concert/places/mts-live-holl': '*',  # MTC Live Холл
             'https://afisha.yandex.ru/moscow/theatre/places/sovremennik': '*',  # Театр Современник
-           # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr-vdnkh': '*',  # Зелёный театр ВДНХ
-           # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr': '*',  # Зелёный театр
-           #'https://afisha.yandex.ru/organizer/teatr-baleta-borisa-eifmana?city=saint-petersburg': '*'  # Балет Ейфмана
-           # 'https://afisha.yandex.ru/moscow/concert/places/kontsertnyi-zal-gostinitsy-kosmos': '*',  # Концертный зал гостиницы «Космос»
-           # 'https://afisha.yandex.ru/saint-petersburg/sport/places/gazprom-arena': '*',  # Газпром Арена
-           # 'https://afisha.yandex.ru/moscow/concert/places/dom-muzyki': '*',  # Дом музыки
+            # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr-vdnkh': '*',  # Зелёный театр ВДНХ
+            # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr': '*',  # Зелёный театр
+            # 'https://afisha.yandex.ru/organizer/teatr-baleta-borisa-eifmana?city=saint-petersburg': '*'  # Балет Ейфмана
+            # 'https://afisha.yandex.ru/moscow/concert/places/kontsertnyi-zal-gostinitsy-kosmos': '*',  # Концертный зал гостиницы «Космос»
+            # 'https://afisha.yandex.ru/saint-petersburg/sport/places/gazprom-arena': '*',  # Газпром Арена
+            # 'https://afisha.yandex.ru/moscow/concert/places/dom-muzyki': '*',  # Дом музыки
             'https://afisha.yandex.ru/saint-petersburg/theatre/places/mikhailovskii-teatr': '*',  # Михайловский питер
-           # 'https://afisha.yandex.ru/moscow/concert/places/shore-house': '*',  # Shore House
+            # 'https://afisha.yandex.ru/moscow/concert/places/shore-house': '*',  # Shore House
             'https://afisha.yandex.ru/moscow/theatre/places/teatr-satiry': '*',  # Театр сатиры
-           #'https://afisha.yandex.ru/moscow/theatre/places/teatr-rossiiskoi-armii': '*',  # Театр армии
+            # 'https://afisha.yandex.ru/moscow/theatre/places/teatr-rossiiskoi-armii': '*',  # Театр армии
             'https://afisha.yandex.ru/moscow/theatre/places/gelikon-opera': '*',  # Геликон-опера
-            #'https://afisha.yandex.ru/sochi/theatre/places/zimnii-teatr': '*',  # Зимний театр
+            # 'https://afisha.yandex.ru/sochi/theatre/places/zimnii-teatr': '*',  # Зимний театр
             'https://afisha.yandex.ru/kazan/circus_show/places/tsirk-kazan': '*',  # Казанский цирк
             'https://afisha.yandex.ru/moscow/theatre/places/planeta-kvn': '*',  # Планета КВН
             'https://afisha.yandex.ru/moscow/concert/places/barvikha-luxury-village': '*',  # Барвиха Luxury Village
-            #'https://afisha.yandex.ru/sochi/concert/places/sochi-park-arena': '*',  # Сочи Парк Арена
+            # 'https://afisha.yandex.ru/sochi/concert/places/sochi-park-arena': '*',  # Сочи Парк Арена
             'https://afisha.yandex.ru/sochi/sport/places/lds-aisberg': '*',  # ЛДС «Айсберг»
-            'https://afisha.yandex.ru/simferopol/circus_show/places/tsirk-im-tezikova': '*', # Симферопольский Цирк
-            #'https://afisha.yandex.ru/moscow/theatre/places/mdm-msk': '*', # МДМ
-            #'https://afisha.yandex.ru/moscow/circus_show/places/tsirk-nikulina-na-tsvetnom-bulvare': '*', #цирк никулина
-            'https://afisha.yandex.ru/saint-petersburg/concert/places/ledovyi-dvorets': '*', #Ледовый дворец СКА
-            #'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-ermolovoi': '*', #ermolova theatre
-            #'https://afisha.yandex.ru/moscow/concert/places/izvestiia-hall': '*', # izvestiya_hall
-            #'https://afisha.yandex.ru/moscow/theatre/places/teatr-gogolia': '*', #gogolia theatre
-            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-maiakovskogo': '*', # Маяковского театр
-            'https://afisha.yandex.ru/moscow/theatre/places/mkht-im-chekhova': '*' , #МХАТ Чехова
-            'https://afisha.yandex.ru/nizhny-novgorod/concert/places/dvorets-sporta-nagornyi': '*' , #Дворец спорта «Нагорный»
-            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-stanislavskogo-i-nemirovicha-danchenko': '*' , #stanislavskogo
-            'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*', #ufa-arena
-            'https://afisha.yandex.ru/togliatti/concert/places/lada-arena': '*', #lada-arena
-            'https://afisha.yandex.ru/chelyabinsk/concert/places/ledovaia-arena-traktor': '*', #arena-traktor
-            'https://afisha.yandex.ru/yekaterinburg/sport/places/arena-uralets': '*', #arena-uralets
-            'https://afisha.yandex.ru/moscow/concert/places/khram-khrista-spasitelia-zal-tserkovnykh-soborov': '*' # hram
+            'https://afisha.yandex.ru/simferopol/circus_show/places/tsirk-im-tezikova': '*',  # Симферопольский Цирк
+            # 'https://afisha.yandex.ru/moscow/theatre/places/mdm-msk': '*', # МДМ
+            # 'https://afisha.yandex.ru/moscow/circus_show/places/tsirk-nikulina-na-tsvetnom-bulvare': '*', #цирк никулина
+            'https://afisha.yandex.ru/saint-petersburg/concert/places/ledovyi-dvorets': '*',  # Ледовый дворец СКА
+            # 'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-ermolovoi': '*', #ermolova theatre
+            # 'https://afisha.yandex.ru/moscow/concert/places/izvestiia-hall': '*', # izvestiya_hall
+            # 'https://afisha.yandex.ru/moscow/theatre/places/teatr-gogolia': '*', #gogolia theatre
+            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-maiakovskogo': '*',  # Маяковского театр
+            'https://afisha.yandex.ru/moscow/theatre/places/mkht-im-chekhova': '*',  # МХАТ Чехова
+            'https://afisha.yandex.ru/nizhny-novgorod/concert/places/dvorets-sporta-nagornyi': '*',
+            # Дворец спорта «Нагорный»
+            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-stanislavskogo-i-nemirovicha-danchenko': '*',
+            # stanislavskogo
+            'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*',  # ufa-arena
+            'https://afisha.yandex.ru/togliatti/concert/places/lada-arena': '*',  # lada-arena
+            'https://afisha.yandex.ru/chelyabinsk/concert/places/ledovaia-arena-traktor': '*',  # arena-traktor
+            'https://afisha.yandex.ru/yekaterinburg/sport/places/arena-uralets': '*',  # arena-uralets
+            'https://afisha.yandex.ru/moscow/concert/places/khram-khrista-spasitelia-zal-tserkovnykh-soborov': '*'
+            # hram
         }
         self.special_url = {
-            #'https://afisha.yandex.ru/moscow/selections/standup': '*',  # Стендап
+            # 'https://afisha.yandex.ru/moscow/selections/standup': '*',  # Стендап
         }
         self.special_url_with_one_person = {
-            #'https://afisha.yandex.ru/artist/pavel-volia?city=moscow': 'Павел Воля'  # Павел Воля
+            # 'https://afisha.yandex.ru/artist/pavel-volia?city=moscow': 'Павел Воля'  # Павел Воля
         }
         self.csrf = ''
         self.our_places_short = []
         self.place = {}
 
-    async def before_body(self):
-        self.session = AsyncProxySession(self)
+    def before_body(self):
+        self.info('before_body!!!!!!!!')
+        self.session = ProxySession(self)
         self.our_places_short = []
 
     def get_dict_from_body(self, body, keyword):
         if keyword not in body:
-            raise RuntimeError(f'[req_err] request doesnt contain needed keyword: {body[:1000]} {self.proxy.__str__() = }')
+            raise RuntimeError(
+                f'[req_err] request doesnt contain needed keyword: {body[:1000]} {self.proxy.__str__() = }')
 
         body = body.replace('undefined', 'null')
         data_str = double_split(body, keyword, "};") + '}'
@@ -111,7 +112,7 @@ class YandexAfishaParser(AsyncEventParser):
 
         return data_dict
 
-    async def deception_request(self):
+    def deception_request(self):
         url = 'https://vk.com/'
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -127,9 +128,9 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(url, headers=headers)
+        r = self.session.get(url, headers=headers)
 
-    async def main_page_request(self):
+    def main_page_request(self):
         url = 'https://afisha.yandex.ru/'
 
         headers = {
@@ -149,10 +150,10 @@ class YandexAfishaParser(AsyncEventParser):
             'user-agent': self.user_agent
         }
 
-        r = await self.session.get(url, headers=headers)
-        r = await self.check_captcha(r, url, headers)
+        r = self.session.get(url, headers=headers)
+        r = self.check_captcha(r, url, headers)
 
-    async def get_places(self):
+    def get_places(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, utf-8',
@@ -171,8 +172,8 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(self.url, headers=headers)
-        r = await self.check_captcha(r, self.url, headers)
+        r = self.session.get(self.url, headers=headers)
+        r = self.check_captcha(r, self.url, headers)
 
         window_data = self.get_dict_from_body(r.text, "window['__initialState'] = ")
         api_data = self.get_dict_from_body(r.text, "window['__apiParams'] = ")
@@ -191,7 +192,7 @@ class YandexAfishaParser(AsyncEventParser):
 
         return places
 
-    async def place_request(self, place_url):
+    def place_request(self, place_url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
@@ -208,8 +209,8 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(place_url, headers=headers)
-        r = await self.check_captcha(r, place_url, headers)
+        r = self.session.get(place_url, headers=headers)
+        r = self.check_captcha(r, place_url, headers)
 
         window_data = self.get_dict_from_body(r.text, "window['__initialState'] = ")
         api_data = self.get_dict_from_body(r.text, "window['__apiParams'] = ")
@@ -261,7 +262,7 @@ class YandexAfishaParser(AsyncEventParser):
 
         return client_key
 
-    async def schedule_events_request(self, request_id, date, period):
+    def schedule_events_request(self, request_id, date, period):
         # https://afisha.yandex.ru/api/places/561f5a0137753641a354609b/schedule_other?date=2023-01-02&period=30&city=moscow&_=1670503199058
         # БЕЗ ПОСЛЕДНЕГО ПАРАМЕТРА РАБОТАЕТ
         # Это какой-то непонятный счетчик запросов. Увеличивается на единицу после каждого запроса
@@ -285,8 +286,8 @@ class YandexAfishaParser(AsyncEventParser):
             'X-Retpath-Y': self.place['url'],
             'user-agent': self.user_agent,
         }
-        r = await self.session.get(url, headers=headers)
-        r = await self.check_captcha(r, url, headers)
+        r = self.session.get(url, headers=headers)
+        r = self.check_captcha(r, url, headers)
 
         if 'schedule' not in r.text or 'items' not in r.text:
             raise RuntimeError(f'[req_err] schedule_events_request doesnt contain needed parameters: {r.text[:400]}')
@@ -296,8 +297,8 @@ class YandexAfishaParser(AsyncEventParser):
     def get_place_events(self, date_items, client_key):
         a_events = []
         for date_item in date_items:
-            for event_info in date_item['sessions']: 
-                if not event_info['session']: #возможно это абонемент
+            for event_info in date_item['sessions']:
+                if not event_info['session']:  # возможно это абонемент
                     continue
                 if not event_info.get('session').get('ticket'):
                     continue
@@ -309,7 +310,7 @@ class YandexAfishaParser(AsyncEventParser):
                 year, month, day = event_info['session']['date'].split('-')
                 month = month_list[int(month)]
                 time = event_info['session'].get('datetime')
-                if not time: # значит возможно это Абонемент и нет точного времени мероприятия
+                if not time:  # значит возможно это Абонемент и нет точного времени мероприятия
                     continue
                 time = time.split('T')[-1]
                 time = ':'.join(time.split(':')[:-1])
@@ -337,19 +338,19 @@ class YandexAfishaParser(AsyncEventParser):
 
         return a_events
 
-    async def check_captcha(self, r, old_url, old_headers):
+    def check_captcha(self, r, old_url, old_headers):
         if '<div class="CheckboxCaptcha" ' not in r.text:
             return r
-        return await self.handle_smart_captcha(r.url, old_url, old_headers)
+        return self.handle_smart_captcha(r.url, old_url, old_headers)
 
-    async def handle_smart_captcha(self, url, old_url, old_headers):
+    def handle_smart_captcha(self, url, old_url, old_headers):
         while True:
-            r = await self.selenium_smart_captha(url)
+            r = self.selenium_smart_captha(url)
             if not ('captcha' in r.url and len(r.url) > 200):
                 break
         return r
 
-    async def selenium_smart_captha(self, url: str):
+    def selenium_smart_captha(self, url: str):
         chrome_options = Options()
         # chrome_options.add_argument("--headless")
         # chrome_options.add_argument('--headless=new')
@@ -357,10 +358,10 @@ class YandexAfishaParser(AsyncEventParser):
 
         try:
             driver.get(url=url)
-            await asyncio.sleep(1)
-            r = await self.solve_smart_captcha_checkbox(driver)
+            time.sleep(1)
+            r = self.solve_smart_captcha_checkbox(driver)
             driver.get(url=r.url)
-            r = await self.solve_smart_captcha_image(driver)
+            r = self.solve_smart_captcha_image(driver)
         except TimeoutException as e:
             raise ProxyError(e)
         except Exception as e:
@@ -369,7 +370,7 @@ class YandexAfishaParser(AsyncEventParser):
             driver.quit()
         return r
 
-    async def solve_smart_captcha_checkbox(self, driver):
+    def solve_smart_captcha_checkbox(self, driver):
         body = WebDriverWait(driver, 6).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "body"))
         ).get_attribute('innerHTML')
@@ -404,10 +405,10 @@ class YandexAfishaParser(AsyncEventParser):
             'user-agent': self.user_agent
         }
         url = f'https://afisha.yandex.ru{href}'
-        r = await self.session.post(url, timeout=10, headers=headers, data=data)
+        r = self.session.post(url, timeout=10, headers=headers, data=data)
         return r
 
-    async def solve_smart_captcha_image(self, driver):
+    def solve_smart_captcha_image(self, driver):
         img_captha = WebDriverWait(driver, 4).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.AdvancedCaptcha-View img"))
         )
@@ -418,11 +419,10 @@ class YandexAfishaParser(AsyncEventParser):
 
         textinstructions = driver.find_element(By.CSS_SELECTOR, value='span.Text').text
 
-        r = await self.session.get(img_captha_href, stream=True)
+        r = self.session.get(img_captha_href, stream=True)
         if r.status_code == 200:
             with open('afisha_catcha.png', 'wb') as f:
                 f.write(r.content)
-
 
         with Image.open('afisha_catcha.png') as img:
             image_with_elements = img.convert('RGB')
@@ -431,18 +431,18 @@ class YandexAfishaParser(AsyncEventParser):
             image_with_elements = base64.b64encode(img.read())
         with Image.open('afisha_catcha_order.png') as img:
             w, h = img.size
-            area = (0, 0, w-399, 0)
+            area = (0, 0, w - 399, 0)
             image_with_order = ImageOps.crop(img, area)
             image_with_order = image_with_order.convert('RGB')
             image_with_order.save('afisha_catcha_order.jpg')
         with open('afisha_catcha_order.jpg', 'rb') as img:
             image_with_order = base64.b64encode(img.read())
 
-        coordinates = await async_captcha.yandex_afisha_coordinates_captha(image_with_elements,
-                                                                           image_with_order,
-                                                                           textinstructions)
+        coordinates = yandex_afisha_coordinates_captha(image_with_elements,
+                                                       image_with_order,
+                                                       textinstructions)
         self.debug(coordinates)
-       
+
         for coordinate in coordinates:
             actions = ActionChains(driver)
             img_captha = driver.find_element(By.CSS_SELECTOR, "div.AdvancedCaptcha-View img")
@@ -470,7 +470,7 @@ class YandexAfishaParser(AsyncEventParser):
             'rep': rep,
             'rdata': r_data,
             'pdata': pdata
-            }
+        }
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -493,17 +493,16 @@ class YandexAfishaParser(AsyncEventParser):
             'user-agent': self.user_agent
         }
         url = f'https://afisha.yandex.ru{href}&rep={rep}'
-        r = await self.session.post(url, timeout=10, headers=headers, data=data)
+        r = self.session.post(url, timeout=10, headers=headers, data=data)
 
         if not '<div class="CheckboxCaptcha' in r.text:
             self.debug(f'Yandex captcha success solved bro!')
         else:
             self.error(f'Yandex captcha DIDNT solved!!!')
-            
-        
+
         return r
 
-    async def _get_total_events(self, url: str) -> tuple[int, str, str]:
+    def _get_total_events(self, url: str) -> tuple[int, str, str]:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -523,15 +522,15 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(url, headers=headers)
-        r = await self.check_captcha(r, url, headers)
+        r = self.session.get(url, headers=headers)
+        r = self.check_captcha(r, url, headers)
 
         client_key = self.get_client_key(r.text)
         request_id = double_split(r.text, '"request-id":"', '"')
         total = int(double_split(r.text, '"total":', '}'))
         return total, request_id, client_key
 
-    async def _get_card_with_event(self, total_events: int, request_id: str, client_key: str, url: str) -> list:
+    def _get_card_with_event(self, total_events: int, request_id: str, client_key: str, url: str) -> list:
         headers = {
             'accept': 'application/json, text/javascript, */*; q=0.01',
             'accept-encoding': 'gzip, deflate, br',
@@ -556,8 +555,8 @@ class YandexAfishaParser(AsyncEventParser):
         final_event = []
         while total_events != offset:
             url = f'https://afisha.yandex.ru/api/events/selection/standup?limit={limit}&offset={offset}&hasMixed=0&city=moscow'
-            r = await self.session.get(url, headers=headers)
-            r = await self.check_captcha(r, url, headers)
+            r = self.session.get(url, headers=headers)
+            r = self.check_captcha(r, url, headers)
 
             card_event_from_request = r.json()['data']
             for card in card_event_from_request:
@@ -566,7 +565,7 @@ class YandexAfishaParser(AsyncEventParser):
                 href_to_all_date = card['url']
                 href_to_all_date = 'https://afisha.yandex.ru' + href_to_all_date
                 try:
-                    dates_and_venues_and_hrefs = await self._get_all_date_and_venue(href_to_all_date, client_key)
+                    dates_and_venues_and_hrefs = self._get_all_date_and_venue(href_to_all_date, client_key)
                 except AttributeError:
                     continue
                 for data in dates_and_venues_and_hrefs:
@@ -596,7 +595,7 @@ class YandexAfishaParser(AsyncEventParser):
         event_params = {'client_key': client_key, 'session_id': session_id}
         return normal_date, venue, href, event_params
 
-    async def _get_event_data_from_page_with_many_month(
+    def _get_event_data_from_page_with_many_month(
             self, event: Tag, event_id: str, request_id: str, client_key: str, href_to_all_date: str
     ) -> list[tuple[str, str, str, dict[str, str]]]:
         all_event_data = []
@@ -626,8 +625,8 @@ class YandexAfishaParser(AsyncEventParser):
                 'user-agent': self.user_agent
             }
             url = f'https://afisha.yandex.ru/api/events/{event_id}/schedule_other?date={date}&period={period}&city=moscow'
-            r = await self.session.get(url, headers=headers)
-            r = await self.check_captcha(r, url, headers)
+            r = self.session.get(url, headers=headers)
+            r = self.check_captcha(r, url, headers)
 
             json_data = r.json()
             items = json_data['items']
@@ -651,7 +650,7 @@ class YandexAfishaParser(AsyncEventParser):
                     all_event_data.append((normal_date, venue, href, event_params))
         return all_event_data
 
-    async def _get_all_date_and_venue(self, href_to_all_date: str, client_key: str) -> list[tuple]:
+    def _get_all_date_and_venue(self, href_to_all_date: str, client_key: str) -> list[tuple]:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -671,8 +670,8 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(href_to_all_date, headers=headers)
-        r = await self.check_captcha(r, href_to_all_date, headers)
+        r = self.session.get(href_to_all_date, headers=headers)
+        r = self.check_captcha(r, href_to_all_date, headers)
 
         dates_and_venues_and_hrefs = []
         soup = BeautifulSoup(r.text, 'lxml')
@@ -687,7 +686,7 @@ class YandexAfishaParser(AsyncEventParser):
         if len(all_events_second) > 0:
             event_id = double_split(r.text, '"event_id":"', '"')
             request_id = double_split(r.text, '"request-id":"', '"')
-            data = await self._get_event_data_from_page_with_many_month(
+            data = self._get_event_data_from_page_with_many_month(
                 all_events_second[0], event_id, request_id, client_key, href_to_all_date
             )
             dates_and_venues_and_hrefs.extend(data)
@@ -709,7 +708,7 @@ class YandexAfishaParser(AsyncEventParser):
 
         return dates_and_venues_and_hrefs
 
-    async def _get_url_events_from_special_url__with_one_person(self, url: str) -> list[str]:
+    def _get_url_events_from_special_url__with_one_person(self, url: str) -> list[str]:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -729,8 +728,8 @@ class YandexAfishaParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(url, headers=headers)
-        r = await self.check_captcha(r, url, headers)
+        r = self.session.get(url, headers=headers)
+        r = self.check_captcha(r, url, headers)
 
         soup = BeautifulSoup(r.text, 'lxml')
         all_events_url = []
@@ -744,7 +743,7 @@ class YandexAfishaParser(AsyncEventParser):
             all_events_url.append(href)
         return all_events_url
 
-    async def _get_events_from_special_url__with_one_person(self, all_events_url: list[str]) -> list[tuple]:
+    def _get_events_from_special_url__with_one_person(self, all_events_url: list[str]) -> list[tuple]:
         output_data = []
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
@@ -763,8 +762,8 @@ class YandexAfishaParser(AsyncEventParser):
             'user-agent': self.user_agent
         }
         for url in all_events_url:
-            r = await self.session.get(url, headers=headers)
-            r = await self.check_captcha(r, url, headers)
+            r = self.session.get(url, headers=headers)
+            r = self.check_captcha(r, url, headers)
 
             requests_id = double_split(r.text, '"X-Request-Id":"', '"')
             csrf_token = double_split(r.text, '"X-CSRF-Token":"', '"')
@@ -800,8 +799,8 @@ class YandexAfishaParser(AsyncEventParser):
             while json_data is None and count_requests != 50:
                 url = f'https://widget.afisha.yandex.ru/api/tickets/v1/events/{event_id}' \
                       f'?clientKey={client_key}&region_id={reg_id}&req_number={count_requests}'
-                r = await self.session.get(url, headers=headers)
-                r = await self.check_captcha(r, url, headers)
+                r = self.session.get(url, headers=headers)
+                r = self.check_captcha(r, url, headers)
                 json_data = r.json().get('result')
                 count_requests += 1
 
@@ -833,8 +832,8 @@ class YandexAfishaParser(AsyncEventParser):
                 url = f'https://widget.afisha.yandex.ru/api/tickets/v1/events/' \
                       f'{event_id}/venues/sessions?clientKey={client_key}&offset=0&limit=20' \
                       f'&dateFrom={data_sessions[0]}&dateTo={data_sessions[-1]}&regionId={reg_id}&req_number={count_requests}'
-                r = await self.session.get(url, headers=headers)
-                r = await self.check_captcha(r, url, headers)
+                r = self.session.get(url, headers=headers)
+                r = self.check_captcha(r, url, headers)
                 json_data = r.json().get('result', {}).get('venues', {}).get('items')
                 count_requests += 1
                 if count_requests == 25:
@@ -857,22 +856,19 @@ class YandexAfishaParser(AsyncEventParser):
                 output_data.append((title, href, normal_date, scene, event_params, venue))
         return output_data
 
-    async def body(self):
-        await self.session.close()
-        await self.before_body()
-
+    def body(self):
         for url, venue in self.special_url_with_one_person.items():
-            all_events_url = await self._get_url_events_from_special_url__with_one_person(url)
-            for event in await self._get_events_from_special_url__with_one_person(all_events_url):
+            all_events_url = self._get_url_events_from_special_url__with_one_person(url)
+            for event in self._get_events_from_special_url__with_one_person(all_events_url):
                 event_params = str(event[4]).replace("'", "\"")
                 event_name = event[0].replace("'", '"')
                 self.register_event(event_name, event[1], date=event[2], scene=event[3],
                                     event_params=event_params, venue=venue)
 
-        # places = await self.get_places()
+        # places = self.get_places()
         for url in self.our_urls:
             self.debug(url, 'yandex Events')
-            client_key, request_id, dates = await self.place_request(url)
+            client_key, request_id, dates = self.place_request(url)
             venue = self.place['title']
             if url == 'https://afisha.yandex.ru/kazan/circus_show/places/tsirk-kazan':
                 venue = 'Казанский цирк'
@@ -887,9 +883,10 @@ class YandexAfishaParser(AsyncEventParser):
 
             # date - 2023-01-02; period - 30
             for date, period in dates.items():
-                date_items = await self.schedule_events_request(request_id, date, period)
+                date_items = self.schedule_events_request(request_id, date, period)
                 a_events = self.get_place_events(date_items, client_key)
                 for event in a_events:
+                    self.info(event)
                     if 'VK Stadiaum' in venue:
                         if 'Абонемент' in event[0]:
                             continue
@@ -899,8 +896,8 @@ class YandexAfishaParser(AsyncEventParser):
                                         event_params=event_params, venue=venue)
 
         for url in self.special_url:
-            total_events, request_id, client_key = await self._get_total_events(url)
-            final_event = await self._get_card_with_event(total_events, request_id, client_key, url)
+            total_events, request_id, client_key = self._get_total_events(url)
+            final_event = self._get_card_with_event(total_events, request_id, client_key, url)
             for event in final_event:
                 event_params = str(event[4]).replace("'", "\"")
                 event_name = event[0].replace("'", '"')

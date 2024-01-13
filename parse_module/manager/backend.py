@@ -196,4 +196,6 @@ def get_router(db_login, db_password):
     process = multiprocessing.Process(target=process_starting,
                                       args=(inner_conn, db_login, db_password,))
     process.start()
-    return SchemeRouterFrontend(outer_conn), process
+    router = SchemeRouterFrontend(outer_conn)
+    router.conn.recv()
+    return router, process

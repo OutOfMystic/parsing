@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import inspect
 import itertools
 import json
 import os
@@ -96,16 +97,15 @@ class Controller:
     def _start_parser(self, parser_variable, parser_name):
         if parser_name.startswith('www.'):
             parser_name = parser_name.split('www.')[1]
-        try:
-            if parser_variable in (EventParser, SeatsParser, AsyncEventParser, AsyncSeatsParser):
-                return
-            elif issubclass(parser_variable, EventParser):
-                self._start_event_parser(parser_variable, parser_name)
-            elif issubclass(parser_variable, SeatsParser):
-                self._init_seats_parsers(parser_variable, parser_name)
-            else:
-                return
-        except TypeError:
+        if not inspect.isclass(parser_variable):
+            return
+        elif parser_variable in (EventParser, SeatsParser, AsyncEventParser, AsyncSeatsParser):
+            return
+        elif issubclass(parser_variable, EventParser):
+            self._start_event_parser(parser_variable, parser_name)
+        elif issubclass(parser_variable, SeatsParser):
+            self._init_seats_parsers(parser_variable, parser_name)
+        else:
             return
 
     def _start_event_parser(self, parser_class, parser_name):
