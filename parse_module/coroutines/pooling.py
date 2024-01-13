@@ -34,7 +34,7 @@ class ScheduledExecutor:
         self._timers = {}
         self._starting_point = time.time()
         self._stats_counter = 0
-        self._semaphore = asyncio.Semaphore(max_connects, loop=loop)
+        self._semaphore = asyncio.Semaphore(max_connects)
         self._is_win32 = platform.system() == 'Windows'
         self.in_process = 0
         asyncio.run_coroutine_threadsafe(self.run_async(), loop)

@@ -104,7 +104,7 @@ class AsyncProxySession(aiohttp.ClientSession):
         semaphore = self.semaphores_on_ip[await_key]
 
         await semaphore.acquire()
-        # await self.global_semaphore.acquire()
+        await self.global_semaphore.acquire()
         global in_process
         try:
             in_process += 1
@@ -114,7 +114,7 @@ class AsyncProxySession(aiohttp.ClientSession):
             in_process -= 1
             # logger.debug('aiohttp', in_process)
             semaphore.release()
-            # self.global_semaphore.release()
+            self.global_semaphore.release()
 
     @staticmethod
     async def _static_response(method, *args, **kwargs):

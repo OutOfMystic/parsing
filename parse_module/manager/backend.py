@@ -3,6 +3,7 @@ import sys
 import threading
 import time
 from collections import defaultdict
+from multiprocessing.connection import Connection
 from threading import Lock
 
 from . import pooling
@@ -13,6 +14,16 @@ from ..models import scheme
 from ..utils import provision
 from ..utils.logger import logger
 from ..utils.provision import multi_try
+
+send_lock = threading.Lock()
+
+
+def send_threadsafe(self, data):
+    send_lock.acquire()
+    try:
+        Connection.send(self, data)
+    finally:
+        send_lock.release()
 
 
 class Postponer(threading.Thread):
@@ -181,6 +192,7 @@ def process_starting(inner_conn, login, password):
 
 def get_router(db_login, db_password):
     outer_conn, inner_conn = multiprocessing.Pipe()
+    outer_conn.send = send_threadsafe.__get__(outer_conn)
     process = multiprocessing.Process(target=process_starting,
                                       args=(inner_conn, db_login, db_password,))
     process.start()
