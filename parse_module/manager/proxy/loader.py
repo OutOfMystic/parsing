@@ -9,7 +9,7 @@ from . import check
 from .check import SpecialConditions, NormalConditions
 from ...utils import provision
 from .instances import UniProxy
-from ...utils.logger import logger
+from ...utils.logger import logger, track_coroutine
 from ...utils.provision import threading_try
 
 
@@ -66,6 +66,7 @@ class ProxyOnCondition:
             sleep_time += 0.1
             time.sleep(0.1)
 
+    @track_coroutine
     async def _wait_async(self):
         sleep_time = 0.1
         while not self.last_update:
@@ -82,6 +83,7 @@ class ProxyOnCondition:
         else:
             return None
 
+    @track_coroutine
     async def get_async(self):
         if not self.last_update:
             await self._wait_async()
@@ -93,14 +95,25 @@ class ProxyOnCondition:
             return None
 
     def get_all(self):
-        self._wait()
+        if not self.last_update:
+            self._wait()
         return self.proxies
+
+    async def get_all_async(self):
+        if not self.last_update:
+            await self._wait_async()
+        return self.proxies
+
+    async def amount(self):
+        if not self.last_update:
+            await self._wait_async()
+        return len(self.proxies)
 
 
 class ProxyHub:
     def __init__(self):
         self.all_proxies = []
-        self.last_tab = get_tab()
+        self.last_tab = 0
 
         self.stored_data = self._load_stored_data()
         self.proxies_on_condition = {}
@@ -135,6 +148,22 @@ class ProxyHub:
 
     @overload
     async def get_async(self, check_conditions: SpecialConditions):
+        ...
+
+    @overload
+    async def get_all_async(self, url: str):
+        ...
+
+    @overload
+    async def get_all_async(self, check_conditions: SpecialConditions):
+        ...
+
+    @overload
+    async def get_amount(self, url: str):
+        ...
+
+    @overload
+    async def get_amount(self, check_conditions: SpecialConditions):
         ...
 
     @staticmethod
@@ -181,6 +210,16 @@ class ProxyHub:
         proxies = self.proxies_on_condition[check_conditions.signature]
         return await proxies.get_async()
 
+    async def get_all_async(self, check_conditions):
+        check_conditions = self._check_argument(check_conditions)
+        proxies = self.proxies_on_condition[check_conditions.signature]
+        return await proxies.get_all_async()
+
+    async def get_amount(self, check_conditions):
+        check_conditions = self._check_argument(check_conditions)
+        proxies = self.proxies_on_condition[check_conditions.signature]
+        return await proxies.amount()
+
     def report(self, check_conditions, proxy):
         check_conditions = self._check_argument(check_conditions)
         proxies = self.proxies_on_condition[check_conditions.signature]
@@ -202,19 +241,3 @@ class ManualProxies(ProxyHub):
             payload = json_.load(fp)
         to_proxies = [UniProxy(row) for row in payload]
         self.all_proxies = to_proxies
-
-
-def get_tab(increase=True):
-    while True:
-        payload = provision.try_open('tab', '1', json_=False)
-        chrtab = int(payload)
-        if increase:
-            chrtab += 1
-            provision.try_write('tab', str(chrtab), json_=False)
-        return chrtab
-
-
-def parse_domain(url):
-    domain = urlparse(url).netloc
-    domain_parts = domain.split('.')   ##############
-    return '.'.join(domain_parts)

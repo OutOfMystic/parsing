@@ -67,14 +67,14 @@ class CoroutineBot(Bot, ABC):
         if result is provision.TryError and self._terminator.alive:
             await provision.async_try(self.on_many_exceptions, name=self.name, tries=1, raise_exc=False)
 
-    async def multi_try(self,
-                        to_try: Callable,
-                        handle_error: Callable = None,
-                        tries=3,
-                        raise_exc=True,
-                        args: Iterable = None,
-                        kwargs: dict = None,
-                        print_errors=True):
+    def multi_try(self,
+                  to_try: Callable,
+                  handle_error: Callable = None,
+                  tries=3,
+                  raise_exc=True,
+                  args: Iterable = None,
+                  kwargs: dict = None,
+                  print_errors=True):
         """
         Try to execute smth ``tries`` times sequentially.
         If all attempts are unsuccessful and ``raise_exc``
@@ -94,12 +94,12 @@ class CoroutineBot(Bot, ABC):
         If all attempts fail, exception is raised or
         provision.TryError is returned.
         """
-        await provision.async_try(to_try,
-                                  name=self.name,
-                                  handle_error=handle_error,
-                                  tries=tries,
-                                  args=args,
-                                  kwargs=kwargs,
-                                  raise_exc=raise_exc,
-                                  print_errors=print_errors)
+        return provision.async_try(to_try,
+                                   name=self.name,
+                                   handle_error=handle_error,
+                                   tries=tries,
+                                   args=args,
+                                   kwargs=kwargs,
+                                   raise_exc=raise_exc,
+                                   print_errors=print_errors)
 

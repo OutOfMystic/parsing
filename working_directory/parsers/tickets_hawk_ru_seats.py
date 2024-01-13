@@ -1,4 +1,6 @@
 from bs4 import BeautifulSoup
+
+from parse_module.utils.logger import track_coroutine
 from parse_module.models.parser import SeatsParser
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
@@ -12,6 +14,7 @@ class XKAvangarg(AsyncSeatsParser):
         self.delay = 1200
         self.driver_source = None
 
+    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
@@ -35,6 +38,7 @@ class XKAvangarg(AsyncSeatsParser):
             if 'Сектор FONBET Бизнес-клуб' in sector['name']:
                 sector['name'] = 'Сектор FONBET Бизнес клуб'
 
+    @track_coroutine
     async def parse_seats(self, json_data):
         total_sector = []
 
@@ -66,7 +70,7 @@ class XKAvangarg(AsyncSeatsParser):
                     )
                     continue
             url = f'https://tickets.hawk.ru/webapi/seats/schema/{first_param_for_request}/{param_for_request}/build?'
-            json_data_for_this_sector = self.request_for_seats_in_sector(url)
+            json_data_for_this_sector = await self.request_for_seats_in_sector(url)
 
             price_list = {}
 
@@ -102,6 +106,7 @@ class XKAvangarg(AsyncSeatsParser):
 
         return total_sector
 
+    @track_coroutine
     async def request_for_seats_in_sector(self, url):
         headers = {
             'accept': 'application/json, text/plain, */*',
@@ -120,6 +125,7 @@ class XKAvangarg(AsyncSeatsParser):
         r = await self.session.get(url, headers=headers, verify=False)
         return r.json()
 
+    @track_coroutine
     async def request_parser(self, url, data):
         headers = {
             'accept': 'application/json, text/plain, */*',
@@ -142,6 +148,7 @@ class XKAvangarg(AsyncSeatsParser):
         r = await self.session.post(url, headers=headers, json=data, verify=False)
         return r.json()
 
+    @track_coroutine
     async def get_seats(self):
         data = {"seasonIds":[]}
         json_data = await self.request_parser(url=self.url, data=data)
@@ -150,6 +157,7 @@ class XKAvangarg(AsyncSeatsParser):
 
         return a_events
 
+    @track_coroutine
     async def body(self):
         all_sectors = await self.get_seats()
 

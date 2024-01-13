@@ -52,7 +52,6 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
             "Referrer-Policy": "strict-origin-when-cross-origin",
             "user-agent": self.user_agent
             }
-        
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -150,7 +149,6 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         events_ids = [i.get('data-tp-event') for i in events_ids]
         return events_ids
 
-
     async def get_info_about_event_TWO(self, id, slug, venue):
         url_to_api = f'https://ticket-place.ru/widget/{id}/data'
         info_about = await self.session.get(url_to_api, headers=self.headers)
@@ -164,8 +162,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
 
         return OutputEvent(title=title, href=href, 
                                             date=date, venue=venue)
-    
-    
+
     async def load_all_dates_TWO(self, id, slug, venue):
         a_events = []
         url = f'https://ticket-place.ru/widget/{id}/similar'
@@ -220,8 +217,8 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
                     events_box.update(events_ids)
                     
                 elif isinstance(info, str):
-                    function = eval(f"await self.{info}")
-                    events_ids, slug, venue = function()
+                    function = getattr(self, info)
+                    events_ids, slug, venue = await function(info)
                     first_event = await self.get_info_about_event_TWO(events_ids[0], slug, venue)
                     events_box.add(first_event)
 

@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
-from parse_module.models.parser import SeatsParser
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class BarvikhaConcertHall(AsyncSeatsParser):
@@ -134,8 +133,7 @@ class BarvikhaConcertHall(AsyncSeatsParser):
         ref_dict = scheme_width_59_table
         if '63972601ca8b3156393981.svg' in self.svg_width_scene:
             ref_dict = scheme_width_59_table
-        elif ('60a3c47765f7f268580790.svg' in self.svg_width_scene or
-              '60a3c47765f7f268580790.svg' in self.svg_width_scene):
+        elif ('60a3c47765f7f268580790.svg' in self.svg_width_scene):
             ref_dict = scheme_without_table
         elif '61519c4b27146906666725.svg' in self.svg_width_scene:
             ref_dict = scheme_width_59_table
@@ -150,20 +148,23 @@ class BarvikhaConcertHall(AsyncSeatsParser):
               '655f466a54b6c198617702.svg' in self.svg_width_scene  or 
               '6570705d1564f798193247.svg' in self.svg_width_scene ):
             ref_dict = scheme_width_112_table
-        elif '653a27c848451187877444' in self.svg_width_scene:
-            ref_dict = scheme_width_59_table
-            ref_dict['VIP ЛОЖА'] = 'Super VIP-ложа'
+        elif ('653a27c848451187877444' in self.svg_width_scene or
+              '658ea246cf2e8401398561' in self.svg_width_scene):
+            ref_dict = scheme_width_112_table
+            ref_dict['VIP ЛОЖА'] = 'Супер VIP ложа'
 
-        for sector in a_sectors:
-            sector['name'] = ref_dict.get(sector['name'], sector['name'])
+        new_a_sectors = {}
+        for sector, tickets in a_sectors.items():
+            new_name = ref_dict.get(sector, sector)
+            new_a_sectors.setdefault(new_name, {}).update(tickets)
+        return new_a_sectors
 
     def parse_seats(self, json_data):
-        total_sector = []
-
         json_data = json_data.get('DATA')
-
+        #self.info(json_data)
         all_sector_dict = {}
         sector_data = json_data.get('segments')
+        #self.info(sector_data, 'sector_data')
         for sector in sector_data:
             sector_id = sector.get('segmentId')
             sector_count = sector.get('segment')
@@ -178,7 +179,8 @@ class BarvikhaConcertHall(AsyncSeatsParser):
             seat_sector_id = seat.get('segmentId')
 
             seat_sector = all_sector_dict.get(seat_sector_id)
-            if self.svg_width_scene == 'https://barvikha-concert-hall-data.storage.yandexcloud.net/media/schemes/60a3c47765f7f268580790.svg':
+
+            if '60a3c47765f7f268580790.svg' in  self.svg_width_scene:
                 if 'Правительственная ложа' in seat_sector or 'Директорская ложа' in seat_sector:
                     seat_row = f'Ложа {seat_sector[-1]}'
                 elif 'Ложа Бенуара' in seat_sector:
@@ -195,25 +197,15 @@ class BarvikhaConcertHall(AsyncSeatsParser):
                     if '12' in seat_sector:
                         seat_row = 'Ложа 12'
 
-            if 'https://barvikha-concert-hall-data.storage.yandexcloud.net/media/schemes/612ce30db591f751824837.svg' in self.svg_width_scene:
+            if '612ce30db591f751824837.svg' in self.svg_width_scene:
                 seat_sector = f'Стол №{seat_row}'
                 seat_row = 1
 
-            if date_seats.get(seat_sector):
-                dict_sector = date_seats[seat_sector]
-                dict_sector[(str(seat_row), str(seat_place), )] = seat_price
-            else:
-                date_seats[seat_sector] = {(str(seat_row), str(seat_place), ): seat_price}
-
-        for sector_name, total_seats_row_prices in date_seats.items():
-            total_sector.append(
-                {
-                    "name": sector_name,
-                    "tickets": total_seats_row_prices
-                }
-            )
-
-        return total_sector
+            date_seats.setdefault(seat_sector, {}).update({
+                (str(seat_row), str(seat_place), ): seat_price
+                })
+            
+        return date_seats
 
     async def request_parser(self, url):
         headers = {
@@ -276,7 +268,8 @@ class BarvikhaConcertHall(AsyncSeatsParser):
     async def body(self):
         all_sectors = await self.get_seats()
 
-        self.reformat(all_sectors)
+        all_sectors = self.reformat(all_sectors)
 
-        for sector in all_sectors:
-            self.register_sector(sector['name'], sector['tickets'])
+        for sector, tickets in all_sectors.items():
+            #self.info(sector, len(tickets))
+            self.register_sector(sector, tickets)

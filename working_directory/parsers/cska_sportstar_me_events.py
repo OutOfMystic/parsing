@@ -6,6 +6,7 @@ import json
 from dateutil import relativedelta
 
 from parse_module.coroutines import AsyncEventParser
+from parse_module.utils.logger import track_coroutine
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
@@ -25,9 +26,11 @@ class CskaSportstar(AsyncEventParser):
         self.driver_source = None
         self.url: str = 'https://cska.sportstar.me/graphql'
 
+    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
+    @track_coroutine
     async def _parse_events(self) -> OutputEvent:
         json_data = await self._requests_to_events()
 
@@ -57,6 +60,7 @@ class CskaSportstar(AsyncEventParser):
         events = json_data['data']['allEvents']['edges']
         return events
 
+    @track_coroutine
     async def _requests_to_events(self) -> json:
         headers = {
             'accept': '*/*',
@@ -114,6 +118,7 @@ class CskaSportstar(AsyncEventParser):
         r = await self.session.post(self.url, json=data, headers=headers)
         return r.json()
 
+    @track_coroutine
     async def body(self):
         for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date)

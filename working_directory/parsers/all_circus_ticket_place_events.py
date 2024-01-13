@@ -220,8 +220,8 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
                     events_box.update(events_ids)
                     
                 elif isinstance(info, str):
-                    function = eval(f"self.{info}")
-                    events_ids, slug, venue = function()
+                    function = getattr(self, info)
+                    events_ids, slug, venue = await function()
                     first_event = await self.get_info_about_event_TWO(events_ids[0], slug, venue)
                     events_box.add(first_event)
 

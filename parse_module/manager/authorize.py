@@ -22,9 +22,13 @@ class PickleSaver(threading.Thread):
     def __init__(self):
         super().__init__()
         self.pickles_to_save = []
+        self._started = False
         # self.save_lock = Lock()
 
     def put(self, fpath, data):
+        if not self._started:
+            self._started = True
+            self.start()
         self.pickles_to_save.append((fpath, data))
 
     def save(self):
@@ -49,7 +53,6 @@ class Account:
         os.mkdir('account_pickles')
 
     save_thread = PickleSaver()
-    save_thread.start()
 
     def __init__(self, login, password, proxy=None):
         super().__init__()

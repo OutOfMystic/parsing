@@ -1,4 +1,7 @@
+import multiprocessing
+import threading
 import time
+from multiprocessing.connection import Connection
 
 from ..models import scheme
 from ..connection import db_manager
@@ -14,10 +17,14 @@ class SchemeRouterFrontend:
 
     def get_parser_scheme(self, event_id, scheme_id, name='Controller'):
         if event_id in self.parser_schemes:
+            # logger.debug('found n sql', name=event_id)
             return self.parser_schemes[event_id]
+        # logger.debug('gettng group scheme', name=event_id)
         group_scheme = self._get_group_scheme(scheme_id)
         operation = ['create_scheme', [event_id, scheme_id, name]]
+        # logger.debug('sendng operaton', name=event_id)
         self.conn.send(operation)
+        # logger.debug('operatn sent', name=event_id)
         new_scheme = SchemeProxy(group_scheme, self.conn, event_id)
         self.parser_schemes[event_id] = new_scheme
         return new_scheme

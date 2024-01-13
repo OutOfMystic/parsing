@@ -4,10 +4,7 @@ from typing import NamedTuple
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.manager.proxy.sessions import AsyncProxySession
-from parse_module.utils import utils
-
 
 class OutputEvent(NamedTuple):
     title: str
@@ -38,19 +35,21 @@ class BiletovedEvents(AsyncEventParser):
     
     async def load_all_events(self, soup):
         pagelist = soup.find(class_='shop2-pagelist')
+        urls = []
         if pagelist:
             pagelist_box = pagelist.select('li.page-num:not(.active-num)')
             urls = [f"https://biletoved.com{i.find('a').get('href')}" for i in pagelist_box]
         
         a_events = []
         a_events.extend(self.load_one_event(soup))
-        for page in urls:
-            try:
-                r2 = await self.session.get(page, headers=self.headers)
-                soup = BeautifulSoup(r2.text, 'lxml')
-                a_events.extend(self.load_one_event(soup))
-            except Exception as ex:
-                self.bprint(f"error in {page} {ex}")
+        if urls:
+            for page in urls:
+                try:
+                    r2 = await self.session.get(page, headers=self.headers)
+                    soup = BeautifulSoup(r2.text, 'lxml')
+                    a_events.extend(self.load_one_event(soup))
+                except Exception as ex:
+                    self.bprint(f"error in {page} {ex}")
         return a_events
 
     def load_one_event(self, soup):

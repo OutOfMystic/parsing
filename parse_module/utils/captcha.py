@@ -70,9 +70,9 @@ def non_selenium_recaptcha(googlekey, url,
 
 
 def yandex_smart_captcha(sitekey, url,
-                           print_logs=True, timeout=160,
-                           invisible=False, proxy=None,
-                           user_agent=None, count_error=0):
+                         print_logs=True, timeout=160,
+                         invisible=False, proxy=None,
+                         user_agent=None, count_error=0):
     start_time = time.time()
     params = {
         'key': API_KEY,

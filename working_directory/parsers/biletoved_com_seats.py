@@ -36,24 +36,27 @@ class BiletovedParsSeats(AsyncSeatsParser):
         all_tickets = soup2.find_all(class_='product-modification-item')
         all_tickets_online = [i for i in all_tickets if 'Электронный билет' in i.find(class_='mobile-kind-type').text]
         a_tickets = {}
-        for name in all_tickets_online:
-            details = name.find(class_='kind-details').find_all(class_="kind-tr")[-1]
-            options = details.find(class_='kind-name').find('span').text
+        try:
+            for name in all_tickets_online:
+                details = name.find(class_='kind-details').find_all(class_="kind-tr")[-1]
+                options = details.find(class_='kind-name').find('span').text
 
-            sector = options.split(':')[0]
+                sector = options.split(':')[0]
 
-            row = re.search(r'(?<=ряд) *\d+', options)[0].strip()
+                row = re.search(r'(?<=ряд) *\d+', options)[0].strip()
 
-            places = re.search(r'(?<=места) *(.*)', options)[0]
-            places = re.findall(r'\d+', places)
-            
-            price = name.find(class_='price-current').find('strong').text
-            price = int(price.replace('\xa0', '').replace(' ', ''))
+                places = re.search(r'(?<=мест[ао]) *(.*)', options)[0]
+                places = re.findall(r'\d+', places)
+                
+                price = name.find(class_='price-current').find('strong').text
+                price = int(price.replace('\xa0', '').replace(' ', ''))
 
-            for place in places:
-                a_tickets.setdefault(sector, {}).update({
-                    (row, place): price
-                })
+                for place in places:
+                    a_tickets.setdefault(sector, {}).update({
+                        (row, place): price
+                    })
+        except Exception as ex:
+            self.warning(f'cannot parsing tickets {ex}')
 
         return a_tickets
 

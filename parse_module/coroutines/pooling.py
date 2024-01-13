@@ -1,15 +1,16 @@
 import asyncio
-import threading
+import platform
 import time
+from asyncio import AbstractEventLoop
 from dataclasses import dataclass
 from collections import namedtuple
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Coroutine
 
 from sortedcontainers import SortedDict
 
-from parse_module.console.base import print_cols
-from parse_module.utils import provision, utils
-from parse_module.utils.logger import logger
+from ..console.base import print_cols
+from ..utils import provision, utils
+from ..utils.logger import logger
 
 Task = namedtuple('Task', ['to_proceed', 'from_thread', 'wait'])
 Result = namedtuple('Result', ['scheduled_time', 'from_thread', 'apply_result'])
@@ -23,18 +24,30 @@ class Task:
     args: Iterable = None
 
 
-class ScheduledExecutor(threading.Thread):
-    def __init__(self):
+class ScheduledExecutor:
+    def __init__(self, loop: AbstractEventLoop, max_connects=60):
         super().__init__()
+        self._loop = loop
         self._tasks = SortedDict()
         self._results = []
         self._stats = []
         self._timers = {}
         self._starting_point = time.time()
         self._stats_counter = 0
-        self.start()
+        self._semaphore = asyncio.Semaphore(max_connects)
+        self._is_win32 = platform.system() == 'Windows'
+        self.in_process = 0
+        asyncio.run_coroutine_threadsafe(self.run_async(), loop)
 
     def add_task(self, task: Task):
+        # coroutine = self.add_task_async(task)
+        # asyncio.run_coroutine_threadsafe(coroutine, self._loop)
+        timestamp = task.wait + time.time()
+        self._tasks.setdefault(timestamp, [task])
+        # logger.debug('got task to pooling', task.from_thread)
+
+    async def add_task_async(self, task: Task):
+        # logger.debug('sent task', task.from_thread)
         timestamp = task.wait + time.time()
         self._tasks.setdefault(timestamp, [task])
 
@@ -61,37 +74,52 @@ class ScheduledExecutor(threading.Thread):
         ppos = key.split('.')[0][-5:]
         return int(ppos)
 
+    @staticmethod
+    def handle_result(result, from_thread):
+        if isinstance(result, BaseException):
+            str_exception = str(result).split('\n')[0]
+            error = f'({type(result).__name__}) {str_exception}'
+            logger.error(error, name=from_thread)
+
     async def _step(self):
         bisection = self._tasks.bisect_left(time.time())
         if not bisection:
             await asyncio.sleep(0.2)
+        tasks_to_run = []
         for _ in range(bisection):
-            scheduled_time, tasks = self._tasks.popitem(0)
+            time_and_tasks = self._tasks.popitem(0)
+            tasks_to_run.append(time_and_tasks)
+            self.in_process += len(time_and_tasks[1])
+
+        for scheduled_time, tasks in tasks_to_run:
             for task in tasks:
-                coroutine = provision.async_try(task.to_proceed,
-                                                name=task.from_thread,
-                                                args=task.args,
-                                                tries=1,
-                                                raise_exc=False)
+                coroutine = self.create_coroutine_from_task(task)
+                """args = task.args if task.args else []
+                coroutine = task.to_proceed(*args)"""
+
+                # await self._semaphore.acquire()
                 apply_result = asyncio.create_task(coroutine)
+                # name = task.to_proceed.__name__ if hasattr(task.to_proceed, '__name__') else str(task.to_proceed)
+                apply_result.set_name(task.from_thread)
                 result_callback = Result(scheduled_time=scheduled_time,
                                          from_thread=task.from_thread,
                                          apply_result=apply_result)
                 # logger.debug(task.to_proceed, name=task.from_thread)
                 self._results.append(result_callback)
+                logger.debug('proceeding', len(self._results), task.from_thread)
 
         to_del = []
         for i, result_callback in enumerate(self._results):
             if result_callback not in self._timers:
                 self._timers[result_callback] = time.time()
             if result_callback.apply_result.done():
-                provision.just_try(result_callback.apply_result.result,
-                                   name=result_callback.from_thread)
+                self.handle_result(result_callback.apply_result.result, result_callback.from_thread)
                 to_del.append(i)
                 # logger.debug('result', int(time.time() - result_callback.scheduled_time), 'sec',
                 #              name=result_callback.from_thread)
         for i in to_del[::-1]:
             del self._results[i]
+            self.in_process -= 1
 
         to_del = []
         to_warn = []
@@ -110,14 +138,16 @@ class ScheduledExecutor(threading.Thread):
             logger.warning(f'Too long execution. Check for input(), '
                            f'time.sleeps or smth blocking the execution',
                            name=thread_name)
+        await asyncio.sleep(0.1)
 
     async def run_async(self):
         while True:
             await provision.async_just_try(self._step, name='Controller')
 
-    def run(self):
-        # Инициализируем и запускаем новый event loop в этом потоке
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(self.run_async())
-        loop.close()
+    def create_coroutine_from_task(self, task):
+        return provision.async_just_try(task.to_proceed,
+                                        name=task.from_thread,
+                                        args=task.args,)
+                                        #semaphore=self._semaphore)
+
+

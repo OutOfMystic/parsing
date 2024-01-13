@@ -12,7 +12,7 @@ from parse_module.manager import authorize
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils import parse_utils, captcha
+from parse_module.utils import parse_utils, captcha, async_captcha
 
 MAX_TRIES = 20
 DEL_FROM_CART = False
@@ -122,7 +122,7 @@ class BolshoiQueue(authorize.AccountsQueue):
             account.csrf_token
         except:
             account.csrf_token = self.get_csrf(account)
-        solved_captcha = captcha.non_selenium_recaptcha(
+        solved_captcha = async_captcha.non_selenium_recaptcha(
             self.sitekey,
             'https://ticket.bolshoi.ru/login',
             print_logs=False)

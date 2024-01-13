@@ -1,15 +1,21 @@
+import asyncio
 import json
+import time
+from collections import defaultdict
 from datetime import datetime
 from http.cookies import SimpleCookie
 from typing import Any, Optional, Union
+from urllib.parse import urlparse
 
 import aiohttp as aiohttp
-from aiohttp import ClientResponse, hdrs, ContentTypeError
-from aiohttp.client_reqrep import _is_expected_content_type
-from aiohttp.typedefs import StrOrURL, JSONDecoder, DEFAULT_JSON_DECODER
+from aiohttp import ClientResponse
+from aiohttp.typedefs import StrOrURL, JSONDecoder
 from requests import Session
 
 from parse_module.utils.logger import logger
+
+PARALLEL_EXECUTIONS = 3
+in_process = 0
 
 
 class ProxySession(Session):
@@ -59,8 +65,18 @@ class AwaitedResponse:
             return loads(stripped)
 
 
+class RaspizdyaistvoError(RuntimeError):
+    """Чек рубрику 'Обратите внимание'"""
+
+
 class AsyncProxySession(aiohttp.ClientSession):
+    semaphores_on_ip = defaultdict(lambda: asyncio.Semaphore(3))
+
     def __init__(self, bot):
+        if isinstance(bot.session, AsyncProxySession):
+            if not bot.session.closed:
+                raise RaspizdyaistvoError('Отклонено. Это могло взорвать всю систему! Испоlьзуйте change_proxy')
+        self.global_semaphore = bot.controller.request_semaphore
         super().__init__()
         self.bot = bot
 
@@ -71,13 +87,34 @@ class AsyncProxySession(aiohttp.ClientSession):
     def cookies(self):
         return super().cookie_jar
 
-    async def _request(self, *args, **kwargs):
-        kwargs['proxy'] = self.bot.proxy.async_proxy
+    async def _request(self, method, url, *args, **kwargs):
+        # Preparing parameters
+        str_proxy = self.bot.proxy.async_proxy
+        kwargs['proxy'] = str_proxy
         kwargs['proxy_auth'] = self.bot.proxy.async_proxy_auth
         kwargs['timeout'] = kwargs['timeout'] if 'timeout' in kwargs else 30
         if 'verify' in kwargs:
             kwargs['ssl'] = kwargs.pop('verify')
-        return await super()._request(*args, **kwargs)
+
+        # Spreading
+        if not self.bot.spreading:
+            return await super()._request(url, *args, **kwargs)
+        domain = urlparse(url).netloc
+        await_key = (domain, str_proxy,)
+        semaphore = self.semaphores_on_ip[await_key]
+
+        await semaphore.acquire()
+        await self.global_semaphore.acquire()
+        global in_process
+        try:
+            in_process += 1
+            # logger.debug('aiohttp', in_process)
+            return await super()._request(method, url, *args, **kwargs)
+        finally:
+            in_process -= 1
+            # logger.debug('aiohttp', in_process)
+            semaphore.release()
+            self.global_semaphore.release()
 
     @staticmethod
     async def _static_response(method, *args, **kwargs):

@@ -1,9 +1,11 @@
+import asyncio
 import datetime
 import itertools
 import json
 import os
 import random
 import time
+from asyncio import AbstractEventLoop
 
 from aiodebug import log_slow_callbacks
 
@@ -23,7 +25,7 @@ from ..models.parser import SeatsParser, EventParser
 from parse_module.manager.group import SeatsParserGroup
 from ..utils import provision, utils
 from ..utils.date import Date
-from ..utils.logger import logger
+from ..utils.logger import logger, start_async_logger
 from ..utils.utils import differences
 
 PREDEFINED = True
@@ -34,11 +36,13 @@ class Controller:
                  parsers_path,
                  config_path,
                  router,
+                 async_loop: AbstractEventLoop,
                  pending_delay=120,
                  debug_url=None,
                  debug_event_id=None,
                  release=False):
         super().__init__()
+        self.async_loop = async_loop
         self.parsed_events = None
         self.parser_modules = load_parsers(parsers_path)
         self.pending_delay = pending_delay
@@ -48,6 +52,7 @@ class Controller:
         self.release = release
 
         self._async_logger_started = False
+        self.fast_time = time.time()
         self.schemes_on_event = {}
         self.event_parsers = []
         self.seats_groups = []
@@ -57,6 +62,7 @@ class Controller:
         self._events_were_reset = []
         self._already_warned_on_collect = set()
 
+        # Controller threaded resources
         self.router = router
         self._prepare_workdir()
         self.tele_core = get_telecore()
@@ -68,9 +74,13 @@ class Controller:
         self.parsing_types = db_manager.get_parsing_types()
         self.venues = venue.VenueAliases(self.solver)
         self.pool = pooling.ScheduledExecutor(max_threads=30)
-        self.pool_async = coroutines.ScheduledExecutor()
+
+        # Controller async resources
+        start_async_logger()
+        self.request_semaphore = asyncio.Semaphore(60)
+        self.pool_async = coroutines.ScheduledExecutor(async_loop, max_connects=60)
+
         self._load_parsers_with_config(config_path)
-        self.fast_time = time.time()
 
     @staticmethod
     def bprint(mes, color=utils.Fore.LIGHTGREEN_EX):
@@ -127,7 +137,7 @@ class Controller:
             if new_margin_rules != margin_func.rules or new_margin_name != margin_func.name:
                 margin_func.rules = new_margin_rules
                 margin_func.name = new_margin_name
-                logger.debug(f'Margin changed on {new_margin_name}')
+                logger.debug(f'Margin changed on {new_margin_name}', name='Controller')
                 for group in self.seats_groups:
                     group.stop_by_margin(margin_id)
         for margin_id in to_add:
@@ -198,7 +208,7 @@ class Controller:
     def load_connections(self):
         start_time = time.time()
         subjects = self.database_interaction()
-        logger.debug(f'Database interaction {time.time() - start_time}')
+        logger.debug(f'Database interaction {time.time() - start_time}', name='Controller')
 
         all_connections = {group: [] for group in self.seats_groups}
         predefined_connections, ai_connections = self.get_connections(subjects)
@@ -230,7 +240,7 @@ class Controller:
 
         # Start async logger
         if not self._async_logger_started:
-            logger.start_async_logger()
+            #start_async_logger(self.async_loop)
             self._async_logger_started = True
 
         # Do some database work at the end of step
@@ -324,7 +334,7 @@ class Controller:
         events_to_reset = all_event_ids - event_ids
 
         _, _, new_to_reset = differences(self._events_were_reset, events_to_reset)
-        logger.debug(f'{len(new_to_reset)} were reset')
+        logger.debug(f'{len(new_to_reset)} were reset', name='Controller')
         db_manager.reset_tickets(new_to_reset)
         self._events_were_reset = list(events_to_reset)
 

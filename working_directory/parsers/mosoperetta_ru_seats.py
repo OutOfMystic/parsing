@@ -1,8 +1,8 @@
 from parse_module.models.parser import SeatsParser
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.utils import async_captcha
 from parse_module.utils.parse_utils import double_split
-from parse_module.utils.captcha import yandex_smart_captcha
 
 
 class OperettaParser(AsyncSeatsParser):
@@ -77,7 +77,7 @@ class OperettaParser(AsyncSeatsParser):
         tries = 0
         token = None
         while not token:
-            token = yandex_smart_captcha(sitekey, self.url, print_logs=False)
+            token = await async_captcha.yandex_smart_captcha(sitekey, self.url, print_logs=False)
 
             if tries >= 3:
                 raise RuntimeError('[operetta_seats]: no token for yandex captcha')

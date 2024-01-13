@@ -87,4 +87,4 @@ class Parser(AsyncEventParser):
 
         for event in a_events:
             self.register_event(event[0], event[1], date=event[2],
-                                 scene=event[3], venue='Малый театр')
+                                scene=event[3], venue='Малый театр')

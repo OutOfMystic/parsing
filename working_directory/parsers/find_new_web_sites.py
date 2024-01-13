@@ -1,5 +1,5 @@
 import json
-from time import sleep
+from asyncio import sleep
 
 from bs4 import BeautifulSoup
 from telebot import TeleBot
@@ -73,18 +73,18 @@ class Check_new_websites(AsyncEventParser):
 
         return all_urls
     
-    def find_and_check(self, new_urls):
+    async def find_and_check(self, new_urls):
         with open('files/portal_domens/urls.json', 'r', encoding='utf-8') as file:
             old_urls = json.load(file)
             for num, url in enumerate(new_urls, 1):
                 if url not in old_urls:
-                    sleep(3.5) # you can send only 20 messages in 1 minute
+                    await sleep(3.5)  # you can send only 20 messages in 1 minute
                     message = f'New web site \n{url}\n'
                     try:
                         self.bot.send_message(self.chat_id, message, parse_mode='HTML')
                     except ApiTelegramException as ex:
                         self.error(ex)
-                        sleep(60)
+                        await sleep(60)
         if len(new_urls) > len(old_urls):                
             with open('files/portal_domens/urls.json', 'w', encoding='utf-8') as file1:
                 json.dump(new_urls, file1, indent=4, ensure_ascii=False)

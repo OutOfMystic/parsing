@@ -96,17 +96,17 @@ class AfishaEvents(AsyncEventParser):
             await self.change_proxy()
             return await self.get_x_token(x_ath_url, count)
         
+        reformat = {}
         try:
-            x_auth_all_txt = double_split(js_to_parsing, 'e.InternalDesktop', '}')
-            reformat =  [i.split('=') for i in x_auth_all_txt.split(',')]
-            reformat = {key[0].split('.')[-1]: key[1].strip('"') for key in reformat if len(key) == 2}
+            x_auth_all_txt = double_split(js_to_parsing, 'InternalDesktopInPage', '}')
+            reformat =  [i.split(':') for i in x_auth_all_txt.split(',')]
+            reformat = {key[0]: key[1].strip('"') for key in reformat if len(key) == 2}
         except Exception as ex:
-            self.error(f'cannot find XApplication token!, set default \
-                        "ec16316b-67e3-4a32-9f05-6a00d1dc0a8b" {ex}')
-        
-        XApplication = reformat.get('InternalDesktopInPageAB')
-        if not XApplication:
-            XApplication = reformat.get('InternalDesktop', 'ec16316b-67e3-4a32-9f05-6a00d1dc0a8b')
+            self.warning(f'cannot find XApplication token!, set default '
+                        f'"ec16316b-67e3-4a32-9f05-6a00d1dc0a8b" {ex}')
+       
+        XApplication = reformat.get('InternalDesktop', 'ec16316b-67e3-4a32-9f05-6a00d1dc0a8b')
+
         return XApplication
 
     async def get_events_from_one_page(self, response, X_AUTH_TOKEN, url_page):
@@ -160,7 +160,6 @@ class AfishaEvents(AsyncEventParser):
     async def make_new_session(self):
         await self.change_proxy()
         # self.proxy = await self.controller.proxy_hub.get_async(self.proxy_check)
-        # await self.session.close()
         # self.session = AsyncProxySession(self)
         
     

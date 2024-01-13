@@ -20,6 +20,7 @@ class AsyncParserBase(core.CoroutineBot, ABC):
         self.controller = controller
         self.session = None
         self.last_state = None
+        self.spreading = 0.2
         self._notifier = None
 
     async def _get_proxy(self):
@@ -60,7 +61,7 @@ class AsyncParserBase(core.CoroutineBot, ABC):
         next_step_delay = min(self.get_delay() / 15, 120)
         if self.proxy is None:
             self._debug_only('changing proxy', int((time.time() - start_time) * 10) / 10)
-            await provision.async_just_try(self._get_proxy)
+            await provision.async_just_try(self._get_proxy, name=self.name)
             self._debug_only('changed proxy', int((time.time() - start_time) * 10) / 10)
 
         if self.proxy is not None:
@@ -80,11 +81,12 @@ class AsyncParserBase(core.CoroutineBot, ABC):
 
         if self._terminator.alive:
             task = pooling.Task(self.proceed, self.name, next_step_delay)
-            self.controller.pool_async.add_task(task)
+            await self.controller.pool_async.add_task_async(task)
             self._debug_only('Pooled', int((time.time() - start_time) * 10) / 10)
 
-    def start(self):
+    def start(self, start_delay=0):
         task = pooling.Task(self.proceed, self.name, 0)
+        # logger.debug('sent task from parser', task)
         self.controller.pool_async.add_task(task)
 
     @abstractmethod

@@ -1,3 +1,4 @@
+import _thread
 import os
 import sys
 import threading
@@ -5,12 +6,12 @@ import time
 import json
 import inspect
 import concurrent.futures
-from typing import Callable, Iterable, Awaitable, Coroutine, Optional
+from typing import Callable, Iterable, Awaitable, Coroutine, Optional, Protocol
 
 from . import utils
 import colorama
 
-from .logger import logger
+from .logger import logger, track_coroutine
 
 colorama.init()
 
@@ -141,8 +142,10 @@ def multi_try(to_try: Callable,
             return result
         elif handle_error:
             error_prefix = '[Exception during `handle_error`] '
-            exc_args = None if len(inspect.signature(handle_error).parameters) == 0 else (exc, *args,)
-            exc_kwargs = None if len(inspect.signature(handle_error).parameters) == 0 else kwargs
+            if does_func_has_arguments(handle_error):
+                exc_args, exc_kwargs = (exc, *args,), kwargs
+            else:
+                exc_args, exc_kwargs = None, None
             _tryfunc(handle_error,
                      name,
                      args=exc_args,
@@ -228,11 +231,12 @@ def _tryfunc(func,
         return result, None
 
 
-async def async_just_try(to_try,
-                         name='Main',
-                         args=None,
-                         kwargs=None,
-                         print_errors=True):
+def async_just_try(to_try,
+                   name='Main',
+                   args=None,
+                   kwargs=None,
+                   print_errors=True,
+                   semaphore=None):
     """
     A simplified async_try statement.
     The same as async_try, but executes ``to_try`` code
@@ -255,11 +259,13 @@ async def async_just_try(to_try,
         'args': args,
         'kwargs': kwargs,
         'raise_exc': False,
-        'print_errors': print_errors
+        'print_errors': print_errors,
+        'semaphore': semaphore
     }
-    return await async_try(to_try, **kwargs)
+    return async_try(to_try, **kwargs)
 
 
+@track_coroutine
 async def async_try(to_try: Callable[..., Awaitable],
                     handle_error: Optional[Callable[..., Awaitable]] = None,
                     tries=3,
@@ -268,7 +274,8 @@ async def async_try(to_try: Callable[..., Awaitable],
                     args: Iterable = None,
                     kwargs: dict = None,
                     print_errors=True,
-                    use_logger=True):
+                    use_logger=True,
+                    semaphore=None):
     """
     Try to execute smth ``tries`` times sequentially.
     If all attempts are unsuccessful and ``raise_exc``
@@ -298,9 +305,19 @@ async def async_try(to_try: Callable[..., Awaitable],
         raise RuntimeError('If tries == 1, exception should not be raised.'
                            ' Set raise_exc argument to False')
 
+    """prnt = []
+    try:
+        prnt.append(to_try.__self__.__class__.__name__)
+    except:
+        pass
+    try:
+        prnt.append(to_try.__name__)
+    except:
+        pass
+    logger.debug('called', *prnt, name=name)"""
     for i in range(tries):
         result, exc = await _asynctry(to_try,
-                                      name,
+                                      name=name,
                                       print_errors=print_errors,
                                       use_logger=use_logger,
                                       args=args,
@@ -308,23 +325,30 @@ async def async_try(to_try: Callable[..., Awaitable],
                                       from_multi_try=(i, tries),
                                       level=logger.error)
         if result is not TryError:
+            if semaphore:
+                semaphore.release()
             return result
         elif handle_error:
             error_prefix = '[Exception during `handle_error`] '
-            exc_args = None if len(inspect.signature(handle_error).parameters) == 0 else (exc, *args,)
-            exc_kwargs = None if len(inspect.signature(handle_error).parameters) == 0 else kwargs
+            if does_func_has_arguments(handle_error):
+                exc_args, exc_kwargs = (exc, *args,), kwargs
+            else:
+                exc_args, exc_kwargs = None, None
             await _asynctry(handle_error,
-                            name,
+                            name=name,
                             args=exc_args,
                             kwargs=exc_kwargs,
                             error_prefix=error_prefix)
     else:
+        if semaphore:
+            semaphore.release()
         if raise_exc:
             raise TryError(f'Превышено число попыток ({tries})')
         else:
             return TryError
 
 
+@track_coroutine
 async def _asynctry(func: Callable[..., Awaitable],
                     name='',
                     error_prefix='',
@@ -367,6 +391,16 @@ async def _asynctry(func: Callable[..., Awaitable],
         return TryError, exc
     else:
         return result, None
+
+
+def does_func_has_arguments(func: Callable):
+    if func.__name__ == 'release' and hasattr(func, '__self__'):
+        if isinstance(func.__self__, _thread.LockType):
+            return False
+    elif len(inspect.signature(func).parameters) == 0:
+        return False
+    else:
+        return True
 
 
 def get_script_dir(follow_symlinks=True):
