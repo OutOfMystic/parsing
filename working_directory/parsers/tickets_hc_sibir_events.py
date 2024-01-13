@@ -74,3 +74,4 @@ class HcSibirHockey(AsyncEventParser):
             for event in a_events:
                 self.register_event(event_name=event[0], url=event[1],
                                                  date=event[2], venue=event[3])
+                self.debug(event)
