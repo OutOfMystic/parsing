@@ -15,3 +15,7 @@ class ParsingError(Exception):
 
 class ProxyHubError(Exception):
     """no proxies available"""
+
+
+class RaspizdyaistvoError(RuntimeError):
+    """Чек рубрику 'Обратите внимание'"""

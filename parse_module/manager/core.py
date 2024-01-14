@@ -3,7 +3,7 @@ import time
 import random
 import weakref
 from abc import abstractmethod, ABC
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Optional
 
 import requests
 import threading
@@ -126,6 +126,36 @@ class BotBase:
                                    kwargs=kwargs,
                                    raise_exc=raise_exc,
                                    print_errors=print_errors)
+
+    def just_try(self,
+                 to_try: Callable,
+                 args=None,
+                 kwargs=None,
+                 print_errors=True):
+        """
+        A simplified multi_try statement.
+        The same as multi_try, but executes ``to_try`` code
+        only once and doesn't raise an exception.
+
+        Args:
+            to_try: main function
+            args: arguments sent to ``to_try``
+            kwargs: keyword arguments sent to ``to_try``
+            print_errors: log errors on each try
+
+        Returns: value from a last successful attempt.
+        If all attempts fail, exception is raised or
+        provision.TryError is returned.
+        """
+        kwargs = {
+            'name': self.name,
+            'tries': 1,
+            'args': args,
+            'kwargs': kwargs,
+            'raise_exc': False,
+            'print_errors': print_errors
+        }
+        return provision.multi_try(to_try, **kwargs)
 
     def except_on_main(self):
         if self.driver:
