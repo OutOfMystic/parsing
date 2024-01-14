@@ -72,7 +72,7 @@ class Controller:
         # Controller async resources
         start_async_logger()
         self.request_semaphore = asyncio.Semaphore(60)
-        self.pool_async = coroutines.ScheduledExecutor(async_loop, max_connects=60)
+        self.pool_async = coroutines.ScheduledExecutor(async_loop)
 
         self._load_parsers_with_config(config_path)
 

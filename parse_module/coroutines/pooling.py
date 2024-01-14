@@ -47,7 +47,7 @@ class ScheduledExecutor:
         # logger.debug('got task to pooling', task.from_thread)
 
     async def add_task_async(self, task: Task):
-        # logger.debug('sent task', task.from_thread)
+        # logger.debug('got async task to pooling', task.from_thread)
         timestamp = task.wait + time.time()
         self._tasks.setdefault(timestamp, [task])
 
@@ -82,8 +82,10 @@ class ScheduledExecutor:
             logger.error(error, name=from_thread)
 
     async def _step(self):
+        print('11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111')
         bisection = self._tasks.bisect_left(time.time())
         if not bisection:
+            logger.debug('0')
             await asyncio.sleep(0.2)
         tasks_to_run = []
         for _ in range(bisection):
@@ -138,6 +140,7 @@ class ScheduledExecutor:
             logger.warning(f'Too long execution. Check for input(), '
                            f'time.sleeps or smth blocking the execution',
                            name=thread_name)
+        logger.debug('2')
         await asyncio.sleep(0.1)
 
     async def run_async(self):

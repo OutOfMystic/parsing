@@ -102,6 +102,7 @@ class Scheme:
                             from_iterable=False,
                             from_thread='Controller',
                             kwargs={'get_scheme': ''})
+        logger.info(f'Pulling scheme {scheme_id} from the database!')
         event_locker.wait(1800)
         del event_locker
 

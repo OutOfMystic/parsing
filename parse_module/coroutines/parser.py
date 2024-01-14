@@ -99,7 +99,6 @@ class AsyncEventParser(AsyncParserBase, parser.EventParser, ABC):
     def __init__(self, controller, name):
         AsyncParserBase.__init__(self, controller)
         parser.EventParser.__init__(self, controller, name)
-        ABC.__init__(self)
 
     def _add_events(self, events_to_send):
         listed_events = []
@@ -140,7 +139,6 @@ class AsyncSeatsParser(AsyncParserBase, parser.SeatsParser, ABC):
         parser.SeatsParser.__init__(self, controller, event_id, event_name,
                                     url, date, venue, signature, scheme,
                                     priority, parent, **extra)
-        ABC.__init__(self)
 
     async def run_try(self):
         if not self.stop.alive:

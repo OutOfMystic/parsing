@@ -276,7 +276,7 @@ async def async_try(to_try: Callable[..., Awaitable],
         raise RuntimeError('If tries == 1, exception should not be raised.'
                            ' Set raise_exc argument to False')
 
-    """prnt = []
+    prnt = []
     try:
         prnt.append(to_try.__self__.__class__.__name__)
     except:
@@ -285,7 +285,7 @@ async def async_try(to_try: Callable[..., Awaitable],
         prnt.append(to_try.__name__)
     except:
         pass
-    logger.debug('called', *prnt, name=name)"""
+    logger.debug('called', *prnt, name=name)
     for i in range(tries):
         result, exc = await _asynctry(to_try,
                                       name=name,
@@ -293,8 +293,7 @@ async def async_try(to_try: Callable[..., Awaitable],
                                       log_func=log_func,
                                       args=args,
                                       kwargs=kwargs,
-                                      from_multi_try=(i, tries),
-                                      level=logger.error)
+                                      from_multi_try=(i, tries))
         if result is not TryError:
             if semaphore:
                 semaphore.release()

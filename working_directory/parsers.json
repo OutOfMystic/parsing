@@ -80,7 +80,7 @@
   "tickets_hclokomotiv_ru_seats": false,
   "tickets_metallurg_ru_events": false,
   "tickets_metallurg_ru_seats": false,
-  "afisha_yandex_ru_events": true,
+  "afisha_yandex_ru_events": false,
   "afisha_yandex_ru_seats": true,
   "barvikhaconcerthall_ru_events": true,
   "barvikhaconcerthall_ru_seats": true,
