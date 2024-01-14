@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from PIL import Image, ImageOps
 
+
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.sessions import ProxySession
 from parse_module.utils.date import month_list
@@ -29,82 +30,77 @@ class YandexAfishaParser(EventParser):
         self.delay = 7200
         self.driver_source = None
         self.our_urls = {
-            # 'https://afisha.yandex.ru/moscow/concert/places/vk-stadium': '*',                    # Вк Арена
-            'https://afisha.yandex.ru/moscow/concert/places/tsska-arena': '*',  # ЦСКА Арена
-            # 'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*',                          # Уфа Арена
-            # 'https://afisha.yandex.ru/vladivostok/concert/places/fetisov-arena': '*',            # Фетисов Арена
-            # 'https://afisha.yandex.ru/khabarovsk/other/places/platinum-arena': '*',              # Платинум Арена
-            'https://afisha.yandex.ru/saint-petersburg/concert/places/iubileinyi-spb': '*',  # Юбилейный
-            'https://afisha.yandex.ru/moscow/concert/places/vtb-arena': '*',  # ВТБ Арена
-            'https://afisha.yandex.ru/moscow/other/places/megasport': '*',  # Мегаспорт
-            # 'https://afisha.yandex.ru/novosibirsk/other/places/ledovyi-dvorets-sibir': '*',      # ЛД Сибирь
-            # 'https://afisha.yandex.ru/omsk/other/places/g-drive-arena': '*',                     # G-Drive Арена
-            'https://afisha.yandex.ru/kazan/concert/places/tatneft-arena': '*',  # Татнефть Арена
-            # 'https://afisha.yandex.ru/moscow/concert/places/crocus-city-hall': '*',              # Крокус !нужно фиксить сектора
-            'https://afisha.yandex.ru/moscow/concert/places/vegas-city-hall-msk': '*',  # Vegas City Hall
-            'https://afisha.yandex.ru/moscow/concert/places/backstage': '*',  # Ресторан Backstage
-            # 'https://afisha.yandex.ru/moscow/sport/places/bolshaia-sportivnaia-arena-luzhniki': '*',  # Лужники
-            # 'https://afisha.yandex.ru/moscow/sport/places/dvorets-gimnastiki-iriny-viner-usmanovoi': '*',  # Лужники Дворец гимнастики Ирины Винер-Усмановой
+           #'https://afisha.yandex.ru/moscow/concert/places/vk-stadium': '*',                    # Вк Арена
+            'https://afisha.yandex.ru/moscow/concert/places/tsska-arena': '*',                   # ЦСКА Арена
+           #'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*',                          # Уфа Арена
+           # 'https://afisha.yandex.ru/vladivostok/concert/places/fetisov-arena': '*',            # Фетисов Арена
+           #'https://afisha.yandex.ru/khabarovsk/other/places/platinum-arena': '*',              # Платинум Арена
+            'https://afisha.yandex.ru/saint-petersburg/concert/places/iubileinyi-spb': '*',      # Юбилейный
+            'https://afisha.yandex.ru/moscow/concert/places/vtb-arena': '*',                     # ВТБ Арена
+            'https://afisha.yandex.ru/moscow/other/places/megasport': '*',                       # Мегаспорт
+           #'https://afisha.yandex.ru/novosibirsk/other/places/ledovyi-dvorets-sibir': '*',      # ЛД Сибирь
+           # 'https://afisha.yandex.ru/omsk/other/places/g-drive-arena': '*',                     # G-Drive Арена
+            'https://afisha.yandex.ru/kazan/concert/places/tatneft-arena': '*',                  # Татнефть Арена
+            #'https://afisha.yandex.ru/moscow/concert/places/crocus-city-hall': '*',              # Крокус !нужно фиксить сектора
+            'https://afisha.yandex.ru/moscow/concert/places/vegas-city-hall-msk': '*',           # Vegas City Hall
+            'https://afisha.yandex.ru/moscow/concert/places/backstage': '*',                     # Ресторан Backstage
+            #'https://afisha.yandex.ru/moscow/sport/places/bolshaia-sportivnaia-arena-luzhniki': '*',  # Лужники
+           # 'https://afisha.yandex.ru/moscow/sport/places/dvorets-gimnastiki-iriny-viner-usmanovoi': '*',  # Лужники Дворец гимнастики Ирины Винер-Усмановой
             'https://afisha.yandex.ru/saint-petersburg/concert/places/bkz-oktiabrskii': '*',  # БКЗ «Октябрьский»
-            # 'https://afisha.yandex.ru/moscow/concert/places/kremlevskii-dvorets': '*',  # Кремльвский дворец
-            # 'https://afisha.yandex.ru/moscow/concert/places/mts-live-holl': '*',  # MTC Live Холл
+           # 'https://afisha.yandex.ru/moscow/concert/places/kremlevskii-dvorets': '*',  # Кремльвский дворец
+           # 'https://afisha.yandex.ru/moscow/concert/places/mts-live-holl': '*',  # MTC Live Холл
             'https://afisha.yandex.ru/moscow/theatre/places/sovremennik': '*',  # Театр Современник
-            # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr-vdnkh': '*',  # Зелёный театр ВДНХ
-            # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr': '*',  # Зелёный театр
-            # 'https://afisha.yandex.ru/organizer/teatr-baleta-borisa-eifmana?city=saint-petersburg': '*'  # Балет Ейфмана
-            # 'https://afisha.yandex.ru/moscow/concert/places/kontsertnyi-zal-gostinitsy-kosmos': '*',  # Концертный зал гостиницы «Космос»
-            # 'https://afisha.yandex.ru/saint-petersburg/sport/places/gazprom-arena': '*',  # Газпром Арена
-            # 'https://afisha.yandex.ru/moscow/concert/places/dom-muzyki': '*',  # Дом музыки
+           # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr-vdnkh': '*',  # Зелёный театр ВДНХ
+           # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr': '*',  # Зелёный театр
+           #'https://afisha.yandex.ru/organizer/teatr-baleta-borisa-eifmana?city=saint-petersburg': '*'  # Балет Ейфмана
+           # 'https://afisha.yandex.ru/moscow/concert/places/kontsertnyi-zal-gostinitsy-kosmos': '*',  # Концертный зал гостиницы «Космос»
+           # 'https://afisha.yandex.ru/saint-petersburg/sport/places/gazprom-arena': '*',  # Газпром Арена
+           # 'https://afisha.yandex.ru/moscow/concert/places/dom-muzyki': '*',  # Дом музыки
             'https://afisha.yandex.ru/saint-petersburg/theatre/places/mikhailovskii-teatr': '*',  # Михайловский питер
-            # 'https://afisha.yandex.ru/moscow/concert/places/shore-house': '*',  # Shore House
+           # 'https://afisha.yandex.ru/moscow/concert/places/shore-house': '*',  # Shore House
             'https://afisha.yandex.ru/moscow/theatre/places/teatr-satiry': '*',  # Театр сатиры
-            # 'https://afisha.yandex.ru/moscow/theatre/places/teatr-rossiiskoi-armii': '*',  # Театр армии
+           #'https://afisha.yandex.ru/moscow/theatre/places/teatr-rossiiskoi-armii': '*',  # Театр армии
             'https://afisha.yandex.ru/moscow/theatre/places/gelikon-opera': '*',  # Геликон-опера
-            # 'https://afisha.yandex.ru/sochi/theatre/places/zimnii-teatr': '*',  # Зимний театр
+            #'https://afisha.yandex.ru/sochi/theatre/places/zimnii-teatr': '*',  # Зимний театр
             'https://afisha.yandex.ru/kazan/circus_show/places/tsirk-kazan': '*',  # Казанский цирк
             'https://afisha.yandex.ru/moscow/theatre/places/planeta-kvn': '*',  # Планета КВН
             'https://afisha.yandex.ru/moscow/concert/places/barvikha-luxury-village': '*',  # Барвиха Luxury Village
-            # 'https://afisha.yandex.ru/sochi/concert/places/sochi-park-arena': '*',  # Сочи Парк Арена
+            #'https://afisha.yandex.ru/sochi/concert/places/sochi-park-arena': '*',  # Сочи Парк Арена
             'https://afisha.yandex.ru/sochi/sport/places/lds-aisberg': '*',  # ЛДС «Айсберг»
-            'https://afisha.yandex.ru/simferopol/circus_show/places/tsirk-im-tezikova': '*',  # Симферопольский Цирк
-            # 'https://afisha.yandex.ru/moscow/theatre/places/mdm-msk': '*', # МДМ
-            # 'https://afisha.yandex.ru/moscow/circus_show/places/tsirk-nikulina-na-tsvetnom-bulvare': '*', #цирк никулина
-            'https://afisha.yandex.ru/saint-petersburg/concert/places/ledovyi-dvorets': '*',  # Ледовый дворец СКА
-            # 'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-ermolovoi': '*', #ermolova theatre
-            # 'https://afisha.yandex.ru/moscow/concert/places/izvestiia-hall': '*', # izvestiya_hall
-            # 'https://afisha.yandex.ru/moscow/theatre/places/teatr-gogolia': '*', #gogolia theatre
-            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-maiakovskogo': '*',  # Маяковского театр
-            'https://afisha.yandex.ru/moscow/theatre/places/mkht-im-chekhova': '*',  # МХАТ Чехова
-            'https://afisha.yandex.ru/nizhny-novgorod/concert/places/dvorets-sporta-nagornyi': '*',
-            # Дворец спорта «Нагорный»
-            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-stanislavskogo-i-nemirovicha-danchenko': '*',
-            # stanislavskogo
-            'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*',  # ufa-arena
-            'https://afisha.yandex.ru/togliatti/concert/places/lada-arena': '*',  # lada-arena
-            'https://afisha.yandex.ru/chelyabinsk/concert/places/ledovaia-arena-traktor': '*',  # arena-traktor
-            'https://afisha.yandex.ru/yekaterinburg/sport/places/arena-uralets': '*',  # arena-uralets
-            'https://afisha.yandex.ru/moscow/concert/places/khram-khrista-spasitelia-zal-tserkovnykh-soborov': '*'
-            # hram
+            'https://afisha.yandex.ru/simferopol/circus_show/places/tsirk-im-tezikova': '*', # Симферопольский Цирк
+            #'https://afisha.yandex.ru/moscow/theatre/places/mdm-msk': '*', # МДМ
+            #'https://afisha.yandex.ru/moscow/circus_show/places/tsirk-nikulina-na-tsvetnom-bulvare': '*', #цирк никулина
+            'https://afisha.yandex.ru/saint-petersburg/concert/places/ledovyi-dvorets': '*', #Ледовый дворец СКА
+            #'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-ermolovoi': '*', #ermolova theatre
+            #'https://afisha.yandex.ru/moscow/concert/places/izvestiia-hall': '*', # izvestiya_hall
+            #'https://afisha.yandex.ru/moscow/theatre/places/teatr-gogolia': '*', #gogolia theatre
+            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-maiakovskogo': '*', # Маяковского театр
+            'https://afisha.yandex.ru/moscow/theatre/places/mkht-im-chekhova': '*' , #МХАТ Чехова
+            'https://afisha.yandex.ru/nizhny-novgorod/concert/places/dvorets-sporta-nagornyi': '*' , #Дворец спорта «Нагорный»
+            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-stanislavskogo-i-nemirovicha-danchenko': '*' , #stanislavskogo
+            'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*', #ufa-arena
+            'https://afisha.yandex.ru/togliatti/concert/places/lada-arena': '*', #lada-arena
+            'https://afisha.yandex.ru/chelyabinsk/concert/places/ledovaia-arena-traktor': '*', #arena-traktor
+            'https://afisha.yandex.ru/yekaterinburg/sport/places/arena-uralets': '*', #arena-uralets
+            'https://afisha.yandex.ru/moscow/concert/places/khram-khrista-spasitelia-zal-tserkovnykh-soborov': '*' # hram
         }
         self.special_url = {
-            # 'https://afisha.yandex.ru/moscow/selections/standup': '*',  # Стендап
+            #'https://afisha.yandex.ru/moscow/selections/standup': '*',  # Стендап
         }
         self.special_url_with_one_person = {
-            # 'https://afisha.yandex.ru/artist/pavel-volia?city=moscow': 'Павел Воля'  # Павел Воля
+            #'https://afisha.yandex.ru/artist/pavel-volia?city=moscow': 'Павел Воля'  # Павел Воля
         }
         self.csrf = ''
         self.our_places_short = []
         self.place = {}
 
     def before_body(self):
-        self.info('before_body!!!!!!!!')
         self.session = ProxySession(self)
         self.our_places_short = []
 
     def get_dict_from_body(self, body, keyword):
         if keyword not in body:
-            raise RuntimeError(
-                f'[req_err] request doesnt contain needed keyword: {body[:1000]} {self.proxy.__str__() = }')
+            raise RuntimeError(f'[req_err] request doesnt contain needed keyword: {body[:1000]} {self.proxy.__str__() = }')
 
         body = body.replace('undefined', 'null')
         data_str = double_split(body, keyword, "};") + '}'
@@ -297,8 +293,8 @@ class YandexAfishaParser(EventParser):
     def get_place_events(self, date_items, client_key):
         a_events = []
         for date_item in date_items:
-            for event_info in date_item['sessions']:
-                if not event_info['session']:  # возможно это абонемент
+            for event_info in date_item['sessions']: 
+                if not event_info['session']: #возможно это абонемент
                     continue
                 if not event_info.get('session').get('ticket'):
                     continue
@@ -310,7 +306,7 @@ class YandexAfishaParser(EventParser):
                 year, month, day = event_info['session']['date'].split('-')
                 month = month_list[int(month)]
                 time = event_info['session'].get('datetime')
-                if not time:  # значит возможно это Абонемент и нет точного времени мероприятия
+                if not time: # значит возможно это Абонемент и нет точного времени мероприятия
                     continue
                 time = time.split('T')[-1]
                 time = ':'.join(time.split(':')[:-1])
@@ -424,6 +420,7 @@ class YandexAfishaParser(EventParser):
             with open('afisha_catcha.png', 'wb') as f:
                 f.write(r.content)
 
+
         with Image.open('afisha_catcha.png') as img:
             image_with_elements = img.convert('RGB')
             image_with_elements.save('afisha_catcha.jpg')
@@ -431,7 +428,7 @@ class YandexAfishaParser(EventParser):
             image_with_elements = base64.b64encode(img.read())
         with Image.open('afisha_catcha_order.png') as img:
             w, h = img.size
-            area = (0, 0, w - 399, 0)
+            area = (0, 0, w-399, 0)
             image_with_order = ImageOps.crop(img, area)
             image_with_order = image_with_order.convert('RGB')
             image_with_order.save('afisha_catcha_order.jpg')
@@ -439,10 +436,10 @@ class YandexAfishaParser(EventParser):
             image_with_order = base64.b64encode(img.read())
 
         coordinates = yandex_afisha_coordinates_captha(image_with_elements,
-                                                       image_with_order,
-                                                       textinstructions)
+                                                                           image_with_order,
+                                                                           textinstructions)
         self.debug(coordinates)
-
+       
         for coordinate in coordinates:
             actions = ActionChains(driver)
             img_captha = driver.find_element(By.CSS_SELECTOR, "div.AdvancedCaptcha-View img")
@@ -470,7 +467,7 @@ class YandexAfishaParser(EventParser):
             'rep': rep,
             'rdata': r_data,
             'pdata': pdata
-        }
+            }
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                       'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -499,7 +496,8 @@ class YandexAfishaParser(EventParser):
             self.debug(f'Yandex captcha success solved bro!')
         else:
             self.error(f'Yandex captcha DIDNT solved!!!')
-
+            
+        
         return r
 
     def _get_total_events(self, url: str) -> tuple[int, str, str]:
@@ -857,18 +855,18 @@ class YandexAfishaParser(EventParser):
         return output_data
 
     def body(self):
-        for url, venue in self.special_url_with_one_person.items():
-            all_events_url = self._get_url_events_from_special_url__with_one_person(url)
-            for event in self._get_events_from_special_url__with_one_person(all_events_url):
-                event_params = str(event[4]).replace("'", "\"")
-                event_name = event[0].replace("'", '"')
-                self.register_event(event_name, event[1], date=event[2], scene=event[3],
-                                    event_params=event_params, venue=venue)
+        # for url, venue in self.special_url_with_one_person.items():
+        #     all_events_url = self._get_url_events_from_special_url__with_one_person(url)
+        #     for event in  self._get_events_from_special_url__with_one_person(all_events_url):
+        #         event_params = str(event[4]).replace("'", "\"")
+        #         event_name = event[0].replace("'", '"')
+        #         self.register_event(event_name, event[1], date=event[2], scene=event[3],
+        #                             event_params=event_params, venue=venue)
 
         # places = self.get_places()
         for url in self.our_urls:
-            self.debug(url, 'yandex Events')
-            client_key, request_id, dates = self.place_request(url)
+            self.info(url, '<---yandex_events--->')
+            client_key, request_id, dates =  self.place_request(url)
             venue = self.place['title']
             if url == 'https://afisha.yandex.ru/kazan/circus_show/places/tsirk-kazan':
                 venue = 'Казанский цирк'
@@ -886,7 +884,7 @@ class YandexAfishaParser(EventParser):
                 date_items = self.schedule_events_request(request_id, date, period)
                 a_events = self.get_place_events(date_items, client_key)
                 for event in a_events:
-                    self.info(event)
+                    #self.debug(event)
                     if 'VK Stadiaum' in venue:
                         if 'Абонемент' in event[0]:
                             continue
@@ -895,11 +893,11 @@ class YandexAfishaParser(EventParser):
                     self.register_event(event_name, event[1], date=event[2], scene=event[3],
                                         event_params=event_params, venue=venue)
 
-        for url in self.special_url:
-            total_events, request_id, client_key = self._get_total_events(url)
-            final_event = self._get_card_with_event(total_events, request_id, client_key, url)
-            for event in final_event:
-                event_params = str(event[4]).replace("'", "\"")
-                event_name = event[0].replace("'", '"')
-                self.register_event(event_name, event[1], date=event[2], scene=event[3],
-                                    event_params=event_params, venue=event[5])
+        # for url in self.special_url:
+        #     total_events, request_id, client_key = self._get_total_events(url)
+        #     final_event = self._get_card_with_event(total_events, request_id, client_key, url)
+        #     for event in final_event:
+        #         event_params = str(event[4]).replace("'", "\"")
+        #         event_name = event[0].replace("'", '"')
+        #         self.register_event(event_name, event[1], date=event[2], scene=event[3],
+        #                             event_params=event_params, venue=event[5])
