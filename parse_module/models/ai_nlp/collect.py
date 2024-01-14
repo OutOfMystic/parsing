@@ -105,7 +105,7 @@ def make_matrix(subjects, objects, venues, labels=None):
                         already_warned.add(record_key)
                         message = (f'Event parser doesn\'t seem correct '
                                    f'(TYPE "{type_name}", SITE "{site_name}")')
-                        logger.warning(message, name='Controller')
+                        logger.warning(message, name='Controller (Backend)')
                 continue
             object_gen = utils.groupby(objects_on_type, lambda o: o['venue'])
             objects_list = list(object_gen)

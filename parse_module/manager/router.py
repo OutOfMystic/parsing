@@ -5,6 +5,7 @@ from multiprocessing.connection import Connection
 
 from ..models import scheme
 from ..connection import db_manager
+from ..utils.exceptions import InternalError
 from ..utils.logger import logger
 
 
@@ -14,6 +15,7 @@ class SchemeRouterFrontend:
         self.conn = conn
         self.group_schemes = {}
         self.parser_schemes = {}
+        self.task_lock = False
 
     def get_parser_scheme(self, event_id, scheme_id, name='Controller'):
         if event_id in self.parser_schemes:
@@ -41,6 +43,20 @@ class SchemeRouterFrontend:
             else:
                 self.group_schemes[scheme_id] = new_scheme
         return self.group_schemes[scheme_id]
+
+    def get_connections_task(self, subjects, indicators, parsing_types, parsed_events):
+        if self.task_lock:
+            raise InternalError('AI task placing error: task transport corrupted')
+        operation = ['get_connections', [subjects, indicators, parsing_types, parsed_events]]
+        self.conn.send(operation)
+        self.task_lock = True
+
+    def get_connections_result(self):
+        if not self.task_lock:
+            raise InternalError('AI solutions were lost: task transport corrupted')
+        connections = self.conn.recv()
+        self.task_lock = False
+        return connections
 
 
 class SchemeProxy:

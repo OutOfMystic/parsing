@@ -70,6 +70,8 @@ class DBConnection:
         multi_try(self._connect_db, name='Controller', tries=5)
 
     def _connect_db(self):
+        self.connection = None
+        self.cursor = None
         self.connection = psycopg2.connect(user=self.user,
                                            password=self.password,
                                            host=self.host,
@@ -415,7 +417,6 @@ class TableDict(dict):
     def __init__(self, update_func):
         super().__init__()
         self.update_func = update_func
-        self.update_names()
 
     def update_names(self):
         actual_data = self.update_func(self.keys())
@@ -425,6 +426,12 @@ class TableDict(dict):
         if item not in self:
             self.update_names()
         return super().__getitem__(item)
+
+    def get(self, item, default=None):
+        try:
+            return self[item]
+        except KeyError:
+            return default
 
 
 def divide_tickets(tickets):

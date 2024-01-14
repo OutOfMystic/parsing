@@ -8,18 +8,15 @@ import random
 import time
 from asyncio import AbstractEventLoop
 
-from aiodebug import log_slow_callbacks
-
 from . import pooling
+from . import router as router_
 from .inspect import run_inspection
 from .proxy import loader
 from .telecore import TeleCore
 from .. import coroutines
 from ..connection import db_manager
-from ..connection.database import TableDict
 from ..coroutines import AsyncEventParser, AsyncSeatsParser
-from ..models.ai_nlp import alias, venue, solve
-from ..models.ai_nlp.collect import cross_subject_object
+from ..models.ai_nlp import alias
 from ..models.margin import MarginRules
 from parse_module.notify import from_parsing
 from ..models.parser import SeatsParser, EventParser
@@ -36,9 +33,9 @@ class Controller:
     def __init__(self,
                  parsers_path,
                  config_path,
-                 router,
+                 router: router_.SchemeRouterFrontend,
                  async_loop: AbstractEventLoop,
-                 pending_delay=120,
+                 pending_delay=20,
                  debug_url=None,
                  debug_event_id=None,
                  release=False):
@@ -61,7 +58,6 @@ class Controller:
         self.seats_notifiers = []
         self.margins = {}
         self._events_were_reset = []
-        self._already_warned_on_collect = set()
 
         # Controller threaded resources
         self.router = router
@@ -69,11 +65,8 @@ class Controller:
         self.tele_core = get_telecore()
         self._console = run_inspection(self, release=True)
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
-        self._table_sites = TableDict(db_manager.get_site_names)
-        self.solver, self._cache_dict = solve.get_model_and_cache()
         self.event_aliases = alias.EventAliases(step=5)
         self.parsing_types = db_manager.get_parsing_types()
-        self.venues = venue.VenueAliases(self.solver)
         self.pool = pooling.ScheduledExecutor(max_threads=30)
 
         # Controller async resources
@@ -176,7 +169,6 @@ class Controller:
     def get_connections(self, subjects):
         indicators = []
         predefined_connections = []
-        ai_connections = []
 
         for subject in subjects[::-1]:
             if not PREDEFINED:
@@ -187,16 +179,8 @@ class Controller:
                 indicators.append(indicator)
                 predefined_connections.append(connection)
 
-        labels = (self._table_sites, self.parsing_types, self._already_warned_on_collect,)
-        for connection in cross_subject_object(subjects, self.parsed_events, self.venues,
-                                               self.solver, self._cache_dict, labels=labels):
-            if connection['indicator'] in indicators:
-                message = f"{connection['event_name']} {connection['date']} route conflict.\n" \
-                          f"This parser is already assigned by AI. Leaving predefined state.\n" \
-                          f"URL {connection['url']}"
-                # self.bprint(message, color=utils.Fore.YELLOW)
-                continue
-            ai_connections.append(connection)
+        self.router.get_connections_task(subjects, indicators, self.parsing_types, self.parsed_events)
+        ai_connections = self.router.get_connections_result()
         return predefined_connections, ai_connections
 
     def database_interaction(self):
