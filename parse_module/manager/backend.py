@@ -95,12 +95,14 @@ class AISolver:
         self.solver, self._cache_dict = solve.get_model_and_cache()
         self.venues = venue.VenueAliases(self.solver)
 
-    def get_connections(self, subjects, indicators, parsing_types, parsed_events):
+    def get_connections(self, subjects: list, indicators: set, parsing_types: dict, parsed_events: list):
         connections = []
 
         labels = (self._table_sites, parsing_types, self._already_warned_on_collect,)
+        types_on_site = db_manager.get_site_parsers()
         for connection in cross_subject_object(subjects, parsed_events, self.venues,
-                                               self.solver, self._cache_dict, labels=labels):
+                                               self.solver, self._cache_dict,
+                                               types_on_site, labels=labels):
             if connection['indicator'] in indicators:
                 continue
             connections.append(connection)

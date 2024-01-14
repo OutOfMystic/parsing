@@ -277,7 +277,7 @@ async def async_try(to_try: Callable[..., Awaitable],
                            ' Set raise_exc argument to False')
 
     prnt = []
-    try:
+    """try:
         prnt.append(to_try.__self__.__class__.__name__)
     except:
         pass
@@ -285,7 +285,7 @@ async def async_try(to_try: Callable[..., Awaitable],
         prnt.append(to_try.__name__)
     except:
         pass
-    logger.debug('called', *prnt, name=name)
+    logger.debug('called', *prnt, name=name)"""
     for i in range(tries):
         result, exc = await _asynctry(to_try,
                                       name=name,

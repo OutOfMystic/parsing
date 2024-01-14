@@ -35,7 +35,7 @@ class Controller:
                  config_path,
                  router: router_.SchemeRouterFrontend,
                  async_loop: AbstractEventLoop,
-                 pending_delay=20,
+                 pending_delay=60,
                  debug_url=None,
                  debug_event_id=None,
                  release=False):
@@ -145,29 +145,33 @@ class Controller:
             del self.margins[margin_id]
 
     def _predefined_parsers(self, conn):
+        margins_by_name = {margin.name: margin.id for margin in self.margins.values()}
         for priority, parsing_settings in enumerate(conn['parsing']):
             subject_url, margin_name = parsing_settings
-            margin_id = self.get_margin_id_by_name(margin_name)
-            if not margin_id:
-                continue
+            margin_id = margins_by_name.get(margin_name, None)
+            if margin_id is None:
+                logger.error(f'Can\'t find margin with name {margin_name}', name='Controller')
+
             connection = {
                 'priority': priority,
                 'event_id': conn['event_id'],
+                'scheme_id': conn['scheme_id'],
                 'date': Date(conn['date'] + datetime.timedelta(hours=3)),
                 'url': subject_url,
-                'margin': margin_id,
-                'scheme_id': conn['scheme_id']
+                'margin': margin_id
             }
+
             signature = connection.copy()
             signature['date'] = str(connection['date'])
             connection['signature'] = signature
             indicator = signature.copy()
             del indicator['priority']
-            connection['indicator'] = indicator
+            connection['indicator'] = str(indicator)
+
             yield connection
 
     def get_connections(self, subjects):
-        indicators = []
+        indicators = set()
         predefined_connections = []
 
         for subject in subjects[::-1]:
@@ -176,10 +180,11 @@ class Controller:
                 break
             for connection in self._predefined_parsers(subject):
                 indicator = connection['indicator']
-                indicators.append(indicator)
+                indicators.add(indicator)
                 predefined_connections.append(connection)
 
-        self.router.get_connections_task(subjects, indicators, self.parsing_types, self.parsed_events)
+        self.router.get_connections_task(subjects, indicators, self.parsing_types,
+                                         self.parsed_events)
         ai_connections = self.router.get_connections_result()
         return predefined_connections, ai_connections
 
@@ -341,13 +346,6 @@ class Controller:
                 self._start_parser(parser_variable, parser_name)
 
         self._seats_prop = turn_on_stats[True] / (turn_on_stats[False] + turn_on_stats[True] + 0.01)
-
-    def get_margin_id_by_name(self, name):
-        for margin in self.margins.values():
-            if margin.name == name:
-                return margin.id
-        else:
-            self.bprint(f'Can\'t find margin with name {name}', color=utils.Fore.RED)
 
     def get_debug_url_conn(self, all_connections):
         for group, connections in all_connections.items():

@@ -8,10 +8,11 @@ from parse_module.utils.date import Date
 from parse_module.utils.logger import logger
 
 
-def cross_subject_object(subjects, objects, venues, solver, cache_dict, labels=None):
+def cross_subject_object(subjects, objects, venues, solver, cache_dict, types_on_site, labels=None):
     start_time = time.time()
 
-    for pairs, submatrix_shapes, priority, margin, _, _ in make_matrix(subjects, objects, venues, labels=labels):
+    matrix_generator = make_matrix(subjects, objects, venues, types_on_site, labels=labels)
+    for pairs, submatrix_shapes, priority, margin, _, _ in matrix_generator:
         names_from_pairs = [(subject['event_name'], object_['event_name'],) for subject, object_ in pairs]
         assignments = solve_pairs(names_from_pairs, submatrix_shapes, solver, cache_dict, originals=pairs)
         connections = [build_connection(subj, obj_, priority, margin) for subj, obj_ in assignments]
@@ -20,7 +21,7 @@ def cross_subject_object(subjects, objects, venues, solver, cache_dict, labels=N
     logger.debug(f'Cross Subject execution {time.time() - start_time}')
 
     """start_time = time.time()
-    matricies_data = list(data[:4] for data in make_matrix(subjects, objects, venues))
+    matricies_data = list(data[:4] for data in make_matrix(subjects, objects, venues, types_on_site))
     chained_pairs = itertools.chain.from_iterable(row[0] for row in matricies_data)
     chained_shapes = itertools.chain.from_iterable(row[1] for row in matricies_data)
     names_from_pairs = [(subject['event_name'], object_['event_name'],) for subject, object_ in chained_pairs]
@@ -62,14 +63,13 @@ def build_connection(subject, object_, priority, margin):
     }
     indicator = signature.copy()
     del indicator['priority']
-    connection['indicator'] = indicator
+    connection['indicator'] = str(indicator)
     return connection
 
 
-def make_matrix(subjects, objects, venues, labels=None):
+def make_matrix(subjects, objects, venues, types_on_site, labels=None):
     if not objects:
         return
-    types_on_site = db_manager.get_site_parsers()
     if labels:
         site_labels, parsers_labels, already_warned = labels
     else:
@@ -91,8 +91,9 @@ def make_matrix(subjects, objects, venues, labels=None):
     venues.update_names(object_venues)
     aliases = venues.aliases
 
+    subjects_on_sites = utils.groupdict(subjects, lambda subj: subj['site_id'])
     for site_id, types in types_on_site.items():
-        subjects_on_site = [subject for subject in subjects if subject['site_id'] == site_id]
+        subjects_on_site = subjects_on_sites.get(site_id, [])
         subjects_dict = utils.groupdict(subjects_on_site, lambda subj: venues.schemes[subj['scheme_id']])
         for priority, type_id in enumerate(types):
             objects_on_type = [object_ for object_ in objects if object_['type_id'] == type_id]
