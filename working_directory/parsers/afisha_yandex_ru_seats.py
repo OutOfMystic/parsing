@@ -3,7 +3,7 @@ import asyncio
 import re
 import base64
 
-from requests.exceptions import ProxyError, JSONDecodeError, ContentDecodingError
+from requests.exceptions import ProxyError, ContentDecodingError
 
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException
@@ -16,10 +16,9 @@ from PIL import Image, ImageOps
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.utils.logger import track_coroutine
 from parse_module.manager.proxy.check import SpecialConditions
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.parse_utils import double_split
-from parse_module.utils import utils, async_captcha
+from parse_module.utils import async_captcha
 from parse_module.drivers.proxelenium import ProxyWebDriver
 from parse_module.utils.captcha import yandex_afisha_coordinates_captha
 
@@ -1080,81 +1079,69 @@ class YandexAfishaParser(AsyncSeatsParser):
             default_headers = await self.load_default_headers()
         except Exception as ex:
             default_headers = {}
-            self.error(f' cannot load Default_headers {self.url} {ex} continue')
+            self.warning(f'if cannot load default_headers: eval(default_headers=dict()) {self.url} {ex}')
+        else:
+            self.debug(default_headers)
 
         event_params = eval(self.event_params)
         
         try:
             if_seats = await self.check_availible_seats_and_session_key(default_headers, event_params)
         except Exception as ex:
-            self.error(f' Seats not found {self.url} Trouble to find tickets in this event')
+            self.error(f'Seats not found {self.url}')
         else:
             if not if_seats:
-                self.debug(f' Skip, no tickets {self.url} Empty_seats ')
+                self.debug(f'Skip, no tickets, empty_seats{self.url}')
                 return
             else:
-                self.debug(f' Find tickets {self.url} seats_find')
+                self.debug(f'find_tickets {self.url}')
 
         r_sectors = None
         r = None
 
         while self.req_number < 50 and r_sectors is None:
             try:
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.2)
                 r_sectors, r = await self.hallplan_request(event_params, default_headers)
             except ProxyError as ex:
                 self.error(f'Catch(change_proxy): {ex} \n url:{self.url}')
                 await self.change_proxy()
                 await asyncio.sleep(1)
             except Exception as ex:
-                self.error(f'Catch: {ex} \nurl:{self.url}')
+                self.error(f'Catch: {ex}; url:{self.url}')
                 await asyncio.sleep(1)
             finally:
                 self.req_number += 1
         if r_sectors == 'no-seats' or r_sectors == 'not-available' or r_sectors == 'closed':
-            self.warning(f'NO tickets {self.url} Yandex afisha this\
-                         event dont have any tickets')
+            self.warning(f'No tickets {self.url} yandex_afisha this'
+                         f'event dont have any tickets')
             return
         
-        self.debug(f'Make requests {self.req_number}')
+        self.debug(f'Make requests count:{self.req_number}')
 
         if r is None:
             self.warning(f'try {self.req_number} requests without sucess')
             self.warning(f'Changing proxy... load 40..sec')
             self.req_number = 0
             self.default_headers = {}
+            await self.change_proxy()
             await asyncio.sleep(40)
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = AsyncProxySession(self)
             
             while self.req_number < 50 and r_sectors is None:
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.2)
                 try:
                     r_sectors, r = await self.hallplan_request(event_params, default_headers)
                 except Exception as ex:
-                    self.error(f'Catch(2-nd while): {ex} \n url:{self.url}')
+                    self.error(f'Catch(2-nd while): {ex} url:{self.url}')
                 finally:
                     self.req_number += 1
                 if r_sectors == 'no-seats' or r_sectors == 'not-available' or r_sectors == 'closed':
                     self.warning(f'NO tickets {self.url} Yandex afisha this \
                                 event dont have any tickets')
                     return
-
-            self.debug(f'Make NEW requests {self.req_number}')
+            self.debug(f'Make NEW requests count:{self.req_number}')
 
         if r_sectors is None:
-            files = []
-            with open('file_to_send_telegram.json', 'w', encoding='utf-8') as file:
-                try:
-                    json.dump(r.json(), file, indent=4)
-                    files.append('file_to_send_telegram.json')
-                except (JSONDecodeError, AttributeError):
-                    ...
-            with open('file_to_send_telegram_text.html', 'w', encoding='utf-8') as file:
-                file.write(r.text)
-                files.append('file_to_send_telegram_text.html')
-            message = f"<b>r_sector is None response {r.json()['result']['saleStatus'] =} count request {self.req_number} {self.url = }</b>"
-            self.send_message_to_telegram(message, files)
             self.warning(f'NO tickets {self.url} Yandex afisha this event dont have any tickets')
             return 
 
@@ -1171,5 +1158,6 @@ class YandexAfishaParser(AsyncSeatsParser):
         self.reformat(a_sectors)
 
         for sector in a_sectors:
+            #self.debug(sector['name'], len(sector['tickets']))
             self.register_sector(sector['name'], sector['tickets'])
         #self.check_sectors()

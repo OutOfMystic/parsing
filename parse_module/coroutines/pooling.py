@@ -47,7 +47,7 @@ class ScheduledExecutor:
         # logger.debug('got task to pooling', task.from_thread)
 
     async def add_task_async(self, task: Task):
-        # logger.debug('sent task', task.from_thread)
+        # logger.debug('got async task to pooling', task.from_thread)
         timestamp = task.wait + time.time()
         self._tasks.setdefault(timestamp, [task])
 

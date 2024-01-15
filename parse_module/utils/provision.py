@@ -5,8 +5,7 @@ import threading
 import time
 import json
 import inspect
-import concurrent.futures
-from typing import Callable, Iterable, Awaitable, Coroutine, Optional, Protocol
+from typing import Callable, Iterable, Awaitable, Coroutine, Optional
 
 from . import utils
 import colorama
@@ -20,36 +19,7 @@ class TryError(Exception):
     """All the tries were not succeeded"""
 
 
-def pool(function, aims, max_threads):
-    """
-     aims = [
-         [args, kwargs, key_to_find_result],
-         [args2, kwargs2],
-         [args3, key_to_find_result3],
-         [args4],
-         arg5
-     ]
-    """
-    results = {}
-    maims = []
-    for i, aim in enumerate(aims):
-        maims.append(parse_aim(aim, i))
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
-        futures_dict = {
-            executor.submit(function, *args, **kwargs): key for args, kwargs, key in maims
-        }
-        for future in concurrent.futures.as_completed(futures_dict):
-            key = futures_dict[future]
-            try:
-                result = future.result()
-            except Exception as exc:
-                print('%r generated an exception: %s' % (key, exc))
-                result = None
-            results[key] = result
-    return results
-
-
-def threading_try(to_try,
+def threading_try(to_try: Callable,
                   name='Main',
                   handle_error=None,
                   tries=3,
@@ -98,7 +68,7 @@ def multi_try(to_try: Callable,
               args: Iterable = None,
               kwargs: dict = None,
               print_errors=True,
-              use_logger=True):
+              log_func: Optional[Callable] = logger.error):
     """
     Try to execute smth ``tries`` times.
     If all attempts are unsuccessful and ``raise_exc``
@@ -114,7 +84,7 @@ def multi_try(to_try: Callable,
         kwargs: keyword arguments sent to ``to_try``
         raise_exc: raise exception or not after all
         print_errors: log errors on each try
-        use_logger: log errors via the custom logger
+        log_func: logging function, e.g., ``logger.error``
 
     Returns: value from a last successful attempt.
     If all attempts fail, exception is raised or
@@ -129,15 +99,13 @@ def multi_try(to_try: Callable,
                            ' Set raise_exc argument to False')
 
     for i in range(tries):
-        level = logger.error if i == tries - 1 else logger.warning
         result, exc = _tryfunc(to_try,
                                name,
                                print_errors=print_errors,
-                               use_logger=use_logger,
+                               log_func=log_func,
                                args=args,
                                kwargs=kwargs,
-                               from_multi_try=(i, tries),
-                               level=logger.error)
+                               from_multi_try=(i, tries))
         if result is not TryError:
             return result
         elif handle_error:
@@ -158,7 +126,7 @@ def multi_try(to_try: Callable,
             return TryError
 
 
-def just_try(to_try,
+def just_try(to_try: Callable,
              name='Main',
              args=None,
              kwargs=None,
@@ -190,12 +158,11 @@ def just_try(to_try,
     return multi_try(to_try, **kwargs)
 
 
-def _tryfunc(func,
+def _tryfunc(func: Callable,
              name='',
              error_prefix='',
              print_errors=True,
-             use_logger=True,
-             level=logger.error,
+             log_func=None,
              args=None,
              kwargs=None,
              from_multi_try=None):
@@ -208,10 +175,12 @@ def _tryfunc(func,
     except Exception as exc:
         if print_errors:
             tried_overall = ''
-            if level == logger.error:
+            if log_func == logger.error:
                 color_switcher1, color_switcher2 = utils.Fore.YELLOW, utils.Fore.RED
-            else:
+            elif log_func == logger.warning:
                 color_switcher1, color_switcher2 = utils.Fore.RED, utils.Fore.YELLOW
+            else:
+                color_switcher1, color_switcher2 = utils.Fore.RED, utils.Fore.RED
 
             if from_multi_try is not None:
                 tried, overall = from_multi_try
@@ -221,8 +190,8 @@ def _tryfunc(func,
             error = f'({type(exc).__name__}){tried_overall} {str_exception}'
             error_with_prefix = error_prefix + error
 
-            if use_logger:
-                level(error_with_prefix, name=name)
+            if log_func:
+                log_func(error_with_prefix, name=name)
             else:
                 name_part = f'{name} | ' if name else ''
                 print(f'{name_part}{color_switcher2}{error_with_prefix}{utils.Fore.RESET}')
@@ -231,7 +200,7 @@ def _tryfunc(func,
         return result, None
 
 
-def async_just_try(to_try,
+def async_just_try(to_try: Callable,
                    name='Main',
                    args=None,
                    kwargs=None,
@@ -248,6 +217,7 @@ def async_just_try(to_try,
         args: arguments sent to ``to_try``
         kwargs: keyword arguments sent to ``to_try``
         print_errors: log errors on each try
+        semaphore: release semaphore at the execution end
 
     Returns: value from a last successful attempt.
     If all attempts fail, exception is raised or
@@ -274,7 +244,7 @@ async def async_try(to_try: Callable[..., Awaitable],
                     args: Iterable = None,
                     kwargs: dict = None,
                     print_errors=True,
-                    use_logger=True,
+                    log_func: Optional[Callable] = logger.error,
                     semaphore=None):
     """
     Try to execute smth ``tries`` times sequentially.
@@ -291,7 +261,8 @@ async def async_try(to_try: Callable[..., Awaitable],
         kwargs: keyword arguments sent to ``to_try``
         raise_exc: raise exception or not after all
         print_errors: log errors on each try
-        use_logger: log errors via the custom logger
+        log_func: logging function, e.g., ``logger.error``
+        semaphore: release semaphore at the execution end
 
     Returns: value from a last successful attempt.
     If all attempts fail, exception is raised or
@@ -305,8 +276,8 @@ async def async_try(to_try: Callable[..., Awaitable],
         raise RuntimeError('If tries == 1, exception should not be raised.'
                            ' Set raise_exc argument to False')
 
-    """prnt = []
-    try:
+    prnt = []
+    """try:
         prnt.append(to_try.__self__.__class__.__name__)
     except:
         pass
@@ -319,11 +290,10 @@ async def async_try(to_try: Callable[..., Awaitable],
         result, exc = await _asynctry(to_try,
                                       name=name,
                                       print_errors=print_errors,
-                                      use_logger=use_logger,
+                                      log_func=log_func,
                                       args=args,
                                       kwargs=kwargs,
-                                      from_multi_try=(i, tries),
-                                      level=logger.error)
+                                      from_multi_try=(i, tries))
         if result is not TryError:
             if semaphore:
                 semaphore.release()
@@ -353,10 +323,9 @@ async def _asynctry(func: Callable[..., Awaitable],
                     name='',
                     error_prefix='',
                     print_errors=True,
-                    use_logger=True,
-                    level=logger.error,
                     args=None,
                     kwargs=None,
+                    log_func=None,
                     from_multi_try=None):
     if kwargs is None:
         kwargs = {}
@@ -370,10 +339,12 @@ async def _asynctry(func: Callable[..., Awaitable],
     except Exception as exc:
         if print_errors:
             tried_overall = ''
-            if level == logger.error:
+            if log_func == logger.error:
                 color_switcher1, color_switcher2 = utils.Fore.YELLOW, utils.Fore.RED
-            else:
+            elif log_func == logger.warning:
                 color_switcher1, color_switcher2 = utils.Fore.RED, utils.Fore.YELLOW
+            else:
+                color_switcher1, color_switcher2 = utils.Fore.RED, utils.Fore.RED
 
             if from_multi_try is not None:
                 tried, overall = from_multi_try
@@ -383,8 +354,8 @@ async def _asynctry(func: Callable[..., Awaitable],
             error = f'({type(exc).__name__}){tried_overall} {str_exception}'
             error_with_prefix = error_prefix + error
 
-            if use_logger:
-                level(error_with_prefix, name=name)
+            if log_func:
+                log_func(error_with_prefix, name=name)
             else:
                 name_part = f'{name} | ' if name else ''
                 print(f'{name_part}{color_switcher2}{error_with_prefix}{utils.Fore.RESET}')
@@ -442,42 +413,6 @@ def delete_module(modname, paranoid=None):
                     pass
 
 
-def load_data(source, json_=True):
-    if isinstance(source, (dict, list)):
-        return source
-    elif isinstance(source, str):
-        with open(source, 'r') as f:
-            data = json.load(f) if json_ else f.read()
-        if not json_:
-            data = data.split('\n')
-        return data
-    else:
-        return json.load(source) if json_ else source.read()
-
-
-def parse_aim(aim, key):
-    kwargs = {}
-    if not isinstance(aim, list):
-        key = aim
-        return [[aim], kwargs, key]
-    elif len(aim) == 3:
-        args, kwargs, key = aim
-    elif len(aim) == 2:
-        if isinstance(aim[1], dict):
-            args, kwargs = aim
-        else:
-            args, key = aim
-    elif len(aim) == 1:
-        args = aim[0]
-        if len(args) == 0:
-            key = aim[0]
-    elif len(aim) == 0:
-        args = []
-    else:
-        raise AttributeError(f'Wrong format of pool task: {aim}')
-    return args, kwargs, key
-
-
 def try_open(path, default, json_=True):
     tries = 3
     for i in range(tries):
@@ -502,19 +437,21 @@ def try_open(path, default, json_=True):
 def try_write(path, to_write, json_=True):
     tries = 5
     for _ in range(tries):
+        fp = None
         try:
-            f = open(path, 'w+')
+            fp = open(path, 'w+')
             if json_:
-                json.dump(to_write, f)
+                json.dump(to_write, fp)
             else:
-                f.write(to_write)
+                fp.write(to_write)
             return True
         except Exception as err:
             print(f'Error writing "{path}" file: {err}')
             time.sleep(1)
         finally:
             try:
-                f.close()
+                if fp:
+                    fp.close()
             except:
                 print(f'File "{path}" can\'t be opened')
     else:

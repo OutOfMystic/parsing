@@ -1,6 +1,5 @@
 import asyncio
 import json
-import time
 from collections import defaultdict
 from datetime import datetime
 from http.cookies import SimpleCookie
@@ -12,6 +11,7 @@ from aiohttp import ClientResponse
 from aiohttp.typedefs import StrOrURL, JSONDecoder
 from requests import Session
 
+from parse_module.utils.exceptions import RaspizdyaistvoError
 from parse_module.utils.logger import logger
 
 PARALLEL_EXECUTIONS = 3
@@ -65,17 +65,14 @@ class AwaitedResponse:
             return loads(stripped)
 
 
-class RaspizdyaistvoError(RuntimeError):
-    """Чек рубрику 'Обратите внимание'"""
-
-
 class AsyncProxySession(aiohttp.ClientSession):
     semaphores_on_ip = defaultdict(lambda: asyncio.Semaphore(3))
 
     def __init__(self, bot):
         if isinstance(bot.session, AsyncProxySession):
             if not bot.session.closed:
-                raise RaspizdyaistvoError('Отклонено. Это могло взорвать всю систему! Испоlьзуйте change_proxy')
+                raise RaspizdyaistvoError('Rejected. It could destroy the system! '
+                                          'Use `change_proxy` instead')
         self.global_semaphore = bot.controller.request_semaphore
         super().__init__()
         self.bot = bot

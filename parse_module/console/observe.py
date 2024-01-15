@@ -54,9 +54,10 @@ def list_events(args):
     venues = VenueAliases(solver)
     subjects = db_manager.get_events_for_parsing()
     objects = db_manager.get_parsed_events()
+    types_on_site = db_manager.get_site_parsers()
 
     print('Initialising a neural network...')
-    for pairs, submatrix_shapes, priority, margin, _, _ in make_matrix(subjects, objects, venues):
+    for pairs, submatrix_shapes, priority, margin, _, _ in make_matrix(subjects, objects, venues, types_on_site):
         names_from_pairs = [(subject['event_name'], object_['event_name'],) for subject, object_ in pairs]
         assignments = solve_pairs(names_from_pairs, submatrix_shapes, solver, cache_dict, originals=pairs)
         connections = [build_connection(*assignment, priority, margin) for assignment in assignments]
@@ -116,6 +117,7 @@ def ai_solutions(args):
     parsed_evs = {crop_url(url): parent for url, parent in db_manager.fetchall()}
     db_manager.execute("SELECT id, name, date, site_id, parsed_url FROM public.tables_event")
     subj_data = db_manager.fetchall()
+    types_on_site = db_manager.get_site_parsers()
     subj_data.sort(key=lambda data_row: Date(data_row[2]))
     sites_with_subjs = set(subject[3] for subject in subj_data)
     no_subjects = [site_id for site_id, site_name in sites.items() if site_id not in sites_with_subjs]
@@ -124,7 +126,7 @@ def ai_solutions(args):
 
     print('Initialising a neural network...')
     for pairs, submatrix_shapes, priority, margin, site_id, type_id\
-            in make_matrix(subjects, objects, venues):
+            in make_matrix(subjects, objects, venues, types_on_site):
         if type_id is None:
             continue
         type_ = parsing_types[type_id]
@@ -314,11 +316,12 @@ def ai_doubts(args):
     parsing_types = db_manager.get_parsing_types()
     sites = db_manager.get_site_names()
     objects = db_manager.get_parsed_events(types=parsing_types)
+    types_on_site = db_manager.get_site_parsers()
 
     print('Initialising a neural network...')
     results = []
     venues = VenueAliases(solver)
-    for pairs, shapes, priority, margin, site_id, type_id in make_matrix(subjects, objects, venues):
+    for pairs, shapes, priority, margin, site_id, type_id in make_matrix(subjects, objects, venues, types_on_site):
         site = sites[site_id]
         if type_id is None:
             continue

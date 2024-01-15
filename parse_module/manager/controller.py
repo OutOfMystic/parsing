@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import inspect
 import itertools
 import json
 import os
@@ -7,18 +8,15 @@ import random
 import time
 from asyncio import AbstractEventLoop
 
-from aiodebug import log_slow_callbacks
-
 from . import pooling
+from . import router as router_
 from .inspect import run_inspection
 from .proxy import loader
 from .telecore import TeleCore
 from .. import coroutines
 from ..connection import db_manager
-from ..connection.database import TableDict
 from ..coroutines import AsyncEventParser, AsyncSeatsParser
-from ..models.ai_nlp import alias, venue, solve
-from ..models.ai_nlp.collect import cross_subject_object
+from ..models.ai_nlp import alias
 from ..models.margin import MarginRules
 from parse_module.notify import from_parsing
 from ..models.parser import SeatsParser, EventParser
@@ -35,9 +33,9 @@ class Controller:
     def __init__(self,
                  parsers_path,
                  config_path,
-                 router,
+                 router: router_.SchemeRouterFrontend,
                  async_loop: AbstractEventLoop,
-                 pending_delay=120,
+                 pending_delay=60,
                  debug_url=None,
                  debug_event_id=None,
                  release=False):
@@ -60,7 +58,6 @@ class Controller:
         self.seats_notifiers = []
         self.margins = {}
         self._events_were_reset = []
-        self._already_warned_on_collect = set()
 
         # Controller threaded resources
         self.router = router
@@ -68,17 +65,14 @@ class Controller:
         self.tele_core = get_telecore()
         self._console = run_inspection(self, release=True)
         self.proxy_hub = loader.ManualProxies('all_proxies.json') if parsers_path else None
-        self._table_sites = TableDict(db_manager.get_site_names)
-        self.solver, self._cache_dict = solve.get_model_and_cache()
         self.event_aliases = alias.EventAliases(step=5)
         self.parsing_types = db_manager.get_parsing_types()
-        self.venues = venue.VenueAliases(self.solver)
         self.pool = pooling.ScheduledExecutor(max_threads=30)
 
         # Controller async resources
         start_async_logger()
         self.request_semaphore = asyncio.Semaphore(60)
-        self.pool_async = coroutines.ScheduledExecutor(async_loop, max_connects=60)
+        self.pool_async = coroutines.ScheduledExecutor(async_loop)
 
         self._load_parsers_with_config(config_path)
 
@@ -96,16 +90,15 @@ class Controller:
     def _start_parser(self, parser_variable, parser_name):
         if parser_name.startswith('www.'):
             parser_name = parser_name.split('www.')[1]
-        try:
-            if parser_variable in (EventParser, SeatsParser, AsyncEventParser, AsyncSeatsParser):
-                return
-            elif issubclass(parser_variable, EventParser):
-                self._start_event_parser(parser_variable, parser_name)
-            elif issubclass(parser_variable, SeatsParser):
-                self._init_seats_parsers(parser_variable, parser_name)
-            else:
-                return
-        except TypeError:
+        if not inspect.isclass(parser_variable):
+            return
+        elif parser_variable in (EventParser, SeatsParser, AsyncEventParser, AsyncSeatsParser):
+            return
+        elif issubclass(parser_variable, EventParser):
+            self._start_event_parser(parser_variable, parser_name)
+        elif issubclass(parser_variable, SeatsParser):
+            self._init_seats_parsers(parser_variable, parser_name)
+        else:
             return
 
     def _start_event_parser(self, parser_class, parser_name):
@@ -152,31 +145,34 @@ class Controller:
             del self.margins[margin_id]
 
     def _predefined_parsers(self, conn):
+        margins_by_name = {margin.name: margin.id for margin in self.margins.values()}
         for priority, parsing_settings in enumerate(conn['parsing']):
             subject_url, margin_name = parsing_settings
-            margin_id = self.get_margin_id_by_name(margin_name)
-            if not margin_id:
-                continue
+            margin_id = margins_by_name.get(margin_name, None)
+            if margin_id is None:
+                logger.error(f'Can\'t find margin with name {margin_name}', name='Controller')
+
             connection = {
                 'priority': priority,
                 'event_id': conn['event_id'],
+                'scheme_id': conn['scheme_id'],
                 'date': Date(conn['date'] + datetime.timedelta(hours=3)),
                 'url': subject_url,
-                'margin': margin_id,
-                'scheme_id': conn['scheme_id']
+                'margin': margin_id
             }
+
             signature = connection.copy()
             signature['date'] = str(connection['date'])
             connection['signature'] = signature
             indicator = signature.copy()
             del indicator['priority']
-            connection['indicator'] = indicator
+            connection['indicator'] = str(indicator)
+
             yield connection
 
     def get_connections(self, subjects):
-        indicators = []
+        indicators = set()
         predefined_connections = []
-        ai_connections = []
 
         for subject in subjects[::-1]:
             if not PREDEFINED:
@@ -184,19 +180,12 @@ class Controller:
                 break
             for connection in self._predefined_parsers(subject):
                 indicator = connection['indicator']
-                indicators.append(indicator)
+                indicators.add(indicator)
                 predefined_connections.append(connection)
 
-        labels = (self._table_sites, self.parsing_types, self._already_warned_on_collect,)
-        for connection in cross_subject_object(subjects, self.parsed_events, self.venues,
-                                               self.solver, self._cache_dict, labels=labels):
-            if connection['indicator'] in indicators:
-                message = f"{connection['event_name']} {connection['date']} route conflict.\n" \
-                          f"This parser is already assigned by AI. Leaving predefined state.\n" \
-                          f"URL {connection['url']}"
-                # self.bprint(message, color=utils.Fore.YELLOW)
-                continue
-            ai_connections.append(connection)
+        self.router.get_connections_task(subjects, indicators, self.parsing_types,
+                                         self.parsed_events)
+        ai_connections = self.router.get_connections_result()
         return predefined_connections, ai_connections
 
     def database_interaction(self):
@@ -357,13 +346,6 @@ class Controller:
                 self._start_parser(parser_variable, parser_name)
 
         self._seats_prop = turn_on_stats[True] / (turn_on_stats[False] + turn_on_stats[True] + 0.01)
-
-    def get_margin_id_by_name(self, name):
-        for margin in self.margins.values():
-            if margin.name == name:
-                return margin.id
-        else:
-            self.bprint(f'Can\'t find margin with name {name}', color=utils.Fore.RED)
 
     def get_debug_url_conn(self, all_connections):
         for group, connections in all_connections.items():

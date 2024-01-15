@@ -9,8 +9,11 @@ from threading import Lock
 from . import pooling
 from .router import SchemeRouterFrontend, wait_until
 from ..connection import db_manager
+from ..connection.database import TableDict
 from ..manager.pooling import ScheduledExecutor
 from ..models import scheme
+from ..models.ai_nlp import venue, solve
+from ..models.ai_nlp.collect import cross_subject_object
 from ..utils import provision
 from ..utils.logger import logger
 from ..utils.provision import multi_try
@@ -78,11 +81,32 @@ class Postponer(threading.Thread):
 
     def run(self):
         while True:
-            processed = multi_try(self._step, tries=1, raise_exc=False, name='Controller')
+            processed = multi_try(self._step, tries=1, raise_exc=False, name='Controller (Backend)')
             if processed is not provision.TryError and not processed:
                 time.sleep(3)
             else:
                 time.sleep(0.2)
+
+
+class AISolver:
+    def __init__(self):
+        self._table_sites = TableDict(db_manager.get_site_names)
+        self._already_warned_on_collect = set()
+        self.solver, self._cache_dict = solve.get_model_and_cache()
+        self.venues = venue.VenueAliases(self.solver)
+
+    def get_connections(self, subjects: list, indicators: set, parsing_types: dict, parsed_events: list):
+        connections = []
+
+        labels = (self._table_sites, parsing_types, self._already_warned_on_collect,)
+        types_on_site = db_manager.get_site_parsers()
+        for connection in cross_subject_object(subjects, parsed_events, self.venues,
+                                               self.solver, self._cache_dict,
+                                               types_on_site, labels=labels):
+            if connection['indicator'] in indicators:
+                continue
+            connections.append(connection)
+        return connections
 
 
 class SchemeRouterBackend:
@@ -94,6 +118,7 @@ class SchemeRouterBackend:
         self.conn = conn
         self._pool = ScheduledExecutor(stats='scheme_router_stats.csv', max_threads=5)
         self._locked_queues = {}
+        self.ai_workspace = AISolver()
         self._postponer = Postponer(self.parser_schemes, self._locked_queues)
 
     def _get_group_scheme(self, scheme_id):
@@ -103,7 +128,7 @@ class SchemeRouterBackend:
             if add_result is False:
                 if not wait_until(lambda: scheme_id in self.group_schemes):
                     logger.error(f'Scheme distribution corrupted! Backend. Scheme id {scheme_id}',
-                                 name='Controller')
+                                 name='Controller (Backend)')
                     self.group_schemes[scheme_id] = new_scheme
             else:
                 self.group_schemes[scheme_id] = new_scheme
@@ -115,7 +140,7 @@ class SchemeRouterBackend:
             self._locked_queues[event_id] = []
         finally:
             self._postponer.lock.release()
-            task = pooling.Task(self._create_scheme, 'Controller', args=(event_id, scheme_id, name,))
+            task = pooling.Task(self._create_scheme, 'Controller (Backend)', args=(event_id, scheme_id, name,))
             self._pool.add_task(task)
 
     def _create_scheme(self, event_id, scheme_id, name):
@@ -160,11 +185,21 @@ class SchemeRouterBackend:
         scheme = self.parser_schemes[event_id]
         scheme.release_sectors(*args)
 
+    def get_connections(self, *args):
+        provision.threading_try(self._get_connections,
+                                args=args,
+                                name='Controller (Backend)',
+                                tries=1)
+
+    def _get_connections(self, subjects, indicators, parsing_types, parsed_events):
+        solutions = self.ai_workspace.get_connections(subjects, indicators, parsing_types, parsed_events)
+        self.conn.send(solutions)
+
     def run(self) -> None:
         self.conn.send('Started')
-        logger.info('Backend started', name='Controller')
+        logger.info('Backend started', name='Controller (Backend)')
         while True:
-            got_data = multi_try(self.conn.recv, tries=20, name='Controller',
+            got_data = multi_try(self.conn.recv, tries=20, name='Controller (Backend)',
                                  raise_exc=False)
             if got_data is provision.TryError:
                 sys.exit()
@@ -172,7 +207,7 @@ class SchemeRouterBackend:
                 command, args = got_data
             method = getattr(self, command)
             # logger.debug(method, args, name='Backend')
-            provision.just_try(method, args=args, name='Controller')
+            provision.just_try(method, args=args, name='Controller (Backend)')
 
 
 def change_connection(login, password):
@@ -181,7 +216,7 @@ def change_connection(login, password):
     db_manager.connection.close()
     db_manager.user = login
     db_manager.password = password
-    db_manager.connect_db()
+    threading.Thread(target=db_manager.connect_db).start()
 
 
 def process_starting(inner_conn, login, password):
@@ -196,4 +231,6 @@ def get_router(db_login, db_password):
     process = multiprocessing.Process(target=process_starting,
                                       args=(inner_conn, db_login, db_password,))
     process.start()
-    return SchemeRouterFrontend(outer_conn), process
+    router = SchemeRouterFrontend(outer_conn)
+    router.conn.recv()
+    return router, process

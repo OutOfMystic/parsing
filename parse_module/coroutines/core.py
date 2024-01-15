@@ -1,7 +1,7 @@
 import asyncio
 import time
 from abc import ABC, abstractmethod
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Optional
 
 from ..manager.core import Bot
 from ..utils import provision
@@ -102,4 +102,34 @@ class CoroutineBot(Bot, ABC):
                                    kwargs=kwargs,
                                    raise_exc=raise_exc,
                                    print_errors=print_errors)
+
+    def just_try(self,
+                 to_try: Callable,
+                 args=None,
+                 kwargs=None,
+                 print_errors=True):
+        """
+        A simplified async_try statement.
+        The same as async_try, but executes ``to_try`` code
+        only once and doesn't raise an exception.
+
+        Args:
+            to_try: main async function
+            args: arguments sent to ``to_try``
+            kwargs: keyword arguments sent to ``to_try``
+            print_errors: log errors on each try
+
+        Returns: value from a last successful attempt.
+        If all attempts fail, exception is raised or
+        provision.TryError is returned.
+        """
+        kwargs = {
+            'name': self.name,
+            'tries': 1,
+            'args': args,
+            'kwargs': kwargs,
+            'raise_exc': False,
+            'print_errors': print_errors
+        }
+        return provision.async_try(to_try, **kwargs)
 

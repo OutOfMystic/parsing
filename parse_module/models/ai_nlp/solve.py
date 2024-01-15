@@ -88,8 +88,8 @@ def get_model_and_cache():
                     out_converter=softmax_to_result,
                     timeout=180,
                     remember_answers=True)
-    models_path = os.path.join(solver.model_name, 'assets', 'high_level_cache.pkl')
-    cache_dict = LocalCacheDict(models_path, hash_function=pairs_hasher)
+    cache_path = os.path.join(solver.model_name, 'assets', 'high_level_cache.pkl')
+    cache_dict = LocalCacheDict(cache_path, hash_function=pairs_hasher)
     return solver, cache_dict
 
 

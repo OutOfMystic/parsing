@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 import requests
 import time
 
@@ -51,7 +53,8 @@ class NormalConditions(SpecialConditions):
         super().__init__()
 
 
-def check_task(handler, proxy, url, method):
+def check_task(check_args):
+    handler, proxy, url, method = check_args
     try:
         handler(proxy, url, method)
     except Exception as err:
@@ -68,10 +71,12 @@ def check_proxies(proxies, proxies_on_condition):
     condition = proxies_on_condition.condition
 
     for proxy in proxies:
-        task = [[condition.handler, proxy, condition.url, condition.method]]
+        task = [condition.handler, proxy, condition.url, condition.method]
         tasks.append(task)
-    results = provision.pool(check_task, tasks, min(len(proxies), 50))
-    good_proxies = list(value for value in results.values() if value)
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        results = executor.map(check_task, tasks)
+
+    good_proxies = [value for value in results if value]
     proxies_on_condition.put(good_proxies)
 
     # FORMATTING

@@ -16,7 +16,8 @@ class ParserBase(core.Bot, ABC):
     proxy_check = check.NormalConditions()
 
     def __init__(self, controller):
-        super().__init__(skip_postinit=True)
+        core.Bot.__init__(self, skip_postinit=True)
+        ABC.__init__(self)
         self.controller = controller
         self.session = None
         self.last_state = None
@@ -80,7 +81,7 @@ class ParserBase(core.Bot, ABC):
         if self.controller.debug:
             self.debug(mes, *args)
 
-    def start(self, start_delay):
+    def start(self, start_delay=0):
         task = pooling.Task(self.proceed, self.name, start_delay)
         self.controller.pool.add_task(task)
 
