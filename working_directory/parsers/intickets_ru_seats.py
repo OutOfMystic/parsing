@@ -10,7 +10,7 @@ import codecs
 
 class InticketsParser(AsyncSeatsParser):
     event = 'intickets.ru'
-    url_filter = lambda url: 'intickets.ru' in url and 'pre8136' not in url
+    url_filter = lambda url: 'intickets.ru' in url and 'pre8136' not in url and 'pre0049' not in url
     proxy_check = SpecialConditions(url='https://iframeab-pre4073.intickets.ru/')
 
     def __init__(self, *args, **extra):
