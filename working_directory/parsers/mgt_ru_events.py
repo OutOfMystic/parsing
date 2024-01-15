@@ -1,7 +1,8 @@
 import json
+from parse_module.coroutines.parser import AsyncEventParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
 from datetime import datetime
 import re
@@ -23,20 +24,20 @@ headers = {
     'sec-ch-ua-platform': '"Linux"',
 }
 
-class MosGubern(EventParser):
+class MosGubern(AsyncEventParser):
     
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.url = 'https://m-g-t.ru/'        
         
-    def before_body(self):
-        self.session = ProxySession(self)
+    async def before_body(self):
+        self.session = AsyncProxySession(self)
 
-    def get_dates_list(self) -> list[str]:
+    async def get_dates_list(self) -> list[str]:
         now = datetime.now()
         formatted_date = f"{now.month}.{now.year}"
         
-        req = self.session.get(f"https://api.m-g-t.ru/api/get_poster.php", params={"date": formatted_date}, headers=headers)
+        req = await self.session.get(f"https://api.m-g-t.ru/api/get_poster.php", params={"date": formatted_date}, headers=headers)
         data = req.json()
         months = data['FILTER_MONTH']
         
@@ -77,20 +78,21 @@ class MosGubern(EventParser):
                             a_events.append((name, link, date_object))
                     else:
                         a_events.append((name, link, date_object))
+        
+        return a_events
     
-    def get_json(self, date) -> json:
+    async def get_json(self, date) -> json:
         
-        req = self.session.get(f"https://api.m-g-t.ru/api/get_poster.php", params={"date": date}, headers=headers)
-        req.raise_for_status()  # Добавляем обработку ошибок
-        data = req.json()
+        req = await self.session.get(f"https://api.m-g-t.ru/api/get_poster.php", params={"date": date}, headers=headers)  # Добавляем обработку ошибок
+        return req.json()
         
-    def body(self):
-        dates = self.get_dates_list()
+    async def body(self): 
+        dates = await self.get_dates_list()
         
         for date in dates:
-            data = self.get_json(date)
+            data = await self.get_json(date)
             
             a_events = self.parse_json(data)
-            
             for event in a_events:
                 self.register_event(event[0], event[1], date=event[2])
+                self.debug(event)
