@@ -1,14 +1,14 @@
+import asyncio
 from datetime import datetime
 from urllib.parse import urlparse
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.manager.proxy.check import NormalConditions
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.check import SpecialConditions
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class KassirParser(AsyncEventParser):
-    proxy_check = NormalConditions()
+    proxy_check = SpecialConditions(url='https://www.kassir.ru/')
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
@@ -77,9 +77,9 @@ class KassirParser(AsyncEventParser):
 
         count = 5
         while not get_events.ok and count > 0:
-            self.error(f'{self.proxy.args}, {self.session.cookies} kassir events')
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = AsyncProxySession(self)
+            self.warning(f'something bad in {slug}, trying to change session')
+            asyncio.sleep(15)
+            await self.change_proxy()
             get_events = await self.session.get(url_to_api, headers=self.new_headers)
             count -= 1
 
@@ -148,7 +148,7 @@ class KassirParser(AsyncEventParser):
                         events_to_write.append((title, url_to_write, date,
                                                  self.venue_name, id, self.domain, url_all_events))
                 except Exception as ex:
-                    self.error(f'{ex} troubles bro.')
+                    self.error(f'cannot load this {url} {ex}')
                     raise
         return events_to_write
 
@@ -164,26 +164,29 @@ class KassirParser(AsyncEventParser):
             'Дворец спорта': 'Дворец спорта «ДС-Казань»'
         }
 
-        a_events = []
+        
         for url, venue_id in self.new_urls.items():
-            self.info('Kassir seats',url)
+            a_events = []
             try:
                 events = await self.new_get_events(url)
                 all_dates = await self.new_reformat_events(events)
                 a_events.extend(all_dates)
             except Exception as ex:
                 self.warning(f'{ex}, {url} cannot load!')
-                raise
+            else:
+                self.info('kassir_seats load sucess', url)
 
-        for event in a_events:
-            if event[2] == '' or 'абонемент' in event[0].lower() or '—' in event[2]:
-                continue
-            elif 'ЦСКА Арена' in event[3]:
-                if 'новогодняя история игрушек' not in event[0].lower():
+            for event in a_events:
+                #self.info(event)
+                if event[2] == '' or 'абонемент' in event[0].lower() or '—' in event[2]:
                     continue
-            try:
-                self.register_event(event[0], event[1], date=event[2],
-                                     venue=event[3], id=event[4], domain=event[5], url_all_events=event[6])
-                self.debug(event)
-            except Exception as ex:
-                self.error(f'{ex}, {event} cannot save to DB!')
+                elif 'ЦСКА Арена' in event[3]:
+                    if 'новогодняя история игрушек' not in event[0].lower():
+                        continue
+                try:
+                    self.register_event(event[0], event[1], date=event[2],
+                                        venue=event[3], id=event[4], domain=event[5], url_all_events=event[6])
+                except Exception as ex:
+                    self.error(f'cannot save to DB!{ex}, {event} {url}')
+                else:
+                    self.info('kassir_seats save to DB sucess', url)
