@@ -10,7 +10,7 @@ from ..connection import db_manager
 from ..manager.backstage import tasker
 from ..utils import utils, provision
 from ..utils.exceptions import SchemeError, ParsingError, InternalError
-from ..utils.logger import logger
+from ..manager.controller import logger
 from ..utils.provision import multi_try
 from ..utils.types import LocalDict
 

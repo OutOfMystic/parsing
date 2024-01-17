@@ -13,7 +13,7 @@ from ..models import user_agent
 from ..utils import utils, parse_utils, provision
 from ..drivers.hrenium import HrenDriver
 from ..drivers.proxelenium import ProxyWebDriver
-from ..utils.logger import logger
+from .controller import logger
 
 
 class BotBase:

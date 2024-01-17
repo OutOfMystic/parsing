@@ -5,7 +5,7 @@ import threading
 from parse_module.console import base
 from parse_module.manager.backstage import tasker
 from parse_module.utils import utils
-from parse_module.utils.logger import logger
+from parse_module.manager.controller import logger
 
 
 class ControllerInterface(base.CommandPrompt):

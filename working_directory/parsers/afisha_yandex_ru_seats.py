@@ -14,7 +14,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 from PIL import Image, ImageOps
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.parse_utils import double_split
@@ -52,7 +51,6 @@ class YandexAfishaParser(AsyncSeatsParser):
         }
         self.session_key = None
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
@@ -738,13 +736,11 @@ class YandexAfishaParser(AsyncSeatsParser):
                     r_sector_name = 'Балкон 5'
         return r_sector_name, row
 
-    @track_coroutine
     async def check_captcha(self, r, old_url, old_headers):
         if '<div class="CheckboxCaptcha" ' not in r.text:
             return r
         return await self.handle_smart_captcha(r.url, old_url, old_headers)
 
-    @track_coroutine
     async def handle_smart_captcha(self, url, old_url, old_headers):
         while True:
             r = await self.selenium_smart_captha(url)
@@ -755,7 +751,6 @@ class YandexAfishaParser(AsyncSeatsParser):
         # r = await self.session.get(old_url, headers=old_headers)
         return r
 
-    @track_coroutine
     async def selenium_smart_captha(self, url: str):
         chrome_options = Options()
         # chrome_options.add_argument("--headless")
@@ -776,7 +771,6 @@ class YandexAfishaParser(AsyncSeatsParser):
             driver.quit()
         return r
 
-    @track_coroutine
     async def solve_smart_captcha_checkbox(self, driver):
         body = WebDriverWait(driver, 6).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "body"))
@@ -815,7 +809,6 @@ class YandexAfishaParser(AsyncSeatsParser):
         r = await self.session.post(url, timeout=10, headers=headers, data=data)
         return r
 
-    @track_coroutine
     async def solve_smart_captcha_image(self, driver):
         img_captha = WebDriverWait(driver, 4).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.AdvancedCaptcha-View img"))

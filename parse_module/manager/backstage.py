@@ -6,7 +6,7 @@ from threading import Lock
 
 from ..console.base import print_cols
 from ..utils import provision
-from ..utils.logger import logger
+from .controller import logger
 
 
 class Task:

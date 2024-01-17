@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
@@ -58,11 +57,9 @@ class Parser(AsyncEventParser):
             ],
         }
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    @track_coroutine
     async def get_events(self, link, places_url, venue):
         events = []
         number_page = 0
@@ -107,7 +104,6 @@ class Parser(AsyncEventParser):
             number_page += 1
         return events
 
-    @track_coroutine
     async def get_cards(self, url, venue):
         collected = []
         headers = {
@@ -174,7 +170,6 @@ class Parser(AsyncEventParser):
             collected.append(card_)
         return collected
 
-    @track_coroutine
     async def get_links_teatrs(self, pagecount, places_url, our_places):
         links_venues = []
         for p in range(1, int(pagecount) + 1):
@@ -221,7 +216,6 @@ class Parser(AsyncEventParser):
                     our_links_venues[link] = venue
         return our_links_venues
 
-    # @track_coroutine
     # async def request_to_ticketland(self, url, headers=None):
     #     r = await self.session.get(url, headers=headers)
     #     r_text = r.text
@@ -229,7 +223,6 @@ class Parser(AsyncEventParser):
     #         raise Exception('Запрос с загрузкой')
     #     return r_text
 
-    @track_coroutine
     async def body(self):
         for places_url, our_places in self.our_places_data.items():
             headers = {

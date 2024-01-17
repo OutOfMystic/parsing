@@ -2,16 +2,15 @@ import functools
 import inspect
 import json
 import re
-import sys
 import threading
 import time
 import traceback
-from asyncio import Task
 from datetime import datetime
 
 from aiodebug import log_slow_callbacks, hang_inspection
 from colorama import Fore, Back
 
+from parse_module.manager.controller import logger
 from parse_module.utils.date import readable_datetime
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.utils import lprint, default_fore, default_back
@@ -318,6 +317,19 @@ def start_async_logger(event_loop=None):
         hang_inspection.start('screen', interval=2, loop=event_loop)
 
 
+def track_coroutine(func):
+
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        coro = func(*args, **kwargs)
+        active_coroutines.add(coro)
+        try:
+            return await coro
+        finally:
+            active_coroutines.remove(coro)
+    return wrapper
+
+
 COLORS = {
     'CRITICAL': Fore.LIGHTWHITE_EX,
     'ERROR': Fore.RED,
@@ -327,18 +339,3 @@ COLORS = {
     'SUCCESS': Fore.GREEN
 }
 colors_reversed = {value: key for key, value in COLORS.items()}
-logger = Logger(release='release' in sys.argv, drop_path_level=1, test=True)
-
-
-def track_coroutine(func):
-
-    @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
-        coro = func(*args, **kwargs)
-        active_coroutines.add(coro)
-        try:
-            # print(func, args, kwargs)
-            return await coro
-        finally:
-            active_coroutines.remove(coro)
-    return wrapper

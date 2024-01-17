@@ -4,7 +4,6 @@ from requests.exceptions import JSONDecodeError, ProxyError
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.parse_utils import double_split
@@ -27,7 +26,6 @@ class LenkomParser(AsyncSeatsParser):
         self.venue = 'Ленком'
         self.count_error = 0
 
-    @track_coroutine
     async def get_tl_csrf_and_data(self):
         result = await self.multi_try(self._get_tl_csrf_and_data, tries=5, raise_exc=False)
         if result == provision.TryError:
@@ -35,7 +33,6 @@ class LenkomParser(AsyncSeatsParser):
             result = None
         return result
 
-    @track_coroutine
     async def _get_tl_csrf_and_data(self):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp'
@@ -84,12 +81,10 @@ class LenkomParser(AsyncSeatsParser):
 
         return tl_csrf.replace('=', '%3D'), performance_id, limit, is_special_sale
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
         await self._get_init_vars_if_not_given()
 
-    @track_coroutine
     async def _get_init_vars_if_not_given(self):
         if self.performance_id:
             return True
@@ -101,7 +96,6 @@ class LenkomParser(AsyncSeatsParser):
             self.info('Waiting event vars')
             return False
 
-    @track_coroutine
     async def request_to_ticketland(self, url, headers=None):
         try:
             r = await self.session.get(url, headers=headers, verify=False)
@@ -125,7 +119,6 @@ class LenkomParser(AsyncSeatsParser):
     def reformat_seat(self, sector_name, row, seat, price, ticket):
         return sector_name, row, seat, price
 
-    @track_coroutine
     async def body(self):
         if not await self._get_init_vars_if_not_given():
             return False

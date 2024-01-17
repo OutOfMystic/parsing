@@ -10,7 +10,7 @@ from typing import Callable, Iterable, Awaitable, Coroutine, Optional
 from . import utils
 import colorama
 
-from .logger import logger, track_coroutine
+from ..manager.controller import logger
 
 colorama.init()
 
@@ -235,7 +235,6 @@ def async_just_try(to_try: Callable,
     return async_try(to_try, **kwargs)
 
 
-@track_coroutine
 async def async_try(to_try: Callable[..., Awaitable],
                     handle_error: Optional[Callable[..., Awaitable]] = None,
                     tries=3,
@@ -318,7 +317,6 @@ async def async_try(to_try: Callable[..., Awaitable],
             return TryError
 
 
-@track_coroutine
 async def _asynctry(func: Callable[..., Awaitable],
                     name='',
                     error_prefix='',

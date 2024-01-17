@@ -4,7 +4,6 @@ import json
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.date import month_list
@@ -26,11 +25,9 @@ class HelikonRu(AsyncEventParser):
         self.driver_source = None
         self.url: str = 'https://www.helikon.ru/ru/playbill'
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    @track_coroutine
     async def _parse_events(self):
         soup = await self._requests_to_events()
 
@@ -40,7 +37,6 @@ class HelikonRu(AsyncEventParser):
 
         return await self._filters_events(all_events)
 
-    @track_coroutine
     async def _filters_events(self, all_events: list[OutputEvent]):
         events = []
         all_events_id = [event.href.split('/')[-1] for event in all_events]

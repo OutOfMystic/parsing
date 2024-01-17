@@ -6,7 +6,7 @@ from multiprocessing.connection import Connection
 from ..models import scheme
 from ..connection import db_manager
 from ..utils.exceptions import InternalError
-from ..utils.logger import logger
+from .controller import logger
 
 
 class SchemeRouterFrontend:

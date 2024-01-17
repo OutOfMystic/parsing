@@ -9,7 +9,7 @@ from ..manager.proxy.sessions import AsyncProxySession
 from ..models import parser
 from ..utils import provision
 from ..utils.exceptions import ProxyHubError
-from ..utils.logger import logger
+from ..manager.controller import logger
 
 
 class AsyncParserBase(core.CoroutineBot, ABC):

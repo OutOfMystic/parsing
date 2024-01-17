@@ -10,7 +10,7 @@ from sortedcontainers import SortedDict
 
 from ..console.base import print_cols
 from ..utils import provision, utils
-from ..utils.logger import logger
+from ..manager.controller import logger
 
 Task = namedtuple('Task', ['to_proceed', 'from_thread', 'wait'])
 Result = namedtuple('Result', ['scheduled_time', 'from_thread', 'apply_result'])
@@ -25,8 +25,9 @@ class Task:
 
 
 class ScheduledExecutor:
-    def __init__(self, loop: AbstractEventLoop, max_connects=60):
+    def __init__(self, loop: AbstractEventLoop, max_connects=60, debug=False):
         super().__init__()
+        self.debug = debug
         self._loop = loop
         self._tasks = SortedDict()
         self._results = []
@@ -34,6 +35,7 @@ class ScheduledExecutor:
         self._timers = {}
         self._starting_point = time.time()
         self._stats_counter = 0
+        self._last_demand_check = time.time()
         self._semaphore = asyncio.Semaphore(max_connects)
         self._is_win32 = platform.system() == 'Windows'
         self.in_process = 0
@@ -50,6 +52,15 @@ class ScheduledExecutor:
         # logger.debug('got async task to pooling', task.from_thread)
         timestamp = task.wait + time.time()
         self._tasks.setdefault(timestamp, [task])
+
+    def high_demand_check(self):
+        awaiting_lower_limit = 1 if self.debug else 50
+        if time.time() - self._last_demand_check > 5 or self.debug:
+            self._last_demand_check = time.time()
+            if self.in_process >= awaiting_lower_limit:
+                stat = f'Digh demand. Tasks in process: {self.in_process}, ' \
+                       f'Scheduled: {len(self._tasks)}'
+                logger.info(stat, name='Controller (Backend)')
 
     def inspect_queue(self):
         log_time = time.time()
@@ -104,6 +115,7 @@ class ScheduledExecutor:
                 result_callback = Result(scheduled_time=scheduled_time,
                                          from_thread=task.from_thread,
                                          apply_result=apply_result)
+                self.high_demand_check()
                 # logger.debug(task.to_proceed, name=task.from_thread)
                 self._results.append(result_callback)
                 logger.debug('proceeding', len(self._results), task.from_thread)

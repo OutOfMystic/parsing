@@ -1,4 +1,4 @@
-from parse_module.utils.logger import logger
+from parse_module.manager.controller import logger
 
 
 class MarginRules:

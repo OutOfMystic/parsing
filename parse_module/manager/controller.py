@@ -5,6 +5,7 @@ import itertools
 import json
 import os
 import random
+import sys
 import time
 from asyncio import AbstractEventLoop
 
@@ -23,7 +24,7 @@ from ..models.parser import SeatsParser, EventParser
 from parse_module.manager.group import SeatsParserGroup
 from ..utils import provision, utils
 from ..utils.date import Date
-from ..utils.logger import logger, start_async_logger
+from ..utils.logger import start_async_logger, Logger
 from ..utils.utils import differences
 
 PREDEFINED = True
@@ -72,7 +73,7 @@ class Controller:
         # Controller async resources
         start_async_logger()
         self.request_semaphore = asyncio.Semaphore(60)
-        self.pool_async = coroutines.ScheduledExecutor(async_loop)
+        self.pool_async = coroutines.ScheduledExecutor(async_loop, debug=self.debug)
 
         self._load_parsers_with_config(config_path)
 
@@ -432,3 +433,6 @@ def is_package(pack):
 def plain_dict_values(dict_):
     chain = itertools.chain.from_iterable(dict_.values())
     return list(chain)
+
+
+logger = Logger(release='release' in sys.argv, drop_path_level=1, test=False)

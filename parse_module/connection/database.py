@@ -8,7 +8,7 @@ from threading import Lock
 import psycopg2
 
 from ..manager.backstage import tasker
-from ..utils.logger import logger
+from ..manager.controller import logger
 from ..utils.provision import multi_try
 from ..utils import utils, provision, date
 

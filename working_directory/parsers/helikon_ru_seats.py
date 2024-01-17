@@ -2,7 +2,6 @@ import json
 from typing import NamedTuple
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 
@@ -22,7 +21,6 @@ class HelikonRu(AsyncSeatsParser):
         self.driver_source = None
         self.url = 'https://core.helikon.ubsystem.ru/uiapi/event/scheme?id=' + self.url.split('/')[-1]
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
@@ -38,7 +36,6 @@ class HelikonRu(AsyncSeatsParser):
 
         return sector_name
 
-    @track_coroutine
     async def _parse_seats(self) -> OutputData:
         json_data = await self._request_to_all_place()
 
@@ -95,7 +92,6 @@ class HelikonRu(AsyncSeatsParser):
         r = await self.session.get(self.url, headers=headers, verify=False)
         return r.json()
 
-    @track_coroutine
     async def body(self) -> None:
         for sector in await self._parse_seats():
             self.register_sector(sector.sector_name, sector.tickets)

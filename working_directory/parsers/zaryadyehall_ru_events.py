@@ -3,7 +3,6 @@ from typing import NamedTuple, Optional, Union
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
 from parse_module.utils.parse_utils import double_split
@@ -24,11 +23,9 @@ class ZaryadyeHall(AsyncEventParser):
         self.driver_source = None
         self.url: str = 'https://zaryadyehall.ru/event/'
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    @track_coroutine
     async def _parse_events(self) -> OutputEvent:
         soup = await self._requests_to_events()
 
@@ -38,7 +35,6 @@ class ZaryadyeHall(AsyncEventParser):
 
         return await self._parse_events_from_json(events, new_page)
 
-    @track_coroutine
     async def _parse_events_from_json(
             self, events: ResultSet[Tag], new_page: Optional[Union[BeautifulSoup, None]]
     ):
@@ -91,7 +87,6 @@ class ZaryadyeHall(AsyncEventParser):
         events = soup.select('ul.zh-c-list > li.zh-c-list__item.zh-c-item div.zh-c-item__content')
         return events
 
-    @track_coroutine
     async def _requests_to_axaj_data(self, url: str) -> BeautifulSoup:
         headers = {
             'accept': 'text/html, */*; q=0.01',
@@ -112,7 +107,6 @@ class ZaryadyeHall(AsyncEventParser):
         r = await self.session.get(url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    @track_coroutine
     async def _requests_to_events(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'

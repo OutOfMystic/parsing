@@ -10,7 +10,7 @@ from sortedcontainers import SortedDict
 
 from parse_module.console.base import print_cols
 from parse_module.utils import provision, utils
-from parse_module.utils.logger import logger
+from parse_module.manager.controller import logger
 
 Task = namedtuple('Task', ['to_proceed', 'from_thread', 'wait'])
 Result = namedtuple('Result', ['scheduled_time', 'from_thread', 'apply_result'])

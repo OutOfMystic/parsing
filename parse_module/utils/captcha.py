@@ -3,7 +3,7 @@ import time
 
 import requests
 
-from parse_module.utils.logger import logger
+from parse_module.manager.controller import logger
 
 API_KEY = 'f86fe003c5bc005f93a7516e2973658c'
 
