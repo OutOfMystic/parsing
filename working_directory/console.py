@@ -14,6 +14,9 @@
  - apply [condition] [expression]
 """
 
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+
 from parse_module.connection import db_manager
 from parse_module.console.command import CustomPrompt
 

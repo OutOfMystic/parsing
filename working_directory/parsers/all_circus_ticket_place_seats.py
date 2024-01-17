@@ -1,11 +1,8 @@
-import re
 from requests.exceptions import TooManyRedirects
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils.parse_utils import double_split
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class SochiCirkParser(AsyncSeatsParser):
@@ -72,6 +69,7 @@ class SochiCirkParser(AsyncSeatsParser):
         a_sectors = self.make_a_seats(all_place)
 
         for sector, tickets in a_sectors.items():
+            #self.info(sector, len(tickets))
             self.register_sector(sector, tickets)
         #self.check_sectors()
 
