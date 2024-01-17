@@ -2,6 +2,7 @@ import functools
 import inspect
 import json
 import re
+import sys
 import threading
 import time
 import traceback
@@ -10,7 +11,6 @@ from datetime import datetime
 from aiodebug import log_slow_callbacks, hang_inspection
 from colorama import Fore, Back
 
-from parse_module.manager.controller import logger
 from parse_module.utils.date import readable_datetime
 from parse_module.utils.parse_utils import double_split
 from parse_module.utils.utils import lprint, default_fore, default_back
@@ -339,3 +339,4 @@ COLORS = {
     'SUCCESS': Fore.GREEN
 }
 colors_reversed = {value: key for key, value in COLORS.items()}
+logger = Logger(release='release' in sys.argv, drop_path_level=1, test=False)

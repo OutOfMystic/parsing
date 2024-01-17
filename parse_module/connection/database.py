@@ -7,10 +7,10 @@ from threading import Lock
 
 import psycopg2
 
-from ..manager.backstage import tasker
-from ..manager.controller import logger
+from ..utils.logger import logger
 from ..utils.provision import multi_try
 from ..utils import utils, provision, date
+from ..manager.backstage import tasker
 
 locked_counter = 0
 
@@ -395,14 +395,20 @@ class ParsingDB(DBConnection):
 
     @locker
     def get_parser_notifiers(self):
-        columns = ['name']
+        columns = ['name', 'delay', 'tele_profiles',
+                   'print_minus', 'min_amount',
+                   'min_increase', 'repeats_until_succeeded',
+                   'autorun_seats', 'autorun_delay',
+                   'autorun_min_amount', 'autorun_min_increase']
         rows = self.select(f'SELECT {", ".join(columns)} FROM public.tables_eventnotifier')
         event_parsers = []
         for row in rows:
             db_data = {column: value for column, value in zip(columns, row)}
             event_parsers.append(db_data)
 
-        columns = ['event_id']
+        columns = ['event_id', 'delay', 'tele_profiles',
+                   'print_minus', 'min_amount',
+                   'min_increase', 'repeats_until_succeeded']
         rows = self.select(f'SELECT {", ".join(columns)} FROM public.tables_seatsnotifier')
         seats_parsers = []
         for row in rows:

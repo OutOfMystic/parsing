@@ -15,7 +15,7 @@ from ..models import scheme
 from ..models.ai_nlp import venue, solve
 from ..models.ai_nlp.collect import cross_subject_object
 from ..utils import provision
-from .controller import logger
+from ..utils.logger import logger
 from ..utils.provision import multi_try
 
 send_lock = threading.Lock()

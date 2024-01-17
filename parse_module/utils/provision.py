@@ -10,7 +10,7 @@ from typing import Callable, Iterable, Awaitable, Coroutine, Optional
 from . import utils
 import colorama
 
-from ..manager.controller import logger
+from .logger import logger
 
 colorama.init()
 

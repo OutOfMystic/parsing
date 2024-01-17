@@ -6,7 +6,7 @@ from ..coroutines import AsyncSeatsParser
 from ..models.parser import SeatsParser
 from ..utils.date import Date
 from ..utils import utils, provision
-from .controller import logger
+from ..utils.logger import logger
 
 
 class SeatsParserGroup:

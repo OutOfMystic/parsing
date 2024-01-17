@@ -9,7 +9,7 @@ from . import check
 from .check import SpecialConditions, NormalConditions
 from ...utils import provision
 from .instances import UniProxy
-from ..controller import logger
+from ...utils.logger import logger
 from ...utils.provision import threading_try
 
 

@@ -11,7 +11,7 @@ from typing import Iterable
 import telebot
 
 from parse_module.utils import provision
-from parse_module.manager.controller import logger
+from parse_module.utils.logger import logger
 
 
 class BotInstance:

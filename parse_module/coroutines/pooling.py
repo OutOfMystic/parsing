@@ -10,7 +10,7 @@ from sortedcontainers import SortedDict
 
 from ..console.base import print_cols
 from ..utils import provision, utils
-from ..manager.controller import logger
+from ..utils.logger import logger
 
 Task = namedtuple('Task', ['to_proceed', 'from_thread', 'wait'])
 Result = namedtuple('Result', ['scheduled_time', 'from_thread', 'apply_result'])

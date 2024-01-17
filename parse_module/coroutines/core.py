@@ -5,7 +5,7 @@ from typing import Callable, Iterable, Optional
 
 from ..manager.core import Bot
 from ..utils import provision
-from ..manager.controller import logger
+from ..utils.logger import logger
 
 
 class CoroutineBot(Bot, ABC):

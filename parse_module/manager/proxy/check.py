@@ -6,7 +6,7 @@ import time
 from requests.exceptions import ProxyError
 
 from ...utils import provision
-from ..controller import logger
+from ...utils.logger import logger
 from ...models import user_agent
 
 CHECK_DELAY = 2 * 60 * 60

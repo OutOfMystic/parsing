@@ -12,7 +12,7 @@ from aiohttp.typedefs import StrOrURL, JSONDecoder
 from requests import Session
 
 from parse_module.utils.exceptions import RaspizdyaistvoError
-from parse_module.manager.controller import logger
+from parse_module.utils.logger import logger
 
 PARALLEL_EXECUTIONS = 3
 in_process = 0

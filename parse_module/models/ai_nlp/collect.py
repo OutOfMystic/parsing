@@ -5,7 +5,7 @@ import time
 from parse_module.connection import db_manager
 from parse_module.utils import utils
 from parse_module.utils.date import Date
-from parse_module.manager.controller import logger
+from parse_module.utils.logger import logger
 
 
 def cross_subject_object(subjects, objects, venues, solver, cache_dict, types_on_site, labels=None):

@@ -1,16 +1,14 @@
 import threading
 from collections import namedtuple
-from importlib.resources import files
 from threading import Lock
 
 from psycopg2 import extras
 
-from .. import connection
 from ..connection import db_manager
 from ..manager.backstage import tasker
 from ..utils import utils, provision
 from ..utils.exceptions import SchemeError, ParsingError, InternalError
-from ..manager.controller import logger
+from ..utils.logger import logger
 from ..utils.provision import multi_try
 from ..utils.types import LocalDict
 

@@ -5,12 +5,10 @@ import itertools
 import json
 import os
 import random
-import sys
 import time
 from asyncio import AbstractEventLoop
 
 from . import pooling
-from . import router as router_
 from .inspect import run_inspection
 from .proxy import loader
 from .telecore import TeleCore
@@ -24,7 +22,7 @@ from ..models.parser import SeatsParser, EventParser
 from parse_module.manager.group import SeatsParserGroup
 from ..utils import provision, utils
 from ..utils.date import Date
-from ..utils.logger import start_async_logger, Logger
+from ..utils.logger import start_async_logger, logger
 from ..utils.utils import differences
 
 PREDEFINED = True
@@ -34,7 +32,7 @@ class Controller:
     def __init__(self,
                  parsers_path,
                  config_path,
-                 router: router_.SchemeRouterFrontend,
+                 router,
                  async_loop: AbstractEventLoop,
                  pending_delay=60,
                  debug_url=None,
@@ -190,16 +188,16 @@ class Controller:
         return predefined_connections, ai_connections
 
     def database_interaction(self):
+        start_time = time.time()
         self.update_margins_from_database()
         self.parsed_events = db_manager.get_parsed_events(types=self.parsing_types)
         self.event_aliases.step()
-        return db_manager.get_events_for_parsing()
-
-    def load_connections(self):
-        start_time = time.time()
-        subjects = self.database_interaction()
+        events_for_parsing = db_manager.get_events_for_parsing()
         logger.debug(f'Database interaction {time.time() - start_time}', name='Controller')
+        return events_for_parsing
 
+    def load_connections(self, subjects):
+        # MAKE CONNECTIONS AND DISTRIBUTE THEM TO SEATS GROUPS
         all_connections = {group: [] for group in self.seats_groups}
         predefined_connections, ai_connections = self.get_connections(subjects)
         for connection in predefined_connections:
@@ -212,6 +210,7 @@ class Controller:
                 if group.url_filter(connection['url']):
                     all_connections[group].append(connection)
 
+        # UPDATE SEATS GROUPS WITH GAINED CONNECTIONS
         if not self.debug:
             for group, connections in all_connections.items():
                 if not connections:
@@ -228,28 +227,27 @@ class Controller:
             for group, connections in self.get_debug_ev_id_conns(all_connections):
                 group.update(connections)
 
-        # Start async logger
+        """ # Start async logger
         if not self._async_logger_started:
             #start_async_logger(self.async_loop)
-            self._async_logger_started = True
+            self._async_logger_started = True"""
 
         # Do some database work at the end of step
-        lock_time = time.time()
         self._reset_tickets(subjects, all_connections)
         self._update_db_with_stored_urls(predefined_connections + ai_connections)
 
         # Waiting for seats lockers to be released
         while any(group.start_lock.locked() for group in self.seats_groups):
-            if time.time() - lock_time > self.pending_delay:
-                connected = sum(group.going_to_start for group in self.seats_groups)
-                groups_locked = [group.name for group in self.seats_groups if group.start_lock.locked()]
-                groups_in_a_row = ', '.join(groups_locked) if len(groups_locked) <= 3 else len(groups_locked)
-                message = f'Seats groups\' ({groups_in_a_row}) lockers are still being released... ' \
-                          f'Going to start {connected}'
-                self.bprint(message, color=utils.Fore.LIGHTGREEN_EX)
-            time.sleep(5)
+            connected = sum(group.going_to_start for group in self.seats_groups)
+            groups_locked = [group.name for group in self.seats_groups if group.start_lock.locked()]
+            groups_in_a_row = ', '.join(groups_locked) if len(groups_locked) <= 3 else len(groups_locked)
+            message = f'Seats groups\' ({groups_in_a_row}) lockers are still being released... ' \
+                      f'Going to start {connected}'
+            self.bprint(message, color=utils.Fore.LIGHTGREEN_EX)
+            time.sleep(2)
 
     def _load_notifiers(self):
+        # EVENT NOTIFIERS
         events_to_load, seats_to_load = db_manager.get_parser_notifiers()
 
         events_to_load_names = {f"EventParser ({data['name']})": data for data in events_to_load}
@@ -257,13 +255,13 @@ class Controller:
                                for notifier in self.event_notifiers}
         to_del, to_review, to_add = utils.differences(loaded_events_names, events_to_load_names)
 
-        # EVENTS NOTIFIERS TO STOP
+        # EVENT NOTIFIERS TO STOP
         for parsing_name in to_del:
             notifier = loaded_events_names[parsing_name]
             notifier.stop()
             self.event_notifiers.remove(notifier)
 
-        # EVENTS NOTIFIERS TO REVIEW
+        # EVENT NOTIFIERS TO REVIEW
         for parsing_name in to_review:
             notifier = loaded_events_names[parsing_name]
             notifier_data = events_to_load_names[parsing_name]
@@ -273,7 +271,7 @@ class Controller:
             for attribute, value in notifier_data.items():
                 setattr(notifier, attribute, value)
 
-        # EVENTS NOTIFIERS TO LOAD
+        # EVENT NOTIFIERS TO LOAD
         event_parsers_to_add = {parser.name: parser for parser in self.event_parsers
                                 if parser.name in to_add}
         for parsing_name, event_parser in event_parsers_to_add.items():
@@ -283,11 +281,22 @@ class Controller:
                         f' was attached to the parser')
             self.event_notifiers.append(notifier)
 
-        seats_to_load_names = {notifier['event_id']: notifier for notifier in seats_to_load}
+        # SEATS NOTIFIERS
+        seats_to_load_names = {load_data['event_id']: load_data for load_data in seats_to_load}
         loaded_seats_names = {notifier.event_id: notifier for notifier in self.seats_notifiers}
         all_seats_parsers = itertools.chain.from_iterable(group.parsers for group in self.seats_groups)
         all_seats_parsers = list(all_seats_parsers)
         to_del, to_review, to_add = utils.differences(loaded_seats_names, seats_to_load_names)
+
+        # PREPARING DATA FOR LOADED WITH AUTORUN SETTINGS
+        events_to_autorun = {data['name']: data for data in events_to_load if data['autorun_seats']}
+        seats_to_run = {}
+        for parser in all_seats_parsers:
+            if parser.parent in events_to_autorun:
+                seats_to_run[parser.event_id] = parser
+                if parser.event_id in seats_to_load_names:
+                    continue
+                seats_to_load_names[parser.event_id] = events_to_autorun[parser.parent]
 
         # SEATS NOTIFIERS TO STOP
         for event_id in to_del:
@@ -308,7 +317,8 @@ class Controller:
         # SEATS NOTIFIERS TO LOAD
         seats_parsers_to_add = {parser.event_id: parser for parser in all_seats_parsers
                                 if parser.event_id in to_add}
-        for event_id, seats_parser in seats_parsers_to_add.items():
+        seats_to_run.update(seats_parsers_to_add)
+        for event_id, seats_parser in seats_to_run.items():
             notifier_data = seats_to_load_names[event_id]
             notifier = from_parsing.SeatsNotifier(self, seats_parser, name=seats_parser.name,
                                                   **notifier_data)
@@ -394,10 +404,11 @@ class Controller:
             self.bprint(utils.red('DEBUG') + utils.green(' EVENT ID IS DEFINED!!!'))
 
         while True:
-            provision.multi_try(self.load_connections, name='Controller',
-                                tries=1, raise_exc=False)
-            provision.multi_try(self._load_notifiers, name='Controller',
-                                tries=1, raise_exc=False)
+            subjects = provision.just_try(self.database_interaction, name='Controller')
+            if subjects is provision.TryError:
+                continue
+            provision.just_try(self.load_connections, args=(subjects,), name='Controller')
+            provision.just_try(self._load_notifiers, name='Controller')
             delay = self.pending_delay if time.time() > self.fast_time else fast_delay
             time.sleep(delay)
 
@@ -434,5 +445,3 @@ def plain_dict_values(dict_):
     chain = itertools.chain.from_iterable(dict_.values())
     return list(chain)
 
-
-logger = Logger(release='release' in sys.argv, drop_path_level=1, test=False)

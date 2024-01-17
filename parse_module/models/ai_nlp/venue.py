@@ -3,7 +3,7 @@ import threading
 from threading import Lock
 
 from ...connection import db_manager
-from ...manager.controller import logger
+from ...utils.logger import logger
 
 
 class VenueAliases:

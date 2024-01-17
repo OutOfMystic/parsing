@@ -9,7 +9,7 @@ from ..manager.proxy import check
 from ..utils import utils, provision
 from ..utils.date import Date
 from ..utils.exceptions import ParsingError, ProxyHubError
-from ..manager.controller import logger
+from ..utils.logger import logger
 
 
 class ParserBase(core.Bot, ABC):
