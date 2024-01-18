@@ -194,6 +194,11 @@ class Logger(threading.Thread):
     def apply_filter(self, source, level):
         self.source_filter = source
         self.level_filter = level
+        last_megabytes = 2
+        if level:
+            last_megabytes *= 5
+        if source:
+            last_megabytes *= 10
 
         print('\n' * 1000 + 'Collecting last messages ...')
 
