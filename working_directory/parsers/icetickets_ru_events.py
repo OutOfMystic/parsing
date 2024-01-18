@@ -60,7 +60,7 @@ class Icetickets(AsyncEventParser):
             href = title_and_href.get('href')
             href = 'https://icetickets.ru' + href
             try:
-                soup = self.get_events(href)
+                soup = await self.get_events(href)
                 all_href_and_date = soup.find('select', class_='select-date-select')
                 all_option = all_href_and_date.find_all('option', value=True)
                 for href_and_date in all_option:
