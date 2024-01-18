@@ -27,6 +27,7 @@ class Task:
 class ScheduledExecutor:
     def __init__(self, loop: AbstractEventLoop, max_connects=100, debug=False):
         super().__init__()
+        self.frst = set() # TODO: TEST
         self.debug = debug
         self._loop = loop
         self._tasks = SortedDict()
@@ -58,7 +59,7 @@ class ScheduledExecutor:
         if time.time() - self._last_demand_check > 5 or self.debug:
             self._last_demand_check = time.time()
             if self.in_process >= awaiting_lower_limit:
-                stat = f'Digh demand. Tasks in process: {self.in_process}, ' \
+                stat = f'High demand. Tasks in process: {self.in_process}, ' \
                        f'Scheduled: {len(self._tasks)}'
                 logger.info(stat, name='Controller (Backend)')
 
@@ -118,7 +119,10 @@ class ScheduledExecutor:
                 self.high_demand_check()
                 # logger.debug(task.to_proceed, name=task.from_thread)
                 self._results.append(result_callback)
-                logger.debug('proceeding', len(self._results), task.from_thread)
+                
+                frst = 'NEW' if task.from_thread not in self.frst else 'OLD'
+                self.frst.add(frst)
+                logger.debug('proceeding', frst, len(self._results), task.from_thread)
 
         to_del = []
         for i, result_callback in enumerate(self._results):

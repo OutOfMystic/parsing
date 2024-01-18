@@ -233,17 +233,19 @@ class Controller:
             self._async_logger_started = True"""
 
         # Do some database work at the end of step
+        start_time = time.time()
         self._reset_tickets(subjects, all_connections)
         self._update_db_with_stored_urls(predefined_connections + ai_connections)
 
         # Waiting for seats lockers to be released
         while any(group.start_lock.locked() for group in self.seats_groups):
-            connected = sum(group.going_to_start for group in self.seats_groups)
-            groups_locked = [group.name for group in self.seats_groups if group.start_lock.locked()]
-            groups_in_a_row = ', '.join(groups_locked) if len(groups_locked) <= 3 else len(groups_locked)
-            message = f'Seats groups\' ({groups_in_a_row}) lockers are still being released... ' \
-                      f'Going to start {connected}'
-            self.bprint(message, color=utils.Fore.LIGHTGREEN_EX)
+            if time.time() - start_time > self.pending_delay:
+                connected = sum(group.going_to_start for group in self.seats_groups)
+                groups_locked = [group.name for group in self.seats_groups if group.start_lock.locked()]
+                groups_in_a_row = ', '.join(groups_locked) if len(groups_locked) <= 3 else len(groups_locked)
+                message = f'Seats groups\' ({groups_in_a_row}) lockers are still being released... ' \
+                          f'Going to start {connected}'
+                self.bprint(message, color=utils.Fore.YELLOW)
             time.sleep(2)
 
     def _load_notifiers(self):
