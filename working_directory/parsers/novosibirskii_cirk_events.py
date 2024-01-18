@@ -66,9 +66,9 @@ class CircusNovosib(AsyncEventParser):
         url = f'https://ticket-place.ru/widget/{id}/similar'
         all_events_json = await self.session.get(url, headers=self.headers)
 
-        with open('TEST2.json', 'w', encoding='utf-8') as file:
-            import json
-            json.dump(all_events_json.json(), file, indent=4, ensure_ascii=False) 
+        # with open('TEST2.json', 'w', encoding='utf-8') as file:
+        #     import json
+        #     json.dump(all_events_json.json(), file, indent=4, ensure_ascii=False) 
 
         for i in all_events_json.json().get("events"):
             title = i.get("name")
