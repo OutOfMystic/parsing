@@ -9,8 +9,6 @@ from parse_module.utils.logger import logger
 
 
 def cross_subject_object(subjects, objects, venues, solver, cache_dict, types_on_site, labels=None):
-    start_time = time.time()
-
     matrix_generator = make_matrix(subjects, objects, venues, types_on_site, labels=labels)
     for pairs, submatrix_shapes, priority, margin, _, _ in matrix_generator:
         names_from_pairs = [(subject['event_name'], object_['event_name'],) for subject, object_ in pairs]
@@ -18,7 +16,6 @@ def cross_subject_object(subjects, objects, venues, solver, cache_dict, types_on
         connections = [build_connection(subj, obj_, priority, margin) for subj, obj_ in assignments]
         for connection in connections:
             yield connection
-    logger.debug(f'Cross Subject execution {time.time() - start_time}')
 
     """start_time = time.time()
     matricies_data = list(data[:4] for data in make_matrix(subjects, objects, venues, types_on_site))
