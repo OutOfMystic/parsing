@@ -1,9 +1,6 @@
 from parse_module.manager.proxy.check import SpecialConditions
-from parse_module.models.parser import SeatsParser
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils.provision import multi_try
-from parse_module.utils import utils
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class ProfticketParser(AsyncSeatsParser):
@@ -217,4 +214,5 @@ class ProfticketParser(AsyncSeatsParser):
             for sector in a_sectors:
                 if sector['name'] == 'Ложа дирекции 3':
                     continue
+                #self.debug(sector['name'], len(sector['tickets']))
                 self.register_sector(sector['name'], sector['tickets'])
