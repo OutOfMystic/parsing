@@ -1,15 +1,16 @@
 from datetime import datetime
 from typing import Optional
 
-from parse_module.coroutines import AsyncEventParser
 from bs4 import BeautifulSoup
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+
+from parse_module.coroutines import AsyncEventParser
+from parse_module.manager.proxy.check import SpecialConditions
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class BileterEvent(AsyncEventParser):
-    
-    proxy_check_url = "https://www.bileter.ru/"
+    proxy_check = SpecialConditions(url="https://www.bileter.ru/")
+
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 1800
@@ -32,8 +33,8 @@ class BileterEvent(AsyncEventParser):
             'x-requested-with': 'XMLHttpRequest',
         }
         self.urls = [
-            'https://www.bileter.ru/afisha?building[]=aleksandrinskiy_teatr.html', # Александрийский театр
-            'https://www.bileter.ru/afisha?building[]=bolshoy_dramaticheskiy_teatr_imgatovstonogova.html', # БДТ Товстогонова
+            #'https://www.bileter.ru/afisha?building[]=aleksandrinskiy_teatr.html', # Александрийский театр
+            #'https://www.bileter.ru/afisha?building[]=bolshoy_dramaticheskiy_teatr_imgatovstonogova.html', # БДТ Товстогонова
             # 'https://www.bileter.ru/afisha?building[]=dom_ofitserov.html', # Дом офицеров
             'https://www.bileter.ru/afisha?building[]=bolshoy_kontsertnyiy_zal_oktyabrskiy.html' # БКЗ "Октябрьский"
         ]
@@ -97,6 +98,7 @@ class BileterEvent(AsyncEventParser):
     
     def put_db(self, events : list[tuple]) -> None: 
         for event in events:
+            #self.debug(event)
             self.register_event(event_name=event[0], url=event[1], date=event[2], venue=event[3])
             
         
@@ -117,7 +119,7 @@ class BileterEvent(AsyncEventParser):
                 p = soup.find('p', class_='uppercase')
                 
                 if p is not None:
-                    self.info("Done")
+                    #self.debug("Done")
                     return
 
                 events = soup.find_all('div', class_='afishe-item')
