@@ -121,7 +121,7 @@ class ScheduledExecutor:
                 self._results.append(result_callback)
                 
                 frst = 'NEW' if task.from_thread not in self.frst else 'OLD'
-                self.frst.add(frst)
+                self.frst.add(task.from_thread)
                 logger.debug('proceeding', frst, len(self._results), task.from_thread)
 
         to_del = []
