@@ -205,16 +205,19 @@ class Logger(threading.Thread):
         start_time = time.time()
         rows = []
         self.pause()
-        with open(self.log_path, 'r', encoding='utf-8') as file:
+        with open(self.log_path, 'rb') as file:
             file.seek(0, 2)
             file_size = file.tell()
             start_pos = max(0, file_size - 2 * 1024 * 1024)
             file.seek(start_pos)
-            lines = file.readlines()
-            for line in lines:
-                rows.append(line)
-                if '"message":"Logger started"' in line:
-                    rows.clear()
+            for line in file:
+                try:
+                    line = line.decode('utf-8')
+                    rows.append(line)
+                    if '"message":"Logger started"' in line:
+                        rows.clear()
+                except Exception as error:
+                    logger.warning(f'Log line is not utf-8 encoded: {error}', name='Controller')
 
         start_time = time.time()
         for row in rows:
