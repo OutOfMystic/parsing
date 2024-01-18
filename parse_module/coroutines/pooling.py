@@ -25,7 +25,7 @@ class Task:
 
 
 class ScheduledExecutor:
-    def __init__(self, loop: AbstractEventLoop, max_connects=100, debug=False):
+    def __init__(self, loop: AbstractEventLoop, max_connects=500, debug=False):
         super().__init__()
         self.frst = set() # TODO: TEST
         self.debug = debug
