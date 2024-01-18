@@ -1,12 +1,8 @@
-import re
 from requests.exceptions import TooManyRedirects
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.manager.proxy.check import NormalConditions
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils.parse_utils import double_split
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class SochiCirkParser(AsyncSeatsParser):
@@ -19,11 +15,9 @@ class SochiCirkParser(AsyncSeatsParser):
         self.driver_source = None
         self.url = self.url[:self.url.index('|')]
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    @track_coroutine
     async def get_all_seats(self):
             headers = {
                     'accept': 'application/json, text/plain, */*',
@@ -67,7 +61,6 @@ class SochiCirkParser(AsyncSeatsParser):
                     continue
         return a_sectors
 
-    @track_coroutine
     async def body(self):
         
         all_place = await self.get_all_seats()
@@ -76,6 +69,7 @@ class SochiCirkParser(AsyncSeatsParser):
         a_sectors = self.make_a_seats(all_place)
 
         for sector, tickets in a_sectors.items():
+            #self.info(sector, len(tickets))
             self.register_sector(sector, tickets)
         #self.check_sectors()
 
@@ -94,8 +88,7 @@ class SochiCirkParser(AsyncSeatsParser):
 #         elif 'правая сторона' in sector.lower():
 #             sector = 'Правая сторона'
 #         return sector
-    
-#   @track_coroutine
+
 #   async def body(self):
 #         super().body()
 

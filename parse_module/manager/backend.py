@@ -41,6 +41,7 @@ class Postponer(threading.Thread):
     def put_task(self, method, args):
         event_id = args[0]
         queue = self.locked_queues.get(event_id, None)
+
         if queue is None:
             self._process_task(method, args)
         else:
@@ -228,6 +229,7 @@ def process_starting(inner_conn, login, password):
 def get_router(db_login, db_password):
     outer_conn, inner_conn = multiprocessing.Pipe()
     outer_conn.send = send_threadsafe.__get__(outer_conn)
+    logger.info('Backend initing...', name='Controller (Backend)')
     process = multiprocessing.Process(target=process_starting,
                                       args=(inner_conn, db_login, db_password,))
     process.start()

@@ -3,7 +3,6 @@ from typing import NamedTuple, Optional, Union
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.utils.parse_utils import double_split
@@ -25,11 +24,9 @@ class AlexandrinskyRu(AsyncEventParser):
         self.url: str = 'https://alexandrinsky.ru/afisha-i-bilety/'
         self.session = None  # Инициализация переменной сеанса
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    @track_coroutine
     async def _parse_events(self):
         soup = await self._requests_to_events()
 
@@ -39,7 +36,6 @@ class AlexandrinskyRu(AsyncEventParser):
 
         return await self._parse_events_from_soup(events, all_ajax_pages)
 
-    @track_coroutine
     async def _parse_events_from_soup(self, events: ResultSet[Tag], all_ajax_pages: int):
         datas = []
         for count_page in range(2, all_ajax_pages + 2):
@@ -53,7 +49,6 @@ class AlexandrinskyRu(AsyncEventParser):
             events = self._get_events_from_soup(soup)
         return datas
 
-    @track_coroutine
     async def _parse_data_from_event(self, event: Tag):
         title = event.find('a').text.strip()
 
@@ -81,7 +76,6 @@ class AlexandrinskyRu(AsyncEventParser):
         all_pages = all_pages.get('value')
         return int(all_pages)
 
-    @track_coroutine
     async def _requests_to_axaj_events(self, next_page: str) -> BeautifulSoup:
         headers = {
             'accept': '*/*',
@@ -112,7 +106,6 @@ class AlexandrinskyRu(AsyncEventParser):
         r = await self.session.get(url, headers=headers, data=data)
         return BeautifulSoup(r.text, 'lxml')
 
-    @track_coroutine
     async def _requests_to_events(self) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
@@ -137,7 +130,6 @@ class AlexandrinskyRu(AsyncEventParser):
         r = await self.session.get(self.url, headers=headers)
         return BeautifulSoup(r.text, 'lxml')
     
-    @track_coroutine
     async def body(self) -> None:
         for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date, event_id=event.event_id)

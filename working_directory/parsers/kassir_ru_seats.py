@@ -1,24 +1,23 @@
+import asyncio
 import re
 
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.manager.proxy.check import NormalConditions
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.check import SpecialConditions
+from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
 class KassirParser(AsyncSeatsParser):
-    proxy_check = NormalConditions()
+    proxy_check = SpecialConditions(url='https://www.kassir.ru/')
     event = 'kassir.ru'
-    url_filter = lambda event: 'kassir.ru' in event and 'crocus2' not in event and 'frame' not in event \
-                               and 'schematr' not in event \
-                               and 'vtb-arena-tsentralnyiy-stadion-dinamo/rusalochka' not in event
+    url_filter = lambda event: ('kassir.ru' in event and 'crocus2' not in event and 'frame' not in event 
+                                    and 'schematr' not in event )
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
-        self.delay = 1200
+        self.delay = 1600
         self.driver_source = None
 
         self.scheme_identifier = ''
@@ -1434,11 +1433,12 @@ class KassirParser(AsyncSeatsParser):
         for sector, tickets in a_sectrors.items():
             if 'Балкон, ложа' in sector:
                 number = sector.split()[-1]
+                number = re.search(r'\d+', number)[0]
                 sector = f'Балкон. Ложа №{number}'
-
+            
             elif 'Балкон, боковое левое' in sector:
                 sector = f'Балкон. Боковое левое (места с ограниченной видимостью)'
-
+            
             elif 'Балкон, боковое правое' in sector:
                 sector = f'Балкон. Боковое правое (места с ограниченной видимостью)'
 
@@ -1457,10 +1457,14 @@ class KassirParser(AsyncSeatsParser):
             elif 'Ложа амфитеатра' in sector:
                 number = sector.split()[-1]
                 sector = f'Амфитеатр. Ложа №{number}'
-
+            
             elif 'Ложа бельэтажа' in sector:
                 number = sector.split()[-1]
                 sector = f'Бельэтаж. Ложа №{number}'
+
+            elif 'Амфитеатр, литер' in sector:
+                letter = sector.split()[-1]
+                sector = f'Амфитеатр. Литер {letter}'
 
             res_sectors.setdefault(sector, {}).update(tickets)
         return res_sectors
@@ -1621,12 +1625,15 @@ class KassirParser(AsyncSeatsParser):
         }
         response = await self.session.get(url, headers=self.new_headers)
 
-        count = 10
-        if (not response.ok or response.text == '[]') and count > 0:
-            await self.change_proxy()
+        count = 5
+        while (not response.ok or response.text == '[]') and count > 0:
             self.debug(url, response.text)
-            raise RuntimeError(f'{count} {self.proxy.args}, {url}, {self.session.cookies} this IP is block')
-
+            count -= 1
+            await asyncio.sleep(30)
+            await self.change_proxy()
+            response = await self.session.get(url, headers=self.new_headers)
+            
+            
         # with open('TEST2.json', 'w', encoding='utf-8') as file:
         #     json.dump(response.json(), file, indent=4, ensure_ascii=False) 
 
@@ -1645,19 +1652,23 @@ class KassirParser(AsyncSeatsParser):
 
         res = {}
         for sector in avalible_sectors:
-            res.setdefault(sector[1], {})
-            url_load_cheme = f'https://api.kassir.ru/api/orders/sectors/scheme/{self.id}/{sector[0]}?domain={self.domain}'
-            r = await self.session.get(url=url_load_cheme, headers=self.new_headers)
-            s = BeautifulSoup(r.text, 'lxml-xml')
+            try:
+                await asyncio.sleep(0.2)
+                res.setdefault(sector[1], {})
+                url_load_cheme = f'https://api.kassir.ru/api/orders/sectors/scheme/{self.id}/{sector[0]}?domain={self.domain}'
+                r = await self.session.get(url=url_load_cheme, headers=self.new_headers)
+                s = BeautifulSoup(r.text, 'lxml-xml')
 
-            polygon =  [i for i in s.find_all('polygon') if 'kh:tariff-group-id' in i.attrs]
-            for i in polygon:
-                row = i.get('kh:rowNumber')
-                if not row: row = '1'
-                price = int(tarif_prices.get(int(i.get('kh:tariff-group-id'))))
-                place = i.find_next('text').text
-                place_to_write = {(row,str(place)):price}
-                res.get(sector[1],{}).update(place_to_write)
+                polygon =  [i for i in s.find_all('polygon') if 'kh:tariff-group-id' in i.attrs]
+                for i in polygon:
+                    row = i.get('kh:rowNumber')
+                    if not row: row = '1'
+                    price = int(tarif_prices.get(int(i.get('kh:tariff-group-id'))))
+                    place = i.find_next('text').text
+                    place_to_write = {(row,str(place)):price}
+                    res.get(sector[1],{}).update(place_to_write)
+            except Exception as ex:
+                self.warning(f'{sector}: Exception:{ex}')
 
         return res
 
@@ -1708,7 +1719,10 @@ class KassirParser(AsyncSeatsParser):
             a_sectors = self.reformat_megasport(a_sectors)
         elif self.venue == 'G-Drive Арена':
             a_sectors = self.reformat_g_drive(a_sectors)
+        elif 'Моссовета' in self.venue:
+            a_sectors = self.reformat_mossovet(a_sectors)
 
         for sector, tickets in a_sectors.items():
+            #self.info(sector, len(tickets))
             self.register_sector(sector.strip(), tickets)
         #self.check_sectors()

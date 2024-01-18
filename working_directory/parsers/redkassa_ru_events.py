@@ -4,7 +4,6 @@ from time import sleep
 
 from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncEventParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.models.parser import EventParser
 from parse_module.utils.date import month_list
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
@@ -40,7 +39,6 @@ class Redkassa(AsyncEventParser):
             'user-agent': self.user_agent
         }
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
@@ -58,7 +56,6 @@ class Redkassa(AsyncEventParser):
         return f"{formatted_day} {month_text} {year} {formatted_time}"
     
 
-    @track_coroutine
     async def take_all_events(self, url):
         r = await self.session.get(url, headers=self.headers)
 
@@ -108,7 +105,6 @@ class Redkassa(AsyncEventParser):
             sleep(4)
         return a_events
 
-    @track_coroutine
     async def parse_events(self, all_events):
         a_events = []
 
@@ -173,12 +169,10 @@ class Redkassa(AsyncEventParser):
 
         return a_events
 
-    @track_coroutine
     async def requests_to_events(self, url):
         r = await self.session.get(url, headers=self.headers)
         return BeautifulSoup(r.text, 'lxml')
 
-    @track_coroutine
     async def new_get_all_events(self, url):
         soup = await self.requests_to_events(url)
 
@@ -205,7 +199,6 @@ class Redkassa(AsyncEventParser):
                 self.error(ex)
         return a_events
 
-    @track_coroutine
     async def body(self):
         a_events = []
         for url in self.urls:

@@ -4,7 +4,6 @@ import json
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.utils.date import month_list
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
@@ -25,11 +24,9 @@ class MdtDodin(AsyncEventParser):
         self.driver_source = None
         self.url: str = 'https://mdt-dodin.ru/plays/afisha/'
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    @track_coroutine
     async def _parse_events(self):
         soup = await self._requests_to_events(self.url)
 
@@ -41,7 +38,6 @@ class MdtDodin(AsyncEventParser):
 
         return await self._get_filtered_events(all_events)
 
-    @track_coroutine
     async def _get_filtered_events(self, all_events: list[OutputEvent]) -> OutputEvent:
         events = []
         all_id_event = [event.id_event for event in all_events]
@@ -51,7 +47,6 @@ class MdtDodin(AsyncEventParser):
             if self._get_status_event(data_status_event, event.id_event):
                 events.append(event)
 
-    @track_coroutine
     async def _parse_events_from_json(self, events: list, links_with_all_events_pages: list[str]) -> list[OutputEvent]:
         output_list = []
         for index, link_with_events in enumerate(links_with_all_events_pages):

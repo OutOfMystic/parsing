@@ -1,5 +1,4 @@
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.manager.proxy.sessions import AsyncProxySession
 
@@ -20,11 +19,9 @@ class AfishaRuSeats(AsyncSeatsParser):
                 },
             }
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    @track_coroutine
     async def load_scheme(self):
         headers = {
             "accept": "application/json",
@@ -102,7 +99,6 @@ class AfishaRuSeats(AsyncSeatsParser):
                             })
         return dict_seats
 
-    @track_coroutine
     async def body(self):
         scheme_json = await self.load_scheme()
         if not scheme_json:

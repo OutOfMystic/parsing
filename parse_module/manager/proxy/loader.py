@@ -9,7 +9,7 @@ from . import check
 from .check import SpecialConditions, NormalConditions
 from ...utils import provision
 from .instances import UniProxy
-from ...utils.logger import logger, track_coroutine
+from ...utils.logger import logger
 from ...utils.provision import threading_try
 
 
@@ -66,7 +66,6 @@ class ProxyOnCondition:
             sleep_time += 0.1
             time.sleep(0.1)
 
-    @track_coroutine
     async def _wait_async(self):
         sleep_time = 0.1
         while not self.last_update:
@@ -83,7 +82,6 @@ class ProxyOnCondition:
         else:
             return None
 
-    @track_coroutine
     async def get_async(self):
         if not self.last_update:
             await self._wait_async()

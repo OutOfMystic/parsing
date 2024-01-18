@@ -3,7 +3,6 @@ import re
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
@@ -18,7 +17,6 @@ class KVNParser(AsyncEventParser):
         self.driver_source = None
         self.url = 'https://domkvn.ru/afisha-1.html'
     
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
@@ -28,7 +26,6 @@ class KVNParser(AsyncEventParser):
         day, month, nothing, time = date.split()
         return f"{day} {month[:3].capitalize()} {time}"
 
-    @track_coroutine
     async def get_html(self, url):
         headers = {
                 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -72,7 +69,6 @@ class KVNParser(AsyncEventParser):
 
         return a_events
 
-    @track_coroutine
     async def body(self):
         text = await self.get_html(self.url)
         soup = BeautifulSoup(text, 'lxml')

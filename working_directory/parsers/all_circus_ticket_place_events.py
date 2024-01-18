@@ -6,8 +6,7 @@ import locale
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -185,7 +184,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         a_events = []
 
         for url, info in self.urls_ONE.items():
-            self.debug(url)
+            #self.debug(url)
             '''https://ticket-place.ru/calendar-widget/ для поиска events'''
             try:
                 url_strip = re.search(r'(?<=://).+(?=/)', url)[0]
@@ -194,11 +193,11 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
                 all_events = await self.load_all_events_ONE(url_strip, url_to_load)
                 a_events_ONE = self.make_events_ONE(title, slug, venue, all_events)
                 a_events.extend(a_events_ONE)
-            except Exception:
-                continue
+            except Exception as ex:
+                self.warning(f'Some problem in {url} {info} {ex}')
         
         for url, info in self.urls_TWO.items():
-            self.debug(url)
+            #self.debug(url)
             '''https://ticket-place.ru/widget/{id}/similar для поиска events'''
             try:
                 events_box = set()
@@ -240,10 +239,11 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
                 a_events.extend(events_box)
 
             except Exception as ex:
-                continue
+                self.warning(f'Some problem in {url} {info} {ex}')
 
 
         for event in a_events:
+            #self.info(event)
             self.register_event(event_name=event.title ,url=event.href,
                                        date=event.date , venue=event.venue)
                 

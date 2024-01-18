@@ -3,7 +3,6 @@ import re
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.models.parser import SeatsParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
@@ -19,7 +18,6 @@ class Bilettorg(AsyncSeatsParser):
         self.delay = 1200
         self.driver_source = None
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
@@ -666,7 +664,6 @@ class Bilettorg(AsyncSeatsParser):
                 })
         return new_a_sectors
 
-    @track_coroutine
     async def parse_seats(self):
         total_sector = []
 
@@ -752,7 +749,6 @@ class Bilettorg(AsyncSeatsParser):
 
         return total_sector
 
-    @track_coroutine
     async def requests_to_seats(self, url):
         headers = {
             'accept': '*/*',

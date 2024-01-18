@@ -45,8 +45,16 @@ class EventNotifier(ParsingNotifier, ABC):
     def __init__(self,
                  controller,
                  event_parser: EventParser,
+                 autorun_seats,
+                 autorun_delay,
+                 autorun_min_amount,
+                 autorun_min_increase,
                  **kwargs):
         super().__init__(controller, event_parser, **kwargs)
+        self.autorun_seats = autorun_seats
+        self.autorun_delay = autorun_delay
+        self.autorun_min_amount = autorun_min_amount
+        self.autorun_min_increase = autorun_min_increase
 
     def body(self, with_state=None):
         skip_sending = False
