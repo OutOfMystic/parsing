@@ -47,7 +47,7 @@ class ScheduledExecutor:
         # asyncio.run_coroutine_threadsafe(coroutine, self._loop)
         timestamp = task.wait + time.time()
         self._tasks.setdefault(timestamp, [task])
-        # logger.debug('got task to pooling', task.from_thread)
+        logger.debug('got task to pooling', task.from_thread)
 
     async def add_task_async(self, task: Task):
         # logger.debug('got async task to pooling', task.from_thread)
@@ -122,7 +122,8 @@ class ScheduledExecutor:
                 
                 frst = 'NEW' if task.from_thread not in self.frst else 'OLD'
                 self.frst.add(task.from_thread)
-                logger.debug('proceeding', frst, len(self._results), task.from_thread)
+                amount = len(self.frst) if task.from_thread not in self.frst else len(self._results)
+                logger.debug('proceeding', frst, amount, task.from_thread)
 
         to_del = []
         for i, result_callback in enumerate(self._results):
