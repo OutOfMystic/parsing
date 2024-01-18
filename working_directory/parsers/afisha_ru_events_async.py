@@ -5,7 +5,6 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
 from parse_module.models.parser import EventParser
@@ -39,7 +38,6 @@ class AfishaEvents(AsyncEventParser):
             'https://www.afisha.ru/msk/theatre/gubernskiy-teatr-15883628/': '*', #gubernskiy
         }
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
@@ -52,7 +50,6 @@ class AfishaEvents(AsyncEventParser):
             date.strftime("%Y %H:%M")
         return date_to_write
 
-    @track_coroutine
     async def get_x_token(self, x_ath_url, count=0):
         headers = {
             'Accept': 'text/html; charset=utf-8',
@@ -146,7 +143,6 @@ class AfishaEvents(AsyncEventParser):
 
         return a_events
 
-    @track_coroutine
     async def get_pages(self, url, count=0):
         response = await self.session.get(url, headers=self.headers)
         try:
@@ -183,7 +179,6 @@ class AfishaEvents(AsyncEventParser):
         
         return links
 
-    @track_coroutine
     async def fill_a_events(self, links):
         for url in links:
             try:
@@ -194,7 +189,6 @@ class AfishaEvents(AsyncEventParser):
                 self.warning(f'Exception {ex}')
                 continue
 
-    @track_coroutine
     async def body(self):
         self.venue_reformat = {
             'МДМ': 'Московский Дворец Молодежи',

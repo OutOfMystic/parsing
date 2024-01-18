@@ -89,7 +89,6 @@ class AsyncProxySession(aiohttp.ClientSession):
         str_proxy = self.bot.proxy.async_proxy
         kwargs['proxy'] = str_proxy
         kwargs['proxy_auth'] = self.bot.proxy.async_proxy_auth
-        kwargs['timeout'] = kwargs['timeout'] if 'timeout' in kwargs else 30
         if 'verify' in kwargs:
             kwargs['ssl'] = kwargs.pop('verify')
 

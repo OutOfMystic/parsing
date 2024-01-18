@@ -6,7 +6,6 @@ import sys
 import threading
 import time
 import traceback
-from asyncio import Task
 from datetime import datetime
 
 from aiodebug import log_slow_callbacks, hang_inspection
@@ -195,22 +194,30 @@ class Logger(threading.Thread):
     def apply_filter(self, source, level):
         self.source_filter = source
         self.level_filter = level
+        last_megabytes = 2
+        if level:
+            last_megabytes *= 5
+        if source:
+            last_megabytes *= 10
 
         print('\n' * 1000 + 'Collecting last messages ...')
 
         start_time = time.time()
         rows = []
         self.pause()
-        with open(self.log_path, 'r', encoding='utf-8') as file:
+        with open(self.log_path, 'rb') as file:
             file.seek(0, 2)
             file_size = file.tell()
             start_pos = max(0, file_size - 2 * 1024 * 1024)
             file.seek(start_pos)
-            lines = file.readlines()
-            for line in lines:
-                rows.append(line)
-                if '"message":"Logger started"' in line:
-                    rows.clear()
+            for line in file:
+                try:
+                    line = line.decode('utf-8')
+                    rows.append(line)
+                    if '"message":"Logger started"' in line:
+                        rows.clear()
+                except Exception as error:
+                    logger.warning(f'Log line is not utf-8 encoded: {error}', name='Controller')
 
         start_time = time.time()
         for row in rows:
@@ -318,6 +325,19 @@ def start_async_logger(event_loop=None):
         hang_inspection.start('screen', interval=2, loop=event_loop)
 
 
+def track_coroutine(func):
+
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        coro = func(*args, **kwargs)
+        active_coroutines.add(coro)
+        try:
+            return await coro
+        finally:
+            active_coroutines.remove(coro)
+    return wrapper
+
+
 COLORS = {
     'CRITICAL': Fore.LIGHTWHITE_EX,
     'ERROR': Fore.RED,
@@ -327,18 +347,4 @@ COLORS = {
     'SUCCESS': Fore.GREEN
 }
 colors_reversed = {value: key for key, value in COLORS.items()}
-logger = Logger(release='release' in sys.argv, drop_path_level=1, test=True)
-
-
-def track_coroutine(func):
-
-    @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
-        coro = func(*args, **kwargs)
-        active_coroutines.add(coro)
-        try:
-            # print(func, args, kwargs)
-            return await coro
-        finally:
-            active_coroutines.remove(coro)
-    return wrapper
+logger = Logger(release='release' in sys.argv, drop_path_level=1, test=False)

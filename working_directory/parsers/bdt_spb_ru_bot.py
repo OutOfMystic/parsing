@@ -10,7 +10,6 @@ from telebot.apihelper import ApiTelegramException
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.utils.logger import track_coroutine
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
@@ -133,11 +132,9 @@ class BdtSpbBot(AsyncEventParser):
         self.all_ticket_in_event = {}
         self.tickets_already_sent = {}
 
-    @track_coroutine
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    @track_coroutine
     async def _parse_free_tickets(self, soup: BeautifulSoup, event_date: str) -> list[TicketData]:
         self.csrf = soup.find('meta', attrs={'name': 'csrf-token'}).get('content')
         data_to_url = soup.select('body script')[0].text
@@ -201,7 +198,6 @@ class BdtSpbBot(AsyncEventParser):
                 return False
         return True
 
-    @track_coroutine
     async def _request_to_place(self, url: str) -> json:
         headers = {
             'accept': '*/*',
@@ -223,7 +219,6 @@ class BdtSpbBot(AsyncEventParser):
         response = await self.session.get(url, headers=headers)
         return response.json()
 
-    @track_coroutine
     async def _find_main_event(self) -> None:
         while True:
             await self._get_href_to_main_event()
@@ -231,7 +226,6 @@ class BdtSpbBot(AsyncEventParser):
                 break
             await asyncio.sleep(15)
 
-    @track_coroutine
     async def _get_href_to_main_event(self) -> None:
         urls = []
 
@@ -277,7 +271,6 @@ class BdtSpbBot(AsyncEventParser):
                 soup = await self._requests_to_events(url)
         self.urls = urls
 
-    @track_coroutine
     async def _requests_to_events(self, url):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
@@ -299,7 +292,6 @@ class BdtSpbBot(AsyncEventParser):
         response = await self.session.get(url, headers=headers)
         return BeautifulSoup(response.text, 'lxml')
 
-    @track_coroutine
     async def _check_self_url(self, url) -> BeautifulSoup:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'

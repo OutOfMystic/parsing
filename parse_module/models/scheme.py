@@ -1,11 +1,9 @@
 import threading
 from collections import namedtuple
-from importlib.resources import files
 from threading import Lock
 
 from psycopg2 import extras
 
-from .. import connection
 from ..connection import db_manager
 from ..manager.backstage import tasker
 from ..utils import utils, provision
