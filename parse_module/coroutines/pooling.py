@@ -4,7 +4,7 @@ import time
 from asyncio import AbstractEventLoop
 from dataclasses import dataclass
 from collections import namedtuple
-from typing import Callable, Iterable, Coroutine
+from typing import Callable, Iterable
 
 from sortedcontainers import SortedDict
 
@@ -94,6 +94,7 @@ class ScheduledExecutor:
             logger.error(error, name=from_thread)
 
     async def _step(self):
+        raise RuntimeError()
         bisection = self._tasks.bisect_left(time.time())
         if not bisection:
             await asyncio.sleep(0.2)
