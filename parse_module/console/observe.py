@@ -250,7 +250,7 @@ def show_venues(_):
     all_types = list(all_types)
 
     print('Formatting output...')
-    matrix = np.full((len(all_schemes), len(all_types)), -1, np.int)
+    matrix = np.full((len(all_schemes), len(all_types)), -1, np.int_)
     for alias_ind, alias in enumerate(venues.aliases):
         if alias is None:
             continue
