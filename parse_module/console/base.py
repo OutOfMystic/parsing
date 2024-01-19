@@ -18,7 +18,7 @@ class CommandPrompt:
         args_row = args_row.strip()
         result = provision.multi_try(self.handler, name='Command', tries=1,
                                      args=(cmd, args_row, self.value),
-                                     raise_exc=False, log_func=None)
+                                     raise_exc=False)
         if result is None:
             handler, value = None, None
         elif result == provision.TryError:
