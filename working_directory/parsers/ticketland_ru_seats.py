@@ -1,6 +1,5 @@
-import re
-
-from requests.exceptions import JSONDecodeError, ProxyError
+import asyncio
+from requests.exceptions import ProxyError
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
@@ -27,7 +26,9 @@ class LenkomParser(AsyncSeatsParser):
         self.count_error = 0
 
     async def get_tl_csrf_and_data(self):
-        result = await self.multi_try(self._get_tl_csrf_and_data, tries=5, raise_exc=False)
+        result = await self.multi_try(self._get_tl_csrf_and_data, 
+                                      handle_error=lambda: (asyncio.ensure_future(asyncio.sleep(4))),
+                                      tries=5, raise_exc=False)
         if result == provision.TryError:
             print(' provision.TryError:')
             result = None
@@ -51,7 +52,9 @@ class LenkomParser(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         # r = self.session.get(self.url, headers=headers)
-        r_text, r_json = await self.multi_try(self.request_to_ticketland, tries=5, args=[self.url, headers])
+        r_text, r_json = await self.multi_try(self.request_to_ticketland, 
+                                              handle_error=lambda: (asyncio.ensure_future(asyncio.sleep(4))),
+                                              tries=5, args=[self.url, headers])
         if r_text is None and r_json is None or 'CDbException' in r_text: 
             self.count_error += 1
             if self.count_error == 50:
@@ -145,7 +148,9 @@ class LenkomParser(AsyncSeatsParser):
             'x-requested-with': 'XMLHttpRequest'
         }
         # r = self.session.get(url, headers=headers)
-        r_text, r_json = await self.multi_try(self.request_to_ticketland, tries=5, args=[url, headers])
+        r_text, r_json = await self.multi_try(self.request_to_ticketland,
+                                              handle_error=lambda: (asyncio.ensure_future(asyncio.sleep(4))),
+                                                tries=5, args=[url, headers])
         if r_text is None and r_json is None or 'CDbException' in r_text or 'Технические работы' in r_text:
             self.count_error += 1
             if self.count_error == 50:
