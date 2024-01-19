@@ -31,6 +31,8 @@ class YandexAfishaParser(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
+        self.spreading = 4
+
         self.count_error = 0
         self.req_number = 0
         self.headers = {

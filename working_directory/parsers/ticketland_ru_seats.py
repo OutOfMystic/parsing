@@ -24,6 +24,7 @@ class LenkomParser(AsyncSeatsParser):
         self.driver_source = None
         self.venue = 'Ленком'
         self.count_error = 0
+        self.spreading = 4
 
     async def get_tl_csrf_and_data(self):
         result = await self.multi_try(self._get_tl_csrf_and_data, 

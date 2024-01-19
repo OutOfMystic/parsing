@@ -19,6 +19,7 @@ class KassirParser(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1600
         self.driver_source = None
+        self.spreading = 4
 
         self.scheme_identifier = ''
         self.place_name = ''
