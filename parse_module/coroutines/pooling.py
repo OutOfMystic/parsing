@@ -27,7 +27,11 @@ class Task:
 class ScheduledExecutor:
     def __init__(self, loop: AbstractEventLoop, max_connects=100, debug=False):
         super().__init__()
+
+        # TO BE DELETED
         self.frst = set()
+        self.saved_rows = []
+
         self.debug = debug
         self._loop = loop
         self._tasks = SortedDict()
@@ -47,6 +51,7 @@ class ScheduledExecutor:
         # asyncio.run_coroutine_threadsafe(coroutine, self._loop)
         timestamp = task.wait + time.time()
         self._tasks.setdefault(timestamp, [task])
+        self.saved_rows.append('got task to pooling ' + task.from_thread)
         # logger.debug('got task to pooling', task.from_thread)
 
     async def add_task_async(self, task: Task):
@@ -77,8 +82,11 @@ class ScheduledExecutor:
             for task in tasks_:
                 row = [utils.green(formed_time), utils.colorize(task.from_thread, utils.Fore.LIGHTCYAN_EX)]
                 to_print.append(row)
-        print_cols(to_print[::-1])
-        utils.blueprint(stat)
+        # print_cols(to_print[::-1])
+        # utils.blueprint(stat)
+        _saved_stats = self.saved_rows.copy()
+        for stat in _saved_stats:
+            print(stat)
 
     @staticmethod
     def get_key(key):
