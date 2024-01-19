@@ -9,7 +9,6 @@ from typing import Callable, Iterable
 
 from sortedcontainers import SortedDict
 
-from ..console.base import print_cols
 from ..utils import provision, utils
 from ..utils.logger import logger
 
