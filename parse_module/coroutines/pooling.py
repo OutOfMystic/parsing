@@ -30,7 +30,7 @@ class ScheduledExecutor:
 
         # TO BE DELETED
         self.frst = set()
-        self.saved_rows = []
+        self.saved_rows = set()
 
         self.debug = debug
         self._loop = loop
@@ -51,7 +51,7 @@ class ScheduledExecutor:
         # asyncio.run_coroutine_threadsafe(coroutine, self._loop)
         timestamp = task.wait + time.time()
         self._tasks.setdefault(timestamp, [task])
-        self.saved_rows.append('got task to pooling ' + task.from_thread)
+        self.saved_rows.add('got task to pooling ' + task.from_thread)
         # logger.debug('got task to pooling', task.from_thread)
 
     async def add_task_async(self, task: Task):
