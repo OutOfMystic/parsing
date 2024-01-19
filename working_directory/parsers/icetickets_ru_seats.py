@@ -2,8 +2,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -61,7 +60,7 @@ class Icetickets(AsyncSeatsParser):
         if len(all_sectors) == 0:
             guid = self.url.split('=')[-1]
             url = f'https://icetickets.ru/lib/custom_ajax.php?oper=get_sectors&guid={guid}'
-            soup = self.request_parser(url)
+            soup = await self.request_parser(url)
             all_sectors = soup.select('li')
 
         for sector in all_sectors:
@@ -171,4 +170,5 @@ class Icetickets(AsyncSeatsParser):
         self.reformat(all_sectors)
 
         for sector in all_sectors:
+            #self.info(sector)
             self.register_sector(sector['name'], sector['tickets'])

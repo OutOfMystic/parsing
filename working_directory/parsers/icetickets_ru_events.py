@@ -1,10 +1,7 @@
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils import utils
-
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 class Icetickets(AsyncEventParser):
     def __init__(self, controller, name):
@@ -60,7 +57,7 @@ class Icetickets(AsyncEventParser):
             href = title_and_href.get('href')
             href = 'https://icetickets.ru' + href
             try:
-                soup = self.get_events(href)
+                soup = await self.get_events(href)
                 all_href_and_date = soup.find('select', class_='select-date-select')
                 all_option = all_href_and_date.find_all('option', value=True)
                 for href_and_date in all_option:
@@ -121,5 +118,6 @@ class Icetickets(AsyncEventParser):
         for url in self.our_places_data:
             for event in await self.parse_events(url):
                 if event not in a_events:
+                    #self.info(event)
                     self.register_event(event[0], event[1], date=event[2], venue=event[3])
                     a_events.append(event)

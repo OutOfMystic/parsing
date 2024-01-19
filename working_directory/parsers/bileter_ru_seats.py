@@ -1,14 +1,14 @@
 import json
-from parse_module.models.parser import SeatsParser
+
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from bs4 import BeautifulSoup
+from parse_module.manager.proxy.sessions import AsyncProxySession
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.utils.parse_utils import decode_unicode_escape, double_split
 
 
 class BileterSeats(AsyncSeatsParser):
     url_filter = lambda url: 'bileter.ru' in url
-    proxy_check_url = 'https://www.bileter.ru/'
+    proxy_check = SpecialConditions(url="https://www.bileter.ru/")
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -77,4 +77,5 @@ class BileterSeats(AsyncSeatsParser):
         a_sectors = self.reformat(activePlaces)
 
         for sector_name, tickets in a_sectors.items():
+            #self.debug(sector_name, len(tickets))
             self.register_sector(sector_name, tickets)

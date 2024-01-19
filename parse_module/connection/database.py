@@ -136,8 +136,15 @@ class ParsingDB(DBConnection):
         super().__init__(host="193.178.170.180",
                          port="5432",
                          user="django_project",
-                         password="2QIzDNI5iHfW3Q",
+                         password="Q8kPzqBPk4fb6I",
                          database="crmdb")
+        
+    # def __init__(self):
+    #     super().__init__(host="195.2.81.173",
+    #                     port="5432",
+    #                     user="tenerunayo",
+    #                     password="umauwuNg24@A",
+    #                     database="crmdb")
 
     @locker
     def get_scheme(self, tasks, saved_schemes, **kwargs):
