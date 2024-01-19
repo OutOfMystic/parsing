@@ -1,6 +1,7 @@
 import asyncio
 from requests.exceptions import ProxyError
 from bs4 import BeautifulSoup
+import re
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
