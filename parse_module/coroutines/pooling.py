@@ -1,5 +1,6 @@
 import asyncio
 import platform
+import threading
 import time
 from asyncio import AbstractEventLoop
 from dataclasses import dataclass
@@ -33,6 +34,7 @@ class ScheduledExecutor:
         self.saved_rows = set()
 
         self.debug = debug
+        self._thread_lock = threading.Lock()
         self._loop = loop
         self._tasks = SortedDict()
         self._results = []
@@ -50,14 +52,20 @@ class ScheduledExecutor:
         # coroutine = self.add_task_async(task)
         # asyncio.run_coroutine_threadsafe(coroutine, self._loop)
         timestamp = task.wait + time.time()
-        self._tasks.setdefault(timestamp, [task])
-        self.saved_rows.add('got task to pooling ' + task.from_thread)
+        self._thread_lock.acquire()
+        try:
+            on_stamp = self._tasks.setdefault(timestamp, [])
+            on_stamp.append(task)
+            self.saved_rows.add('got task to pooling ' + task.from_thread)
+        finally:
+            self._thread_lock.release()
         # logger.debug('got task to pooling', task.from_thread)
 
     async def add_task_async(self, task: Task):
         # logger.debug('got async task to pooling', task.from_thread)
         timestamp = task.wait + time.time()
-        self._tasks.setdefault(timestamp, [task])
+        on_stamp = self._tasks.setdefault(timestamp, [])
+        on_stamp.append(task)
 
     def high_demand_check(self):
         awaiting_lower_limit = 1 if self.debug else 50
