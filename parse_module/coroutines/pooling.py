@@ -56,7 +56,7 @@ class ScheduledExecutor:
         try:
             on_stamp = self._tasks.setdefault(timestamp, [])
             on_stamp.append(task)
-            self.saved_rows.add('got task to pooling ' + task.from_thread)
+            # self.saved_rows.add('got task to pooling ' + task.from_thread)
         finally:
             self._thread_lock.release()
         # logger.debug('got task to pooling', task.from_thread)
