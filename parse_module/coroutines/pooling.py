@@ -47,7 +47,7 @@ class ScheduledExecutor:
         # asyncio.run_coroutine_threadsafe(coroutine, self._loop)
         timestamp = task.wait + time.time()
         self._tasks.setdefault(timestamp, [task])
-        logger.debug('got task to pooling', task.from_thread)
+        # logger.debug('got task to pooling', task.from_thread)
 
     async def add_task_async(self, task: Task):
         # logger.debug('got async task to pooling', task.from_thread)
@@ -94,7 +94,6 @@ class ScheduledExecutor:
             logger.error(error, name=from_thread)
 
     async def _step(self):
-        raise RuntimeError()
         bisection = self._tasks.bisect_left(time.time())
         if not bisection:
             await asyncio.sleep(0.2)
