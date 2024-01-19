@@ -1,5 +1,6 @@
 import asyncio
 import platform
+import random
 import threading
 import time
 from asyncio import AbstractEventLoop
@@ -41,6 +42,7 @@ class ScheduledExecutor:
         self._timers = {}
         self._starting_point = time.time()
         self._stats_counter = 0
+        self._spray = 0
         self._last_demand_check = time.time()
         self._semaphore = asyncio.Semaphore(max_connects)
         self._is_win32 = platform.system() == 'Windows'
@@ -50,11 +52,11 @@ class ScheduledExecutor:
     def add_task(self, task: Task):
         # coroutine = self.add_task_async(task)
         # asyncio.run_coroutine_threadsafe(coroutine, self._loop)
-        timestamp = task.wait + time.time()
         self._thread_lock.acquire()
         try:
-            on_stamp = self._tasks.setdefault(timestamp, [])
-            on_stamp.append(task)
+            self._spray += 1
+            timestamp = task.wait + time.time() + self._spray / 10000 + random.random() / 10000
+            self._tasks[timestamp] = [task]
             # self.saved_rows.add('got task to pooling ' + task.from_thread)
         finally:
             self._thread_lock.release()
@@ -62,9 +64,9 @@ class ScheduledExecutor:
 
     async def add_task_async(self, task: Task):
         # logger.debug('got async task to pooling', task.from_thread)
-        timestamp = task.wait + time.time()
-        on_stamp = self._tasks.setdefault(timestamp, [])
-        on_stamp.append(task)
+        self._spray += 1
+        timestamp = task.wait + time.time() + self._spray / 10000 + random.random() / 10000
+        self._tasks[timestamp] = [task]
 
     def high_demand_check(self):
         awaiting_lower_limit = 1 if self.debug else 50
@@ -89,11 +91,12 @@ class ScheduledExecutor:
             for task in tasks_:
                 row = [utils.green(formed_time), utils.colorize(task.from_thread, utils.Fore.LIGHTCYAN_EX)]
                 to_print.append(row)
-        print_cols(to_print[::-1])
+        # print_cols(to_print[::-1])
         utils.blueprint(stat)
-        _saved_stats = self.saved_rows.copy()
+        utils.blueprint(f'unjque started: {len(self.frst)}')
+        """_saved_stats = self.saved_rows.copy()
         for stat in _saved_stats:
-            print(stat)
+            print(stat)"""
 
     @staticmethod
     def get_key(key):
