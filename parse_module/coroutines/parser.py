@@ -86,7 +86,7 @@ class AsyncParserBase(core.CoroutineBot, ABC):
 
     def start(self, start_delay=0):
         task = pooling.Task(self.proceed, self.name, 0)
-        # logger.debug('sent task from parser', task)
+        self.controller.pool_async.add('sent task from parser', task)
         self.controller.pool_async.add_task(task)
 
     @abstractmethod
