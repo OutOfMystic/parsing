@@ -89,8 +89,8 @@ class ScheduledExecutor:
             for task in tasks_:
                 row = [utils.green(formed_time), utils.colorize(task.from_thread, utils.Fore.LIGHTCYAN_EX)]
                 to_print.append(row)
-        # print_cols(to_print[::-1])
-        # utils.blueprint(stat)
+        print_cols(to_print[::-1])
+        utils.blueprint(stat)
         _saved_stats = self.saved_rows.copy()
         for stat in _saved_stats:
             print(stat)
