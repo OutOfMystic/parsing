@@ -1625,7 +1625,7 @@ class KassirParser(AsyncSeatsParser):
         }
         response = await self.session.get(url, headers=self.new_headers)
 
-        count = 5
+        count = 3
         while (not response.ok or response.text == '[]') and count > 0:
             self.debug(url, response.text)
             count -= 1
