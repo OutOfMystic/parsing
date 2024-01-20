@@ -1,14 +1,10 @@
-import json
-from time import sleep
 from datetime import datetime
 
 from bs4 import BeautifulSoup
 from telebot import TeleBot
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils import utils
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class TNA(AsyncEventParser):
@@ -134,31 +130,33 @@ class TNA(AsyncEventParser):
 
         return a_events
 
-    def check_new_events(self, a_events):
-        events_new = { f"{i[0]} {i[2]}": i[1] for i in a_events}
-        chat_id = '-1001823568418'
-        flag = 0
+    # def check_new_events(self, a_events):
+    #     import json
+    #     events_new = { f"{i[0]} {i[2]}": i[1] for i in a_events}
+    #     chat_id = '-1001823568418'
+    #     flag = 0
 
-        with open('files/events/akbars_events.json', 'r', encoding='utf-8') as file:
-            events_old = json.load(file)
-            for name, url in events_new.items():
-                if name not in events_old:
-                    flag = 1
-                    message = f'New event \n{name}\n {url}'
-                    self.telegram_bot.send_message(chat_id, message, parse_mode='HTML')
-        if flag:
-            with open('files/events/akbars_events.json', 'w',encoding='utf-8') as file2:
-                json.dump(events_new, file2, indent=4, ensure_ascii=False)
+    #     with open('files/events/akbars_events.json', 'r', encoding='utf-8') as file:
+    #         events_old = json.load(file)
+    #         for name, url in events_new.items():
+    #             if name not in events_old:
+    #                 flag = 1
+    #                 message = f'New event \n{name}\n {url}'
+    #                 self.telegram_bot.send_message(chat_id, message, parse_mode='HTML')
+    #     if flag:
+    #         with open('files/events/akbars_events.json', 'w',encoding='utf-8') as file2:
+    #             json.dump(events_new, file2, indent=4, ensure_ascii=False)
 
     async def body(self):
         for url in self.urls:
             a_events = await self.get_events(url)
             
-            if url == 'https://tna-tickets.ru/sport/akbars/':
-                try:
-                    self.check_new_events(a_events)
-                except Exception as ex:
-                    self.error(ex, 'Exception in tickets_tna_ru_events, problems with TG bot')
+            # if url == 'https://tna-tickets.ru/sport/akbars/':
+            #     try:
+            #         self.check_new_events(a_events)
+            #     except Exception as ex:
+            #         self.error(ex, 'Exception in tickets_tna_ru_events, problems with TG bot')
 
             for event in a_events:
+                #self.info(event)
                 self.register_event(event[0], event[1], date=event[2])
