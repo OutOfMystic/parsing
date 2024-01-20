@@ -1,10 +1,8 @@
-from typing import NamedTuple, Optional, Union
-
+from typing import NamedTuple
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -22,7 +20,6 @@ class AlexandrinskyRu(AsyncEventParser):
         self.delay = 3600
         self.driver_source = None
         self.url: str = 'https://alexandrinsky.ru/afisha-i-bilety/'
-        self.session = None  # Инициализация переменной сеанса
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -133,4 +130,4 @@ class AlexandrinskyRu(AsyncEventParser):
     async def body(self) -> None:
         for event in await self._parse_events():
             self.register_event(event.title, event.href, date=event.date, event_id=event.event_id)
-            self.debug(f'{event.title}, {event.href}, {event.date}, {event.event_id}')
+            #self.debug(f'{event.title}, {event.href}, {event.date}, {event.event_id}')

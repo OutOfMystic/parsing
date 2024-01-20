@@ -4,8 +4,8 @@ from typing import NamedTuple, Optional, Union
 from requests.exceptions import JSONDecodeError
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.check import SpecialConditions
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -15,6 +15,7 @@ class OutputData(NamedTuple):
 
 class AlexandrinskyRu(AsyncSeatsParser):
     url_filter = lambda url: 'afisha.ru/wl/402' in url
+    proxy_check = SpecialConditions(url='https://afisha.ru/wl/402/')
 
     def __init__(self, *args, **extra) -> None:
         super().__init__(*args, **extra)
@@ -123,4 +124,5 @@ class AlexandrinskyRu(AsyncSeatsParser):
 
     async def body(self) -> None:
         for sector in await self._parse_seats():
+            #self.debug(sector.sector_name, len(sector.tickets))
             self.register_sector(sector.sector_name, sector.tickets)
