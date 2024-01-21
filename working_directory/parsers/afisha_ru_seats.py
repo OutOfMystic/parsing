@@ -18,6 +18,7 @@ class AfishaRuSeats(AsyncSeatsParser):
                 'Амфитеатр. Правая сторона': 'Амфитеатр, правая сторона'
                 },
             }
+        self.spreading = 4
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
