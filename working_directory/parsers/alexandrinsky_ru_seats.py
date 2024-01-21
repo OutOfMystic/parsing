@@ -21,6 +21,7 @@ class AlexandrinskyRu(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
+        self.spreading = 4
         
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -116,7 +117,8 @@ class AlexandrinskyRu(AsyncSeatsParser):
         }
         r = await self.session.post(self.url, data=data, headers=headers)
         try:
-            return r.json()
+            json = r.json()
+            return json
         except JSONDecodeError:
             if count_error == 5:
                 return None
