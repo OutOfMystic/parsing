@@ -1,3 +1,4 @@
+import aiohttp
 from typing import NamedTuple
 from bs4 import BeautifulSoup, ResultSet, Tag
 
@@ -11,7 +12,6 @@ class OutputEvent(NamedTuple):
     href: str
     date: str
     event_id: str
-
 
 class AlexandrinskyRu(AsyncEventParser):
 
@@ -37,16 +37,15 @@ class AlexandrinskyRu(AsyncEventParser):
         datas = []
         for count_page in range(2, all_ajax_pages + 2):
             for event in events:
-                output_data = await self._parse_data_from_event(event)
+                output_data = self._parse_data_from_event(event)
                 if output_data is not None:
                     for data in output_data:
                         datas.append(data)
-
             soup = await self._requests_to_axaj_events(str(count_page))
             events = self._get_events_from_soup(soup)
         return datas
 
-    async def _parse_data_from_event(self, event: Tag):
+    def _parse_data_from_event(self, event: Tag):
         title = event.find('a').text.strip()
 
         events = []
@@ -80,7 +79,6 @@ class AlexandrinskyRu(AsyncEventParser):
             'accept-language': 'ru,en;q=0.9',
             'cache-control': 'no-cache',
             'connection': 'keep-alive',
-            'content-length': '23',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'host': 'alexandrinsky.ru',
             'origin': 'https://alexandrinsky.ru',
@@ -100,7 +98,7 @@ class AlexandrinskyRu(AsyncEventParser):
             "PAGEN_2": next_page
         }
         url = 'https://alexandrinsky.ru/afisha-i-bilety/'
-        r = await self.session.get(url, headers=headers, data=data)
+        r = await self.session.post(url, headers=headers, data=data, timeout=aiohttp.ClientTimeout(total=5))
         return BeautifulSoup(r.text, 'lxml')
 
     async def _requests_to_events(self) -> BeautifulSoup:
@@ -129,5 +127,5 @@ class AlexandrinskyRu(AsyncEventParser):
     
     async def body(self) -> None:
         for event in await self._parse_events():
+            #self.debug(event)
             self.register_event(event.title, event.href, date=event.date, event_id=event.event_id)
-            #self.debug(f'{event.title}, {event.href}, {event.date}, {event.event_id}')
