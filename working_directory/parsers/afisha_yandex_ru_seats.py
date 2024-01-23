@@ -1,9 +1,8 @@
 import json
 import asyncio
+from aiohttp import ClientPayloadError, ClientProxyConnectionError
 import re
 import base64
-
-from requests.exceptions import ProxyError, ContentDecodingError
 
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException
@@ -766,7 +765,7 @@ class YandexAfishaParser(AsyncSeatsParser):
             driver.get(url=r.url)
             r = await self.solve_smart_captcha_image(driver)
         except TimeoutException as e:
-            raise ProxyError(e)
+            raise ClientProxyConnectionError(e)
         except Exception as e:
             raise Exception(str(e))
         finally:
@@ -930,7 +929,7 @@ class YandexAfishaParser(AsyncSeatsParser):
         headers.update(default_headers)
         try:
             r = await self.session.get(url, headers=headers)
-        except ContentDecodingError as ex:
+        except ClientPayloadError as ex:
             self.error(f"{url} {ex} failed to decode it! wrong sessinon_id or client_key")
             raise
         r = await self.check_captcha(r, url, headers)
@@ -1059,6 +1058,8 @@ class YandexAfishaParser(AsyncSeatsParser):
         except:
             self.session_key = event_params["session_id"]
 
+        if r2.json().get('status') != 'success':
+            return False
         if r2.json()["result"]["session"]["saleStatus"] in ['not-available', 'closed', 'no-seats']:
             return False
         return True
@@ -1084,6 +1085,7 @@ class YandexAfishaParser(AsyncSeatsParser):
             if_seats = await self.check_availible_seats_and_session_key(default_headers, event_params)
         except Exception as ex:
             self.error(f'Seats not found {self.url}')
+            return
         else:
             if not if_seats:
                 self.debug(f'Skip, no tickets, empty_seats{self.url}')
@@ -1098,10 +1100,13 @@ class YandexAfishaParser(AsyncSeatsParser):
             try:
                 await asyncio.sleep(0.2)
                 r_sectors, r = await self.hallplan_request(event_params, default_headers)
-            except ProxyError as ex:
+            except ClientProxyConnectionError as ex:
                 self.error(f'Catch(change_proxy): {ex} \n url:{self.url}')
                 await self.change_proxy()
                 await asyncio.sleep(1)
+            except ClientPayloadError as ex:
+                self.error(f"{self.url} {ex} failed to decode it! wrong sessinon_id or client_key")
+                return
             except Exception as ex:
                 self.error(f'Catch: {ex}; url:{self.url}')
                 await asyncio.sleep(1)
@@ -1126,6 +1131,9 @@ class YandexAfishaParser(AsyncSeatsParser):
                 await asyncio.sleep(0.2)
                 try:
                     r_sectors, r = await self.hallplan_request(event_params, default_headers)
+                except ClientPayloadError as ex:
+                    self.error(f"{self.url} {ex} failed to decode it! wrong sessinon_id or client_key")
+                    return
                 except Exception as ex:
                     self.error(f'Catch(2-nd while): {ex} url:{self.url}')
                 finally:
