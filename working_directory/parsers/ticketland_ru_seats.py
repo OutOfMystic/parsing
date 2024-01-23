@@ -703,6 +703,7 @@ class AleksandrinskiyTeatr(LenkomParser):
                 for ticket_row_and_seat, price in tickets.items():
                     sector_nm, seat = ticket_row_and_seat
                     row_number = 'Ложа ' + sector_nm 
+                    seat = re.search(r'\d+', seat)[0]
                     sector['tickets'][(row_number, seat)] = price
                 sector['name'] = 'Бельэтаж'
 
@@ -728,6 +729,7 @@ class AleksandrinskiyTeatr(LenkomParser):
                 for ticket_row_and_seat, price in tickets.items():
                     sector_nm, seat = ticket_row_and_seat
                     row_number = 'Ложа ' + sector_nm 
+                    seat = re.search(r'\d+', seat)[0]
                     sector['tickets'][(row_number, seat)] = price
                 sector['name'] = '1 ярус'
 
@@ -751,6 +753,7 @@ class AleksandrinskiyTeatr(LenkomParser):
                 for ticket_row_and_seat, price in tickets.items():
                     sector_nm, seat = ticket_row_and_seat
                     row_number = 'Ложа ' + sector_nm 
+                    seat = re.search(r'\d+', seat)[0]
                     sector['tickets'][(row_number, seat)] = price
                 sector['name'] = '2 ярус'
 
@@ -774,6 +777,7 @@ class AleksandrinskiyTeatr(LenkomParser):
                 for ticket_row_and_seat, price in tickets.items():
                     sector_nm, seat = ticket_row_and_seat
                     row_number = 'Ложа ' + sector_nm 
+                    seat = re.search(r'\d+', seat)[0]               
                     sector['tickets'][(row_number, seat)] = price
                 sector['name'] = '3 ярус'
 
@@ -797,6 +801,7 @@ class AleksandrinskiyTeatr(LenkomParser):
                 for ticket_row_and_seat, price in tickets.items():
                     sector_nm, seat = ticket_row_and_seat
                     row_number = 'Ложа ' + sector_nm 
+                    seat = re.search(r'\d+', seat)[0] 
                     sector['tickets'][(row_number, seat)] = price
                 sector['name'] = '4 ярус'
 
