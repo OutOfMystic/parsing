@@ -1,4 +1,5 @@
 from typing import NamedTuple, Optional, Union
+import re
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
@@ -32,7 +33,7 @@ class ZaryadyeHall(AsyncEventParser):
         new_page = self._next_page_with_events(soup)
 
         events = self._get_events_from_soup(soup)
-
+        
         return await self._parse_events_from_json(events, new_page)
 
     async def _parse_events_from_json(
@@ -40,20 +41,19 @@ class ZaryadyeHall(AsyncEventParser):
     ):
         datas = []
         count_page = 1
-        while True:
+        for i in range(40):
             for event in events:
                 output_data = self._parse_data_from_event(event)
                 if output_data is not None:
                     datas.append(output_data)
-
             if new_page is None:
-                break
+                return datas
             url = f'https://zaryadyehall.ru/event/?PAGEN_1={count_page}'
             count_page += 1
             soup = await self._requests_to_axaj_data(url)
             new_page = self._next_page_with_events(soup)
             events = self._get_events_from_soup(soup)
-        return datas
+        
 
     def _parse_data_from_event(self, event: Tag) -> Optional[Union[OutputEvent, None]]:
         title = event.find('a', class_='zh-c-item__name').text.strip().replace("'", '"')
@@ -73,7 +73,8 @@ class ZaryadyeHall(AsyncEventParser):
             return None
         href = href[0].get('onclick')
         try:
-            href = double_split(href, "openNewWin('", "')")
+            event_id = re.search(r'(?<=event_id:) +\d+', href)[0].strip()
+            href = f"https://tickets.afisha.ru/wl/101/api?site=zaryadyehall.ru&cat_id=undefined&building_id=undefined#/place/{event_id}"
         except (IndexError, AttributeError):
             return None
 
@@ -129,5 +130,7 @@ class ZaryadyeHall(AsyncEventParser):
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self) -> None:
-        for event in await self._parse_events():
+        box = await self._parse_events()
+        for event in box:
+            #self.info(event)
             self.register_event(event.title, event.href, date=event.date)
