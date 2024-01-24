@@ -1085,7 +1085,6 @@ class YandexAfishaParser(AsyncSeatsParser):
             if_seats = await self.check_availible_seats_and_session_key(default_headers, event_params)
         except Exception as ex:
             self.error(f'Seats not found {self.url}')
-            return
         else:
             if not if_seats:
                 self.debug(f'Skip, no tickets, empty_seats{self.url}')
@@ -1106,7 +1105,9 @@ class YandexAfishaParser(AsyncSeatsParser):
                 await asyncio.sleep(1)
             except ClientPayloadError as ex:
                 self.error(f"{self.url} {ex} failed to decode it! wrong sessinon_id or client_key")
-                return
+                await self.change_proxy()
+                self.req_number += 30
+                await asyncio.sleep(1)
             except Exception as ex:
                 self.error(f'Catch: {ex}; url:{self.url}')
                 await asyncio.sleep(1)
@@ -1133,7 +1134,8 @@ class YandexAfishaParser(AsyncSeatsParser):
                     r_sectors, r = await self.hallplan_request(event_params, default_headers)
                 except ClientPayloadError as ex:
                     self.error(f"{self.url} {ex} failed to decode it! wrong sessinon_id or client_key")
-                    return
+                    self.req_number += 30
+                    await asyncio.sleep(1)
                 except Exception as ex:
                     self.error(f'Catch(2-nd while): {ex} url:{self.url}')
                 finally:
