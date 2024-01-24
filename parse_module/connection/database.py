@@ -216,6 +216,7 @@ class ParsingDB(DBConnection):
                      "FROM public.tables_event "
                      "WHERE site_id <> 3 AND scheme_id IS NOT NULL")
         records = self.fetchall()
+
         connections = [{'event_id': id_, 'event_name': name, 'date': date,
                         'parsing': parsing, 'site_id': site_id, 'scheme_id': scheme_id}
                        for id_, name, date, scheme_id, parsing, site_id in records]
@@ -224,6 +225,8 @@ class ParsingDB(DBConnection):
                 connection['parsing'] = []
             connection['event_id'] = int(connection['event_id'])
         connections.sort(key=lambda key: key['event_id'])
+        for connection in connections:
+            logger.info(f'subject', connection['event_id'], connection['event_name'], connection['date'])
         return connections
 
     @locker

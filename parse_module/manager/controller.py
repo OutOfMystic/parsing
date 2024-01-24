@@ -216,6 +216,8 @@ class Controller:
                 if not connections:
                     continue
                 group.update(connections)
+                for connection in connections:
+                    logger.debug(f'connection', connection['event_id'], connection['date'])
         elif self._debug_url:
             group, connections = self.get_debug_url_conn(all_connections)
             if connections:
@@ -377,7 +379,7 @@ class Controller:
     def _update_db_with_stored_urls(self, connections):
         if random.random() < 0.1 or not self.release:
             return
-        self.database_interaction()
+        # self.database_interaction()
         parsers_on_event = {}
         for event_id, conns_on_event in utils.groupby(connections, lambda conn: conn['event_id']):
             parser_urls = {conn['url'] for conn in conns_on_event

@@ -117,7 +117,6 @@ def subject_object_check(args):
     connections = ai_solver.get_connections(subjects, set(), parsing_types, objects)
 
 
-
 def ai_solutions(args):
     def mark_obj(object_, to_site, to_type_):
         mark_key = (to_site, to_type_, object_['url'],)

@@ -121,6 +121,8 @@ class SeatsParserGroup:
                 prepared_data.append(event_data)
                 continue
             event_data = self._add_data_from_db(event_data)
+            logger.debug(f'group', event_data['event_id'],
+                         event_data['event_name'], event_data['date'])
             if not event_data:
                 continue
             if event_data['margin'] not in self.controller.margins:
