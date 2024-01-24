@@ -56,7 +56,7 @@ class ScheduledExecutor:
         self._thread_lock.acquire()
         try:
             self._spray += 1
-            timestamp = task.wait + time.time() + self._spray / 10000 + random.random() / 10000
+            timestamp = task.wait + time.time() + (self._spray % 100) / 100000 + random.random() / 1000
             self._tasks[timestamp] = [task]
             # self.saved_rows.add('got task to pooling ' + task.from_thread)
         finally:
@@ -66,7 +66,7 @@ class ScheduledExecutor:
     async def add_task_async(self, task: Task):
         # logger.debug('got async task to pooling', task.from_thread)
         self._spray += 1
-        timestamp = task.wait + time.time() + self._spray / 10000 + random.random() / 10000
+        timestamp = task.wait + time.time() + (self._spray % 100) / 100000 + random.random() / 1000
         self._tasks[timestamp] = [task]
 
     def high_demand_check(self):

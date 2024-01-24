@@ -5,13 +5,14 @@ import numpy as np
 
 from . import base
 from ..connection import db_manager
+from ..manager.backend import AISolver
 from ..models.ai_nlp import solve
 from ..models.ai_nlp.collect import make_matrix, solve_pairs, build_connection
 from ..models.ai_nlp.venue import VenueAliases
 from parse_module.manager.group import crop_url
 from ..utils import utils
 from ..utils.date import Date
-
+from ..utils.logger import logger
 
 solver, cache_dict = solve.get_model_and_cache()
 
@@ -90,6 +91,31 @@ def list_events(args):
         to_print.append(['', f'--{site}--', '', ''])
         to_print.extend(searched_records)
     base.print_cols(to_print, (7, 50, 30, 1000))
+
+
+def result_message(step, legend, success):
+    message = f'{step}. {legend}'
+    log_func = logger.success if success else logger.error
+    log_func(message)
+
+
+def subject_object_check(args):
+    if len(args) == 2:
+        raise RuntimeError('Number of arguments should be 2')
+    event_id, url = args
+
+    subjects = db_manager.get_events_for_parsing()
+    sycceded = event_id in [subj['event_id'] for subj in subjects]
+    result_message(0, 'Проверка на наlичие event_id в системе', sycceded)
+    if not sycceded:
+        return
+
+    parsing_types = db_manager.get_parsing_types()
+    objects = db_manager.get_parsed_events(types=parsing_types)
+
+    ai_solver = AISolver()
+    connections = ai_solver.get_connections(subjects, set(), parsing_types, objects)
+
 
 
 def ai_solutions(args):

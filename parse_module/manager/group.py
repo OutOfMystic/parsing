@@ -55,8 +55,9 @@ class SeatsParserGroup:
             if event_data['date'].is_outdated():
                 return
             elif abs(time_delta.seconds) > 900:
+                event_data_str = f'{event_data["event_name"]} {event_data["date"]} ({event_data["parent"]})'
                 self.bprint('Date mismatch in parsed event and in the database!\n'
-                            f'    Parsed data: {event_data["event_name"]} {event_data["date"]} ({event_data["parent"]})\n'
+                            f'    Parsed data: {event_data_str}\n'
                             f'    Database date: {parsed_data["date"]}', color=utils.Fore.YELLOW)
 
     def stop_by_margin(self, margin):
