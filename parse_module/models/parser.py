@@ -13,7 +13,7 @@ from ..utils.logger import logger
 
 
 RESTRICTED_COLUMNS = ['controller', 'event_id', 'event_name',
-                      'url', 'date', 'venue', 'signature', 'scheme',
+                      'url', 'date', 'signature', 'scheme',
                       'priority', 'parent', 'extra']
 
 

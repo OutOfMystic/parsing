@@ -142,7 +142,7 @@ class SeatsParserGroup:
         self.start_lock.release()
 
     def _start_parser(self, event_data):
-        logger.debug('1. Group: getting scheme', event_data['event_id'], name=self.name)
+        # logger.debug('1. Group: getting scheme', event_data['event_id'], name=self.name)
         scheme = self.controller.router.get_parser_scheme(event_data['event_id'],
                                                           event_data['scheme_id'],
                                                           name=self.name)
