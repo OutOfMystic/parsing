@@ -185,6 +185,15 @@ class Controller:
         self.router.get_connections_task(subjects, indicators, self.parsing_types,
                                          self.parsed_events)
         ai_connections = self.router.get_connections_result()
+        already_ran_conns = set()
+        for connection in ai_connections:
+            indicator_without_margin = connection['indicator'].copy()
+            del indicator_without_margin['margin']
+            if indicator_without_margin in already_ran_conns:
+                logger.warning(f'SEATS parser ({connection["event_name"]}'
+                               f' {connection["date"]}) is absolutely similar '
+                               f'to another one ({connection["event_id"]})')
+            already_ran_conns.add(indicator_without_margin)
         return predefined_connections, ai_connections
 
     def database_interaction(self):
