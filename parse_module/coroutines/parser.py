@@ -135,6 +135,9 @@ class AsyncSeatsParser(AsyncParserBase, parser.SeatsParser, ABC):
     def __init__(self, controller, event_id, event_name,
                  url, date, venue, signature, scheme,
                  priority, parent, **extra):
+        logger.debug(event_id, event_name,
+                     url, date, venue, signature, scheme,
+                     priority, parent, extra)
         AsyncParserBase.__init__(self, controller)
         parser.SeatsParser.__init__(self, controller, event_id, event_name,
                                     url, date, venue, signature, scheme,
