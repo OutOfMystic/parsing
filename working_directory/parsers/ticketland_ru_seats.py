@@ -827,7 +827,10 @@ class AleksandrinskiyTeatr(LenkomParser):
             return None, row, seat, price
         elif 'Партер' in sector_name:
             sector_name = 'Партер'
+        elif 'Места за креслами' in sector_name:
+            sector_name = 'Места за креслами'
         return sector_name, row, seat, price
+
 
 
 # class ZimniyTeatrSochi(LenkomParser):
