@@ -51,7 +51,7 @@ class Contextfest(AsyncEventParser):
         # href = f'https://ticketscloud.com/v1/widgets/common?event={event_id}&token={token}'
         href = 'https://ticketscloud.com/v1/services/widget'
 
-        return OutputEvent(title=title, href=href, date=normal_date, event_id=event_id, token=token)
+        return OutputEvent(title=title, href=href, date=normal_date, event_id_=event_id, token=token)
 
     def _get_events_from_soup(self, soup: BeautifulSoup) -> ResultSet[Tag]:
         events = soup.find_all('div', class_='list-item')
