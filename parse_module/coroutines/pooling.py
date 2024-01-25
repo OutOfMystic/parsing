@@ -58,7 +58,7 @@ class ScheduledExecutor:
             self._spray += 1
             timestamp = task.wait + time.time() + (self._spray % 100) / 100000 + random.random() / 1000
             self._tasks[timestamp] = [task]
-            # self.saved_rows.add('got task to pooling ' + task.from_thread)
+            self.saved_rows.add('got task to pooling ' + task.from_thread)
         finally:
             self._thread_lock.release()
         # logger.debug('got task to pooling', task.from_thread)
@@ -95,9 +95,9 @@ class ScheduledExecutor:
         print_cols(to_print[::-1])
         utils.blueprint(stat)
         utils.blueprint(f'unjque started: {len(self.frst)}')
-        """_saved_stats = self.saved_rows.copy()
+        _saved_stats = self.saved_rows.copy()
         for stat in _saved_stats:
-            print(stat)"""
+            print(stat)
 
     @staticmethod
     def get_key(key):
