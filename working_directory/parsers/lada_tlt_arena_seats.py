@@ -16,7 +16,7 @@ class HcLadaHockeyTLTarena_seats(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 3200
         self.driver_source = None
-        self.event_id = self.url.split('/')[-1]
+        self.event_id_ = self.url.split('/')[-1]
        
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -55,7 +55,7 @@ class HcLadaHockeyTLTarena_seats(AsyncSeatsParser):
         return ids
     
     async def make_zones_dict(self, id):
-        url = f'https://tickets.tlt-arena.ru/seats-list/{self.event_id}/{id}'
+        url = f'https://tickets.tlt-arena.ru/seats-list/{self.event_id_}/{id}'
         headers = {
             "accept": "*/*",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",

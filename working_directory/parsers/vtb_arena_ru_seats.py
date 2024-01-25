@@ -19,7 +19,7 @@ class VtbArena(AsyncSeatsParser):
         self.driver_source = None
         self.scene = None
         self.widget_key = double_split(self.url, '?key=', '&eventId=')
-        self.event_id = self.url[self.url.index('&eventId=')+len('&eventId='):]
+        self.event_id_ = self.url[self.url.index('&eventId=')+len('&eventId='):]
         self.get_configuration_id = None
         self.count_error = 0
 
@@ -551,7 +551,7 @@ class VtbArena(AsyncSeatsParser):
             tariff_price = tariff.get('price')
             tariffs_data[tariff_id] = (tariff_price, tariff_available_seats,)
 
-        url = f'https://schematr.kassir.ru/api/v1/halls/configurations/{self.get_configuration_id}?language=ru&phpEventId={self.event_id}'
+        url = f'https://schematr.kassir.ru/api/v1/halls/configurations/{self.get_configuration_id}?language=ru&phpEventId={self.event_id_}'
         get_all_seats = await self.request_parser_kassir(url)
         if get_all_seats is None:
             return []
@@ -625,7 +625,7 @@ class VtbArena(AsyncSeatsParser):
             return None
 
     async def get_seats_from_kassir(self):
-        url = f'https://schematr.kassir.ru/api/v1/events/{self.event_id}?language=ru'
+        url = f'https://schematr.kassir.ru/api/v1/events/{self.event_id_}?language=ru'
         get_configuration_id = await self.request_parser_kassir(url)
         if get_configuration_id is None:
             return []
@@ -634,7 +634,7 @@ class VtbArena(AsyncSeatsParser):
             return []
         self.get_configuration_id = self.get_configuration_id.get('trHallConfigurationId')
 
-        url = f'https://schematr.kassir.ru/api/v1/events/{self.event_id}/seats?language=ru&phpEventId={self.event_id}'
+        url = f'https://schematr.kassir.ru/api/v1/events/{self.event_id_}/seats?language=ru&phpEventId={self.event_id_}'
         json_data = await self.request_parser_kassir(url)
         if json_data is None:
             return []

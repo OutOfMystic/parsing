@@ -98,7 +98,7 @@ class BiletServisParser(AsyncSeatsParser):
         }
         url = f'https://biletservis.ru/widget/index.php?action' \
               f'=get_svg&widget=1&date={self.sec_date}&event_id' \
-              f'={self.event_id_cfg}&place_id={self.place_id}&' \
+              f'={self.event_id__cfg}&place_id={self.place_id}&' \
               f'hall_id={self.hall_id}&part_id='
               
         r_text = await self.session.get_text(url, headers=headers)

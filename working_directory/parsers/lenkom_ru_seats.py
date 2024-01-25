@@ -78,13 +78,13 @@ class Lenkom(AsyncSeatsParser):
         if r.status_code == 499:
             return None
         elif r.status_code != 200:
-            message = f"<b>lenkom_seats response.status_code {r.status_code}\n{self.event_id = }</b>"
+            message = f"<b>lenkom_seats response.status_code {r.status_code}\n{self.event_id_ = }</b>"
             self.send_message_to_telegram(message)
         return r.json()
 
     async def get_seats(self):
         data = {
-            "event_id": self.event_id,
+            "event_id": self.event_id_,
             "user_token": f"167644{random.randint(1000000, 9999999)}-{random.randint(100000, 999999)}"
             # "user_token": "1676449721616-847937"
         }

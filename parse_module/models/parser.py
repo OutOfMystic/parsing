@@ -12,6 +12,11 @@ from ..utils.exceptions import ParsingError, ProxyHubError
 from ..utils.logger import logger
 
 
+RESTRICTED_COLUMNS = ['controller', 'event_id', 'event_name',
+                      'url', 'date', 'venue', 'signature', 'scheme',
+                      'priority', 'parent', 'extra']
+
+
 class ParserBase(core.Bot, ABC):
     proxy_check = check.NormalConditions()
 
@@ -139,6 +144,9 @@ class EventParser(ParserBase, ABC):
         if venue is not None:
             venue = venue.replace('\n', ' ')
         columns['venue'] = venue
+        for restricted in RESTRICTED_COLUMNS:
+            if restricted in columns:
+                raise RuntimeError(f'`{restricted}` parameter is restricted for registration. Rename it')
         formatted_date = str(Date(date))
         aliased_name = self.controller.event_aliases[event_name]
         cols_hash = utils.get_dict_hash(columns)

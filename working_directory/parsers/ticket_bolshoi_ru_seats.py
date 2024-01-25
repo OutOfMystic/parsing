@@ -279,13 +279,13 @@ class BtParser(AsyncSeatsParser):
         self.account = None
         self.delay = 900
         self.driver_source = None
-        self.event_id = None
+        self.event_id_ = None
         self._lock = Lock()
 
     async def before_body(self):
         self.account = self.get_account()
         self.session = AsyncProxySession(self)
-        self.event_id = self.url.split('/')[-1]
+        self.event_id_ = self.url.split('/')[-1]
 
     def get_account(self):
         global bt_accounts
@@ -369,7 +369,7 @@ class BtParser(AsyncSeatsParser):
             'user-agent': self.user_agent,
             # 'x-csrf-token': self.account.csrf_token
         }
-        url = f'https://ticket.bolshoi.ru/api/v1/client/shows/{self.event_id}/tariffs/17/seats'
+        url = f'https://ticket.bolshoi.ru/api/v1/client/shows/{self.event_id_}/tariffs/17/seats'
         r = self.account.get(url, headers=headers)
         if 'error' in r.json() and r.json()['error'] == 'Для оформления заказа необходимо подтвердить емейл адрес!':
             self.block_account()

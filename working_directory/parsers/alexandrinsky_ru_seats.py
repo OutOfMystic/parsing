@@ -112,7 +112,7 @@ class AlexandrinskyRu(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         data = {
-            "event_id": self.event_id,
+            "event_id": self.event_id_,
             "user_token": f"167644{random.randint(1000000, 9999999)}-{random.randint(100000, 999999)}"
         }
         r = await self.session.post(self.url, data=data, headers=headers)

@@ -20,7 +20,7 @@ class CskaSportstar(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-        self.event_id = int(self.url.split('/')[-1])
+        self.event_id_ = int(self.url.split('/')[-1])
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -117,7 +117,7 @@ class CskaSportstar(AsyncSeatsParser):
             'operationName': 'eventSectorSeats',
             'query': "query eventSectorSeats($eventId: Int!, $sectorId: Int!, $sectorKey: String) {\n  eventSectorSeats(eventId: $eventId, sectorId: $sectorId, sectorKey: $sectorKey) {\n    ...eventSectorRow\n    __typename\n  }\n}\n\nfragment eventSectorRow on EventSectorRow {\n  row\n  seats {\n    ...eventSectorSeat\n    __typename\n  }\n  __typename\n}\n\nfragment eventSectorSeat on EventSectorSeat {\n  seatId\n  name\n  row\n  seat\n  price\n  isReserved\n  __typename\n}\n",
             'variables': {
-                'eventId': self.event_id,
+                'eventId': self.event_id_,
                 'sectorId': sector_id,
                 'sectorKey': sector_key
             }
@@ -150,7 +150,7 @@ class CskaSportstar(AsyncSeatsParser):
         data = {
             'operationName': 'eventSectors',
             'query': "query eventSectors($eventId: Int!, $sectorId: [Int!]) {\n  eventSectors(eventId: $eventId, sectorId: $sectorId) {\n    ...eventSector\n    __typename\n  }\n}\n\nfragment eventSector on EventSector {\n  key\n  name\n  quantity\n  category\n  isSectorSaleEnabled\n  discountAvailableSlots\n  discountSectorPrice {\n    ...eventSectorPrice\n    __typename\n  }\n  eventSectorPrice {\n    ...eventSectorPrice\n    __typename\n  }\n  loyaltyDiscount {\n    ...loyaltyDiscount\n    __typename\n  }\n  sectorId\n  rotation\n  __typename\n}\n\nfragment eventSectorPrice on EventSectorPrice {\n  priceCategoryId\n  priceMin\n  priceMax\n  priceDiscount\n  __typename\n}\n\nfragment loyaltyDiscount on LoyaltyDiscount {\n  order {\n    id\n    __typename\n  }\n  discountPercent\n  __typename\n}\n",
-            'variables': {'eventId': self.event_id}
+            'variables': {'eventId': self.event_id_}
         }
         url = 'https://cska.sportstar.me/graphql'
         r = await self.session.post(url, json=data, headers=headers)

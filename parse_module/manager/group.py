@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 from threading import Lock
 
 from ..coroutines import AsyncSeatsParser
-from ..models.parser import SeatsParser
+from ..models.parser import SeatsParser, RESTRICTED_COLUMNS
 from ..utils.date import Date
 from ..utils import utils, provision
 from ..utils.logger import logger
@@ -121,8 +121,6 @@ class SeatsParserGroup:
                 prepared_data.append(event_data)
                 continue
             event_data = self._add_data_from_db(event_data)
-            logger.debug(f'group', event_data['event_id'],
-                         event_data['event_name'], event_data['date'])
             if not event_data:
                 continue
             if event_data['margin'] not in self.controller.margins:
@@ -144,7 +142,7 @@ class SeatsParserGroup:
         self.start_lock.release()
 
     def _start_parser(self, event_data):
-        # logger.debug('1. Group: getting scheme', event_data['event_id'], name=self.name)
+        logger.debug('1. Group: getting scheme', event_data['event_id'], name=self.name)
         scheme = self.controller.router.get_parser_scheme(event_data['event_id'],
                                                           event_data['scheme_id'],
                                                           name=self.name)
@@ -155,7 +153,10 @@ class SeatsParserGroup:
         event_data['scheme'] = scheme
         event_data['margin'] = margin_rules
         extra = event_data.pop('extra')
-        event_data.update(extra)
+        for key, value in extra.items():
+            if key in RESTRICTED_COLUMNS:
+                key += '_'
+            event_data[key] = value
 
         # logger.debug('3. Group: parser.__init__', event_data['event_id'], name=self.name)
         parser = self.parser_class(self.controller, **event_data)

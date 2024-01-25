@@ -150,7 +150,7 @@ class ProfticketParser(AsyncSeatsParser):
         url = f'https://widget.profticket.ru/api/event/scheme/?' \
               f'company_id={self.company_id}&' \
               f'global_show_id={global_show_id}&' \
-              f'event_id={self.event_id}&' \
+              f'event_id={self.event_id_}&' \
               f'language=ru-RU'
         headers = {
             'accept': 'application/json, text/plain, */*',

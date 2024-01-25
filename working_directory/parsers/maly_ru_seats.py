@@ -15,11 +15,11 @@ class MalyParser(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-        self.event_id = None
+        self.event_id_ = None
         if 'buy-tickets' in self.url:
-            self.event_id = self.url.split('/')[-1]
+            self.event_id_ = self.url.split('/')[-1]
         elif 'select-seat' in self.url:
-            self.event_id = self.url.split('=')[-1]
+            self.event_id_ = self.url.split('=')[-1]
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -100,7 +100,7 @@ class MalyParser(AsyncSeatsParser):
         return csrf
 
     async def get_occupied_ticket_ids(self, csrf):
-        url = f'http://www.maly.ru/halls/occupied-seats?event_id={self.event_id}'
+        url = f'http://www.maly.ru/halls/occupied-seats?event_id={self.event_id_}'
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate',
@@ -167,7 +167,7 @@ class MalyParser(AsyncSeatsParser):
                 'x-csrf-token': csrf
             }
             data = {
-                'event_id': self.event_id,
+                'event_id': self.event_id_,
                 'lang': 'ru',
                 '_csrf': csrf
             }
@@ -179,14 +179,14 @@ class MalyParser(AsyncSeatsParser):
 
         elif 'buy-tickets' in self.url:
             headers = {'user-agent': self.user_agent}
-            params = {'id': self.event_id}
+            params = {'id': self.event_id_}
             url = 'http://maly.core.ubsystem.ru/uiapi/event/scheme'
             r = await self.session.get(url, params=params, headers=headers, verify=False)
             seat_data = r.json()['seats']
             a_sectors = self._get_sectors_data(seat_data)
             
             try:
-                response = await self.session.get(f'https://maly.core.ubsystem.ru/uiapi/event/{self.event_id}', headers=headers)
+                response = await self.session.get(f'https://maly.core.ubsystem.ru/uiapi/event/{self.event_id_}', headers=headers)
                 self.name_of_scene = response.json()['hallScheme']['hall']['title']
             except Exception:
                 raise Exception('Cannot find hallScheme, name_of_scene')

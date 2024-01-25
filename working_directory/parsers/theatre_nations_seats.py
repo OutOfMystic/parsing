@@ -13,11 +13,11 @@ class NationsParser(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 900
         self.driver_source = None
-        self.event_id = None
+        self.event_id_ = None
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
-        self.event_id = self.url.split('/')[-2]
+        self.event_id_ = self.url.split('/')[-2]
 
     def reformat(self, a_sectors):
         for sector in a_sectors:
@@ -57,7 +57,7 @@ class NationsParser(AsyncSeatsParser):
 
     async def get_tickets(self):
         url = ("https://theatreofnations.ru/api/places/?nombilkn="
-               f"{self.event_id}&cmd=get_hall_and_places&early_access=")
+               f"{self.event_id_}&cmd=get_hall_and_places&early_access=")
         headers = {
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',

@@ -21,7 +21,7 @@ class MelomanRu(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-        self.event_id = self.url.split('=')[-1]
+        self.event_id_ = self.url.split('=')[-1]
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -104,7 +104,7 @@ class MelomanRu(AsyncSeatsParser):
         }
         data = {
             'x-csrf-token': self.csrf_token,
-            'event_id': self.event_id,
+            'event_id': self.event_id_,
             'view_id': sector_id
         }
         url = 'https://go.unics.ru/event/get-prices'

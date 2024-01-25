@@ -18,7 +18,7 @@ class Hc_Salavat_Seats(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 3200
         self.driver_source = None
-        self.event_id = self.url.split('/')[-1]
+        self.event_id_ = self.url.split('/')[-1]
         self.headers1 = {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",

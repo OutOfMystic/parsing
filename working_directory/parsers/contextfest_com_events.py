@@ -81,4 +81,4 @@ class Contextfest(AsyncEventParser):
 
     async def body(self):
         for event in await self._parse_events():
-            self.register_event(event.title, event.href, date=event.date, event_id=event.event_id, token=event.token)
+            self.register_event(event.title, event.href, date=event.date, event_id_=event.event_id, token=event.token)

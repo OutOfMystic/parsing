@@ -14,7 +14,7 @@ class BileterSeats(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-        self.event_id = self.url.split('/')[-1]
+        self.event_id_ = self.url.split('/')[-1]
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -30,7 +30,7 @@ class BileterSeats(AsyncSeatsParser):
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-origin",
             "x-requested-with": "XMLHttpRequest",
-            "Referer": f"https://www.bileter.ru/performance/{self.event_id}",
+            "Referer": f"https://www.bileter.ru/performance/{self.event_id_}",
             "Referrer-Policy": "strict-origin-when-cross-origin",
             "user-agent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
         }
@@ -72,7 +72,7 @@ class BileterSeats(AsyncSeatsParser):
         return a_sectors
 
     async def body(self):
-        url_seats = f'https://www.bileter.ru/performance/hall-scheme?IdPerformance={self.event_id}'
+        url_seats = f'https://www.bileter.ru/performance/hall-scheme?IdPerformance={self.event_id_}'
         activePlaces = await self.get_seats(url_seats)
         a_sectors = self.reformat(activePlaces)
 

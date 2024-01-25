@@ -21,7 +21,7 @@ class CskaBasket(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-        self.event_id = self.url.split('=')[-1]
+        self.event_id_ = self.url.split('=')[-1]
         self.csrf_frontend = None
 
     async def before_body(self):
@@ -129,7 +129,7 @@ class CskaBasket(AsyncSeatsParser):
             'x-requested-with': 'XMLHttpRequest'
         }
         data = {
-            'event_id': self.event_id,
+            'event_id': self.event_id_,
             'view_id': sector_id,
             '_csrf-frontend': self.csrf_frontend
         }

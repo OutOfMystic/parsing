@@ -15,7 +15,7 @@ class Hc_Sibir_Seats(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 3200
         self.driver_source = None
-        self.event_id = self.url.split('/')[-1]
+        self.event_id_ = self.url.split('/')[-1]
        
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -54,7 +54,7 @@ class Hc_Sibir_Seats(AsyncSeatsParser):
         await self.session.get(url=self.url, headers=headers1, verify=False)
 
     async def get_availible_ids(self):
-        url_zones = f"https://tickets.hcsibir.ru/zones-list/{self.event_id}"
+        url_zones = f"https://tickets.hcsibir.ru/zones-list/{self.event_id_}"
         headers2 = {
             "accept": "*/*",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",
@@ -86,8 +86,8 @@ class Hc_Sibir_Seats(AsyncSeatsParser):
         for id_sector in sectors_ids:
             try:
                 #sleep(0.2)
-                seats_sector = f'https://tickets.hcsibir.ru/seats-list/{self.event_id}/{id_sector}'
-                choose_seats = f"https://tickets.hcsibir.ru/choose-seats/{self.event_id}/{id_sector}"
+                seats_sector = f'https://tickets.hcsibir.ru/seats-list/{self.event_id_}/{id_sector}'
+                choose_seats = f"https://tickets.hcsibir.ru/choose-seats/{self.event_id_}/{id_sector}"
                 headers3 = {
                     "accept": "*/*",
                     "accept-language": "en-US,en;q=0.9,ru;q=0.8",

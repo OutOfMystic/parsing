@@ -138,7 +138,7 @@ class Contextfest(AsyncSeatsParser):
             'x-requested-with': 'XMLHttpRequest'
         }
         data = {
-            'event': self.event_id
+            'event': self.event_id_
         }
         r = await self.session.post(self.url, headers=headers, json=data)
         return r.json()

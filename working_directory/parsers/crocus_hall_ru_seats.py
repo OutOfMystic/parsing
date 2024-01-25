@@ -17,7 +17,7 @@ class CrocusHall(AsyncSeatsParser):
         self.delay = 1200
         self.driver_source = None
         self.widget_key = re.search(r'(?<=key\=)[\w\-]*', self.url)[0]
-        self.event_id = re.search(r'(?<=eventId\=)\d+', self.url)[0]
+        self.event_id_ = re.search(r'(?<=eventId\=)\d+', self.url)[0]
         self.get_configuration_id = None
         self.count_error = 0
 
@@ -245,7 +245,7 @@ class CrocusHall(AsyncSeatsParser):
             price = tariffs_data[tariff_id]
             self.register_dancefloor(sector_name, price, amount)
 
-        url = f'https://crocus2.kassir.ru/api/v1/halls/configurations/{self.get_configuration_id}?language=ru&phpEventId={self.event_id}'
+        url = f'https://crocus2.kassir.ru/api/v1/halls/configurations/{self.get_configuration_id}?language=ru&phpEventId={self.event_id_}'
         get_all_seats = await self.request_parser(url)
         if get_all_seats is None:
             return []
@@ -325,7 +325,7 @@ class CrocusHall(AsyncSeatsParser):
             return None        
 
     async def get_seats(self):
-        url = f'https://crocus2.kassir.ru/api/v1/events/{self.event_id}?language=ru'
+        url = f'https://crocus2.kassir.ru/api/v1/events/{self.event_id_}?language=ru'
         get_configuration_id = await self.request_parser(url)
         if get_configuration_id is None:
             return []
@@ -334,7 +334,7 @@ class CrocusHall(AsyncSeatsParser):
             return []
         self.get_configuration_id = self.get_configuration_id.get('trHallConfigurationId')
 
-        url = f'https://crocus2.kassir.ru/api/v1/events/{self.event_id}/seats?language=ru&phpEventId={self.event_id}'
+        url = f'https://crocus2.kassir.ru/api/v1/events/{self.event_id_}/seats?language=ru&phpEventId={self.event_id_}'
         json_data = await self.request_parser(url)
         if json_data is None:
             return []

@@ -128,4 +128,4 @@ class AlexandrinskyRu(AsyncEventParser):
     async def body(self) -> None:
         for event in await self._parse_events():
             #self.debug(event)
-            self.register_event(event.title, event.href, date=event.date, event_id=event.event_id)
+            self.register_event(event.title, event.href, date=event.date, event_id_=event.event_id)

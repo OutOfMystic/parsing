@@ -81,4 +81,4 @@ class Lenkom(AsyncEventParser):
         a_events = await self.get_events()
 
         for event in a_events:
-            self.register_event(event[0], event[1], date=event[2], event_id=event[3])
+            self.register_event(event[0], event[1], date=event[2], event_id_=event[3])

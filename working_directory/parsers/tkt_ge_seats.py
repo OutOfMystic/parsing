@@ -30,8 +30,8 @@ class TktGe(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-        self.event_id = '355735'
-        self.url = f'https://tkt.ge/api/v2/shows/get?itemId={self.event_id}&category=Event&previewKey=&queueItTkn=e_brunomars~q_7f49ffa3-14cc-4b2a-9799-12578a5ecac5~ts_1689595300~ce_true~rt_safetynet~h_02039ce52a856df442b56c3583793dafcf6a856d67bd8c428ae7eea4be419abe&urlWithoutQueueITTkn=https%3A%2F%2Ftkt.ge%2Fevent%2F355735&api_key=7d8d34d1-e9af-4897-9f0f-5c36c179be77'
+        self.event_id_ = '355735'
+        self.url = f'https://tkt.ge/api/v2/shows/get?itemId={self.event_id_}&category=Event&previewKey=&queueItTkn=e_brunomars~q_7f49ffa3-14cc-4b2a-9799-12578a5ecac5~ts_1689595300~ce_true~rt_safetynet~h_02039ce52a856df442b56c3583793dafcf6a856d67bd8c428ae7eea4be419abe&urlWithoutQueueITTkn=https%3A%2F%2Ftkt.ge%2Fevent%2F355735&api_key=7d8d34d1-e9af-4897-9f0f-5c36c179be77'
         self.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
 
     async def before_body(self):
@@ -113,7 +113,7 @@ class TktGe(AsyncSeatsParser):
             'accept-language': 'ka-GE;ka',
             'cache-control': 'no-cache',
             'pragma': 'no-cache',
-            'referer': f'https://tkt.ge/event/{self.event_id}/bruno-mars',
+            'referer': f'https://tkt.ge/event/{self.event_id_}/bruno-mars',
             'sec-ch-ua': '"Chromium";v="112", "YaBrowser";v="23", "Not:A-Brand";v="99"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
@@ -122,7 +122,7 @@ class TktGe(AsyncSeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        url = f'https://tkt.ge/api/Events/Map?mapId={self.event_id}&sectionId={sector_id}&orderKey=&api_key=7d8d34d1-e9af-4897-9f0f-5c36c179be77'
+        url = f'https://tkt.ge/api/Events/Map?mapId={self.event_id_}&sectionId={sector_id}&orderKey=&api_key=7d8d34d1-e9af-4897-9f0f-5c36c179be77'
         r = self.session.get(url, headers=headers)
         return r.json()['data']['seats'][4:]
 
@@ -142,7 +142,7 @@ class TktGe(AsyncSeatsParser):
             'accept-language': 'ka-GE;ka',
             'cache-control': 'no-cache',
             'pragma': 'no-cache',
-            'referer': f'https://tkt.ge/event/{self.event_id}/bruno-mars',
+            'referer': f'https://tkt.ge/event/{self.event_id_}/bruno-mars',
             'sec-ch-ua': '"Chromium";v="112", "YaBrowser";v="23", "Not:A-Brand";v="99"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
@@ -151,7 +151,7 @@ class TktGe(AsyncSeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        url = f'https://tkt.ge/api/Events/Map?mapId={self.event_id}&orderKey=&api_key=7d8d34d1-e9af-4897-9f0f-5c36c179be77'
+        url = f'https://tkt.ge/api/Events/Map?mapId={self.event_id_}&orderKey=&api_key=7d8d34d1-e9af-4897-9f0f-5c36c179be77'
         r = self.session.get(url, headers=headers)
         return r.json()
 
@@ -174,7 +174,7 @@ class TktGe(AsyncSeatsParser):
             'authorization': 'Bearer undefined',
             'cache-control': 'no-cache',
             'pragma': 'no-cache',
-            'referer': f'https://tkt.ge/event/{self.event_id}/bruno-mars',
+            'referer': f'https://tkt.ge/event/{self.event_id_}/bruno-mars',
             'sec-ch-ua': '"Chromium";v="112", "YaBrowser";v="23", "Not:A-Brand";v="99"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',

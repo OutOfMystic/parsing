@@ -26,7 +26,7 @@ class ZaryadyeHall(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-        self.event_id: str = self.url.split('/')[-1]
+        self.event_id_: str = self.url.split('/')[-1]
         self.user_token = self.generate_user_token()
         self.spreading = 5
 
@@ -165,7 +165,7 @@ class ZaryadyeHall(AsyncSeatsParser):
         }
         url = 'https://www.afisha.ru/wl/101/api/events/info?lang=ru&sid='
         data = {
-            'event_id': str(self.event_id),
+            'event_id': str(self.event_id_),
             'user_token': self.user_token
         }
         try:

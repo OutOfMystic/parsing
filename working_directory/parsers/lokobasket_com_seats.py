@@ -23,7 +23,7 @@ class Lokobasket(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-        self.event_id = self.url.split('/')[-1]
+        self.event_id_ = self.url.split('/')[-1]
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -198,7 +198,7 @@ class Lokobasket(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         data = {
-            'event_id': self.event_id,
+            'event_id': self.event_id_,
             'widget_session': 'eLdgrITSBV3mAwGoJSD8MlBUIzM5rf0n4hyoJTHz'
         }
         r = await self.session.post(self.url, headers=headers, data=data)

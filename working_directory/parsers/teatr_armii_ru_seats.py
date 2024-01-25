@@ -16,7 +16,7 @@ class ArmyParser(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 3600
         self.driver_source = None
-        self.event_id = self.url.split('/')[-1]
+        self.event_id_ = self.url.split('/')[-1]
     
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -60,7 +60,7 @@ class ArmyParser(AsyncSeatsParser):
         
        
         try:   
-            resp = await self.session.post(url,data={'event_id':{self.event_id}}, headers=headers)
+            resp = await self.session.post(url,data={'event_id':{self.event_id_}}, headers=headers)
             resp = resp.json()
             list_with_places = resp['places']
             scene = resp['event']["location_name"]

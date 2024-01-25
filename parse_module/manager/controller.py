@@ -216,8 +216,6 @@ class Controller:
                 if not connections:
                     continue
                 group.update(connections)
-                for connection in connections:
-                    logger.debug(f'connection', connection['event_id'], connection['date'])
         elif self._debug_url:
             group, connections = self.get_debug_url_conn(all_connections)
             if connections:
@@ -297,10 +295,11 @@ class Controller:
         seats_to_run = {}
         for parser in all_seats_parsers:
             if parser.parent in events_to_autorun:
-                seats_to_run[parser.event_id] = parser
-                if parser.event_id in seats_to_load_names:
+                real_parser_event_id = parser.signature['event_id']
+                seats_to_run[real_parser_event_id] = parser
+                if real_parser_event_id in seats_to_load_names:
                     continue
-                seats_to_load_names[parser.event_id] = events_to_autorun[parser.parent]
+                seats_to_load_names[real_parser_event_id] = events_to_autorun[parser.parent]
 
         # SEATS NOTIFIERS TO STOP
         for event_id in to_del:
@@ -319,8 +318,8 @@ class Controller:
                 setattr(notifier, attribute, value)
 
         # SEATS NOTIFIERS TO LOAD
-        seats_parsers_to_add = {parser.event_id: parser for parser in all_seats_parsers
-                                if parser.event_id in to_add}
+        seats_parsers_to_add = {parser.signature['event_id']: parser for parser in all_seats_parsers
+                                if parser.signature['event_id'] in to_add}
         seats_to_run.update(seats_parsers_to_add)
         for event_id, seats_parser in seats_to_run.items():
             notifier_data = seats_to_load_names[event_id]
