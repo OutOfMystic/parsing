@@ -74,9 +74,9 @@ class ScheduledExecutor:
         if time.time() - self._last_demand_check > 5 or self.debug:
             self._last_demand_check = time.time()
             if self.in_process >= awaiting_lower_limit:
-                stat = f'High demand. Tasks in process: {self.in_process}, ' \
-                       f'Scheduled: {len(self._tasks)}'
-                logger.info(stat, name='Controller (Backend)')
+                logger.info(f'High demand. Tasks in process: {self.in_process}, '
+                            f'Scheduled: {len(self._tasks)}',
+                            name='Controller (Backend)')
 
     def inspect_queue(self):
         log_time = time.time()

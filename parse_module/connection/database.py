@@ -225,8 +225,6 @@ class ParsingDB(DBConnection):
                 connection['parsing'] = []
             connection['event_id'] = int(connection['event_id'])
         connections.sort(key=lambda key: key['event_id'])
-        for connection in connections:
-            logger.info(f'subject', connection['event_id'], connection['event_name'], connection['date'])
         return connections
 
     @locker
