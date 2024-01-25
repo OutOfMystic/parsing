@@ -899,7 +899,7 @@ class YandexAfishaParser(AsyncSeatsParser):
         r = await self.session.post(url, timeout=10, headers=headers, data=data)
 
         if not '<div class="CheckboxCaptcha' in r.text:
-            self.info(f'Yandex captcha success solved bro!')
+            self.debug(f'Yandex captcha success solved bro!')
         else:
             self.warning(f'Yandex captcha DIDNT solved!!!')
         return r
@@ -935,10 +935,10 @@ class YandexAfishaParser(AsyncSeatsParser):
         r = await self.check_captcha(r, url, headers)
 
         if 'result' not in r.text:
-            self.info(f'[req_err] request doesnt contain result: {r.text[:400]}')
+            self.warning(f'[req_err] request doesnt contain result: {r.text[:400]}')
             return None, r
         if r.json()['status'] != 'success':
-            self.info(f'[req_err] request status != success: {r.text[:400]}')
+            self.warning(f'[req_err] request status != success: {r.text[:400]}')
             return None, r
         if r.json()['result']['saleStatus'] in ['not-available', 'closed', 'no-seats']:
             return r.json()['result']['saleStatus'], r

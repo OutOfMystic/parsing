@@ -257,7 +257,7 @@ class Parser(AsyncEventParser):
             teatr_links = await self.get_links_teatrs(pagecount, places_url, our_places)
             for link, venue in teatr_links.items():
                 for event in await self.get_events(link, places_url, venue):
-                    self.info(event)
+                    # self.debug(event)
                     if 'gosudarstvennyy-kremlevskiy-dvorec' in our_places:
                         venue = 'Кремлёвский Дворец'
                         if 'kremlevskiy-dvorec/novogodnee-predstavlenie' not in event[1]:

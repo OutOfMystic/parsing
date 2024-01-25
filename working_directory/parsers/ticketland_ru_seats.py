@@ -98,7 +98,7 @@ class LenkomParser(AsyncSeatsParser):
             self.tl_csrf_no_f, self.performance_id, self.limit, self.is_special_sale = event_vars
             return True
         else:
-            self.info('Waiting event vars')
+            self.info('Event seems empty. Waiting event vars...')
             return False
 
     async def request_to_ticketland(self, url, headers=None):

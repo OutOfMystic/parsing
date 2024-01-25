@@ -174,7 +174,7 @@ class KassirParser(AsyncEventParser):
             except Exception as ex:
                 self.warning(f'{ex}, {url} cannot load!')
             else:
-                self.info('kassir_seats load sucess', url)
+                self.debug('kassir_seats load sucess', url)
 
             for event in a_events:
                 #self.info(event)
