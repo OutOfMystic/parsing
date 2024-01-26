@@ -1,10 +1,11 @@
 from bs4 import BeautifulSoup
-from parse_module.models.parser import SeatsParser
+import re
+
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
-class Cska(AsyncSeatsParser):
+class Ska(AsyncSeatsParser):
     event = 'tickets.ska.ru'
     url_filter = lambda url: 'tickets.ska.ru' in url
 
@@ -126,13 +127,19 @@ class Cska(AsyncSeatsParser):
             '216': 'Сектор 216',
         }
 
-        ref_dict = {}
         if 'ледовый дворец' in self.venue.lower():
             ref_dict = cska_arena_reformat_dict
-
-        for sector in a_sectors:
-            sector['name'] = ref_dict.get(sector['name'], sector['name'])
-
+            for sector in a_sectors:
+                sector['name'] = ref_dict.get(sector['name'], sector['name'])
+        if 'ска арена (хкска)' in self.venue.lower():
+            for sector in a_sectors:
+                if 'ресторан' not in sector['name'].lower():
+                    sector_main = sector['name']
+                    number = re.search(r'\d+', sector_main)[0]
+                    if number[0] in ('5', '4'):
+                        sector['name'] = f'Ложа {number}'
+                    elif number[0] in ('6', '2', '3'):
+                        sector['name'] = f'Сектор {number}'
     def parse_seats(self, soup):
         total_sector = []
 

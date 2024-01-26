@@ -81,7 +81,8 @@ class YandexAfishaParser(EventParser):
             'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*', #ufa-arena
             'https://afisha.yandex.ru/togliatti/concert/places/lada-arena': '*', #lada-arena
             'https://afisha.yandex.ru/chelyabinsk/concert/places/ledovaia-arena-traktor': '*', #arena-traktor
-            'https://afisha.yandex.ru/yekaterinburg/sport/places/arena-uralets': '*', #arena-uralets
+            'https://afisha.yandex.ru/yekaterinburg/sport/places/arena-uralets': '*', #arena-uralets,
+            #'https://afisha.yandex.ru/saint-petersburg/sport/places/ska-arena': '*',  # SKA arena
             'https://afisha.yandex.ru/moscow/concert/places/khram-khrista-spasitelia-zal-tserkovnykh-soborov': '*' # hram
         }
         self.special_url = {
