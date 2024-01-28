@@ -233,7 +233,7 @@ def get_router(local_db=False):
     outer_conn, inner_conn = multiprocessing.Pipe()
     outer_conn.send = send_threadsafe.__get__(outer_conn)
     logger.info('Backend initing...', name='Controller (Backend)')
-    if local_db:
+    if not local_db:
         args = (inner_conn, '127.0.0.1', '5432', 'django_project',)
     else:
         args = (inner_conn, '193.178.170.180', '5432', 'django_project',)
