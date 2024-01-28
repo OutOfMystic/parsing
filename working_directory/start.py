@@ -15,10 +15,11 @@ DEBUG_DATA = 19309
 
 
 if __name__ == '__main__':
-    event_loop = create_thread_with_event_loop()
-    router, process = backend.get_router('django_project', 'Q8kPzqBPk4fb6I')
-
     release = 'release' in sys.argv
+    local = 'local' in sys.argv
+
+    event_loop = create_thread_with_event_loop()
+    router, process = backend.get_router(local_db=local)
     debug_url, debug_event_id = None, None
     if DEBUG:
         if isinstance(DEBUG_DATA, str): 

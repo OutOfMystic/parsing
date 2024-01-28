@@ -1,19 +1,19 @@
-class InternalError(Exception):
+class InternalError(RuntimeError):
     """a deep-based unexpected error"""
 
 
-class SchemeError(Exception):
+class SchemeError(RuntimeError):
     """
     this error is almost caused by incorrect
     ``Constructor`` instance
     """
 
 
-class ParsingError(Exception):
+class ParsingError(RuntimeError):
     """a wrong parsing code"""
 
 
-class ProxyHubError(Exception):
+class ProxyHubError(RuntimeError):
     """no proxies available"""
 
 

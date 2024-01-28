@@ -8,6 +8,7 @@ from threading import Lock
 
 from . import pooling
 from .router import SchemeRouterFrontend, wait_until
+from .. import connection
 from ..connection import db_manager
 from ..connection.database import TableDict
 from ..manager.pooling import ScheduledExecutor
@@ -211,27 +212,33 @@ class SchemeRouterBackend:
             provision.just_try(method, args=args, name='Controller (Backend)')
 
 
-def change_connection(login, password):
+def change_connection(ip, port, login):
     while not db_manager.connection:
         time.sleep(0.1)
     db_manager.connection.close()
     db_manager.user = login
-    db_manager.password = password
+    db_manager.host = ip
+    db_manager.port = port
+    db_manager.password = 'Q8kPzqBPk4fb6I'
     threading.Thread(target=db_manager.connect_db).start()
 
 
-def process_starting(inner_conn, login, password):
-    change_connection(login, password)
+def process_starting(inner_conn, ip, port, login):
+    change_connection(ip, port, login)
     backend_ = SchemeRouterBackend(inner_conn)
     backend_.run()
 
 
-def get_router(db_login, db_password):
+def get_router(local_db=False):
     outer_conn, inner_conn = multiprocessing.Pipe()
     outer_conn.send = send_threadsafe.__get__(outer_conn)
     logger.info('Backend initing...', name='Controller (Backend)')
+    if local_db:
+        args = (inner_conn, '127.0.0.1', '5432', 'django_project',)
+    else:
+        args = (inner_conn, '193.178.170.180', '5432', 'django_project',)
     process = multiprocessing.Process(target=process_starting,
-                                      args=(inner_conn, db_login, db_password,))
+                                      args=args)
     process.start()
     router = SchemeRouterFrontend(outer_conn)
     router.conn.recv()

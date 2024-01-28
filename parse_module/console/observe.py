@@ -105,9 +105,9 @@ def subject_object_check(args):
     event_id, url = args
 
     subjects = db_manager.get_events_for_parsing()
-    sycceded = event_id in [subj['event_id'] for subj in subjects]
-    result_message(0, 'Проверка на наlичие event_id в системе', sycceded)
-    if not sycceded:
+    succeded = event_id in [subj['event_id'] for subj in subjects]
+    result_message(0, 'Проверка на наlичие event_id в системе', succeded)
+    if not succeded:
         return
 
     parsing_types = db_manager.get_parsing_types()

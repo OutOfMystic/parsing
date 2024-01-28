@@ -1,6 +1,7 @@
 import os
 import pickle
 import json
+import sys
 import time
 from collections import defaultdict
 from threading import Lock
@@ -133,11 +134,18 @@ class DBConnection:
 
 class ParsingDB(DBConnection):
     def __init__(self):
-        super().__init__(host="193.178.170.180",
-                         port="5432",
-                         user="django_project",
-                         password="Q8kPzqBPk4fb6I",
-                         database="crmdb")
+        if 'local' in sys.argv:
+            super().__init__(host="127.0.0.1",
+                             port="5432",
+                             user="django_project",
+                             password="Q8kPzqBPk4fb6I",
+                             database="crmdb")
+        else:
+            super().__init__(host="193.178.170.180",
+                             port="5432",
+                             user="django_project",
+                             password="Q8kPzqBPk4fb6I",
+                             database="crmdb")
         
     # def __init__(self):
     #     super().__init__(host="195.2.81.173",
