@@ -2,8 +2,7 @@ import json
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.parse_utils import double_split, lrsplit
 import codecs
 
@@ -46,7 +45,7 @@ class InticketsParser(AsyncSeatsParser):
         }
         r = await self.session.get(self.url, headers=headers, verify_ssl=False)
 
-        if 'Билетов больше нет' in r.text:
+        if 'Билетов больше нет' in r.text or 'Продажа билетов завершена' in r.text:
             return False
 
         sectors_data = double_split(r.text, '"schemaSectorArr":', '}') + '}'
@@ -77,4 +76,5 @@ class InticketsParser(AsyncSeatsParser):
         self.reformat(a_sectors)
 
         for sector in a_sectors:
+            #self.debug(sector['name'], len(sector['tickets']))
             self.register_sector(sector['name'], sector['tickets'])
