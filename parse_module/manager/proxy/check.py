@@ -1,4 +1,8 @@
+import asyncio
+import threading
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
+from typing import Optional
 
 import requests
 import time
@@ -13,17 +17,32 @@ CHECK_DELAY = 2 * 60 * 60
 
 
 class SpecialConditions:
+    semaphores_on_condition = {}
+    async_semaphores_on_condition = {}
+
     def __init__(self,
                  url='http://httpbin.org/',
                  method=requests.get,
                  handler=None,
-                 lifetime=3600):
+                 lifetime=3600,
+                 max_parsers_on_ip=None):
         self.url = url
         self.method = method
         self.handler = handler if handler else self.default_handler
         assert lifetime >= 120, 'Proxy lifetime should be more or equal to 2 minutes'
         self.lifetime = lifetime
+        self.max_parsers_on_ip = max_parsers_on_ip
         self.signature = (self.url, self.method.__name__, self.default_handler.__name__,)
+        self.semaphores_on_condition[self.signature] = defaultdict(threading.Semaphore)
+        self.async_semaphores_on_condition[self.signature] = defaultdict(asyncio.Semaphore)
+
+    def get_proxy_semaphore(self, proxy) -> Optional[threading.Semaphore]:
+        if self.max_parsers_on_ip:
+            return self.semaphores_on_condition[self.signature][proxy.args]
+
+    def get_async_proxy_semaphore(self, proxy) -> Optional[asyncio.Semaphore]:
+        if self.max_parsers_on_ip:
+            return self.async_semaphores_on_condition[self.signature][proxy.args]
 
     @staticmethod
     def default_handler(proxy, url, method):
@@ -68,6 +87,7 @@ def check_proxies(proxies, proxies_on_condition):
     # CHECK TASKS POOLING
     start_time = time.time()
     tasks = []
+    condition: SpecialConditions
     condition = proxies_on_condition.condition
 
     for proxy in proxies:

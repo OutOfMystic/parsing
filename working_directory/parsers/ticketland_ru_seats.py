@@ -12,7 +12,7 @@ from parse_module.utils import provision
 
 class LenkomParser(AsyncSeatsParser):
     event = 'ticketland.ru'
-    proxy_check = SpecialConditions(url='https://www.ticketland.ru/')
+    proxy_check = SpecialConditions(url='https://www.ticketland.ru/', max_parsers_on_ip=1)
     url_filter = lambda url: 'ticketland.ru' in url and 'lenkom' in url
 
     def __init__(self, *args, **extra):

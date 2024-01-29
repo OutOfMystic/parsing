@@ -184,8 +184,13 @@ class SchemeRouterBackend:
         self._postponer.put_task(self._release_sectors, args)
 
     def _release_sectors(self, event_id, *args):
-        scheme = self.parser_schemes[event_id]
-        scheme.release_sectors(*args)
+        lock = self.event_lockers[event_id]
+        try:
+            lock.acquire()
+            scheme = self.parser_schemes[event_id]
+            scheme.release_sectors(*args)
+        finally:
+            lock.release()
 
     def get_connections(self, *args):
         provision.threading_try(self._get_connections,

@@ -59,16 +59,19 @@ class ParserBase(core.Bot, ABC):
         next_step_delay = min(self.get_delay() / 15, 120)
         if self.proxy is None:
             self._debug_only('changing proxy', int((time.time() - start_time) * 10) / 10)
-            provision.just_try(self._get_proxy)
+            provision.just_try(self._get_proxy, name=self.name)
             self._debug_only('changed proxy', int((time.time() - start_time) * 10) / 10)
 
         if self.proxy is not None:
             next_step_delay = self.get_delay()
+            semaphore = self.proxy_check.get_proxy_semaphore(self.proxy)
+            if semaphore:
+                semaphore.acquire()
             if not self.fully_inited:
                 if self.driver:
                     self.driver.quit()
                     self.driver = None
-                self.inthread_init()
+                provision.just_try(self.inthread_init, name=self.name)
                 self._debug_only('inited', int((time.time() - start_time) * 10) / 10)
             if self.fully_inited and self._terminator.alive:
                 self._debug_only('Proceeding', int((time.time() - start_time) * 10) / 10)
@@ -76,6 +79,8 @@ class ParserBase(core.Bot, ABC):
                 self._debug_only('Proceeded', int((time.time() - start_time) * 10) / 10)
             else:
                 next_step_delay = max(self.get_delay() / 7, 300)
+            if semaphore:
+                semaphore.release()
 
         if self._terminator.alive:
             task = pooling.Task(self.proceed, self.name, next_step_delay)
