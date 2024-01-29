@@ -6,7 +6,7 @@ from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class Parser(AsyncEventParser):
-    proxy_check = SpecialConditions(url='https://www.ticketland.ru/')
+    proxy_check = SpecialConditions(url='https://www.ticketland.ru/', max_parsers_on_ip=1)
 
     def __init__(self, controller, name):
         super().__init__(controller, name)

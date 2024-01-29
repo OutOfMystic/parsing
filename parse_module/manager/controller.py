@@ -199,7 +199,7 @@ class Controller:
                                f' {connection["event_name"]}'
                                f' {connection["date"]} '
                                f' is absolutely similar'
-                               f' to another one')
+                               f' to another loaded')
             else:
                 already_ran_conns.add(indicator_without_margin)
         logger.debug(len(predefined_connections))
