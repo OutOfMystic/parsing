@@ -219,7 +219,6 @@ def change_connection(ip, port, login):
     db_manager.user = login
     db_manager.host = ip
     db_manager.port = port
-    db_manager.password = 'Q8kPzqBPk4fb6I'
     threading.Thread(target=db_manager.connect_db).start()
 
 

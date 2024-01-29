@@ -187,18 +187,23 @@ class Controller:
         ai_connections = self.router.get_connections_result()
         already_ran_conns = set()
         for connection in ai_connections:
-            indicator_without_margin = {
+            indicator_data = {
                 'event_id': connection['event_id'],
                 'scheme_id': connection['scheme_id'],
-                'date': connection['date'],
+                'date': str(connection['date']),
                 'url': connection['url']
             }
+            indicator_without_margin = json.dumps(indicator_data, sort_keys=True)
             if indicator_without_margin in already_ran_conns:
-                logger.warning(f'SEATS parser ({connection["event_name"]}'
-                               f' {connection["date"]}) is absolutely similar '
-                               f'to another one ({connection["event_id"]})')
+                logger.warning(f'SEATS parser #{connection["event_id"]}'
+                               f' {connection["event_name"]}'
+                               f' {connection["date"]} '
+                               f' is absolutely similar'
+                               f' to another one')
             else:
                 already_ran_conns.add(indicator_without_margin)
+        logger.debug(len(predefined_connections))
+        logger.debug(len(ai_connections))
         return predefined_connections, ai_connections
 
     def database_interaction(self):
@@ -246,12 +251,8 @@ class Controller:
             #start_async_logger(self.async_loop)
             self._async_logger_started = True"""
 
-        # Do some database work at the end of step
-        start_time = time.time()
-        self._reset_tickets(subjects, all_connections)
-        self._update_db_with_stored_urls(predefined_connections + ai_connections)
-
         # Waiting for seats lockers to be released
+        start_time = time.time()
         while any(group.start_lock.locked() for group in self.seats_groups):
             if time.time() - start_time > self.pending_delay:
                 connected = sum(group.going_to_start for group in self.seats_groups)
@@ -261,6 +262,8 @@ class Controller:
                           f'Going to start {connected}'
                 self.bprint(message, color=utils.Fore.YELLOW)
             time.sleep(2)
+
+        return subjects, all_connections, predefined_connections + ai_connections
 
     def _load_notifiers(self):
         # EVENT NOTIFIERS
@@ -343,9 +346,14 @@ class Controller:
                         f'was attached to the parser')
             self.seats_notifiers.append(notifier)
 
+    def _database_cleanwork(self, subjects, all_conns, all_conns_plain):
+        # Do some database work at the end of step
+        if self.release and not self.debug:
+            db_manager.delete_old_tickets()
+            self._reset_tickets(subjects, all_conns)
+        self._update_db_with_stored_urls(all_conns_plain)
+
     def _reset_tickets(self, subjects, all_connections):
-        if not self.release or self.debug:
-            return
         event_ids = set(connection['event_id'] for connection in plain_dict_values(all_connections))
         all_event_ids = set(subject['event_id'] for subject in subjects)
         events_to_reset = all_event_ids - event_ids
@@ -423,9 +431,14 @@ class Controller:
         while True:
             subjects = provision.just_try(self.database_interaction, name='Controller')
             if subjects is provision.TryError:
+                logger.error('DATABASE INTERACTION FAILED', name='Controller')
                 continue
-            provision.just_try(self.load_connections, args=(subjects,), name='Controller')
+            conn_data = provision.just_try(self.load_connections, args=(subjects,), name='Controller')
             provision.just_try(self._load_notifiers, name='Controller')
+            if conn_data is provision.TryError:
+                logger.error('MAKING CONNECTIONS FAILED', name='Controller')
+                continue
+            provision.just_try(self._database_cleanwork, args=conn_data, name='Controller')
             delay = self.pending_delay if time.time() > self.fast_time else fast_delay
             time.sleep(delay)
 

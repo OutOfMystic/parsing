@@ -146,6 +146,7 @@ class ParsingDB(DBConnection):
                              user="django_project",
                              password="Q8kPzqBPk4fb6I",
                              database="crmdb")
+        self._already_deleted = False
         
     # def __init__(self):
     #     super().__init__(host="195.2.81.173",
@@ -432,6 +433,18 @@ class ParsingDB(DBConnection):
             seats_parsers.append(db_data)
 
         return event_parsers, seats_parsers
+
+    @locker
+    def delete_old_tickets(self):
+        if self._already_deleted:
+            return
+        self.execute("DELETE FROM public.tables_tickets"
+                     "WHERE event_id_id IN ("
+                     "    SELECT id FROM public.tables_event"
+                     "    WHERE date < (NOW() - INTERVAL '24 hours')"
+                     ") AND status NOT IN ('ordered', 'available');")
+        self.commit()
+        self._already_deleted = True
 
 
 class TableDict(dict):

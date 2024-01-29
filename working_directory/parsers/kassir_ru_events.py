@@ -189,4 +189,4 @@ class KassirParser(AsyncEventParser):
                 except Exception as ex:
                     self.error(f'cannot save to DB!{ex}, {event} {url}')
                 else:
-                    self.info('kassir_seats save to DB sucess', url)
+                    self.debug('kassir_seats save to DB sucess', url)
