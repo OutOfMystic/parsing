@@ -14,6 +14,7 @@ class KassirParser(AsyncSeatsParser):
     event = 'kassir.ru'
     url_filter = lambda event: ('kassir.ru' in event and 'crocus2' not in event and 'frame' not in event 
                                     and 'schematr' not in event )
+    SpecialConditions
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
@@ -25,7 +26,7 @@ class KassirParser(AsyncSeatsParser):
         self.place_name = ''
         self.breadcrumb = ''
         self.url_spb_or_msk = double_split(self.url, 'https://', '/')
-        self.count_error = 0
+        self.count_error = 4
         self.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
         self.headers = {
             "accept": "*/*",
@@ -1620,6 +1621,7 @@ class KassirParser(AsyncSeatsParser):
             'sec-fetch-dest': 'empty',
             'sec-fetch-mode': 'cors',
             'sec-fetch-site': 'same-site',
+            'Origin': f"https://msk.kassir.ru",
             "Referer": f"https://{self.domain}/",
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'user-agent': self.user_agent
@@ -1630,10 +1632,11 @@ class KassirParser(AsyncSeatsParser):
         while (not response.ok or response.text == '[]') and count > 0:
             self.debug(url, response.text)
             count -= 1
-            await asyncio.sleep(30)
+            await asyncio.sleep(10)
             await self.change_proxy()
             response = await self.session.get(url, headers=self.new_headers)
-            
+            #self.info(response.status_code, 'response_main')
+
             
         # with open('TEST2.json', 'w', encoding='utf-8') as file:
         #     json.dump(response.json(), file, indent=4, ensure_ascii=False) 
@@ -1652,12 +1655,32 @@ class KassirParser(AsyncSeatsParser):
             self.new_venue = ''
 
         res = {}
+
+        
+        headers_availible = {
+            "accept": "*/*",
+            "accept-language": "en-US,en;q=0.9,ru;q=0.8",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site",
+            "Referer": f"https://{self.domain}/",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            'user-agent': self.user_agent
+        }
+
         for sector in avalible_sectors:
+            #self.info(sector, 'sector')
             try:
                 await asyncio.sleep(0.2)
-                res.setdefault(sector[1], {})
                 url_load_cheme = f'https://api.kassir.ru/api/orders/sectors/scheme/{self.id}/{sector[0]}?domain={self.domain}'
-                r = await self.session.get(url=url_load_cheme, headers=self.new_headers)
+                r = await self.session.get(url=url_load_cheme, headers=headers_availible)
+
+                #self.info(r.status_code, 'response.text')
+
+                while r.status_code != 200 and self.count_error > 0:
+                    r = await self.session.get(url=url_load_cheme, headers=headers_availible)
+                    self.count_error -= 1
+                    await asyncio.sleep(5)
                 s = BeautifulSoup(r.text, 'lxml-xml')
 
                 polygon =  [i for i in s.find_all('polygon') if 'kh:tariff-group-id' in i.attrs]
@@ -1724,6 +1747,6 @@ class KassirParser(AsyncSeatsParser):
             a_sectors = self.reformat_mossovet(a_sectors)
 
         for sector, tickets in a_sectors.items():
-            #self.info(sector, len(tickets))
+            #self.info(sector, len(tickets), self.url)
             self.register_sector(sector.strip(), tickets)
         #self.check_sectors()
