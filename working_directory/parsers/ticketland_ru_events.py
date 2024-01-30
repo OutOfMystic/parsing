@@ -62,8 +62,8 @@ class Parser(AsyncEventParser):
     async def get_events(self, link, places_url, venue):
         events = []
         number_page = 0
-        achtung = None
-        while achtung == None:
+        achtung = False
+        while not achtung:
             if 'bdt-imtovstonogova' in link:
                 add_link = link + f'LoadBuildingCrossPopularJS/?page={number_page}&dateStart=0&dateEnd=0&dateRangeCode=default'
             else:
@@ -94,7 +94,7 @@ class Parser(AsyncEventParser):
             r = await self.session.get(add_link, headers=headers)
             soup = BeautifulSoup(r.text, "lxml")
             cards = soup.find_all('div', class_='col')
-            achtung = soup.find('p', class_='mb-2')
+            achtung = 'На выбранную дату нет мероприятий' in r.text
             for card in cards:
                 href = card.find('a', class_='card__image-link').get('href')
                 link_ = link.split('w')[0] + places_url.split('/')[2] + href
@@ -256,8 +256,9 @@ class Parser(AsyncEventParser):
                 pagecount = 1
             teatr_links = await self.get_links_teatrs(pagecount, places_url, our_places)
             for link, venue in teatr_links.items():
+                #self.debug(link)
                 for event in await self.get_events(link, places_url, venue):
-                    # self.debug(event)
+                    #self.debug(event)
                     if 'gosudarstvennyy-kremlevskiy-dvorec' in our_places:
                         venue = 'Кремлёвский Дворец'
                         if 'kremlevskiy-dvorec/novogodnee-predstavlenie' not in event[1]:
