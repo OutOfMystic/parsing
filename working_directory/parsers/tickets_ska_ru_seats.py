@@ -140,7 +140,7 @@ class Ska(AsyncSeatsParser):
                         sector['name'] = f'Ложа {number}'
                     elif number[0] in ('6', '2', '3'):
                         sector['name'] = f'Сектор {number}'
-    def parse_seats(self, soup):
+    async def parse_seats(self, soup):
         total_sector = []
 
         text_js = soup.find('div', class_='wrp-main').find('script').text
@@ -156,7 +156,7 @@ class Ska(AsyncSeatsParser):
                 url_sector = f'seats-list/{url_split[-1]}/{sector_id}'
                 url_to_sector = '/'.join(url_split[:-2]) + '/' + url_sector
 
-                r = self.request_parser(url=url_to_sector)
+                r = await self.get_html(url=url_to_sector)
                 json_request = r.json()
 
                 list_price_in_json = json_request.get('prices')[::-1]
@@ -217,13 +217,13 @@ class Ska(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         r = await self.session.get(url, headers=headers)
-        return r.text
+        return r
 
     async def get_seats(self):
-        r_text = await self.get_html(url=self.url)
-        soup = BeautifulSoup(r_text, 'lxml')
+        r = await self.get_html(url=self.url)
+        soup = BeautifulSoup(r.text, 'lxml')
 
-        a_events = self.parse_seats(soup)
+        a_events = await self.parse_seats(soup)
 
         return a_events
 
@@ -233,4 +233,5 @@ class Ska(AsyncSeatsParser):
         self.reformat(all_sectors)
 
         for sector in all_sectors:
+            #self.debug(sector['name'], len(sector['tickets']))
             self.register_sector(sector['name'], sector['tickets'])
