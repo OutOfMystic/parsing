@@ -171,8 +171,9 @@ class Controller:
 
     def get_connections(self, subjects):
         indicators = set()
-        predefined_connections = []
 
+        # Predefined connections
+        predefined_connections = []
         for subject in subjects[::-1]:
             if not PREDEFINED:
                 self.bprint('PREDEFINED PARSERS ARE SWITCHED OFF', color=utils.Fore.YELLOW)
@@ -185,25 +186,6 @@ class Controller:
         self.router.get_connections_task(subjects, indicators, self.parsing_types,
                                          self.parsed_events)
         ai_connections = self.router.get_connections_result()
-        already_ran_conns = set()
-        for connection in ai_connections:
-            indicator_data = {
-                'event_id': connection['event_id'],
-                'scheme_id': connection['scheme_id'],
-                'date': str(connection['date']),
-                'url': connection['url']
-            }
-            indicator_without_margin = json.dumps(indicator_data, sort_keys=True)
-            if indicator_without_margin in already_ran_conns:
-                logger.warning(f'SEATS parser #{connection["event_id"]}'
-                               f' {connection["event_name"]}'
-                               f' {connection["date"]} '
-                               f' is absolutely similar'
-                               f' to another loaded')
-            else:
-                already_ran_conns.add(indicator_without_margin)
-        logger.debug(len(predefined_connections))
-        logger.debug(len(ai_connections))
         return predefined_connections, ai_connections
 
     def database_interaction(self):

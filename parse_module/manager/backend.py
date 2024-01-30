@@ -1,3 +1,4 @@
+import json
 import multiprocessing
 import sys
 import threading
@@ -15,7 +16,7 @@ from ..manager.pooling import ScheduledExecutor
 from ..models import scheme
 from ..models.ai_nlp import venue, solve
 from ..models.ai_nlp.collect import cross_subject_object
-from ..utils import provision
+from ..utils import provision, utils
 from ..utils.logger import logger
 from ..utils.provision import multi_try
 
@@ -91,16 +92,17 @@ class Postponer(threading.Thread):
 
 
 class AISolver:
+
     def __init__(self):
         self._table_sites = TableDict(db_manager.get_site_names)
-        self._already_warned_on_collect = set()
+        self._already_warned = set()
         self.solver, self._cache_dict = solve.get_model_and_cache()
         self.venues = venue.VenueAliases(self.solver)
 
     def get_connections(self, subjects: list, indicators: set, parsing_types: dict, parsed_events: list):
         connections = []
 
-        labels = (self._table_sites, parsing_types, self._already_warned_on_collect,)
+        labels = (self._table_sites, parsing_types, self._already_warned,)
         types_on_site = db_manager.get_site_parsers()
         for connection in cross_subject_object(subjects, parsed_events, self.venues,
                                                self.solver, self._cache_dict,
@@ -108,7 +110,33 @@ class AISolver:
             if connection['indicator'] in indicators:
                 continue
             connections.append(connection)
+
+        self._warn_already_loaded(connections)
         return connections
+
+    def _warn_already_loaded(self, connections):
+        already_ran_conns = dict()
+        for connection in connections:
+            indicator_data = {
+                'event_id': connection['event_id'],
+                'scheme_id': connection['scheme_id'],
+                'date': str(connection['date']),
+                'url': connection['url']
+            }
+            indicator_without_margin = json.dumps(indicator_data, sort_keys=True)
+            if indicator_without_margin in already_ran_conns:
+                already_ran_parent = already_ran_conns[indicator_without_margin]
+                parents_part = f'{utils.Fore.RED}{connection["parent"]}\\{already_ran_parent}{utils.Fore.YELLOW}'
+                message = (f'SEATS parser #{connection["event_id"]}'
+                           f' {connection["event_name"]}'
+                           f' {connection["date"]} ({parents_part})'
+                           f' is absolutely similar'
+                           f' to another loaded')
+                if message not in self._already_warned:
+                    self._already_warned.add(message)
+                    logger.warning(message, name='Controller (Backend)')
+            else:
+                already_ran_conns[indicator_without_margin] = connection['parent']
 
 
 class SchemeRouterBackend:

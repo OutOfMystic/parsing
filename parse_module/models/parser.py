@@ -65,7 +65,7 @@ class ParserBase(core.Bot, ABC):
         if self.proxy is not None:
             next_step_delay = self.get_delay()
             semaphore = self.proxy_check.get_proxy_semaphore(self.proxy)
-            if semaphore:
+            if semaphore is not None:
                 semaphore.acquire()
             if not self.fully_inited:
                 if self.driver:
@@ -79,7 +79,7 @@ class ParserBase(core.Bot, ABC):
                 self._debug_only('Proceeded', int((time.time() - start_time) * 10) / 10)
             else:
                 next_step_delay = max(self.get_delay() / 7, 300)
-            if semaphore:
+            if semaphore is not None:
                 semaphore.release()
 
         if self._terminator.alive:
