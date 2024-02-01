@@ -49,7 +49,7 @@ class Hc_Sibir_Seats(AsyncSeatsParser):
             "upgrade-insecure-requests": "1",
             "User-Agent": self.user_agent
         }
-        await self.session.get(url=self.url, headers=headers1, verify=False)
+        await self.session.get(url=self.url, headers=headers1, ssl=False)
 
     async def get_availible_ids(self):
         url_zones = f"https://tickets.hcsibir.ru/zones-list/{self.event_id_}"
@@ -67,7 +67,7 @@ class Hc_Sibir_Seats(AsyncSeatsParser):
             "Referrer-Policy": "strict-origin-when-cross-origin",
             "User-Agent": self.user_agent
         }
-        availible_zones_json = await self.session.get(url=url_zones, headers=headers2, verify=False)
+        availible_zones_json = await self.session.get(url=url_zones, headers=headers2, ssl=False)
         availible_zones = [ i.get('id') for i in availible_zones_json.json()["zones"]]
         return availible_zones # ['153522', '153851', '154280', '154609', '154886', ...]
 
@@ -100,7 +100,7 @@ class Hc_Sibir_Seats(AsyncSeatsParser):
                     "Referrer-Policy": "strict-origin-when-cross-origin",
                     "User-Agent": self.user_agent
                 }
-                price_zones = await self.session.get(url=choose_seats, headers=headers3, verify=False)
+                price_zones = await self.session.get(url=choose_seats, headers=headers3, ssl=False)
                 price_zones.encoding = 'utf-8'
 
                 zones_txt = self.double_split(price_zones.text,'CORE.data.prices = ', ';')
@@ -108,7 +108,7 @@ class Hc_Sibir_Seats(AsyncSeatsParser):
                 for zones in price_zones:
                     all_price_zones.setdefault(zones.get('pricezoneId') , int(float(zones.get('value'))))
 
-                ticktes_all = await self.session.get(url=seats_sector, headers=headers3, verify=False)
+                ticktes_all = await self.session.get(url=seats_sector, headers=headers3, ssl=False)
 
                 for i in ticktes_all.json()['seats']:
                     sector, row, seat = self.get_row_and_place(i.get("name"))

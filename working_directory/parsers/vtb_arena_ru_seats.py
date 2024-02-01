@@ -517,7 +517,7 @@ class VtbArena(AsyncSeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = await self.session.post(url, headers=headers, json=data, verify=False)
+        r = await self.session.post(url, headers=headers, json=data, ssl=False)
         return r.json()
 
     async def get_seats(self):
@@ -614,7 +614,7 @@ class VtbArena(AsyncSeatsParser):
             'user-agent': self.user_agent,
             'x-widget-key': self.widget_key
         }
-        r = await self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers, ssl=False)
         if r.status_code == 500:
             return None
         try:

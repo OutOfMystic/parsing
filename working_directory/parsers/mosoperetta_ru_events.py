@@ -32,7 +32,7 @@ class OperettaParser(AsyncEventParser):
             'Sec-Fetch-Site': 'none',
             'Sec-Fetch-User': '?1',
         }
-        r = await self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers, ssl=False)
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -112,14 +112,13 @@ class OperettaParser(AsyncEventParser):
 
             data.update(month_data)
 
-        r = await self.session.post(url, headers=headers, data=data, verify=False)
+        r = await self.session.post(url, headers=headers, data=data, ssl=False)
 
         count = 5
         while not r.ok and count > 0:
             self.debug(f'{self.proxy.args = }, {self.session.cookies = } kassir events')
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = AsyncProxySession(self)
-            r = await self.session.post(url, headers=headers, data=data, verify=False)
+            self.change_proxy()
+            r = await self.session.post(url, headers=headers, data=data, ssl=False)
             count -= 1
 
         soup = BeautifulSoup(r.text, 'lxml')

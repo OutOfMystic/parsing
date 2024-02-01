@@ -34,7 +34,7 @@ class Parser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(self.url + month_params, headers=headers, verify=False)
+        r = await self.session.get(self.url + month_params, headers=headers, ssl=False)
         return r.text
 
     def get_months_params(self, months_container):

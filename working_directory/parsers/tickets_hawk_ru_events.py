@@ -77,7 +77,7 @@ class XKAvangarg(AsyncEventParser):
             "isSeason": 0,
             "withoutActionType": 93
         }
-        r = await self.session.post(self.url, headers=headers, json=data, verify=False)
+        r = await self.session.post(self.url, headers=headers, json=data, ssl=False)
 
         a_events = self.parse_events(r.json())
 

@@ -53,7 +53,7 @@ class LenkomParser(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        # r = self.session.get(self.url, headers=headers)
+        # r = self.session.get(self.url, headers=headers, ssl=False)
         r_text, r_json = await self.multi_try(self.request_to_ticketland, 
                                               handle_error=lambda: (asyncio.ensure_future(asyncio.sleep(4))),
                                               tries=5, args=[self.url, headers])
@@ -103,7 +103,7 @@ class LenkomParser(AsyncSeatsParser):
 
     async def request_to_ticketland(self, url, headers=None):
         try:
-            r = await self.session.get(url, headers=headers, verify=False)
+            r = await self.session.get(url, headers=headers, ssl=False)
         except ProxyError:
             return None, None
         if '<div id="id_spinner" class="container"><div class="load">Loading...</div>' in r.text:
@@ -149,7 +149,7 @@ class LenkomParser(AsyncSeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        # r = self.session.get(url, headers=headers)
+        # r = self.session.get(url, headers=headers, ssl=False)
         r_text, r_json = await self.multi_try(self.request_to_ticketland,
                                               handle_error=lambda: (asyncio.ensure_future(asyncio.sleep(4))),
                                                 tries=5, args=[url, headers])

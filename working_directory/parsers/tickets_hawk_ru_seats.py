@@ -118,7 +118,7 @@ class XKAvangarg(AsyncSeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, ssl=False)
         return r.json()
 
     async def request_parser(self, url, data):
@@ -140,7 +140,7 @@ class XKAvangarg(AsyncSeatsParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = await self.session.post(url, headers=headers, json=data, verify=False)
+        r = await self.session.post(url, headers=headers, json=data, ssl=False)
         return r.json()
 
     async def get_seats(self):

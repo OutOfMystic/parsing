@@ -62,14 +62,13 @@ class OperettaParser(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(self.url, headers=headers, verify=False)
+        r = await self.session.get(self.url, headers=headers, ssl=False)
 
         count = 8
         while not r.ok and count > 0:
             self.debug(f'{self.proxy.args = }, {self.session.cookies = } mosoperetta 505 bad gateway')
-            self.proxy = self.controller.proxy_hub.get(self.proxy_check)
-            self.session = AsyncProxySession(self)
-            r = await self.session.get(self.url, headers=headers, verify=False)
+            self.change_proxy()
+            r = await self.session.get(self.url, headers=headers, ssl=False)
             count -= 1
 
         sitekey = double_split(r.text, 'data-sitekey="', '"')
@@ -107,7 +106,7 @@ class OperettaParser(AsyncSeatsParser):
             'smart-token': token,
         }
 
-        r = await self.session.post(self.url, headers=headers, data=data, verify=False)
+        r = await self.session.post(self.url, headers=headers, data=data, ssl=False)
         try:
             svg_url = double_split(r.text, "url_svg = '", "'")
         except:
@@ -134,7 +133,7 @@ class OperettaParser(AsyncSeatsParser):
             'x-requested-with': 'XMLHttpRequest'
         }
         url = seats_url
-        r = await self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, ssl=False)
         if not r.json().get('FreePlacesQty'):
             return []
 

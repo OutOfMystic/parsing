@@ -90,7 +90,7 @@ class MalyParser(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers, ssl=False)
         if r.status_code == 407:
             raise ProxyError(f'{r.status_code = }, {self.proxy.args = }')
         try:
@@ -112,7 +112,7 @@ class MalyParser(AsyncSeatsParser):
             'x-requested-with': 'XMLHttpRequest',
             'x-csrf-token': csrf
         }
-        r = await self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers, ssl=False)
         return r.json()
 
     def _get_sectors_data(self, seat_data, occupied_ticket_ids=None):
@@ -172,7 +172,7 @@ class MalyParser(AsyncSeatsParser):
                 '_csrf': csrf
             }
             url = 'http://www.maly.ru/halls/event-hall-scheme'
-            r = await self.session.post(url, data=data, headers=headers, verify=False)
+            r = await self.session.post(url, data=data, headers=headers, ssl=False)
             seat_data = r.json()['seats']
             self.name_of_scene = 'Историческая сцена'
             a_sectors = self._get_sectors_data(seat_data, occupied_ticket_ids)
@@ -181,12 +181,12 @@ class MalyParser(AsyncSeatsParser):
             headers = {'user-agent': self.user_agent}
             params = {'id': self.event_id_}
             url = 'http://maly.core.ubsystem.ru/uiapi/event/scheme'
-            r = await self.session.get(url, params=params, headers=headers, verify=False)
+            r = await self.session.get(url, params=params, headers=headers, ssl=False)
             seat_data = r.json()['seats']
             a_sectors = self._get_sectors_data(seat_data)
             
             try:
-                response = await self.session.get(f'https://maly.core.ubsystem.ru/uiapi/event/{self.event_id_}', headers=headers)
+                response = await self.session.get(f'https://maly.core.ubsystem.ru/uiapi/event/{self.event_id_}', headers=headers, ssl=False)
                 self.name_of_scene = response.json()['hallScheme']['hall']['title']
             except Exception:
                 raise Exception('Cannot find hallScheme, name_of_scene')

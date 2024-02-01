@@ -41,7 +41,7 @@ class HcSibirHockey(AsyncEventParser):
     
 
     async def body(self):
-            r = await self.session.get(url=self.url, headers=self.headers, verify=False)
+            r = await self.session.get(url=self.url, headers=self.headers, ssl=False)
             soup = BeautifulSoup(r.text, 'lxml')
 
             tickets = soup.find(class_='tickets__list').find('tbody')

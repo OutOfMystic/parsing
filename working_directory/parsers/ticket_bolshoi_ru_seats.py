@@ -50,7 +50,7 @@ class BolshoiQueue(authorize.AccountsQueue):
             'user-agent': self.user_agent,
             'x-csrf-token': account.csrf_token
         }
-        r = account.get(url, headers=headers, verify=False)
+        r = account.get(url, headers=headers, ssl=False)
 
         try:
             tickets_in_cart = r.json()
@@ -85,7 +85,7 @@ class BolshoiQueue(authorize.AccountsQueue):
             'user-agent': self.user_agent,
             'x-csrf-token': account.csrf_token
         }
-        r = account.delete(url, headers=headers, verify=False)
+        r = account.delete(url, headers=headers, ssl=False)
         self.debug('deleting on', account.login)
 
     def is_logined(self, account):
@@ -113,7 +113,7 @@ class BolshoiQueue(authorize.AccountsQueue):
         }
         r = account.get(seats_url,
                         headers=headers,
-                        verify=False)
+                        ssl=False)
         return 'Unauthorized' not in r.text
 
     def login(self, account, err_counter=0):
@@ -155,7 +155,7 @@ class BolshoiQueue(authorize.AccountsQueue):
         r = account.put('https://ticket.bolshoi.ru/api/v1/client/login',
                         data=params,
                         headers=headers,
-                        verify=False)
+                        ssl=False)
         if 'одключение к системе' in r.text:
             error = f'{account.login}:{account.password} - Заблокирован!'
             self.add_to_blacklist(account)
@@ -189,7 +189,7 @@ class BolshoiQueue(authorize.AccountsQueue):
             'Sec-Fetch-User': '?1',
             'Connection': 'keep-alive'
         }
-        r = session.get(url, headers=headers, verify=False)
+        r = session.get(url, headers=headers, ssl=False)
 
     def get_app_name(self, session):
         url = 'https://ticket.bolshoi.ru/login'
@@ -206,7 +206,7 @@ class BolshoiQueue(authorize.AccountsQueue):
             'Sec-Fetch-Site': 'cross-site',
             'Connection': 'keep-alive'
         }
-        r = session.get(url, headers=headers, verify=False)
+        r = session.get(url, headers=headers, ssl=False)
 
         return parse_utils.double_split(r.text, '"/js/app', '"')
 
@@ -234,7 +234,7 @@ class BolshoiQueue(authorize.AccountsQueue):
         }
         r = session.get(f'https://ticket.bolshoi.ru/js/app{app_name}',
                         headers=headers,
-                        verify=False)
+                        ssl=False)
 
         return parse_utils.double_split(r.text, 'reCaptchaKey:"', '"')
 
@@ -257,7 +257,7 @@ class BolshoiQueue(authorize.AccountsQueue):
         try:
             r = account.get('https://ticket.bolshoi.ru/api/csrfToken',
                             headers=headers,
-                            verify=False)
+                            ssl=False)
         except Exception as error:
             raise RuntimeError(f'No CSRF on ip ' + str(account.proxy) + ' ' + str(error))
 

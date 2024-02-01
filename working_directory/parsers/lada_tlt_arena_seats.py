@@ -48,7 +48,7 @@ class HcLadaHockeyTLTarena_seats(AsyncSeatsParser):
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'user-agent': self.user_agent
         }
-        r1 = await self.session.get(url=url, headers=headers, verify_ssl=False)
+        r1 = await self.session.get(url=url, headers=headers, ssl=False)
         zones = self.double_split(r1.text, 'CORE.data.zones = ', ';')
         json_data = json.loads(zones)
         ids = [i.get('id') for i in json_data]
@@ -70,7 +70,7 @@ class HcLadaHockeyTLTarena_seats(AsyncSeatsParser):
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'user-agent': self.user_agent
             }   
-        r = await self.session.get(url=url, headers=headers, verify=False)
+        r = await self.session.get(url=url, headers=headers, ssl=False)
 
         self.prices.update(
             {i["pricezoneId"]: i["value"] for i in r.json()['prices']}

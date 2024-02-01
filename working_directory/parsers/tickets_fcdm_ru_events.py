@@ -64,7 +64,7 @@ class TicketsFcdmRu(AsyncEventParser):
             'sec-fetch-site': 'same-origin',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(self.url, headers=headers, verify=False)
+        r = await self.session.get(self.url, headers=headers, ssl=False)
         return r.json()
 
     async def body(self):

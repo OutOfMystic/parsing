@@ -1,9 +1,9 @@
 import json
 from typing import NamedTuple
+import ssl
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -20,6 +20,9 @@ class HelikonRu(AsyncSeatsParser):
         self.delay = 1200
         self.driver_source = None
         self.url = 'https://core.helikon.ubsystem.ru/uiapi/event/scheme?id=' + self.url.split('/')[-1]
+        self.ssl_context = ssl.create_default_context()
+        self.ssl_context.check_hostname = False
+        self.ssl_context.verify_mode = ssl.CERT_NONE
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -89,7 +92,7 @@ class HelikonRu(AsyncSeatsParser):
             'sec-fetch-site': 'cross-site',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(self.url, headers=headers, verify=False)
+        r = await self.session.get(self.url, headers=headers, ssl=self.ssl_context)
         return r.json()
 
     async def body(self) -> None:

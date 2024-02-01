@@ -118,7 +118,7 @@ class MdtDodin(AsyncEventParser):
         data = {
             "ids": data
         }
-        r = await self.session.post(url, headers=headers, json=data, verify=False)
+        r = await self.session.post(url, headers=headers, json=data, ssl=False)
         return r.json()
 
     async def _requests_to_events(self, url: str) -> BeautifulSoup:
@@ -139,7 +139,7 @@ class MdtDodin(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(url, headers=headers)
+        r = await self.session.get(url, headers=headers, ssl=False)
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self) -> None:

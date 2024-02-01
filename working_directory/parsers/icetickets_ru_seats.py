@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import ssl
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
@@ -15,6 +16,9 @@ class Icetickets(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
+        self.ssl_context = ssl.create_default_context()
+        self.ssl_context.check_hostname = False
+        self.ssl_context.verify_mode = ssl.CERT_NONE
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -117,7 +121,7 @@ class Icetickets(AsyncSeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = await self.session.post(url, data=data, headers=headers, verify=False)
+        r = await self.session.post(url, data=data, headers=headers, ssl=self.ssl_context)
         return BeautifulSoup(r.text, 'lxml')
 
     async def second_requests_parser(self, url):
@@ -135,7 +139,7 @@ class Icetickets(AsyncSeatsParser):
             'user-agent': self.user_agent,
             'x-requested-with': 'XMLHttpRequest'
         }
-        r = await self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, ssl=self.ssl_context)
         return BeautifulSoup(r.text, 'lxml')
 
     async def request_parser(self, url):
@@ -154,7 +158,7 @@ class Icetickets(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, ssl=self.ssl_context)
         return BeautifulSoup(r.text, 'lxml')
 
     async def get_seats(self):

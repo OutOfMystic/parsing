@@ -70,7 +70,7 @@ class Hc_Salavat_Seats(AsyncSeatsParser):
             }
         
         url_zones = f"https://tickets.hcsalavat.ru/event/get-zones?event_id={self.id}"
-        r2 = await self.session.get(url=url_zones, headers=headers2, verify_ssl=False)
+        r2 = await self.session.get(url=url_zones, headers=headers2, ssl=False)
 
         zones = {}
         for i in r2.json()['zones'].items():
@@ -102,14 +102,14 @@ class Hc_Salavat_Seats(AsyncSeatsParser):
            'view_id': zone,
            'clear_cache':'false',
            'csrf-frontend': csrf_token}
-        r3 = await self.session.post(url=url_post, headers=headers3, data=data, verify_ssl=False)
+        r3 = await self.session.post(url=url_post, headers=headers3, data=data, ssl=False)
 
         status = r3.json()['places']['type']
         seat_name = self.reformat_seats(self.sectors_info[zone])
         if status == 'busy':
             busy_seats =  set(i['id'] for i in r3.json()['places']['values'])
             get_svg = 'https://tickets.hcsalavat.ru/event/get-svg-places'
-            r4 = await self.session.post(url=get_svg, headers=headers3, data=data, verify=False)
+            r4 = await self.session.post(url=get_svg, headers=headers3, data=data, ssl=False)
             for i in r4.json()["places"].items():
                 places = set(i[1]).difference(busy_seats)
                 price = self.zones.get(int(i[0]))
@@ -136,7 +136,7 @@ class Hc_Salavat_Seats(AsyncSeatsParser):
         
     async def body(self) -> None:
         self.id = self.url.split('=')[-1]
-        r1 = await self.session.get(url=self.url, headers=self.headers1, verify_ssl=False)
+        r1 = await self.session.get(url=self.url, headers=self.headers1, ssl=False)
         soup = BeautifulSoup(r1.text, 'lxml')
         csrf_token = soup.find('meta', {'name':'csrf-token'}).get('content')
 

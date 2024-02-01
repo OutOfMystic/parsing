@@ -2,6 +2,7 @@ from asyncio import sleep as asyncio_sleep
 import re
 import locale
 from datetime import datetime
+import ssl
 
 from bs4 import BeautifulSoup
 
@@ -37,6 +38,9 @@ class AfishaEvents(AsyncEventParser):
             'https://www.afisha.ru/msk/theatre/teatr-rossiyskoy-armii-15877731/': '*', #armii
             #'https://www.afisha.ru/msk/theatre/gubernskiy-teatr-15883628/': '*', #gubernskiy
         }
+        self.ssl_context = ssl.create_default_context()
+        self.ssl_context.check_hostname = False
+        self.ssl_context.verify_mode = ssl.CERT_NONE
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -60,7 +64,7 @@ class AfishaEvents(AsyncEventParser):
             'Connection': 'keep-alive',
             'User-Agent': self.user_agent
         } 
-        response = await self.session.get(x_ath_url, headers=headers, verify=False)
+        response = await self.session.get(x_ath_url, headers=headers, ssl=self.ssl_context)
         soup = BeautifulSoup(response.text, 'lxml')
         re_find_js = re.compile(r'^/js/.*\.js')
         scripts = soup.find_all('script', {'src': re_find_js})
@@ -83,7 +87,7 @@ class AfishaEvents(AsyncEventParser):
             ]
         js_to_parsing = None
         for script in scripts:
-            js_response = await self.session.get(script, headers=headers)
+            js_response = await self.session.get(script, headers=headers, ssl=self.ssl_context)
             js_text = js_response.text
             search = [i in js_text for i in find_in_js]
             if any(search):
@@ -150,7 +154,7 @@ class AfishaEvents(AsyncEventParser):
         self.warning(f"incorrect data in {url_page}, cannot find 'Schedule' in response.json() ")
         await self.make_new_session()
         await asyncio_sleep(1)
-        response = await self.session.get(url_page, headers=self.headers)
+        response = await self.session.get(url_page, headers=self.headers, ssl=self.ssl_context)
         perfomances = response.json().get('Schedule', {})
         if not perfomances:
             self.error(f"2(request) incorrect data in {url_page}, cannot find 'Schedule' in response.json() ")
@@ -164,7 +168,7 @@ class AfishaEvents(AsyncEventParser):
         
     
     async def get_pages(self, url, count=0):
-        response = await self.session.get(url, headers=self.headers)
+        response = await self.session.get(url, headers=self.headers, ssl=self.ssl_context)
         try:
             resp = response.json()
         except Exception as ex:
@@ -202,7 +206,7 @@ class AfishaEvents(AsyncEventParser):
         for url in links:
             #self.info(url, '->>> for url in links')
             try:
-                response = await self.session.get(url, headers=self.headers)
+                response = await self.session.get(url, headers=self.headers, ssl=self.ssl_context)
                 if response.status_code == 200:
                     self.a_events.extend(await self.get_events_from_one_page(response, X_AUTH_TOKEN, url))
             except Exception as ex:

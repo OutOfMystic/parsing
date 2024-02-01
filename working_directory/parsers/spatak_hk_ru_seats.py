@@ -53,7 +53,7 @@ class HockeySpartak(AsyncSeatsParser):
             'event_id': self.id,
             'widget_session': session_key
         }
-        r = await self.session.post(url, headers=headers, data=data)
+        r = await self.session.post(url, headers=headers, data=data, ssl=False)
         soup, text = BeautifulSoup(r.text, 'lxml'), r.text
         return soup, text
     
@@ -101,7 +101,7 @@ class HockeySpartak(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         #exampleUrl1 = 'https://cdn.qtickets.tech/storage/temp/bundles/375268/3cda7f82b87ea5e3045e9b89ea573906-a8d376fc1f76fa376c5a8bccd41763e1.ru.public.js?cache_lock=on'
-        r1 = await self.session.get(url, headers=headers, verify=False)
+        r1 = await self.session.get(url, headers=headers, ssl=False)
         x = len(re.findall(r'function\(cfg\)', r1.text)) #столько есть отдельных массивов с одинаковыми переменными
 
         text1 = self.double_split(r1.text, '(function(cfg){var ', '\n', x=1, n=0)
@@ -136,7 +136,7 @@ class HockeySpartak(AsyncSeatsParser):
         'x-requested-with': 'XMLHttpRequest'
         }
         #ExampleUrl2 = 'https://hk-spartak.qtickets.ru/widget/seats?show_id=375268&widget_session=0000000000000000000000000000000000000000&salt=ca8120baca0962c1134829ed32577af9&cache_lock=on&hash=d3f3ab6c99215101748c464134055421'
-        r2 = await self.session.get(url, headers=headers, verify_ssl=False)
+        r2 = await self.session.get(url, headers=headers, ssl=False)
         # with open('TEST3.json', 'w', encoding='utf-8') as file:
         #     json.dump(r2.json(), file, indent=4, ensure_ascii=False) 
         seats = r2.json()

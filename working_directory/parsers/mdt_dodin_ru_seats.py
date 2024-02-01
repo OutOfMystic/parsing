@@ -87,7 +87,7 @@ class MdtDodin(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         url = 'https://mdtdodin.core.ubsystem.ru/uiapi/event/scheme?id=' + self.url.split('/')[-1]
-        r = await self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, ssl=False)
         return r.json()['seats']
 
     async def body(self) -> None:

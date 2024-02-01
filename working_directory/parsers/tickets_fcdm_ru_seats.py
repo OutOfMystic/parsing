@@ -90,7 +90,7 @@ class TicketsFcdmRu(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         url = f'https://tickets.fcdm.ru/api/event-show/sale/{self.url.split("/")[-1]}/available-seats/full'
-        r = await self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, ssl=False)
         return r.json()
 
     async def body(self):
