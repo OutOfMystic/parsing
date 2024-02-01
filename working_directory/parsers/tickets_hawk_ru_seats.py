@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 
-from parse_module.models.parser import SeatsParser
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class XKAvangarg(AsyncSeatsParser):
@@ -159,4 +158,5 @@ class XKAvangarg(AsyncSeatsParser):
         for sector in all_sectors:
             if '114 Айс Бункер клуб' in sector['name']:
                 continue
+            #self.debug(sector['name'], len(sector['tickets']))
             self.register_sector(sector['name'], sector['tickets'])

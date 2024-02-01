@@ -39,7 +39,7 @@ class YandexAfishaParser(EventParser):
             'https://afisha.yandex.ru/moscow/concert/places/vtb-arena': '*',                     # ВТБ Арена
             'https://afisha.yandex.ru/moscow/other/places/megasport': '*',                       # Мегаспорт
            #'https://afisha.yandex.ru/novosibirsk/other/places/ledovyi-dvorets-sibir': '*',      # ЛД Сибирь
-           # 'https://afisha.yandex.ru/omsk/other/places/g-drive-arena': '*',                     # G-Drive Арена
+            'https://afisha.yandex.ru/omsk/other/places/g-drive-arena': '*',                     # G-Drive Арена
             'https://afisha.yandex.ru/kazan/concert/places/tatneft-arena': '*',                  # Татнефть Арена
             #'https://afisha.yandex.ru/moscow/concert/places/crocus-city-hall': '*',              # Крокус !нужно фиксить сектора
             'https://afisha.yandex.ru/moscow/concert/places/vegas-city-hall-msk': '*',           # Vegas City Hall
