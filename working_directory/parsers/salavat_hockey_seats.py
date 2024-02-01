@@ -4,9 +4,7 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils import utils
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class Hc_Salavat_Seats(AsyncSeatsParser): 
@@ -155,6 +153,7 @@ class Hc_Salavat_Seats(AsyncSeatsParser):
                 self.error(f"{ex}cannot load one of the sectors")
 
         for sector, tickets in self.a_sectors.items():
+            #self.debug(sector, len(tickets))
             self.register_sector(sector, tickets)
         #self.check_sectors()
 
