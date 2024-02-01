@@ -1,10 +1,7 @@
-import re
-
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class HcSibirHockey(AsyncEventParser):
@@ -72,6 +69,6 @@ class HcSibirHockey(AsyncEventParser):
                     a_events.append((title, url_event, full_date, 'Сибирь-Арена'))
             
             for event in a_events:
+                #self.debug(event)
                 self.register_event(event_name=event[0], url=event[1],
                                                  date=event[2], venue=event[3])
-                self.debug(event)

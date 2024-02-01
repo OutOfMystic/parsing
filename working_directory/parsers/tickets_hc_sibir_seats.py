@@ -3,9 +3,7 @@ import json
 from time import sleep
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils import utils
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 class Hc_Sibir_Seats(AsyncSeatsParser): 
     event = 'tickets.hcsibir.ru'
@@ -134,6 +132,7 @@ class Hc_Sibir_Seats(AsyncSeatsParser):
     
         for sector, tickets in a_sectors.items():
             #sector = self.reformat_sector(sector)
+            #self.debug(sector, len(tickets))
             self.register_sector(sector, tickets)
         #self.check_sectors()
     
