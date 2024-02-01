@@ -1,4 +1,3 @@
-import re
 import json
 from datetime import datetime
 
@@ -6,10 +5,8 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.manager.proxy.check import NormalConditions
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.models.parser import EventParser
+from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.parse_utils import double_split
-from parse_module.utils import utils
 
 
 class AfishaEvents(AsyncEventParser):
@@ -121,6 +118,7 @@ class AfishaEvents(AsyncEventParser):
         for event in a_events:
             event_params = {"client_key":event[4],
                             "session_id":event[3]}
+            self.info(event)
             self.register_event(event[0], event[2], date=event[1],
                                   event_params=str(event_params).replace("'", "\""), venue='РАМТ')
             
