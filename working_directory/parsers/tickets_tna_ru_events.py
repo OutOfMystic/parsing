@@ -57,7 +57,7 @@ class TNA(AsyncEventParser):
                 date_and_time = item.find('div', class_='home_events_item_date').text
                 date, time = date_and_time.split('/')
                 day, month = date.split()
-                month = month[:3]
+                month = month[:3].strip().replace('мая','май')
                 month_find = short_months_in_russian.index(month)
                 time = time.replace(' ', '')
 
@@ -149,6 +149,7 @@ class TNA(AsyncEventParser):
 
     async def body(self):
         for url in self.urls:
+            #self.debug(url)
             a_events = await self.get_events(url)
             
             # if url == 'https://tna-tickets.ru/sport/akbars/':
@@ -158,5 +159,5 @@ class TNA(AsyncEventParser):
             #         self.error(ex, 'Exception in tickets_tna_ru_events, problems with TG bot')
 
             for event in a_events:
-                #self.info(event)
+                #self.debug(event)
                 self.register_event(event[0], event[1], date=event[2])
