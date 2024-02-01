@@ -1,13 +1,10 @@
 import random
 import re
-import time
-import json
 
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class HockeySpartak(AsyncSeatsParser):
@@ -216,6 +213,7 @@ class HockeySpartak(AsyncSeatsParser):
 
         for sector, tickets in avalibale_seats.items():
             sector = self.sector_reformat(sector)
+            self.info(sector, len(tickets))
             self.register_sector(sector, tickets)
         #self.check_sectors()
         

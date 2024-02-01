@@ -4,10 +4,7 @@ import re
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils.parse_utils import double_split
-
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 class OutputEvent(NamedTuple):
     title: str
@@ -90,5 +87,6 @@ class Lokobasket(AsyncEventParser):
 
     async def body(self) -> None:
         for event in await self._parse_events():
+            #self.debug(event)
             self.register_event(event.title, event.href,
                                  date=event.date, venue='Дворец Спорта «Мегаспорт»')
