@@ -1,11 +1,10 @@
 import asyncio
-import json
+import ssl
 
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.parse_utils import double_split
 
 
@@ -17,8 +16,11 @@ class CskaHockeyParser(AsyncSeatsParser):
         super().__init__(*args, **extra)
         self.delay = 1200
         self.driver_source = None
-
+        self.spreading = 4
         self.csrf = ''
+        self.ssl_context = ssl.create_default_context()
+        self.ssl_context.check_hostname = False
+        self.ssl_context.verify_mode = ssl.CERT_NONE
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -308,12 +310,13 @@ class CskaHockeyParser(AsyncSeatsParser):
             'x-requested-with': 'XMLHttpRequest',
         }
         data = {
-            'event_id': event_id,
-            'view_id': sector_id,
+            'event_id': int(event_id),
+            'view_id': int(sector_id),
             'clear_cache': 'false',
             '_csrf-frontend': self.csrf,
         }
-        r = await self.session.post(url, headers=headers, data=data, verify=False)
+    
+        r = await self.session.post(url, headers=headers, data=data, ssl=self.ssl_context)
         type_ = r.json()['places']['type']
 
         all_seats = await self.get_all_sector_seats(event_id, sector_id)
@@ -331,6 +334,7 @@ class CskaHockeyParser(AsyncSeatsParser):
 
         a_sectors = []
         for sector_id, sector_info in sectors_info.items():
+            await asyncio.sleep(1)
             sector_name = sector_info['name']
             sector_price = sector_info['price']
             seats = await self.get_a_sector_seats(sector_id, event_id, sector_price)
@@ -352,5 +356,6 @@ class CskaHockeyParser(AsyncSeatsParser):
         self.reformat(a_sectors, self.venue)
 
         for sector in a_sectors:
+            #self.info(sector['name'], len(sector['tickets']))
             self.register_sector(sector['name'], sector['tickets'])
         #self.check_sectors()
