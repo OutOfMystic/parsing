@@ -1,9 +1,8 @@
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.models.parser import EventParser
 from parse_module.utils.date import month_list
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class Cska(AsyncEventParser):
@@ -81,4 +80,5 @@ class Cska(AsyncEventParser):
         a_events = await self.get_events()
 
         for event in a_events:
+            #self.debug(event)
             self.register_event(event[0], event[1], date=event[2], venue=event[3])
