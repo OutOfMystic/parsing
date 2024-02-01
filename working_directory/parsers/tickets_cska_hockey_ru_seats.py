@@ -162,7 +162,7 @@ class CskaHockeyParser(AsyncSeatsParser):
         ]
         url = 'https://cska-hockey.queue.infomatika.ru/api/users/' + id_queue
         while True:
-            r = await self.session.get(url, data=params, headers=headers, verify=False)
+            r = await self.session.get(url, data=params, headers=headers, ssl=self.ssl_context)
             get_data = r.json()
             expired_at = get_data.get('expired_at')
             if expired_at is None:
@@ -187,7 +187,7 @@ class CskaHockeyParser(AsyncSeatsParser):
             'user-agent': self.user_agent
         }
         url = 'https://tickets.cska-hockey.ru/?queue=' + id_queue
-        r = await self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, ssl=self.ssl_context)
         if r.url == 'https://tickets.cska-hockey.ru/':
             headers = {
                 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -204,7 +204,7 @@ class CskaHockeyParser(AsyncSeatsParser):
                 'upgrade-insecure-requests': '1',
                 'user-agent': self.user_agent,
             }
-            r = await self.session.get(self.url, headers=headers, verify=False)
+            r = await self.session.get(self.url, headers=headers, ssl=self.ssl_context)
         return BeautifulSoup(r.text, 'lxml'), r
 
     async def get_event_data(self):
@@ -223,7 +223,7 @@ class CskaHockeyParser(AsyncSeatsParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent,
         }
-        r = await self.session.get(self.url, headers=headers, verify=False)
+        r = await self.session.get(self.url, headers=headers, ssl=self.ssl_context)
         soup = BeautifulSoup(r.text, 'lxml')
         if 'https://cska-hockey.queue.infomatika.ru/' in r.url:
             get_id = soup.select('body script')[0].text
@@ -269,7 +269,7 @@ class CskaHockeyParser(AsyncSeatsParser):
             'view_id': sector_id,
             '_csrf-frontend': self.csrf,
         }
-        r = await self.session.post(url, headers=headers, data=data, verify=False)
+        r = await self.session.post(url, headers=headers, data=data, ssl=self.ssl_context)
 
         all_seats = {}
         for seat_zone, seats in r.json()['places'].items():

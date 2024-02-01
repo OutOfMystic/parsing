@@ -1,5 +1,6 @@
 import asyncio
 from bs4 import BeautifulSoup
+import ssl
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.parse_utils import double_split
@@ -15,6 +16,9 @@ class CskaHockeyParser(AsyncEventParser):
         self.our_urls = {
         }
         self.url = 'https://tickets.cska-hockey.ru/'
+        self.ssl_context = ssl.create_default_context()
+        self.ssl_context.check_hostname = False
+        self.ssl_context.verify_mode = ssl.CERT_NONE
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -69,7 +73,7 @@ class CskaHockeyParser(AsyncEventParser):
         ]
         url = 'https://cska-hockey.queue.infomatika.ru/api/users/' + id_queue
         while True:
-            r = await self.session.get(url, data=params, headers=headers)
+            r = await self.session.get(url, data=params, headers=headers, ssl=self.ssl_context)
             get_data = r.json()
             expired_at = get_data.get('expired_at')
             if expired_at is None:
@@ -94,7 +98,7 @@ class CskaHockeyParser(AsyncEventParser):
             'user-agent': self.user_agent
         }
         url = 'https://tickets.cska-hockey.ru/?queue=' + id_queue
-        r = await self.session.get(url, headers=headers, verify=False)
+        r = await self.session.get(url, headers=headers, ssl=self.ssl_context)
         return BeautifulSoup(r.text, 'lxml')
 
     async def get_events(self):
@@ -112,7 +116,7 @@ class CskaHockeyParser(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent,
         }
-        r = await self.session.get(self.url, headers=headers, verify=False)
+        r = await self.session.get(self.url, headers=headers, ssl=self.ssl_context)
 
         soup = BeautifulSoup(r.text, 'lxml')
         if 'https://cska-hockey.queue.infomatika.ru/' in r.url:
