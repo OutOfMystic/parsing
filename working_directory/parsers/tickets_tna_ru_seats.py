@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import NormalConditions
 from parse_module.manager.proxy.sessions import AsyncProxySession
-from parse_module.utils.parse_utils import double_split
 
 
 class TNA(AsyncSeatsParser):
@@ -41,6 +40,7 @@ class TNA(AsyncSeatsParser):
 
         all_sectors = json_data.get('result')
         for sector in all_sectors:
+            self.info(sector)
             try:
                 sector_name = sector.get('name')
                 sector_id = sector.get('sector_id')
@@ -140,5 +140,5 @@ class TNA(AsyncSeatsParser):
         self.reformat(all_sectors)
 
         for sector in all_sectors:
-            #self.debug(sector['name'], len(sector['tickets']))
+            #self.info(sector['name'], len(sector['tickets']))
             self.register_sector(sector['name'], sector['tickets'])
