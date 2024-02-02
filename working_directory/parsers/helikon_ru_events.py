@@ -41,7 +41,7 @@ class HelikonRu(AsyncEventParser):
         events = []
         all_events_id = [event.href.split('/')[-1] for event in all_events]
         data_about_all_event_id = await self._requests_to_data_about_all_event_id(all_events_id)
-        sold_out = [str(event['id']) 
+        sold_out = [str(event['id'])
                         for event in data_about_all_event_id.values()
                                 if event and event['salesAvailable'] is False]
         for event in all_events:
@@ -109,6 +109,8 @@ class HelikonRu(AsyncEventParser):
         }
         url = 'https://helikon.core.ubsystem.ru/uiapi/event/sale-status'
         r = await self.session.post(url, headers=headers, json=data)
+        if r.status_code == 500:
+            return {}
         return r.json()
 
     async def _requests_to_events(self) -> BeautifulSoup:

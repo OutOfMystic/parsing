@@ -59,24 +59,22 @@ class CskaSportstar(AsyncEventParser):
 
     async def _requests_to_events(self) -> json:
         headers = {
+            'Accept-Language': 'ru,en;q=0.9',
+            'Connection': 'keep-alive',
+            'Cookie': '_ga=GA1.1.1125317026.1704712163; _ym_uid=1704712194553231140; _ym_d=1704712194; _ga_8TTFSDSJWG=GS1.1.1706871776.2.0.1706871776.0.0.0; _ym_isad=2; _ym_visorc=w',
+            'Origin': 'https://cska.sportstar.me',
+            'Referer': 'https://cska.sportstar.me/tickets',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'same-origin',
+            'User-Agent': self.user_agent,
             'accept': '*/*',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru,en;q=0.9',
-            'cache-control': 'no-cache',
-            'connection': 'keep-alive',
-            'content-length': '2325',
             'content-type': 'application/json',
-            'host': 'cska.sportstar.me',
-            'origin': 'https://cska.sportstar.me',
-            'pragma': 'no-cache',
-            'referer': 'https://cska.sportstar.me/tickets',
-            'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
+            'sec-ch-ua': '"Chromium";v="118", "YaBrowser";v="23.11", "Not=A?Brand";v="99", "Yowser";v="2.5"',
             'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': self.user_agent
+            'sec-ch-ua-platform': '"Linux"',
+            'x-locale': 'ru',
+            'x-session-id': 'vQMFpsZIkxCEmK1l'
         }
         start_date = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = start_date + relativedelta.relativedelta(months=1)
@@ -86,32 +84,9 @@ class CskaSportstar(AsyncEventParser):
         end_date = datetime.datetime.timestamp(end_date)
         start_date = str(int(start_date)) + '001'
         end_date = str(int(end_date)) + '001'
-        data = {
-            'operationName': 'allEvents',
-            'query': "query allEvents($query: DefaultQueryInput) {\n  allEvents(query: $query) {\n    ...eventConnection\n    __typename\n  }\n}\n\nfragment eventConnection on EventConnection {\n  total\n  limit\n  cursor\n  sortable\n  edges {\n    ...eventFull\n    __typename\n  }\n  __typename\n}\n\nfragment eventFull on Event {\n  ...eventFlat\n  price {\n    ...eventPrice\n    __typename\n  }\n  eventType {\n    ...eventType\n    __typename\n  }\n  tournamentMatch {\n    ...tournamentMatch\n    __typename\n  }\n  loyaltyDiscount {\n    ...loyaltyDiscount\n    __typename\n  }\n  promo {\n    ...loyaltyPromo\n    __typename\n  }\n  __typename\n}\n\nfragment eventFlat on Event {\n  id\n  image\n  state\n  title\n  eventTypeId\n  eventPlaceId\n  description\n  saleStartDate\n  saleFinishDate\n  startDate\n  finishDate\n  availableSlots\n  saleLimit\n  parkings\n  isFanIdRequired\n  __typename\n}\n\nfragment eventPrice on EventPrice {\n  value\n  discountValue\n  __typename\n}\n\nfragment eventType on EventType {\n  id\n  name\n  description\n  image\n  templates\n  __typename\n}\n\nfragment tournamentMatch on TournamentMatch {\n  ...tournamentMatchFlat\n  team1 {\n    ...tournamentTeamSmall\n    __typename\n  }\n  team2 {\n    ...tournamentTeamSmall\n    __typename\n  }\n  __typename\n}\n\nfragment tournamentMatchFlat on TournamentMatch {\n  id\n  team1Id\n  team2Id\n  result\n  team1IdGoals\n  team2IdGoals\n  state\n  stadiumName\n  stadiumAddress\n  startDate\n  startTime\n  finishDate\n  startedAt\n  finishedAt\n  __typename\n}\n\nfragment tournamentTeamSmall on TournamentTeam {\n  id\n  name\n  logo\n  website\n  __typename\n}\n\nfragment loyaltyDiscount on LoyaltyDiscount {\n  order {\n    id\n    __typename\n  }\n  discountPercent\n  __typename\n}\n\nfragment loyaltyPromo on LoyaltyPromo {\n  id\n  clientId\n  name\n  description\n  imageUri\n  state\n  amount\n  currencyId\n  code\n  codeType\n  codesCount\n  startDate\n  finishDate\n  promoCodeStartDate\n  promoCodeFinishDate\n  discountMaxAmount\n  discountPercent\n  createdAt\n  updatedAt\n  __typename\n}\n",
-            'variables': {
-                'query': {
-                    'filters': [
-                        {
-                            'field': 'eventTypeId',
-                            'value': '[2,1]'
-                        },
-                        {
-                            'field': 'startDate',
-                            'isRange': True,
-                            'value': f"[{start_date}, {end_date}]"
-                        }
-                    ],
-                    'sort': [
-                        {
-                            'direction': 'ASC',
-                            'field': 'startDate'
-                        }
-                    ]
-                }
-            }
-        }
-        r = await self.session.post(self.url, json=data, headers=headers)
+        payload = '{\"query\":\"query allEvents($query: DefaultQueryInput) {\\n  allEvents(query: $query) {\\n    ...eventConnection\\n    __typename\\n  }\\n}\\n\\nfragment eventConnection on EventConnection {\\n  total\\n  limit\\n  cursor\\n  sortable\\n  edges {\\n    ...eventFull\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment eventFull on Event {\\n  ...eventFlat\\n  price {\\n    ...eventPrice\\n    __typename\\n  }\\n  eventType {\\n    ...eventType\\n    __typename\\n  }\\n  tournamentMatch {\\n    ...tournamentMatch\\n    __typename\\n  }\\n  loyaltyDiscount {\\n    ...loyaltyDiscount\\n    __typename\\n  }\\n  promo {\\n    ...loyaltyPromo\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment eventFlat on Event {\\n  id\\n  image\\n  state\\n  title\\n  eventTypeId\\n  eventPlaceId\\n  description\\n  saleStartDate\\n  saleFinishDate\\n  startDate\\n  finishDate\\n  availableSlots\\n  saleLimit\\n  parkings\\n  isFanIdRequired\\n  __typename\\n}\\n\\nfragment eventPrice on EventPrice {\\n  value\\n  discountValue\\n  __typename\\n}\\n\\nfragment eventType on EventType {\\n  id\\n  name\\n  description\\n  image\\n  templates\\n  __typename\\n}\\n\\nfragment tournamentMatch on TournamentMatch {\\n  ...tournamentMatchFlat\\n  team1 {\\n    ...tournamentTeamSmall\\n    __typename\\n  }\\n  team2 {\\n    ...tournamentTeamSmall\\n    __typename\\n  }\\n  __typename\\n}\\n\\nfragment tournamentMatchFlat on TournamentMatch {\\n  id\\n  team1Id\\n  team2Id\\n  result\\n  team1IdGoals\\n  team2IdGoals\\n  state\\n  stadiumName\\n  stadiumAddress\\n  startDate\\n  startTime\\n  finishDate\\n  startedAt\\n  finishedAt\\n  __typename\\n}\\n\\nfragment tournamentTeamSmall on TournamentTeam {\\n  id\\n  name\\n  logo\\n  website\\n  __typename\\n}\\n\\nfragment loyaltyDiscount on LoyaltyDiscount {\\n  order {\\n    id\\n    __typename\\n  }\\n  discountPercent\\n  __typename\\n}\\n\\nfragment loyaltyPromo on LoyaltyPromo {\\n  id\\n  clientId\\n  name\\n  description\\n  imageUri\\n  state\\n  amount\\n  currencyId\\n  code\\n  codeType\\n  codesCount\\n  startDate\\n  finishDate\\n  promoCodeStartDate\\n  promoCodeFinishDate\\n  discountMaxAmount\\n  discountPercent\\n  createdAt\\n  updatedAt\\n  __typename\\n}\\n\",\"variables\":{\"query\":{\"filters\":[{\"field\":\"eventTypeId\",\"value\":\"[2,1]\"},{\"value\":\"' + f'[{start_date}, {end_date}]' + '\",\"field\":\"startDate\",\"isRange\":true}],\"sort\":[{\"direction\":\"ASC\",\"field\":\"startDate\"}]}}}'
+        
+        r = await self.session.post(self.url, data=payload, headers=headers)
         return r.json()
 
     async def body(self):

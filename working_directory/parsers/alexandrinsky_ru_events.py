@@ -59,7 +59,7 @@ class AlexandrinskyRu(AsyncEventParser):
             href = 'https://www.afisha.ru/wl/402/api/events/info?lang=ru&sid='
             event_id = href_and_date.get('onclick')
             event_id = double_split(event_id, 'event_id: ', '})')
-            event = OutputEvent(title=title, href=href, date=normal_date, event_id_=event_id)
+            event = OutputEvent(title=title, href=href, date=normal_date, event_id=event_id)
             events.append(event)
         return events
 
