@@ -5,6 +5,7 @@ import threading
 import time
 from collections import defaultdict
 from multiprocessing.connection import Connection
+from queue import Queue
 from threading import Lock
 
 from . import pooling
@@ -29,66 +30,6 @@ def send_threadsafe(self, data):
         Connection.send(self, data)
     finally:
         send_lock.release()
-
-
-class Postponer(threading.Thread):
-
-    def __init__(self, parser_schemes: dict, locked_queues: dict):
-        super().__init__()
-        self.schemes = parser_schemes
-        self.locked_queues = locked_queues
-        self.lock = Lock()
-        self.start()
-
-    def put_task(self, method, args):
-        event_id = args[0]
-        queue = self.locked_queues.get(event_id, None)
-
-        if queue is None:
-            self._process_task(method, args)
-        else:
-            # Scheme was not created
-            try:
-                self.lock.acquire()
-                task = [method, args]
-                queue.append(task)
-            finally:
-                self.lock.release()
-
-    def _process_task(self, method, args, raise_exc=True):
-        event_id = args[0]
-        thread_name = self.schemes[event_id].name
-        return multi_try(method, args=args, name=thread_name, tries=3, raise_exc=raise_exc)
-
-    def _step(self):
-        try:
-            self.lock.acquire()
-            event_ids_waiting_to_proceed = list(self.locked_queues.keys())
-        finally:
-            self.lock.release()
-
-        processed = 0
-        for event_id in event_ids_waiting_to_proceed:
-            if event_id not in self.schemes:
-                continue
-            try:
-                self.lock.acquire()
-                queue = self.locked_queues.pop(event_id)
-            finally:
-                self.lock.release()
-            for method, args in queue:
-                self._process_task(method, args, raise_exc=False)
-                processed += 1
-
-        return processed
-
-    def run(self):
-        while True:
-            processed = multi_try(self._step, tries=1, raise_exc=False, name='Controller (Backend)')
-            if processed is not provision.TryError and not processed:
-                time.sleep(3)
-            else:
-                time.sleep(0.2)
 
 
 class AISolver:
@@ -139,86 +80,90 @@ class AISolver:
                 already_ran_conns[indicator_without_margin] = connection['parent']
 
 
+class ThreadBuffer(threading.Thread):
+
+    def __init__(self, process_func):
+        super().__init__()
+        self.buffer = []
+        self.process_func = process_func
+        self.start()
+
+    def put(self, item):
+        self.buffer.append(item)
+
+    def run(self):
+        while True:
+            buffer = self.buffer
+            self.buffer = []
+            for item in buffer:
+                self.process_func(item)
+            if not buffer:
+                time.sleep(0.05)
+
+
+class TasksOnScheme(Queue):
+
+    def __init__(self, event_id, scheme_id, name, group_schemes, pool):
+        super().__init__()
+        self.event_id = event_id
+        self._group_schemes = group_schemes
+        self.scheme = None
+        self.queue_processed = False
+        task = pooling.Task(self._create_scheme, 'Controller (Backend)', args=(event_id, scheme_id, name,))
+        pool.add_task(task)
+
+    def _get_group_scheme(self, scheme_id):
+        if scheme_id not in self._group_schemes:
+            new_scheme = scheme.Scheme(scheme_id)
+            add_result = new_scheme.setup_sectors(wait_mode=True)
+            if add_result is False:
+                if not wait_until(lambda: scheme_id in self._group_schemes):
+                    logger.error(f'Scheme distribution corrupted! Backend. Scheme id {scheme_id}',
+                                 name='Controller (Backend)')
+                    self._group_schemes[scheme_id] = new_scheme
+            else:
+                self._group_schemes[scheme_id] = new_scheme
+        return self._group_schemes[scheme_id]
+
+    def _create_scheme(self, event_id, scheme_id, name):
+        group_scheme = self._get_group_scheme(scheme_id)
+        new_scheme = scheme.ParserScheme(group_scheme, event_id, name)
+        self.scheme = new_scheme
+        self._empty_tasks_buffer()
+
+    def _empty_tasks_buffer(self):
+        while not self.empty():
+            method_name, args = self.get()
+            method = self._get_method(method_name)
+            provision.just_try(method, args=args, name='Controller (Backend)')
+        self.queue_processed = True
+
+    def process(self, method_name, args):
+        if self.queue_processed:
+            method = self._get_method(method_name)
+            provision.just_try(method, args=args, name='Controller (Backend)')
+        else:
+            self.put([method_name, args])
+        # logger.debug(method_name, args, name='Backend')
+
+    def _get_method(self, name):
+        return getattr(self.scheme, name)
+
+
 class SchemeRouterBackend:
 
     def __init__(self, conn: multiprocessing.connection.Connection):
         self.parser_schemes = {}
         self.group_schemes = {}
-        self.event_lockers = defaultdict(Lock)
         self.conn = conn
         self._pool = ScheduledExecutor(stats='scheme_router_stats.csv', max_threads=5)
-        self._locked_queues = {}
+        self.buffer = ThreadBuffer(self.process_buffer)
         self.ai_workspace = AISolver()
-        self._postponer = Postponer(self.parser_schemes, self._locked_queues)
-
-    def _get_group_scheme(self, scheme_id):
-        if scheme_id not in self.group_schemes:
-            new_scheme = scheme.Scheme(scheme_id)
-            add_result = new_scheme.setup_sectors(wait_mode=True)
-            if add_result is False:
-                if not wait_until(lambda: scheme_id in self.group_schemes):
-                    logger.error(f'Scheme distribution corrupted! Backend. Scheme id {scheme_id}',
-                                 name='Controller (Backend)')
-                    self.group_schemes[scheme_id] = new_scheme
-            else:
-                self.group_schemes[scheme_id] = new_scheme
-        return self.group_schemes[scheme_id]
 
     def create_scheme(self, event_id, scheme_id, name):
-        try:
-            self._postponer.lock.acquire()
-            self._locked_queues[event_id] = []
-        finally:
-            self._postponer.lock.release()
-            task = pooling.Task(self._create_scheme, 'Controller (Backend)', args=(event_id, scheme_id, name,))
-            self._pool.add_task(task)
-
-    def _create_scheme(self, event_id, scheme_id, name):
-        lock = self.event_lockers[event_id]
-        try:
-            lock.acquire()
-            if event_id not in self.parser_schemes:
-                group_scheme = self._get_group_scheme(scheme_id)
-                new_scheme = scheme.ParserScheme(group_scheme, event_id, name)
-                self.parser_schemes[event_id] = new_scheme
-        finally:
-            lock.release()
-
-    def bind(self, event_id, priority, margin_func):
-        self._postponer.put_task(self._bind, (event_id, priority, margin_func,))
-
-    def _bind(self, event_id, priority, margin_func):
-        lock = self.event_lockers[event_id]
-        try:
-            lock.acquire()
-            scheme = self.parser_schemes[event_id]
-            scheme.bind(priority, margin_func,)
-        finally:
-            lock.release()
-
-    def unbind(self, event_id, priority):
-        self._postponer.put_task(self._unbind, (event_id, priority,))
-
-    def _unbind(self, event_id, priority):
-        lock = self.event_lockers[event_id]
-        try:
-            lock.acquire()
-            scheme = self.parser_schemes[event_id]
-            scheme.unbind(priority)
-        finally:
-            lock.release()
-
-    def release_sectors(self, *args):
-        self._postponer.put_task(self._release_sectors, args)
-
-    def _release_sectors(self, event_id, *args):
-        lock = self.event_lockers[event_id]
-        try:
-            lock.acquire()
-            scheme = self.parser_schemes[event_id]
-            scheme.release_sectors(*args)
-        finally:
-            lock.release()
+        if event_id not in self.parser_schemes:
+            self.parser_schemes[event_id] = TasksOnScheme(event_id, scheme_id, name,
+                                                          self.group_schemes, self._pool)
 
     def get_connections(self, *args):
         provision.threading_try(self._get_connections,
@@ -230,6 +175,23 @@ class SchemeRouterBackend:
         solutions = self.ai_workspace.get_connections(subjects, indicators, parsing_types, parsed_events)
         self.conn.send(solutions)
 
+    def process_buffer(self, got_data):
+        method_name, args = got_data
+        if hasattr(self, method_name):
+            method = getattr(self, method_name)
+            provision.just_try(method, args=args, name='Controller (Backend)')
+        else:
+            if not args:
+                logger.error('Buffer corrupted', name='Controller (Backend)')
+                return
+            event_id = args[0]
+            args = args[1:]
+            if event_id not in self.parser_schemes:
+                logger.error('Scheme distribution corrupted', name='Controller (Backend)')
+                return
+            event_scheme = self.parser_schemes[event_id]
+            event_scheme.process(method_name, args)
+
     def run(self) -> None:
         self.conn.send('Started')
         logger.info('Backend started', name='Controller (Backend)')
@@ -239,10 +201,7 @@ class SchemeRouterBackend:
             if got_data is provision.TryError:
                 sys.exit()
             else:
-                command, args = got_data
-            method = getattr(self, command)
-            # logger.debug(method, args, name='Backend')
-            provision.just_try(method, args=args, name='Controller (Backend)')
+                self.buffer.put(got_data)
 
 
 def change_connection(ip, port, login):

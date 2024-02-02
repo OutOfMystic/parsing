@@ -58,8 +58,6 @@ class Logger(threading.Thread):
 
         if not dont_start:
             self.start()
-        if not test:
-            self.info('Logger started', name='Controller')
 
     def log(self, message: str, level, **kwargs):
         now = datetime.now()
@@ -107,7 +105,9 @@ class Logger(threading.Thread):
             if self.level_filter != log['level']:
                 return
         if self.source_filter is not None:
-            if self.source_filter.lower() not in log['name'].lower():
+            if 'name' not in log:
+                return
+            if self.source_filter not in log['name'].lower():
                 return
         try:
             self.print_log(log, message=message)
@@ -208,7 +208,8 @@ class Logger(threading.Thread):
         with open(self.log_path, 'rb') as file:
             file.seek(0, 2)
             file_size = file.tell()
-            start_pos = max(0, file_size - 2 * 1024 * 1024)
+            megabytes = 50 if source else 2
+            start_pos = max(0, file_size - megabytes * 1024 * 1024)
             file.seek(start_pos)
             for line in file:
                 try:
@@ -235,11 +236,13 @@ class Logger(threading.Thread):
 
     def resume(self):
         while self._stub_buffer:
-            try:
-                log = self._stub_buffer.pop(0)
-                self.filter_and_print(log)
-            except Exception as err:
-                self.warning(f'Lost log: {err}')
+            stub_buffer = self._stub_buffer.copy()
+            self._stub_buffer = []
+            for log in stub_buffer:
+                try:
+                    self.filter_and_print(log)
+                except Exception as err:
+                    self.warning(f'Lost log: {err}')
         self._print_locker = False
 
     def run(self):

@@ -29,9 +29,10 @@ class ControllerInterface(base.CommandPrompt):
             pattern, level = args
         else:
             raise ValueError('There are should be 1 or 2 arguments')
-        ControllerInterface.source = pattern
+        ControllerInterface.source = pattern.lower()
         if level is not None:
             ControllerInterface.level = level.upper()
+        logger.apply_filter(ControllerInterface.source, ControllerInterface.level)
 
     @staticmethod
     def log_level(args_row):
@@ -41,11 +42,14 @@ class ControllerInterface(base.CommandPrompt):
         else:
             raise ValueError('1 argument should be sent')
         ControllerInterface.level = level.upper()
+        logger.apply_filter(ControllerInterface.source, ControllerInterface.level)
+        print('LEVEL APPLJED??')
 
     @staticmethod
     def clear(args_row):
         ControllerInterface.source = None
         ControllerInterface.level = None
+        logger.apply_filter(ControllerInterface.source, ControllerInterface.level)
 
     @staticmethod
     def get_back(args_row):
@@ -85,8 +89,6 @@ def process_command(cmd, args_row, stored):
     if cmd in commands:
         to_call = commands[cmd]
         to_call(args_row)
-        if cmd in ['filter', 'level', 'clear']:
-            logger.apply_filter(ControllerInterface.source, ControllerInterface.level)
         return prespell_home, None, ''
     else:
         raise RuntimeError(f'No command "{cmd}" found')

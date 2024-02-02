@@ -74,8 +74,8 @@ class ScheduledExecutor:
         if time.time() - self._last_demand_check > 5 or self.debug:
             self._last_demand_check = time.time()
             if self.in_process >= awaiting_lower_limit:
-                logger.info(f'High demand. Tasks in process: {self.in_process}, '
-                            f'Scheduled: {len(self._tasks)}',
+                logger.info(f'High demand. Scheduled: {len(self._tasks)}, '
+                            f'Tasks to process: {self.in_process}',
                             name='Controller (Backend)')
 
     def inspect_queue(self):
@@ -93,11 +93,11 @@ class ScheduledExecutor:
                 row = [utils.green(formed_time), utils.colorize(task.from_thread, utils.Fore.LIGHTCYAN_EX)]
                 to_print.append(row)
         print_cols(to_print[::-1])
+        _saved_stats = self.saved_rows.copy()
+        for got_task in _saved_stats:
+            print(got_task)
         utils.blueprint(stat)
         utils.blueprint(f'unjque started: {len(self.frst)}')
-        _saved_stats = self.saved_rows.copy()
-        for stat in _saved_stats:
-            print(stat)
 
     @staticmethod
     def get_key(key):

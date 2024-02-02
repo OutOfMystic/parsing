@@ -175,7 +175,7 @@ class ZaryadyeHall(AsyncSeatsParser):
             self.warning(ex.__class__.__name__, url, data)
             if count_error == 5:
                 return None
-            self.change_proxy()
+            await self.change_proxy()
             await asyncio.sleep(10)
             self.XSRF = await self.load_cookies_and_xsrf()
             self.user_token = self.generate_user_token()
