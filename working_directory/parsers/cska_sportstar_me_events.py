@@ -61,7 +61,6 @@ class CskaSportstar(AsyncEventParser):
         headers = {
             'Accept-Language': 'ru,en;q=0.9',
             'Connection': 'keep-alive',
-            'Cookie': '_ga=GA1.1.1125317026.1704712163; _ym_uid=1704712194553231140; _ym_d=1704712194; _ga_8TTFSDSJWG=GS1.1.1706871776.2.0.1706871776.0.0.0; _ym_isad=2; _ym_visorc=w',
             'Origin': 'https://cska.sportstar.me',
             'Referer': 'https://cska.sportstar.me/tickets',
             'Sec-Fetch-Dest': 'empty',
@@ -74,7 +73,6 @@ class CskaSportstar(AsyncEventParser):
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Linux"',
             'x-locale': 'ru',
-            'x-session-id': 'vQMFpsZIkxCEmK1l'
         }
         start_date = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = start_date + relativedelta.relativedelta(months=1)
