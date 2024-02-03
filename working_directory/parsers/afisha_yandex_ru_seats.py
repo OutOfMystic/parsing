@@ -1147,8 +1147,7 @@ class YandexAfishaParser(AsyncSeatsParser):
             self.debug(f'Make NEW requests count:{self.req_number}')
 
         if r_sectors is None:
-            self.warning(f'NO tickets {self.url} Yandex afisha this event dont have any tickets')
-            return 
+            raise AssertionError(f'{self.url}  r_sectors is None')
 
         a_sectors = []
         for r_sector in r_sectors:
