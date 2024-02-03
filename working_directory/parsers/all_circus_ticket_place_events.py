@@ -24,9 +24,12 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         self.urls_ONE = {
             #'https://circus-saratov.ru/strashnaya-sila.html': ('Балаган', 'saratov', 'Цирк им. братьев Никитиных Саратов',
             #        'https://ticket-place.ru/calendar-widget/25?showId=112&dateFrom=&dateTo=&page='),
-            'https://www.circus-vladivostok.ru/novogodnee-shou-byt-po-semu.html': ('Быть по сему',
+            #'https://www.circus-vladivostok.ru/novogodnee-shou-byt-po-semu.html': ('Быть по сему',
+                                                                        #'vladivostok','Цирк Владивосток',
+                        #'https://ticket-place.ru/calendar-widget/34?showId=169&dateFrom=&dateTo=&page=1&maxDays=4'),
+            'https://circus-vladivostok.ru/tigry-na-zemle-i-v-vozduhe.html': ('Тигры на земле и в воздухе',
                                                                         'vladivostok','Цирк Владивосток',
-                        'https://ticket-place.ru/calendar-widget/34?showId=169&dateFrom=&dateTo=&page=1&maxDays=4')
+                        'https://ticket-place.ru/calendar-widget/34?showId=179&dateFrom=&dateTo=&page=1&maxDays=4'),
         }
         self.urls_TWO = {
             # url: tuple('slug', 'venue') -> для поиска  ids, в вёрстке есть calendar__item!
@@ -243,7 +246,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
 
 
         for event in a_events:
-            #self.info(event)
+            #self.debug(event)
             self.register_event(event_name=event.title ,url=event.href,
                                        date=event.date , venue=event.venue)
                 
