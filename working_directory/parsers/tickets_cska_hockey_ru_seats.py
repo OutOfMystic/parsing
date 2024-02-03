@@ -324,8 +324,6 @@ class CskaHockeyParser(AsyncSeatsParser):
         for seat in r.json()['places']['values']:
             if type_ == 'free':
                 a_seats[seat['id']] = all_seats[seat['id']]
-            else:
-                del a_seats[seat['id']]
 
         return a_seats
 
@@ -334,28 +332,32 @@ class CskaHockeyParser(AsyncSeatsParser):
 
         a_sectors = []
         for sector_id, sector_info in sectors_info.items():
-            await asyncio.sleep(1)
-            sector_name = sector_info['name']
-            sector_price = sector_info['price']
-            seats = await self.get_a_sector_seats(sector_id, event_id, sector_price)
+            try:
+                #self.debug(sector_id, sector_info)
+                await asyncio.sleep(1)
+                sector_name = sector_info['name']
+                sector_price = sector_info['price']
+                seats = await self.get_a_sector_seats(sector_id, event_id, sector_price)
 
-            for ticket in seats.values():
-                row = str(ticket['row'])
-                seat = str(ticket['place'])
-                price = int(float(ticket['price']))
-                for sector in a_sectors:
-                    if sector_name == sector['name']:
-                        sector['tickets'][row, seat] = price
-                        break
-                else:
-                    a_sectors.append({
-                        'name': sector_name,
-                        'tickets': {(row, seat): price}
-                    })
+                for ticket in seats.values():
+                    row = str(ticket['row'])
+                    seat = str(ticket['place'])
+                    price = int(float(ticket['price']))
+                    for sector in a_sectors:
+                        if sector_name == sector['name']:
+                            sector['tickets'][row, seat] = price
+                            break
+                    else:
+                        a_sectors.append({
+                            'name': sector_name,
+                            'tickets': {(row, seat): price}
+                        })
+            except Exception as ex:
+                self.warning(ex)
 
         self.reformat(a_sectors, self.venue)
 
         for sector in a_sectors:
-            #self.info(sector['name'], len(sector['tickets']))
+            #self.debug(sector['name'], len(sector['tickets']))
             self.register_sector(sector['name'], sector['tickets'])
         #self.check_sectors()
