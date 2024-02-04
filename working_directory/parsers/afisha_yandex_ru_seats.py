@@ -1120,7 +1120,7 @@ class YandexAfishaParser(AsyncSeatsParser):
         
         self.debug(f'Make requests count:{self.req_number}')
 
-        if r is None:
+        if r is None or r_sectors is None:
             self.warning(f'try {self.req_number} requests without sucess')
             self.warning(f'Changing proxy... load 40..sec')
             self.req_number = 0
@@ -1146,7 +1146,7 @@ class YandexAfishaParser(AsyncSeatsParser):
                     return
             self.debug(f'Make NEW requests count:{self.req_number}')
 
-        if r_sectors is None:
+        if r_sectors is None or r is None:
             raise AssertionError(f'{self.url}  r_sectors is None')
 
         a_sectors = []
