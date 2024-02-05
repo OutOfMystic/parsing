@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 from parse_module.coroutines import AsyncEventParser
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class Parser(AsyncEventParser):
@@ -86,5 +85,6 @@ class Parser(AsyncEventParser):
                 not_events_to_skip += 1
 
         for event in a_events:
+            #self.debug(event)
             self.register_event(event[0], event[1], date=event[2],
                                 scene=event[3], venue='Малый театр')

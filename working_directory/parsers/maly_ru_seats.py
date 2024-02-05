@@ -198,4 +198,5 @@ class MalyParser(AsyncSeatsParser):
         self.reformat(a_sectors)
 
         for sector in a_sectors:
+            #self.debug(sector['name'], len(sector['tickets']))
             self.register_sector(sector['name'], sector['tickets'])
