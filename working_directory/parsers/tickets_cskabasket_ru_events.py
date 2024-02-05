@@ -1,13 +1,10 @@
-from typing import NamedTuple, Optional, Union
-import datetime
+from typing import NamedTuple
 
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-from parse_module.utils import utils
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -32,6 +29,8 @@ class CskaBasket(AsyncEventParser):
         soup = await self._requests_to_events(self.url)
 
         events = self._get_events_from_soup(soup)
+        if events is None:
+            return None
 
         return self._parse_events_from_soup(events)
 
@@ -97,5 +96,9 @@ class CskaBasket(AsyncEventParser):
 
     async def body(self) -> None:
         a_events = await self._parse_events()
+        if a_events is None:
+            self.warning('Dont have any events, look at tickets.cskabasket.ru/ru/')
+            return
         for event in a_events:
+            #self.debug(event)
             self.register_event(event.title, event.href, date=event.date, venue=event.venue)
