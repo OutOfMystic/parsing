@@ -32,7 +32,7 @@ class LenkomParser(AsyncSeatsParser):
                                       handle_error=lambda: (asyncio.ensure_future(asyncio.sleep(4))),
                                       tries=5, raise_exc=False)
         if result == provision.TryError:
-            print(' provision.TryError:')
+            self.error('provision.TryError:')
             result = None
         return result
 
@@ -189,7 +189,16 @@ class LenkomParser(AsyncSeatsParser):
         for ticket in all_tickets:
             row = ticket['row']
             seat = ticket['place']
-            cost = int(ticket['price'])
+            try:
+                cost = int(ticket['price'])
+            except ValueError as ex:
+                if ticket.get('taxes'):
+                    taxes = ticket['taxes']
+                    tax = list(taxes.keys())[0]
+                    cost = taxes.get(tax, {}).get('price')
+                else:
+                    self.warning(ex, ticket)
+                    continue
             sector_name = ticket['section']['name']
             sector_name, row, seat, cost = self.reformat_seat(sector_name, row, seat, cost, ticket)
             if sector_name is None:
