@@ -148,53 +148,56 @@ class Ska(AsyncSeatsParser):
         dict_data = eval(no_render_data.replace('null', 'None'))
 
         for sectors in dict_data:
-            sector = sectors.get('name')
-            if sector:
-                sector_id = sectors.get('id')
+            try:
+                sector = sectors.get('name')
+                if sector:
+                    sector_id = sectors.get('id')
 
-                url_split = self.url.split("/")
-                url_sector = f'seats-list/{url_split[-1]}/{sector_id}'
-                url_to_sector = '/'.join(url_split[:-2]) + '/' + url_sector
+                    url_split = self.url.split("/")
+                    url_sector = f'seats-list/{url_split[-1]}/{sector_id}'
+                    url_to_sector = '/'.join(url_split[:-2]) + '/' + url_sector
 
-                r = await self.get_html(url=url_to_sector)
-                json_request = r.json()
+                    r = await self.get_html(url=url_to_sector)
+                    json_request = r.json()
 
-                list_price_in_json = json_request.get('prices')[::-1]
-                if len(list_price_in_json) == 0:
-                    continue
-                dict_prices = {}
-                for price in list_price_in_json:
-                    category = price.get('categoryName')
-                    if category == 'Коммерческий':
-                        prices_id = price.get('pricezoneId')
-                        count_price = price.get('value')
-                        dict_prices[prices_id] = count_price
-
-                total_seats_row_prices = {}
-                list_seat_in_json = json_request.get('seats')
-                for seats in list_seat_in_json:
-                    pricezon_id = seats.get('pricezoneId')
-                    price_for_seat = dict_prices.get(pricezon_id)
-
-                    if price_for_seat is None:
+                    list_price_in_json = json_request.get('prices')[::-1]
+                    if len(list_price_in_json) == 0:
                         continue
+                    dict_prices = {}
+                    for price in list_price_in_json:
+                        category = price.get('categoryName')
+                        if category == 'Коммерческий':
+                            prices_id = price.get('pricezoneId')
+                            count_price = price.get('value')
+                            dict_prices[prices_id] = count_price
 
-                    seat_and_row = seats.get('name')
-                    seat_and_row_list = seat_and_row.split()
-                    seat_in_sector = seat_and_row_list[-1]
-                    row_in_sector = seat_and_row_list[3]
-                    if str(sector)[0] == '3':
-                        row_in_sector = '1'
-                    seat_and_row = (row_in_sector, seat_in_sector,)
+                    total_seats_row_prices = {}
+                    list_seat_in_json = json_request.get('seats')
+                    for seats in list_seat_in_json:
+                        pricezon_id = seats.get('pricezoneId')
+                        price_for_seat = dict_prices.get(pricezon_id)
 
-                    total_seats_row_prices[seat_and_row] = int(price_for_seat.split('.')[0])
+                        if price_for_seat is None:
+                            continue
 
-                total_sector.append(
-                    {
-                        "name": str(sector),
-                        "tickets": total_seats_row_prices
-                    }
-                )
+                        seat_and_row = seats.get('name')
+                        seat_and_row_list = seat_and_row.split()
+                        seat_in_sector = seat_and_row_list[-1]
+                        row_in_sector = seat_and_row_list[3]
+                        if str(sector)[0] == '3':
+                            row_in_sector = '1'
+                        seat_and_row = (row_in_sector, seat_in_sector,)
+
+                        total_seats_row_prices[seat_and_row] = int(price_for_seat.split('.')[0])
+
+                    total_sector.append(
+                        {
+                            "name": str(sector),
+                            "tickets": total_seats_row_prices
+                        }
+                    )
+            except Exception as ex:
+                self.warning(ex,sectors)
 
         return total_sector
 
