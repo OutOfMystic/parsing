@@ -64,11 +64,10 @@ class ProxyWebDriver(webdriver.Chrome):
         manifest_json = _manifest_listen if self.listen_responses else _manifest
 
         # Defining chrome options
-        if options is None:
+        if chrome_options is None:
             chrome_options = webdriver.ChromeOptions()
-        elif options:
-            chrome_options = options
         chrome_options.add_argument(f'--user-agent={self.user_agent}')
+        chrome_options.add_argument("--no-sandbox")
         if self.blocked_hosts:
             stringed_rules = [f'MAP {host} 127.0.0.1' for host in self.blocked_hosts]
             to_args = ', '.join(stringed_rules)

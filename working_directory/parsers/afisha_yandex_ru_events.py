@@ -5,7 +5,7 @@ import base64
 
 from requests.exceptions import ProxyError
 from bs4 import BeautifulSoup, Tag
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver import ChromeOptions
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -348,9 +348,10 @@ class YandexAfishaParser(EventParser):
         return r
 
     def selenium_smart_captha(self, url: str):
-        chrome_options = Options()
+        chrome_options = ChromeOptions()
         # chrome_options.add_argument("--headless")
         # chrome_options.add_argument('--headless=new')
+        chrome_options.add_argument("--no-sandbox")
         driver = ProxyWebDriver(proxy=self.proxy, chrome_options=chrome_options)
 
         try:
