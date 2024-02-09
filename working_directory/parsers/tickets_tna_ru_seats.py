@@ -40,7 +40,7 @@ class TNA(AsyncSeatsParser):
 
         all_sectors = json_data.get('result')
         for sector in all_sectors:
-            self.info(sector)
+            #self.info(sector)
             try:
                 sector_name = sector.get('name')
                 sector_id = sector.get('sector_id')
