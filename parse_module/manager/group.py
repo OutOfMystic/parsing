@@ -146,7 +146,7 @@ class SeatsParserGroup:
         scheme = self.controller.router.get_parser_scheme(event_data['event_id'],
                                                           event_data['scheme_id'],
                                                           name=self.name)
-        margin_rules = self.controller.margins[event_data['margin']]
+        margin_rules = self.controller.margins[int(event_data['margin'])]
         # logger.debug('2. Group: binding scheme', event_data['event_id'], name=self.name)
         scheme.bind(event_data['priority'], margin_rules)
         event_data = event_data.copy()
