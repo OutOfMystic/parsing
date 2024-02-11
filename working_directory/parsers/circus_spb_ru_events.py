@@ -33,7 +33,7 @@ class CircusSpbRu(AsyncEventParser):
         self.driver_source = None
         self.urls = {
             #'https://www.circus.spb.ru/': 'Страшная сила',
-            'https://www.circus.spb.ru/novogodnee-predstavlenie.html': 'МАСКА',
+            #'https://www.circus.spb.ru/novogodnee-predstavlenie.html': 'МАСКА',
             'https://circus.spb.ru/princ-cirka.html': 'ПРИНЦ ЦИРКА',
             #'https://circus.spb.ru/balagan.html': 'Балаган',
             #'https://bezgranits.circus.team/': 'Фестиваль циркового искусства «Без границ»',
@@ -70,7 +70,7 @@ class CircusSpbRu(AsyncEventParser):
         elif 'Балаган' in title:
             events = await self._get_events_balagan_requests()
             ids = [i.find('a', attrs={'data-tp-event': re.compile(r'\d+')}) for i in events]
-            ids = [i.get('data-tp-event') for i in ids]
+            ids = [i.get('data-tp-event') for i in ids if i]
             a_events = await self.load_events(ids)
             #events = self._get_events_balagan_selenium(self_url)
             #a_events = self._parse_events_balagan(events)
@@ -78,13 +78,13 @@ class CircusSpbRu(AsyncEventParser):
         elif 'МАСКА' in title:
             all_events = await self._get_events_maska()
             ids = [i.find('a', attrs={'data-tp-event': re.compile(r'\d+')}) for i in all_events]
-            ids = [i.get('data-tp-event') for i in ids]
+            ids = [i.get('data-tp-event') for i in ids if i]
             a_events = await self.load_events(ids)
         
         elif 'ПРИНЦ ЦИРКА' in title:
             all_events = await self._get_events_princ_cirka()
             ids = [i.find('a', attrs={'data-tp-event': re.compile(r'\d+')}) for i in all_events]
-            ids = [i.get('data-tp-event') for i in ids]
+            ids = [i.get('data-tp-event') for i in ids if i]
             a_events = await self.load_events(ids)    
 
         else:
@@ -350,10 +350,10 @@ class CircusSpbRu(AsyncEventParser):
 
     async def body(self) -> None:
         for self_url, title in self.urls.items():
-            #self.info(self_url, title)
+            #self.debug(self_url, title, 'info')
             try:
                 for event in await self._parse_events(self_url, title):
-                    #self.info(event)
+                    #self.debug(event)
                     self.register_event(event.title, event.href, 
                                         date=event.date, venue='Цирк на Фонтанке (СПБ)')
             except Exception as ex:

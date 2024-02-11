@@ -71,14 +71,14 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         r = await self.session.get(url='https://princess.circus.team/', headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
         ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
-        ids = [i.get('data-tp-event') for i in ids]
+        ids = [i.get('data-tp-event') for i in ids if i]
         return ids, 'saratov' , 'Цирк им. братьев Никитиных Саратов'
     
     async def sochi(self):
         r = await self.session.get(url='https://www.circus-sochi.ru/', headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
         ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
-        ids = [i.get('data-tp-event') for i in ids]
+        ids = [i.get('data-tp-event') for i in ids if i]
         return ids, 'sochi' , 'Сочинский Государственный Цирк'
 
     async def load_all_events_ONE(self, url_strip, url_to_load):
@@ -149,7 +149,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         soup = BeautifulSoup(r.text, 'lxml')
         self.debug(r.text)
         events_ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
-        events_ids = [i.get('data-tp-event') for i in events_ids]
+        events_ids = [i.get('data-tp-event') for i in events_ids if i]
         return events_ids
 
 
