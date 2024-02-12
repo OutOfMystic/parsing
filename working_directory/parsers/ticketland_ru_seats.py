@@ -608,32 +608,32 @@ class FomenkoParser(LenkomParser):
                 sector['name'] = 'Партер'
 
 
-# class MkhatGorkyParser(LenkomParser):
-#     event = 'ticketland.ru'
-#     url_filter = lambda url: 'ticketland.ru' in url and 'mkhat-im-m-gorkogo' in url
+class MkhatGorkyParser(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'ticketland.ru' in url and 'mkhat-im-m-gorkogo' in url
 
-#     def __init__(self, *args, **extra):
-#         super().__init__(*args, **extra)
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
 
-#     def reformat(self, sectors, scene):
-#         for sector in sectors:
-#             sector['name'] = sector['name'].replace('  ', ' ').capitalize()
-#             sec_name_low = sector['name'].lower()
+    def reformat(self, sectors, scene):
+        for sector in sectors:
+            sector['name'] = sector['name'].replace('  ', ' ').capitalize()
+            sec_name_low = sector['name'].lower()
 
-#             # TODO С сайта приходят данные о местах в этом секторе, при это на самом сайте их выбрать нельзя
-#             # TODO сектор отрезан на схеме как бы
-#             sector['name'] = sector['name'].replace('1-й', 'Первый')
+            # TODO С сайта приходят данные о местах в этом секторе, при это на самом сайте их выбрать нельзя
+            # TODO сектор отрезан на схеме как бы
+            sector['name'] = sector['name'].replace('1-й', 'Первый')
 
-#             # TODO Ложа А и Д не настроены
-#             if 'vip партер' in sec_name_low:
-#                 sector['name'] = 'VIP-партер'
-#             elif ' ложа' in sec_name_low:
-#                 sector['name'] = sector['name'].replace(' ложа', ', ложа')
-#             elif 'Высокий партер' == sector['name']:
-#                 sector['name'] = 'Партер'
+            # TODO Ложа А и Д не настроены
+            if 'vip партер' in sec_name_low:
+                sector['name'] = 'VIP-партер'
+            elif ' ложа' in sec_name_low:
+                sector['name'] = sector['name'].replace(' ложа', ', ложа')
+            elif 'Высокий партер' == sector['name']:
+                sector['name'] = 'Партер'
 
-#     async def body(self):
-#         super().body()
+    async def body(self):
+        super().body()
 
 
 # class VernadskogoCirk(LenkomParser):
@@ -842,42 +842,42 @@ class AleksandrinskiyTeatr(LenkomParser):
 
 
 
-# class ZimniyTeatrSochi(LenkomParser):
-#     event = 'ticketland.ru'
-#     url_filter = lambda url: 'sochi.ticketland.ru' in url and 'zimniy-teatr-sochi' in url
+class ZimniyTeatrSochi(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'sochi.ticketland.ru' in url and 'zimniy-teatr-sochi' in url
 
-#     def __init__(self, *args, **extra):
-#         super().__init__(*args, **extra)
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
 
-#     def reformat(self, sectors, scene):
-#         for sector in sectors:
-#             if 'Ложа Бельэтажа' in sector['name']:
-#                 row_number = sector['name'].split('N')[-1]
-#                 tickets = sector['tickets']
-#                 sector['tickets'] = {}
-#                 for ticket_row_and_seat, price in tickets.items():
-#                     _, seat = ticket_row_and_seat
-#                     sector['tickets'][(row_number, seat)] = price
-#                 sector['name'] = 'Бельэтаж'
-#             elif 'Ложа Бенуар' in sector['name']:
-#                 row_number = sector['name'].split('N')[-1]
-#                 tickets = sector['tickets']
-#                 sector['tickets'] = {}
-#                 for ticket_row_and_seat, price in tickets.items():
-#                     _, seat = ticket_row_and_seat
-#                     sector['tickets'][(row_number, seat)] = price
-#                 sector['name'] = 'Бенуар'
+    def reformat(self, sectors, scene):
+        for sector in sectors:
+            if 'Ложа Бельэтажа' in sector['name']:
+                row_number = sector['name'].split('N')[-1]
+                tickets = sector['tickets']
+                sector['tickets'] = {}
+                for ticket_row_and_seat, price in tickets.items():
+                    _, seat = ticket_row_and_seat
+                    sector['tickets'][(row_number, seat)] = price
+                sector['name'] = 'Бельэтаж'
+            elif 'Ложа Бенуар' in sector['name']:
+                row_number = sector['name'].split('N')[-1]
+                tickets = sector['tickets']
+                sector['tickets'] = {}
+                for ticket_row_and_seat, price in tickets.items():
+                    _, seat = ticket_row_and_seat
+                    sector['tickets'][(row_number, seat)] = price
+                sector['name'] = 'Бенуар'
 
 
-# class UgolokDedushkiDurova(LenkomParser):
-#     event = 'ticketland.ru'
-#     url_filter = lambda url: 'www.ticketland.ru' in url and 'teatr-ugolok-dedushki-durova' in url
+class UgolokDedushkiDurova(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'www.ticketland.ru' in url and 'teatr-ugolok-dedushki-durova' in url
 
-#     def __init__(self, *args, **extra):
-#         super().__init__(*args, **extra)
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
 
-#     def reformat(self, sectors, scene):
-#         ...
+    def reformat(self, sectors, scene):
+        ...
 
 
 # # class SovremennikTeatr(LenkomParser):
@@ -898,151 +898,151 @@ class AleksandrinskiyTeatr(LenkomParser):
 # #         super().body()
 
 
-# class BdtTeatr(LenkomParser):
-#     event = 'ticketland.ru'
-#     url_filter = lambda url: 'ticketland.ru' in url and 'bdt-imtovstonogova' in url
+class BdtTeatr(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'ticketland.ru' in url and 'bdt-imtovstonogova' in url
 
-#     def __init__(self, *args, **extra):
-#         super().__init__(*args, **extra)
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
 
-#     def reformat(self, sectors, scene):
-#         ...
+    def reformat(self, sectors, scene):
+        ...
 
-#     def reformat_seat(self, sector_name, row, seat, price, ticket):
-#         if_seat_in_parter = [
-#             39, 40, 61, 62, 63, 64, 85, 86, 87, 88, 109, 110, 111, 112, 133, 134, 135, 136, 157, 158, 159, 160,
-#             181, 182, 183, 184, 205, 206, 207, 208, 229, 230, 231, 232, 253, 254, 255, 256, 277, 278, 279, 280,
-#             301, 302, 323
-#         ]
-#         if 'Партер' in sector_name and int(seat) in if_seat_in_parter:
-#             sector_name = 'Партер'
-#         elif 'Партер' in sector_name and 'Гардероб' in sector_name:
-#             sector_name = 'Партер'
-#         elif 'бельэтаж' in sector_name.lower() and 'ложа' not in sector_name.lower():
-#             sector_name = 'Балкон бельэтажа'
-#         elif 'Балкон' in sector_name:
-#             if '3го яруса' in sector_name or '3-го яруса' in sector_name:
-#                 sector_name = 'Балкон третьего яруса'
-#         elif 'Партер-трибуна' in sector_name:
-#             sector_name = 'Кресла партера'
-#         elif 'Галерея 3го яр.' in sector_name or 'Галерея 3-го яруса' in sector_name or\
-#                 'Галерея третьего яруса' in sector_name:
-#             row = ''
-#             if 'правая' in sector_name.lower() or 'пр. ст.' in sector_name.lower():
-#                 sector_name = 'Галерея третьего яруса. Правая сторона'
-#             else:
-#                 sector_name = 'Галерея третьего яруса. Левая сторона'
-#         elif 'Места за креслами' in sector_name:
-#             sector_name = 'Места за креслами'
-#         elif 'Партер' in sector_name:
-#             sector_name = 'Кресла партера'
-#         elif 'ложи' in sector_name or 'ложа' in sector_name.lower():
-#             if '№' in sector_name:
-#                 number_lozha = sector_name.split()[1].replace('№', '')
-#                 if not number_lozha.isnumeric():
-#                     index_number = sector_name.index('№') + 1
-#                     number_lozha = sector_name[index_number:index_number + 1]
-#                     if not number_lozha.isnumeric():
-#                         number_lozha = sector_name[index_number]
-#             elif sector_name.split()[1] in ['А', 'Б', 'В', 'Г']:
-#                 number_lozha = sector_name.split()[1]
-#             else:
-#                 number_lozha = sector_name.split()[-1]
-#             if 'бельэтаж' in sector_name.lower():
-#                 new_sector_name = 'Бельэтаж'
-#             elif 'бенуар' in sector_name.lower():
-#                 new_sector_name = 'Бенуар'
-#             elif '2-го яруса' in sector_name.lower():
-#                 new_sector_name = 'Второй ярус'
-#             else:
-#                 new_sector_name = sector_name
-#             x_coordinate = ticket['x']
-#             if x_coordinate < 700:
-#                 sector_name = f'{new_sector_name}. Левая сторона, ложа ' + number_lozha
-#             else:
-#                 sector_name = f'{new_sector_name}. Правая сторона, ложа ' + number_lozha
-#         elif sector_name == 'Свободная рассадка':
-#             sector_name = None
+    def reformat_seat(self, sector_name, row, seat, price, ticket):
+        if_seat_in_parter = [
+            39, 40, 61, 62, 63, 64, 85, 86, 87, 88, 109, 110, 111, 112, 133, 134, 135, 136, 157, 158, 159, 160,
+            181, 182, 183, 184, 205, 206, 207, 208, 229, 230, 231, 232, 253, 254, 255, 256, 277, 278, 279, 280,
+            301, 302, 323
+        ]
+        if 'Партер' in sector_name and int(seat) in if_seat_in_parter:
+            sector_name = 'Партер'
+        elif 'Партер' in sector_name and 'Гардероб' in sector_name:
+            sector_name = 'Партер'
+        elif 'бельэтаж' in sector_name.lower() and 'ложа' not in sector_name.lower():
+            sector_name = 'Балкон бельэтажа'
+        elif 'Балкон' in sector_name:
+            if '3го яруса' in sector_name or '3-го яруса' in sector_name:
+                sector_name = 'Балкон третьего яруса'
+        elif 'Партер-трибуна' in sector_name:
+            sector_name = 'Кресла партера'
+        elif 'Галерея 3го яр.' in sector_name or 'Галерея 3-го яруса' in sector_name or\
+                'Галерея третьего яруса' in sector_name:
+            row = ''
+            if 'правая' in sector_name.lower() or 'пр. ст.' in sector_name.lower():
+                sector_name = 'Галерея третьего яруса. Правая сторона'
+            else:
+                sector_name = 'Галерея третьего яруса. Левая сторона'
+        elif 'Места за креслами' in sector_name:
+            sector_name = 'Места за креслами'
+        elif 'Партер' in sector_name:
+            sector_name = 'Кресла партера'
+        elif 'ложи' in sector_name or 'ложа' in sector_name.lower():
+            if '№' in sector_name:
+                number_lozha = sector_name.split()[1].replace('№', '')
+                if not number_lozha.isnumeric():
+                    index_number = sector_name.index('№') + 1
+                    number_lozha = sector_name[index_number:index_number + 1]
+                    if not number_lozha.isnumeric():
+                        number_lozha = sector_name[index_number]
+            elif sector_name.split()[1] in ['А', 'Б', 'В', 'Г']:
+                number_lozha = sector_name.split()[1]
+            else:
+                number_lozha = sector_name.split()[-1]
+            if 'бельэтаж' in sector_name.lower():
+                new_sector_name = 'Бельэтаж'
+            elif 'бенуар' in sector_name.lower():
+                new_sector_name = 'Бенуар'
+            elif '2-го яруса' in sector_name.lower():
+                new_sector_name = 'Второй ярус'
+            else:
+                new_sector_name = sector_name
+            x_coordinate = ticket['x']
+            if x_coordinate < 700:
+                sector_name = f'{new_sector_name}. Левая сторона, ложа ' + number_lozha
+            else:
+                sector_name = f'{new_sector_name}. Правая сторона, ложа ' + number_lozha
+        elif sector_name == 'Свободная рассадка':
+            sector_name = None
 
-#         return sector_name, row, seat, price
-
-
-# class BdtKamennoostrovskiyTeatr(LenkomParser):
-#     event = 'ticketland.ru'
-#     url_filter = lambda url: 'ticketland.ru' in url and 'kamennoostrovskiy-teatr' in url 
-
-#     def __init__(self, *args, **extra):
-#         super().__init__(*args, **extra)
-
-#     def reformat(self, sectors, scene):
-#         for sector in sectors:
-#             if 'ложа' in sector['name'].lower():
-#                 number_lozha = sector['name'].split('№')[-1]
-#                 if '1 яруса' in sector['name']:
-#                     sector['name'] = 'Первый ярус, ложа ' + number_lozha
-#                 elif 'бельэтаж' in sector['name'].lower():
-#                     sector['name'] = 'Бельэтаж, ложа ' + number_lozha
-#                 elif 'бенуар' in sector['name'].lower():
-#                     sector['name'] = 'Бенуар, ложа ' + number_lozha
-#                 new_tickets = {}
-#                 tickets = sector['tickets']
-#                 for row_and_seat, price in tickets.items():
-#                     new_tickets[('1', row_and_seat[1])] = price
-#                 sector['tickets'] = new_tickets
-#             elif 'Партер свободная рассадка' == sector['name']:
-#                 sector['name'] = 'Партер'
-#             elif 'Ложи' in sector['name']:
-#                 if '1 Яруса' in sector['name']:
-#                     sector['name'] = 'Ложи первого яруса'
-#                 elif 'бельэт' in sector['name']:
-#                     sector['name'] = 'Ложи бельэтажа'
-#                 else:
-#                     sector['name'] = 'Ложи бенуара'
-#                 new_tickets = {}
-#                 tickets = sector['tickets']
-#                 for row_and_seat, price in tickets.items():
-#                     new_tickets[('1', row_and_seat[1])] = price
-#                 sector['tickets'] = new_tickets
+        return sector_name, row, seat, price
 
 
-# class MikhailovskyTeatr(LenkomParser):
-#     event = 'ticketland.ru'
-#     url_filter = lambda url: 'spb.ticketland.ru' in url and 'mikhaylovskiy-teatr' in url
+class BdtKamennoostrovskiyTeatr(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'ticketland.ru' in url and 'kamennoostrovskiy-teatr' in url 
 
-#     def __init__(self, *args, **extra):
-#         super().__init__(*args, **extra)
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
 
-#     def reformat(self, sectors, scene):
-#         ...
+    def reformat(self, sectors, scene):
+        for sector in sectors:
+            if 'ложа' in sector['name'].lower():
+                number_lozha = sector['name'].split('№')[-1]
+                if '1 яруса' in sector['name']:
+                    sector['name'] = 'Первый ярус, ложа ' + number_lozha
+                elif 'бельэтаж' in sector['name'].lower():
+                    sector['name'] = 'Бельэтаж, ложа ' + number_lozha
+                elif 'бенуар' in sector['name'].lower():
+                    sector['name'] = 'Бенуар, ложа ' + number_lozha
+                new_tickets = {}
+                tickets = sector['tickets']
+                for row_and_seat, price in tickets.items():
+                    new_tickets[('1', row_and_seat[1])] = price
+                sector['tickets'] = new_tickets
+            elif 'Партер свободная рассадка' == sector['name']:
+                sector['name'] = 'Партер'
+            elif 'Ложи' in sector['name']:
+                if '1 Яруса' in sector['name']:
+                    sector['name'] = 'Ложи первого яруса'
+                elif 'бельэт' in sector['name']:
+                    sector['name'] = 'Ложи бельэтажа'
+                else:
+                    sector['name'] = 'Ложи бенуара'
+                new_tickets = {}
+                tickets = sector['tickets']
+                for row_and_seat, price in tickets.items():
+                    new_tickets[('1', row_and_seat[1])] = price
+                sector['tickets'] = new_tickets
 
-#     def reformat_seat(self, sector_name, row, seat, price, ticket):
-#         if 'Партер' in sector_name:
-#             sector_name = 'Партер'
-#         elif 'Ложа' in sector_name:
-#             if 'бельэтажа' in sector_name:
-#                 sector_name = 'Ложи бельэтажа'
-#             elif 'бенуара' in sector_name:
-#                 sector_name = 'Ложи бенуара'
-#             elif '1-го яруса' in sector_name:
-#                 sector_name = 'Ложи 1 яруса'
-#             elif '2-го яруса' in sector_name:
-#                 sector_name = 'Ложи 2 яруса'
-#             elif '3-го яруса' in sector_name:
-#                 sector_name = 'Ложи 3 яруса'
-#         elif 'ЛОЖА' in sector_name:
-#             sector_name = 'Ложа' + ' ' + sector_name.split()[-1]
-#         elif '1-й ярус' in sector_name or '1-Й Ярус' in sector_name:
-#             sector_name = '1 ярус'
-#         elif '2-й ярус' in sector_name or '2-Й Ярус' in sector_name:
-#             sector_name = '2 ярус'
-#         elif '3-й ярус' in sector_name or '3-Й Ярус' in sector_name:
-#             sector_name = '3 ярус'
-#         elif 'Кресла Бенуар' in sector_name:
-#             sector_name = 'Бенуар'
-#         elif 'Кресла Бельэтаж' in sector_name:
-#             sector_name = 'Бельэтаж'
 
-#         return sector_name, row, seat, price
+class MikhailovskyTeatr(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'spb.ticketland.ru' in url and 'mikhaylovskiy-teatr' in url
+
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+
+    def reformat(self, sectors, scene):
+        ...
+
+    def reformat_seat(self, sector_name, row, seat, price, ticket):
+        if 'Партер' in sector_name:
+            sector_name = 'Партер'
+        elif 'Ложа' in sector_name:
+            if 'бельэтажа' in sector_name:
+                sector_name = 'Ложи бельэтажа'
+            elif 'бенуара' in sector_name:
+                sector_name = 'Ложи бенуара'
+            elif '1-го яруса' in sector_name:
+                sector_name = 'Ложи 1 яруса'
+            elif '2-го яруса' in sector_name:
+                sector_name = 'Ложи 2 яруса'
+            elif '3-го яруса' in sector_name:
+                sector_name = 'Ложи 3 яруса'
+        elif 'ЛОЖА' in sector_name:
+            sector_name = 'Ложа' + ' ' + sector_name.split()[-1]
+        elif '1-й ярус' in sector_name or '1-Й Ярус' in sector_name:
+            sector_name = '1 ярус'
+        elif '2-й ярус' in sector_name or '2-Й Ярус' in sector_name:
+            sector_name = '2 ярус'
+        elif '3-й ярус' in sector_name or '3-Й Ярус' in sector_name:
+            sector_name = '3 ярус'
+        elif 'Кресла Бенуар' in sector_name:
+            sector_name = 'Бенуар'
+        elif 'Кресла Бельэтаж' in sector_name:
+            sector_name = 'Бельэтаж'
+
+        return sector_name, row, seat, price
 
 
 # # class TicketlandVdnh(LenkomParser):
@@ -1087,80 +1087,82 @@ class AleksandrinskiyTeatr(LenkomParser):
 # #         super().body()
 
 
-# class RAMT(LenkomParser):
-#     event = 'ticketland.ru'
-#     url_filter = lambda url: 'www.ticketland.ru' in url and 'ramt' in url
+class RAMT(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'www.ticketland.ru' in url and 'ramt' in url
 
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-#     def reformat(self, sectors, scene):
-#         ramt_ref = {
-#             'Бельэтаж - правая сторона': 'Бельэтаж, правая сторона',
-#             'Бельэтаж - левая сторона': 'Бельэтаж, левая сторона',
-#             'Бельэтаж - середина': 'Бельэтаж, середина',
-#             'Партер - правая сторона': 'Партер, правая сторона',
-#             'Партер -  левая сторона': 'Партер, левая сторона',
-#             'Партер - левая сторона': 'Партер, левая сторона',
-#             'Партер - середина': 'Партер, середина',
-#             '1-й ярус - середина': '1 ярус, середина',
-#             '1 ярус-лев.ст. неудобное место': '1 ярус, левая сторона, места с ограниченной видимостью',
-#             '1-й ярус - лев. ст. ограниченная вид': '1 ярус, левая сторона, места с ограниченной видимостью',
-#             '1-й ярус - прав. ст. ограниченная вид': '1 ярус, правая сторона, места с ограниченной видимостью',
-#             '1 ярус-прав.ст. неудобное место': '1 ярус, правая сторона, места с ограниченной видимостью',
-#             '1-й ярус - прав. ст. ограниченная ви': '1 ярус, правая сторона, места с ограниченной видимостью',
-#             '1 ярус, левая сторона, места с огран': '1 ярус, левая сторона, места с ограниченной видимостью',
-#             '1 ярус, правая сторона, места с огра': '1 ярус, правая сторона, места с ограниченной видимостью',
-#             '1 ярус, левая сторона, неудобные мес': '1 ярус, левая сторона, места с ограниченной видимостью',
-#             '1 ярус, правая сторона, неудобные ме': '1 ярус, правая сторона, места с ограниченной видимостью',
-#             'Партер - прав.ст. ограниченная видим': 'Партер, правая сторона',
-#             'Партер - лев.ст. ограниченная видимо': 'Партер, левая сторона',
-#         }
-#         for sector in sectors:
-#             sector['name'] = sector['name'].strip()
-#             if sector['name'] in ramt_ref:
-#                 sector['name'] = ramt_ref.get(sector['name'])
+    def reformat(self, sectors, scene):
+        ramt_ref = {
+            'Бельэтаж - правая сторона': 'Бельэтаж, правая сторона',
+            'Бельэтаж - левая сторона': 'Бельэтаж, левая сторона',
+            'Бельэтаж - середина': 'Бельэтаж, середина',
+            'Партер - правая сторона': 'Партер, правая сторона',
+            'Партер -  левая сторона': 'Партер, левая сторона',
+            'Партер - левая сторона': 'Партер, левая сторона',
+            'Партер - середина': 'Партер, середина',
+            '1-й ярус - середина': '1 ярус, середина',
+            '1 ярус-лев.ст. неудобное место': '1 ярус, левая сторона, места с ограниченной видимостью',
+            '1-й ярус - лев. ст. ограниченная вид': '1 ярус, левая сторона, места с ограниченной видимостью',
+            '1-й ярус - прав. ст. ограниченная вид': '1 ярус, правая сторона, места с ограниченной видимостью',
+            '1 ярус-прав.ст. неудобное место': '1 ярус, правая сторона, места с ограниченной видимостью',
+            '1-й ярус - прав. ст. ограниченная ви': '1 ярус, правая сторона, места с ограниченной видимостью',
+            '1 ярус, левая сторона, места с огран': '1 ярус, левая сторона, места с ограниченной видимостью',
+            '1 ярус, правая сторона, места с огра': '1 ярус, правая сторона, места с ограниченной видимостью',
+            '1 ярус, левая сторона, неудобные мес': '1 ярус, левая сторона, места с ограниченной видимостью',
+            '1 ярус, правая сторона, неудобные ме': '1 ярус, правая сторона, места с ограниченной видимостью',
+            'Партер - прав.ст. ограниченная видим': 'Партер, правая сторона',
+            'Партер - лев.ст. ограниченная видимо': 'Партер, левая сторона',
+        }
+        for sector in sectors:
+            sector['name'] = sector['name'].strip()
+            if sector['name'] in ramt_ref:
+                sector['name'] = ramt_ref.get(sector['name'])
 
 
-# class TeatrGogolya(LenkomParser):
-#     event = 'ticketland.ru'
-#     url_filter = lambda url: 'www.ticketland.ru' in url and 'teatr-im-nvgogolya' in url
+class TeatrGogolya(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'www.ticketland.ru' in url and 'teatr-im-nvgogolya' in url
     
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
     
-#     def reformat(self, sectors, scene):
-#         ...
+    def reformat(self, sectors, scene):
+        ...
 
 
-# class Kreml(LenkomParser):
-#     event = 'ticketland.ru'
-#     url_filter = lambda url: 'www.ticketland.ru' in url and 'kremlevskiy-dvorec/novogodnee-predstavlenie' in url
+class Kreml(LenkomParser):
+    event = 'ticketland.ru'
+    url_filter = lambda url: 'www.ticketland.ru' in url and 'kremlevskiy-dvorec/novogodnee-predstavlenie' in url
 
-#     def __init__(self, *args, **extra):
-#         super().__init__(*args, **extra)
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
 
-#     def reformat_seat(self, sector_name, row, seat, price, ticket):
-#         ref_kreml = {
-#             'Партер середина': 'Партер, середина',
-#             'Партер левая сторона': 'Партер, левая сторона',
-#             'Партер правая сторона': 'Партер, правая сторона',
-#             'Балкон правая сторона': 'Балкон, правая сторона',
-#             'Балкон-середина': 'Балкон, середина',
-#             'Балкон левая сторона': 'Балкон, левая сторона',
-#             'Амфитеатр-середина': 'Амфитеатр, середина',
-#             'Амфитеатр левая сторона': 'Амфитеатр, левая сторона',
-#             'Амфитеатр правая сторона': 'Амфитеатр, правая сторона',
-#             'Ложа балкона левая': 'Ложа балкона, левая сторона',
-#             'Ложа балкона правая': 'Ложа балкона, правая сторона',
-#             'Балкон лев.ст. откидное': 'Балкон, левая сторона (откидные)',
-#             'Балкон прав.ст. откидное': 'Балкон, правая сторона (откидные)'
-#         }
-#         sector_name = ref_kreml.get(sector_name, sector_name)
-#         return sector_name, row, seat, price
+    def reformat_seat(self, sector_name, row, seat, price, ticket):
+        ref_kreml = {
+            'Партер середина': 'Партер, середина',
+            'Партер левая сторона': 'Партер, левая сторона',
+            'Партер правая сторона': 'Партер, правая сторона',
+            'Балкон правая сторона': 'Балкон, правая сторона',
+            'Балкон-середина': 'Балкон, середина',
+            'Балкон левая сторона': 'Балкон, левая сторона',
+            'Амфитеатр-середина': 'Амфитеатр, середина',
+            'Амфитеатр левая сторона': 'Амфитеатр, левая сторона',
+            'Амфитеатр правая сторона': 'Амфитеатр, правая сторона',
+            'Ложа балкона левая': 'Ложа балкона, левая сторона',
+            'Ложа балкона правая': 'Ложа балкона, правая сторона',
+            'Балкон лев.ст. откидное': 'Балкон, левая сторона (откидные)',
+            'Балкон прав.ст. откидное': 'Балкон, правая сторона (откидные)'
+        }
+        sector_name = ref_kreml.get(sector_name, sector_name)
+        return sector_name, row, seat, price
     
-#     def reformat(self, sectors, scene):
-#         pass
+    def reformat(self, sectors, scene):
+        pass
+
+
 class MkhtParser(LenkomParser):
     event = 'ticketland.ru'
     url_filter = lambda url: 'ticketland.ru' in url and 'mkht' in url
@@ -1576,52 +1578,52 @@ class MkhatGorkyParser(LenkomParser):
         super().body()
 
 
-class VernadskogoCirk(LenkomParser):
-    event = 'ticketland.ru'
-    url_filter = lambda url: 'ticketland.ru' in url and 'bolshoy-moskovskiy-cirk' in url
+# class VernadskogoCirk(LenkomParser):
+#     event = 'ticketland.ru'
+#     url_filter = lambda url: 'ticketland.ru' in url and 'bolshoy-moskovskiy-cirk' in url
 
-    def __init__(self, *args, **extra):
-        super().__init__(*args, **extra)
+#     def __init__(self, *args, **extra):
+#         super().__init__(*args, **extra)
 
-    def reformat(self, sectors, scene):
-        for sector in sectors:
-            sector['name'] = sector['name'].title()
+#     def reformat(self, sectors, scene):
+#         for sector in sectors:
+#             sector['name'] = sector['name'].title()
 
-    async def body(self):
-        super().body()
+#     async def body(self):
+#         super().body()
 
 
-class MtsLiveKhollMoskva(LenkomParser):
-    event = 'ticketland.ru'
-    url_filter = lambda url: 'ticketland.ru' in url and 'mts-live-kholl-moskva' in url
+# class MtsLiveKhollMoskva(LenkomParser):
+#     event = 'ticketland.ru'
+#     url_filter = lambda url: 'ticketland.ru' in url and 'mts-live-kholl-moskva' in url
 
-    def __init__(self, *args, **extra):
-        super().__init__(*args, **extra)
+#     def __init__(self, *args, **extra):
+#         super().__init__(*args, **extra)
 
-    def reformat(self, sectors, scene):
-        for sector in sectors:
-            sector_name = sector['name'].split()
-            if 'танцевальный партер' in sector['name'].lower():
-                sector['name'] = 'Танцпол'
-            elif 'meet&greet' == sector['name'].lower():
-                sector['name'] = ' Meet & Greet'
-            elif 'vip dance' == sector['name'].lower():
-                sector['name'] = 'VIP Dance'
-            elif 'vip lounge' == sector['name'].lower():
-                sector['name'] = 'VIP Lounge'
-            elif 'vip' in sector['name'].lower():
-                if 'vip' in sector_name[0].lower():
-                    sector_name[0] = sector_name[0].upper()
-                    sector['name'] = ' '.join(sector_name)
-                elif 'vip' in sector_name[1].lower():
-                    sector_name[0] = sector_name[0].title()
-                    sector_name[1] = sector_name[1].upper()
-                    if len(sector_name) == 2:
-                        sector['name'] = ' '.join(sector_name[:2]) + ', центр'
-                    else:
-                        sector_name[2] = sector_name[2].lower()
-                        sector_name[3] = sector_name[3].lower()
-                        sector['name'] = ' '.join(sector_name[:2]) + ', ' + ' '.join(sector_name[2:])
+#     def reformat(self, sectors, scene):
+#         for sector in sectors:
+#             sector_name = sector['name'].split()
+#             if 'танцевальный партер' in sector['name'].lower():
+#                 sector['name'] = 'Танцпол'
+#             elif 'meet&greet' == sector['name'].lower():
+#                 sector['name'] = ' Meet & Greet'
+#             elif 'vip dance' == sector['name'].lower():
+#                 sector['name'] = 'VIP Dance'
+#             elif 'vip lounge' == sector['name'].lower():
+#                 sector['name'] = 'VIP Lounge'
+#             elif 'vip' in sector['name'].lower():
+#                 if 'vip' in sector_name[0].lower():
+#                     sector_name[0] = sector_name[0].upper()
+#                     sector['name'] = ' '.join(sector_name)
+#                 elif 'vip' in sector_name[1].lower():
+#                     sector_name[0] = sector_name[0].title()
+#                     sector_name[1] = sector_name[1].upper()
+#                     if len(sector_name) == 2:
+#                         sector['name'] = ' '.join(sector_name[:2]) + ', центр'
+#                     else:
+#                         sector_name[2] = sector_name[2].lower()
+#                         sector_name[3] = sector_name[3].lower()
+#                         sector['name'] = ' '.join(sector_name[:2]) + ', ' + ' '.join(sector_name[2:])
 
-    async def body(self):
-        super().body()
+#     async def body(self):
+#         super().body()
