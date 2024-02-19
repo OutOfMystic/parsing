@@ -83,7 +83,8 @@ class YandexAfishaParser(EventParser):
             'https://afisha.yandex.ru/chelyabinsk/concert/places/ledovaia-arena-traktor': '*', #arena-traktor
             'https://afisha.yandex.ru/yekaterinburg/sport/places/arena-uralets': '*', #arena-uralets,
             #'https://afisha.yandex.ru/saint-petersburg/sport/places/ska-arena': '*',  # SKA arena
-            'https://afisha.yandex.ru/moscow/concert/places/khram-khrista-spasitelia-zal-tserkovnykh-soborov': '*' # hram
+            'https://afisha.yandex.ru/moscow/concert/places/khram-khrista-spasitelia-zal-tserkovnykh-soborov': '*', # hram
+            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-mossoveta': '*' #mossoveta
         }
         self.special_url = {
             #'https://afisha.yandex.ru/moscow/selections/standup': '*',  # Стендап
