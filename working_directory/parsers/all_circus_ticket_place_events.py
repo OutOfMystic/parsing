@@ -30,6 +30,9 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
             'https://circus-vladivostok.ru/tigry-na-zemle-i-v-vozduhe.html': ('Тигры на земле и в воздухе',
                                                                         'vladivostok','Цирк Владивосток',
                         'https://ticket-place.ru/calendar-widget/34?showId=179&dateFrom=&dateTo=&page=1&maxDays=4'),
+            'https://www.circus-sochi.ru/tropic-show.html': ('ТРОПИК ШОУ',
+                                                            'sochi' , 'Сочинский Государственный Цирк',
+                        'https://ticket-place.ru/calendar-widget/26?showId=200&dateFrom=&dateTo=&page=1&maxDays=4')           
         }
         self.urls_TWO = {
             # url: tuple('slug', 'venue') -> для поиска  ids, в вёрстке есть calendar__item!
@@ -40,7 +43,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
             #'https://www.circus-ivanovo.ru/': ('ivanovo', 'Ивановский цирк'),
             #'https://princess.circus.team/': [1302, 'saratov', 'Цирк им. братьев Никитиных Саратов'],
             #'https://princess.circus.team/': 'princess_saratov',
-            'https://www.circus-sochi.ru/': 'sochi'
+            #'https://www.circus-sochi.ru/': 'sochi'
         }
         self.headers = {
             "accept": "application/json, text/plain, */*",
@@ -246,7 +249,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
 
 
         for event in a_events:
-            #self.debug(event)
+            #self.info(event)
             self.register_event(event_name=event.title ,url=event.href,
                                        date=event.date , venue=event.venue)
                 
