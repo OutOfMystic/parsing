@@ -97,4 +97,5 @@ class HelikonRu(AsyncSeatsParser):
 
     async def body(self) -> None:
         for sector in await self._parse_seats():
+            #self.info(sector.sector_name, len(sector.tickets))
             self.register_sector(sector.sector_name, sector.tickets)

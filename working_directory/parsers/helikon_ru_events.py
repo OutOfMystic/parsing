@@ -91,7 +91,6 @@ class HelikonRu(AsyncEventParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'cache-control': 'no-cache',
-            'content-length': '821',
             'content-type': 'application/json;charset=UTF-8',
             'origin': 'https://www.helikon.ru',
             'pragma': 'no-cache',
@@ -108,7 +107,7 @@ class HelikonRu(AsyncEventParser):
             'ids': all_events_id
         }
         url = 'https://helikon.core.ubsystem.ru/uiapi/event/sale-status'
-        r = await self.session.post(url, headers=headers, json=data)
+        r = await self.session.post(url, headers=headers, json=data, ssl=False)
         if r.status_code == 500:
             return {}
         return r.json()
@@ -132,10 +131,11 @@ class HelikonRu(AsyncEventParser):
             'upgrade-insecure-requests': '1',
             'user-agent': self.user_agent
         }
-        r = await self.session.get(self.url, headers=headers)
+        r = await self.session.get(self.url, headers=headers, ssl=False)
         return BeautifulSoup(r.text, 'lxml')
 
     async def body(self) -> None:
         for event in await self._parse_events():
+            #self.info(event)
             self.register_event(event.title, event.href,
                                  date=event.date, venue=event.venue)
