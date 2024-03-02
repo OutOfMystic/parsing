@@ -4,8 +4,8 @@ import json
 from bs4 import BeautifulSoup, ResultSet, Tag
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.check import SpecialConditions
+from parse_module.manager.proxy.sessions import AsyncProxySession
 from parse_module.utils.date import month_list
 
 
@@ -18,7 +18,7 @@ class OutputEvent(NamedTuple):
 
 
 class HelikonRu(AsyncEventParser):
-
+    proxy_check = SpecialConditions(url='https://www.helikon.ru/')
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600

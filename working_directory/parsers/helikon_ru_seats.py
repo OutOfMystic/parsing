@@ -3,6 +3,7 @@ from typing import NamedTuple
 import ssl
 
 from parse_module.coroutines import AsyncSeatsParser
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
@@ -12,6 +13,7 @@ class OutputData(NamedTuple):
 
 
 class HelikonRu(AsyncSeatsParser):
+    proxy_check = SpecialConditions(url='https://www.helikon.ru/')
     event = 'helikon.ru'
     url_filter = lambda url: 'helikon.ru' in url
 
