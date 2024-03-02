@@ -250,7 +250,6 @@ class CskaHockeyParser(AsyncSeatsParser):
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru-RU,ru;q=0.9',
-            'content-length': '130',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'origin': 'https://tickets.cska-hockey.ru',
             'referer': self.url,

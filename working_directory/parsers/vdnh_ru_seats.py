@@ -91,7 +91,6 @@ class VDNHRu(AsyncSeatsParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'cache-control': 'no-cache',
-            'content-length': '196',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'origin': 'https://vdnh.ru',
             'pragma': 'no-cache',

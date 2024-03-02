@@ -90,7 +90,6 @@ class OperettaParser(AsyncEventParser):
             'Accept-Encoding': 'gzip, deflate, br',
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'X-Requested-With': 'XMLHttpRequest',
-            'Content-Length': '41',
             'Origin': 'https://mosoperetta.ru',
             'DNT': '1',
             'Connection': 'keep-alive',

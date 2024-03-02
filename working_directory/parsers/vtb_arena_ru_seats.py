@@ -504,7 +504,6 @@ class VtbArena(AsyncSeatsParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'connection': 'keep-alive',
-            'content-length': '61',
             'content-type': 'application/json;charset=UTF-8',
             'host': 'newticket.vtb-arena.com',
             'origin': 'https://newticket.vtb-arena.com',

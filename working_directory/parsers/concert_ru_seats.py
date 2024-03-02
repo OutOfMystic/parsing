@@ -129,7 +129,6 @@ class Concert(AsyncSeatsParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'connection': 'keep-alive',
-            'content-length': '192',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'host': 'www.concert.ru',
             'origin': 'https://www.concert.ru',

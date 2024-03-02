@@ -256,7 +256,6 @@ class Mmdm(AsyncSeatsParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
             'cache-control': 'no-cache',
-            'content-length': '44134',
             'content-type': 'text/plain;charset=UTF-8',
             'origin': 'https://www.mmdm.ru',
             'pragma': 'no-cache',

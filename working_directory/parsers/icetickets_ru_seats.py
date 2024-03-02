@@ -109,7 +109,6 @@ class Icetickets(AsyncSeatsParser):
             'accept': '*/*',
             'accept-encoding': 'gzip, deflate, utf-8',
             'accept-language': 'ru,en;q=0.9',
-            'content-length': '102',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'origin': 'https://icetickets.ru',
             'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "Yandex";v="23"',

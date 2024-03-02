@@ -66,7 +66,6 @@ class Lokobasket(AsyncEventParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'cache-control': 'no-cache',
-            'content-length': '735',
             'content-type': 'application/x-www-form-urlencoded',
             'origin': 'https://lokobasket.com',
             'pragma': 'no-cache',

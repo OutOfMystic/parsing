@@ -45,7 +45,6 @@ class XKMetalurg(AsyncEventParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'connection': 'keep-alive',
-            'content-length': '15',
             'content-type': 'application/json',
             'host': 'tickets.metallurg.ru',
             'origin': 'https://tickets.metallurg.ru',

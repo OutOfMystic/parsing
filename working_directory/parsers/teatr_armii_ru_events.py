@@ -49,7 +49,6 @@ class Parser(AsyncEventParser):
                     'Accept-Encoding':'gzip, deflate, br',
                     'Accept-Language':'en-US,en;q=0.9,ru;q=0.8',
                     'Connection':'keep-alive',
-                    'Content-Length':'0',
                     'Dnt':'1',
                     'X-Xsrf-Token':xsrf_token
                     }

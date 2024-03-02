@@ -126,7 +126,6 @@ class XKAvangarg(AsyncSeatsParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'connection': 'keep-alive',
-            # 'content-length': '16',
             'content-type': 'application/json',
             'host': 'tickets.hawk.ru',
             'origin': 'https://tickets.hawk.ru',

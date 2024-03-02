@@ -124,7 +124,6 @@ class Contextfest(AsyncSeatsParser):
             'accept-language': 'ru,en;q=0.9',
             'authorization': f'token {self.token}',
             'cache-control': 'no-cache',
-            'content-length': '36',
             'content-type': 'application/json',
             'origin': 'https://ticketscloud.com',
             'pragma': 'no-cache',

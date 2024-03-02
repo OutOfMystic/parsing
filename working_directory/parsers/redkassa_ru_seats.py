@@ -135,7 +135,6 @@ class Redkassa(AsyncSeatsParser):
             'accept': 'application/json, text/plain, */*',
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
-            'content-length': '64',
             'content-type': 'application/json;charset=UTF-8',
             'origin': 'https://redkassa.ru',
             'referer': self.url,

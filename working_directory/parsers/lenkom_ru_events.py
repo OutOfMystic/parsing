@@ -49,7 +49,6 @@ class Lenkom(AsyncEventParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'connection': 'keep-alive',
-            'content-length': '0',
             'host': 'tickets.afisha.ru',
             'origin': 'https://tickets.afisha.ru',
             'referer': 'https://tickets.afisha.ru/wl/54/api?building_id=undefined&cat_id=undefined&gclid=991064686.1676449618&site=lenkom.ru',

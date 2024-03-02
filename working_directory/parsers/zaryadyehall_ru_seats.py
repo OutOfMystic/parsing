@@ -148,7 +148,6 @@ class ZaryadyeHall(AsyncSeatsParser):
             'accept-language': 'ru,en;q=0.9',
             'cache-control': 'no-cache',
             'connection': 'keep-alive',
-            'content-length': '47',
             'content-type': 'application/x-www-form-urlencoded',
             'host': 'www.afisha.ru',
             'origin': 'https://www.afisha.ru',

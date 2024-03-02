@@ -157,7 +157,6 @@ class MalyParser(AsyncSeatsParser):
                 'accept-encoding': 'gzip, deflate',
                 'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
                 'connection': 'keep-alive',
-                'content-length': '117',
                 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'host': 'www.maly.ru',
                 'origin': 'http://www.maly.ru',

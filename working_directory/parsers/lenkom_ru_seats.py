@@ -61,7 +61,6 @@ class Lenkom(AsyncSeatsParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'connection': 'keep-alive',
-            'content-length': '47',
             'content-type': 'application/x-www-form-urlencoded',
             'host': 'tickets.afisha.ru',
             'origin': 'https://tickets.afisha.ru',

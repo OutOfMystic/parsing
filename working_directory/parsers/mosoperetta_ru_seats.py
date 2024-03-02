@@ -90,7 +90,6 @@ class OperettaParser(AsyncSeatsParser):
             'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3',
             'Accept-Encoding': 'gzip, deflate, br',
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': '284',
             'Origin': 'https://mosoperetta.ru',
             'DNT': '1',
             'Connection': 'keep-alive',

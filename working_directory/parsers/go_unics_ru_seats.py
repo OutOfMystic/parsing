@@ -87,7 +87,6 @@ class MelomanRu(AsyncSeatsParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'cache-control': 'no-cache',
-            'content-length': '131',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'origin': 'https://go.unics.ru',
             'pragma': 'no-cache',

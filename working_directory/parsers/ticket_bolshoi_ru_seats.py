@@ -135,7 +135,6 @@ class BolshoiQueue(authorize.AccountsQueue):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
             'cache-control': 'no-cache',
-            'content-length': '67',
             'content-type': 'application/x-www-form-urlencoded',
             'origin': 'https://ticket.bolshoi.ru',
             'pragma': 'no-cache',
