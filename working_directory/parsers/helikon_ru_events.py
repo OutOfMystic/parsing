@@ -40,7 +40,9 @@ class HelikonRu(AsyncEventParser):
     async def _filters_events(self, all_events: list[OutputEvent]):
         events = []
         all_events_id = [event.href.split('/')[-1] for event in all_events]
+        print(all_events_id, 'all_events_id')
         data_about_all_event_id = await self._requests_to_data_about_all_event_id(all_events_id)
+        print(data_about_all_event_id, 'data_about_all_event_id')
         sold_out = [str(event['id'])
                         for event in data_about_all_event_id.values()
                                 if event and event['salesAvailable'] is False]

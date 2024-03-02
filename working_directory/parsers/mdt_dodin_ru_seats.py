@@ -2,8 +2,8 @@ import json
 from typing import NamedTuple
 
 from parse_module.coroutines import AsyncSeatsParser
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.check import SpecialConditions
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class OutputData(NamedTuple):
@@ -12,6 +12,7 @@ class OutputData(NamedTuple):
 
 
 class MdtDodin(AsyncSeatsParser):
+    proxy_check = SpecialConditions(url='https://mdt-dodin.ru/')
     event = 'mdt-dodin.ru'
     url_filter = lambda url: 'mdt-dodin.ru' in url
 
@@ -92,4 +93,5 @@ class MdtDodin(AsyncSeatsParser):
 
     async def body(self) -> None:
         for sector in await self._parse_seats():
+            #self.info(sector.sector_name, len(sector.tickets))
             self.register_sector(sector.sector_name, sector.tickets)

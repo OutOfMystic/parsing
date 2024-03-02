@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
 from parse_module.utils.date import month_list
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.check import SpecialConditions
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class OutputEvent(NamedTuple):
@@ -17,7 +17,7 @@ class OutputEvent(NamedTuple):
 
 
 class MdtDodin(AsyncEventParser):
-
+    proxy_check = SpecialConditions(url='https://mdt-dodin.ru/')
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
@@ -41,11 +41,11 @@ class MdtDodin(AsyncEventParser):
     async def _get_filtered_events(self, all_events: list[OutputEvent]) -> OutputEvent:
         events = []
         all_id_event = [event.id_event for event in all_events]
-
         data_status_event = await self._requests_to_check_tickets(all_id_event)
         for event in all_events:
             if self._get_status_event(data_status_event, event.id_event):
                 events.append(event)
+        return events
 
     async def _parse_events_from_json(self, events: list, links_with_all_events_pages: list[str]) -> list[OutputEvent]:
         output_list = []
@@ -102,7 +102,6 @@ class MdtDodin(AsyncEventParser):
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'cache-control': 'no-cache',
-            'content-length': '142',
             'content-type': 'application/json;charset=UTF-8',
             'origin': 'https://mdt-dodin.ru',
             'pragma': 'no-cache',
@@ -144,4 +143,5 @@ class MdtDodin(AsyncEventParser):
 
     async def body(self) -> None:
         for event in await self._parse_events():
+            #self.info(event)
             self.register_event(event.title, event.href, date=event.date)
