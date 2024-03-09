@@ -400,6 +400,7 @@ class KassirParser(AsyncSeatsParser):
 
     @staticmethod
     def reformat_vtb_arena(a_sectors):
+        print('reformat_vtb_arena format')
         vtb_reformat_dict = {
             'Press 3': 'Press 3',
             'Press 2': 'Press 2',
@@ -683,12 +684,18 @@ class KassirParser(AsyncSeatsParser):
         }
         a_sectors_new = {}
         for sector, tickets in a_sectors.items():
+            print(sector, 'a_sectors.items()')
             if 'Трибуна' in sector: #Трибуна А-303
                 sector = sector.split()[-1] #А-303
                 sector = sector.replace('-', '').replace('А', 'A')
+                sector = sector.replace('С', 'C')
             if vtb_reformat_dict.get(sector):
                 a_sectors_new.setdefault(vtb_reformat_dict.get(sector), {}).update(tickets)
             else:
+                sector = sector.replace('С', 'C').replace('А', 'A')
+                if 'ектор' in sector:
+                    sector = sector.split()[-1]
+                sector = f"Сектор {sector}"
                 a_sectors_new.setdefault(sector, {}).update(tickets)
         return a_sectors_new
 
@@ -1799,7 +1806,6 @@ class KassirParser(AsyncSeatsParser):
         # with open('/home/anton/Work/parsing/EXAMPLE33.json', 'w', encoding='utf-8') as file:
         #     json.dump(product_info_json, file, indent=4, ensure_ascii=False)
 
-
         self.new_venue = self.make_venue(product_info_json)
         TARIFS:dict = self.make_tarif(product_info_json)
 
@@ -1814,6 +1820,7 @@ class KassirParser(AsyncSeatsParser):
         list_to_reformat = ['Кремлёвский дворец', 'Театр «Современник»',
                             'Театр Сатиры', 'Казанский цирк', 'Театр Маяковского'] #venue will need to reformat
 
+        #print(self.venue, self.new_venue, 'self.venue, self.new_venue')
         if self.venue in list_to_reformat:
             a_sectors = self.new_reformat(a_sectors, self.venue)
         elif self.venue == 'Зимний театр':
@@ -1846,6 +1853,6 @@ class KassirParser(AsyncSeatsParser):
             a_sectors = self.reformat_mossovet(a_sectors)
 
         for sector, tickets in a_sectors.items():
-            #self.info(sector, len(tickets))
+            self.info(sector, len(tickets))
             self.register_sector(sector.strip(), tickets)
-        #self.check_sectors()
+        self.check_sectors()
