@@ -2,48 +2,40 @@ import asyncio
 import re
 
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.manager.proxy.sessions import AsyncProxySession
-from parse_module.utils.parse_utils import double_split
 
 
 class KassirParser(AsyncSeatsParser):
     proxy_check = SpecialConditions(url='https://www.kassir.ru/', max_parsers_on_ip=1)
     event = 'kassir.ru'
     url_filter = lambda event: ('kassir.ru' in event and 'crocus2' not in event and 'frame' not in event 
-                                    and 'schematr' not in event )
+                                    and 'schematr' not in event)
 
     def __init__(self, *args, **extra):
         super().__init__(*args, **extra)
-        self.delay = 1600
+        self.delay = 6600
         self.driver_source = None
-        self.spreading = 4
 
-        self.scheme_identifier = ''
-        self.place_name = ''
-        self.breadcrumb = ''
-        self.url_spb_or_msk = double_split(self.url, 'https://', '/')
-        self.count_error = 4
-        #self.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
-        self.headers = {
-            "accept": "*/*",
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru,en;q=0.9',
-            'Connection': 'keep-alive',
-            'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-site',
-            "Referrer-Policy": "strict-origin-when-cross-origin",
-            'user-agent': self.user_agent
-        }
+        self.count_error = 2
+        self.platform = self.set_platform()
+        self.headers_api = None
+        self.new_venue = None
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
+
+    def set_platform(self):
+        if 'Windows' in self.url:
+            return 'Windows'
+        elif 'Linux' in self.url:
+            return 'Linux'
+        elif 'Mac OS' in self.url:
+            return 'Mac OS'
+        return 'Windows'
 
     @staticmethod
     def reformat_megasport(a_sectors):
@@ -1608,116 +1600,211 @@ class KassirParser(AsyncSeatsParser):
         else: 
             return a_sectors
 
-    async def new_get_sectors(self, url):
-        self.new_headers = {
-            "accept": "*/*",
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru,en;q=0.9',
-            'Connection': 'keep-alive',
-            'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-site',
-            'Origin': f"https://msk.kassir.ru",
-            "Referer": f"https://{self.domain}/",
-            "Referrer-Policy": "strict-origin-when-cross-origin",
-            'user-agent': self.user_agent
-        }
-        response = await self.session.get(url, headers=self.new_headers)
-        #self.debug(response.status_code, 'response_main', url)
-        #self.debug('proxy_we_use', self.session.bot.proxy.async_proxy)
-
-        count = 3
-        while (not response.ok or response.text == '[]') and count > 0:
-            self.debug(url, response.text)
-            count -= 1
-            await asyncio.sleep(10)
-            await self.change_proxy(report=True)
-            response = await self.session.get(url, headers=self.new_headers)
-            #self.debug(response.status_code, 'response_main')            
-        # with open('TEST2.json', 'w', encoding='utf-8') as file:
-        #     json.dump(response.json(), file, indent=4, ensure_ascii=False) 
-
-        sectors = response.json().get('orderKit').get('sectors')
+    async def old_get_sectors(self, product_info_json):
+        sectors = product_info_json.get('orderKit').get('sectors')
         avalible_sectors = [(i.get('id'),i.get('name')) for i in sectors if not i.get('isDisabled')
                             and i.get("saleMode")!="ALL_SEATS_ONLY"] 
-        tarif_groups = response.json().get('orderKit').get('tariffGroups')
+        tarif_groups = product_info_json.get('orderKit').get('tariffGroups')
         tarif_prices = {i.get('id'):i.get('tariffs')[0].get('price') for i in tarif_groups}
-
-        #venue name
-        try:
-            new_venue = response.json().get("event")
-            self.new_venue = new_venue.get('venueName').strip()
-        except Exception:
-            self.new_venue = ''
-
-        res = {}
-        headers_availible = {
-            "accept": "*/*",
-            "accept-language": "en-US,en;q=0.9,ru;q=0.8",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-site",
+        a_sectors = {}
+        headers = {
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Accept-Language": "en-US,en;q=0.9,ru;q=0.8",
+            "Dnt": "1",
+            "Origin": f"https://{self.domain}",
             "Referer": f"https://{self.domain}/",
-            "Referrer-Policy": "strict-origin-when-cross-origin",
-            'user-agent': self.user_agent
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": f"\"{self.platform}\"",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-site",
+            "User-Agent": self.user_agent
         }
-
         for sector in avalible_sectors:
-            #self.debug(sector, 'sector')
+            self.debug(sector[1], 'sector parsing now...')
+            await asyncio.sleep(25)
             try:
-                await asyncio.sleep(0.2)
                 url_load_cheme = f'https://api.kassir.ru/api/orders/sectors/scheme/{self.id}/{sector[0]}?domain={self.domain}'
-                r = await self.session.get(url=url_load_cheme, headers=headers_availible)
+                r = await self.session.get(url=url_load_cheme, headers=headers)
                 #self.debug(r.status_code, url_load_cheme,'r.status_code in avalible_sectors')
-
                 while r.status_code != 200 and self.count_error > 0:
                     self.count_error -= 1
-                    #self.debug('chaing proxy')
-                    await self.change_proxy(report=True)
-                    await asyncio.sleep(5)
-                    #self.debug('proxy_we_use in while', self.session.bot.proxy.async_proxy)
-                    response = await self.session.get(url, headers=self.new_headers)
-                    #self.debuf(response.status_code, 'response_in_while')
-                    await asyncio.sleep(5)
-                    r = await self.session.get(url=url_load_cheme, headers=headers_availible)
-                    #self.debug(r.status_code,url_load_cheme,'r.status_code in  while loop')
+                    self.warning(f'Ban proxy! {self.session.bot.proxy.async_proxy} in {url_load_cheme} status code: {r.status_code} err:{self.count_error}')
+                    await self.change_proxy()
+                    await asyncio.sleep(20)
+                    r = await self.session.get(url=url_load_cheme, headers=headers)
                 s = BeautifulSoup(r.text, 'lxml-xml')
-
-                polygon =  [i for i in s.find_all('polygon') if 'kh:tariff-group-id' in i.attrs]
+                polygon = [i for i in s.find_all('polygon') if 'kh:tariff-group-id' in i.attrs]
                 for i in polygon:
                     row = i.get('kh:rowNumber')
                     if not row: row = '1'
                     price = int(tarif_prices.get(int(i.get('kh:tariff-group-id'))))
                     place = i.find_next('text').text
                     place_to_write = {(row,str(place)):price}
-                    res.get(sector[1],{}).update(place_to_write)
+                    a_sectors.setdefault(sector[1],{}).update(place_to_write)
             except Exception as ex:
                 self.warning(f'{sector}: Exception in availible_sectors:{ex}')
+                raise
+        return a_sectors
 
-        return res
+    async def load_one_product_id(self):
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Accept-Language": "en-US,en;q=0.9,ru;q=0.8",
+            "Cache-Control": "no-cache",
+            "DNT": "1",
+            "Pragma": "no-cache",
+            "Sec-CH-UA-Mobile": "?0",
+            "Sec-CH-UA-Platform": f"\"{self.platform}\"",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "same-origin",
+            "Sec-Fetch-User": "?1",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": self.user_agent
+        }
+        r1 = await self.session.get(self.url, headers=headers)
+        soup = BeautifulSoup(r1.text, 'lxml')
+        divs_with_product_id = soup.find_all('div', attrs={"data-product-id": True})
+        if divs_with_product_id:
+            PROD_ID = divs_with_product_id[0].get('data-product-id')
+            return PROD_ID
+        else:
+            self.warning(f"{self.url} cannot find data-product-id here!")
+            #raise AssertionError(f"{self.url} find data-product-id without success")
+
+    async def load_product_info(self, PROD_ID, url_api=None):
+        if not url_api:
+            url_api = f'https://api.kassir.ru/api/event-page-kit/{PROD_ID}?domain={self.domain}'
+        self.headers_api = {
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Accept-Language": "en-US,en;q=0.9,ru;q=0.8",
+            "Cache-Control": "no-cache",
+            "DNT": "1",
+            "Origin": f"https://{self.domain}",
+            "Pragma": "no-cache",
+            "Referer": f"https://{self.domain}/",
+            "Sec-CH-UA-Mobile": "?0",
+            "Sec-CH-UA-Platform": f"\"{self.platform}\"",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-site",
+            "User-Agent": self.user_agent
+        }
+        r2 = await self.session.get(url_api, headers=self.headers_api)
+        json_r2 = r2.json()
+        return json_r2
+
+    @staticmethod
+    def make_tarif(product_info_json):
+        tarif_groups = product_info_json.get('orderKit').get('tariffGroups')
+        tarif_prices = {i.get('id'): i.get('tariffs')[0].get('price') for i in tarif_groups}
+        #{8213240: 850.0, 8213241: 2550.0, 8213242: 2800.0, 8213243: 3000.0, ... }
+        return tarif_prices
+
+    async def load_tikets_page(self, PROD_ID):
+        url_tickets = f'https://api.kassir.ru/api/order-kit/{PROD_ID}/scheme?domain={self.domain}'
+        r3 = await self.session.get(url_tickets, headers=self.headers_api)
+        json_tickets = r3.json()
+        return json_tickets
+
+    @staticmethod
+    def make_places_id(tickets_json):
+        type:str = tickets_json.get('type')
+        if type != 'TICKETRAIN-JSON':
+            return type
+        data = tickets_json.get('data')
+        all_sectors_rows_seats = data.get('entities')
+        all_place_id = {}
+        # 770772795: {'sector_name': 'Трибуна 7',
+        #   'row_number': '14',
+        #   'row_name': 'Ряд',
+        #   'place_name': '16'}
+        for sector in all_sectors_rows_seats:
+            secotor_id = sector.get("id")
+            sector_name = sector.get("name")
+            all_rows_in_sector = sector.get("rows")
+            if all_rows_in_sector:
+                for row in all_rows_in_sector:
+                    row_id = row.get("id")
+                    row_number = row.get("name")
+                    row_name = row.get("rowName")
+                    all_place_in_row = row.get("seats")
+                    for place in all_place_in_row:
+                        place_id = place.get("id")
+                        place_name = place.get("name")
+                        all_place_id.setdefault(place_id, {}).update({
+                            "sector_name": sector_name,
+                            'row_number': row_number,
+                            "row_name": row_name,
+                            'place_name': place_name
+                        })
+        return all_place_id
+
+    def make_availible_places(self, tickets_json, ALL_PLACE_ID, TARIFS):
+        a_sectors = {}
+        data = tickets_json.get('data')
+        if data:
+            dancefloors_limit = data.get('entranceQuota')
+            availible_places = data.get('seatQuota')
+            if availible_places:
+                for place_id, payment_type in availible_places.items():
+                    place_info = ALL_PLACE_ID.get(int(place_id))
+                    price = TARIFS.get(payment_type)
+                    if place_info and price:
+                        sector = place_info.get('sector_name')
+                        row = place_info.get('row_number')
+                        place = place_info.get('place_name')
+                        a_sectors.setdefault(sector, {}).update({
+                            (row, place): int(price)
+                        })
+        return a_sectors
+    @staticmethod
+    def make_venue(product_info_json):
+        try:
+            new_venue = product_info_json.get("event")
+            new_venue = new_venue.get('venueName').strip()
+        except Exception:
+            new_venue = ''
+        return  new_venue
 
     async def body(self):
-        list_to_reformat = ['Кремлёвский дворец', 'Театр «Современник»',
-                            'Театр Сатиры', 'Казанский цирк', 'Театр Маяковского'] #venue will need to reformat 
         if 'widget.kassir.ru' in self.url:
-            self.id = self.url.split('=')[-1].strip()
             self.domain = re.search(r'(?<=domain\=)[\w\.]+(?=&)', self.url)[0].strip()
+            PROD_ID = self.url.split('=')[-1].strip()
             KEY = re.search(r'(?<=key\=)[\w\-]+', self.url)[0].strip()
-            url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?widgetKey={KEY}&domain={self.domain}'
+            url_api = f'https://api.kassir.ru/api/event-page-kit/{PROD_ID}?widgetKey={KEY}&domain={self.domain}'
+            product_info_json = await self.load_product_info(PROD_ID, url_api)
         else:
-            url = f'https://api.kassir.ru/api/event-page-kit/{self.id}?domain={self.domain}'
-        # try:
-        #     await self.session.get(url=self.url, headers=self.headers, timeout=10)
-        # except Exception as ex:
-        #     self.warning(f'Cannot load {self.url} {ex}')
-        # else:
-        #     self.debug(f'load succes {self.url}')
+            if '#' in self.url:
+                PROD_ID = self.url.split('#')[-1]
+                self.url = self.url.split('#')[0]
+            else:
+                #PROD_ID = await self.load_one_product_id() возможно поможет имитировать настоящего юзера
+                PROD_ID = self.id
+            product_info_json = await self.load_product_info(PROD_ID)
+        import json
+        # with open('/home/anton/Work/parsing/EXAMPLE33.json', 'w', encoding='utf-8') as file:
+        #     json.dump(product_info_json, file, indent=4, ensure_ascii=False)
 
-        a_sectors = await self.new_get_sectors(url)
-        
+
+        self.new_venue = self.make_venue(product_info_json)
+        TARIFS:dict = self.make_tarif(product_info_json)
+
+        tickets_json = await self.load_tikets_page(PROD_ID)
+        ALL_PLACE_ID:dict|str = self.make_places_id(tickets_json)
+        if isinstance(ALL_PLACE_ID, dict):
+            a_sectors: dict = self.make_availible_places(tickets_json, ALL_PLACE_ID, TARIFS)
+        else:
+            self.info(f'{self.url} is type {ALL_PLACE_ID} trying to parse svg xmlns(DANGEROUS!)')
+            a_sectors = await self.old_get_sectors(product_info_json)
+
+        list_to_reformat = ['Кремлёвский дворец', 'Театр «Современник»',
+                            'Театр Сатиры', 'Казанский цирк', 'Театр Маяковского'] #venue will need to reformat
+
         if self.venue in list_to_reformat:
             a_sectors = self.new_reformat(a_sectors, self.venue)
         elif self.venue == 'Зимний театр':
@@ -1750,6 +1837,6 @@ class KassirParser(AsyncSeatsParser):
             a_sectors = self.reformat_mossovet(a_sectors)
 
         for sector, tickets in a_sectors.items():
-            #self.debug(sector, len(tickets), self.url)
+            #self.info(sector, len(tickets))
             self.register_sector(sector.strip(), tickets)
         #self.check_sectors()

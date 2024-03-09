@@ -9,36 +9,47 @@ from parse_module.manager.proxy.sessions import AsyncProxySession
 
 class KassirParser(AsyncEventParser):
     proxy_check = SpecialConditions(url='https://www.kassir.ru/')
-
     def __init__(self, controller, name):
         super().__init__(controller, name)
-        self.delay = 3600
+        self.delay = 9600
         self.driver_source = None
+        self.platform = self.set_platform()
+
         self.new_urls = {
              #'https://msk.kassir.ru/koncertnye-zaly/zelenyiy-teatr-vdnh': '*', #Зелёный театр
              #'https://msk.kassir.ru/teatry/mdm': '*', # Московский дворец молодёжи
              #'https://msk.kassir.ru/drugoe/krasnaya-ploschad': '*', #Красная площадь
              #'https://msk.kassir.ru/teatry/rossijskoj-armii': '*', # Театр Армии
              'https://sochi.kassir.ru/teatry/zimniy-teatr': '', # Зимний театр Сочи
-             'https://msk.kassir.ru/teatry/teatr-sovremennik': '*', # Театр Современник
-             'https://msk.kassir.ru/koncertnye-zaly/gosudarstvennyj-kremlevskij-dvorec': '*', #Kreml dvorec
-             'https://msk.kassir.ru/teatry/teatr-satiryi': '*', # teatr satiry
+             ###'https://msk.kassir.ru/teatry/teatr-sovremennik': '*', # Театр Современник не поддерживает новый виджет пока что
+             ###'https://msk.kassir.ru/koncertnye-zaly/gosudarstvennyj-kremlevskij-dvorec': '*', #Kreml dvorec  не поддерживает новый виджет пока что
+             ###'https://msk.kassir.ru/teatry/teatr-satiryi': '*', # teatr satiry не поддерживает новый виджет пока что
              'https://kzn.kassir.ru/cirki/tsirk-2': '*',  # kazanskii cirk
-             'https://msk.kassir.ru/teatry/operetty': '*', #mosoperetta 
+             ###'https://msk.kassir.ru/teatry/operetty': '*', #mosoperetta не поддерживает новый виджет пока что
              'https://msk.kassir.ru/sportivnye-kompleksy/vtb-arena-tsentralnyiy-stadion-dinamo': '*', # Dinamo MSK stadium
-             'https://msk.kassir.ru/sportivnye-kompleksy/dvorets-sporta-megasport': '*', # megasport
-             #'https://sochi.kassir.ru/koncertnye-zaly/kontsertnyiy-zal-festivalnyiy': '*', #fistivalnii sochi
+             ###'https://msk.kassir.ru/sportivnye-kompleksy/dvorets-sporta-megasport': '*', # megasport не поддерживает новый виджет пока что
+             'https://sochi.kassir.ru/koncertnye-zaly/kontsertnyiy-zal-festivalnyiy': '*', #fistivalnii sochi
              #'https://msk.kassir.ru/teatry/ermolovoj': '*', # ermolovoi theatre
              #'https://msk.kassir.ru/teatry/teatr-im-vlmayakovskogo': '*', #Majakousogo theatre moscow
-             'https://omsk.kassir.ru/sportivnye-kompleksy/g-drive-arena': '*',# G-Drive Арена omsk
-             'https://kzn.kassir.ru/koncertnye-zaly/dvorets-sportakazan': '*',#Дворец спорта Казань
+             #'https://omsk.kassir.ru/sportivnye-kompleksy/g-drive-arena': '*',# G-Drive Арена omsk
+             #'https://kzn.kassir.ru/koncertnye-zaly/dvorets-sportakazan': '*',#Дворец спорта Казань
              'https://msk.kassir.ru/sportivnye-kompleksy/cska-arena': 'cska', #cska arena
-             'https://msk.kassir.ru/teatry/mossoveta': '*', #mossoveta
+             'https://spb.kassir.ru/sportivnye-kompleksy/sk-yubileynyiy-2': '*',
+             'https://ufa.kassir.ru/sportivnye-kompleksy/ufa---arena': '*'
         }
+
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
+    def set_platform(self):
+        if 'Windows' in self.url:
+            return 'Windows'
+        elif 'Linux' in self.url:
+            return 'Linux'
+        elif 'Mac OS' in self.url:
+            return 'Mac OS'
+        return 'Windows'
 
     @staticmethod
     def format_date(date):
@@ -52,24 +63,23 @@ class KassirParser(AsyncEventParser):
         return date_to_write
     
     async def new_get_events(self, url):
+        url_to_pars = urlparse(url)
+        slug = url_to_pars.path  # /koncertnye-zaly/zelenyiy-teatr-vdnh
+        self.domain = url_to_pars.netloc  # msk.kassir.ru
         self.new_headers = {
             "accept": "*/*",
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru,en;q=0.9',
             'Connection': 'keep-alive',
-            'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
             'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
+            'sec-ch-ua-platform': f'"{self.platform}"',
             'sec-fetch-dest': 'empty',
             'sec-fetch-mode': 'cors',
             'sec-fetch-site': 'same-site',
-            "Referer": "https://msk.kassir.ru/",
+            "Referer": f"https://{self.domain}/",
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'user-agent': self.user_agent
         }
-        url_to_pars = urlparse(url)
-        slug = url_to_pars.path #/koncertnye-zaly/zelenyiy-teatr-vdnh
-        self.domain = url_to_pars.netloc #msk.kassir.ru
         url_to_api = f'https://api.kassir.ru/api/page-kit?slug={slug}&domain={self.domain}'
 
         # Здесь пока не будем менять логику
@@ -79,7 +89,7 @@ class KassirParser(AsyncEventParser):
         while not get_events.ok and count > 0:
             self.warning(f'something bad in {slug}, trying to change session')
             asyncio.sleep(15)
-            await self.change_proxy()
+            await self.change_proxy(report=True)
             get_events = await self.session.get(url_to_api, headers=self.new_headers)
             count -= 1
 
@@ -164,8 +174,8 @@ class KassirParser(AsyncEventParser):
             'Дворец спорта': 'Дворец спорта «ДС-Казань»'
         }
 
-        
         for url, venue_id in self.new_urls.items():
+            self.info(url, 'kassir events working process...')
             a_events = []
             try:
                 events = await self.new_get_events(url)
@@ -177,7 +187,7 @@ class KassirParser(AsyncEventParser):
                 self.debug('kassir_seats load sucess', url)
 
             for event in a_events:
-                #self.info(event)
+                self.info(event)
                 if event[2] == '' or 'абонемент' in event[0].lower() or '—' in event[2]:
                     continue
                 elif 'ЦСКА Арена' in event[3]:
