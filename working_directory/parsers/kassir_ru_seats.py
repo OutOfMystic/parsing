@@ -1853,6 +1853,6 @@ class KassirParser(AsyncSeatsParser):
             a_sectors = self.reformat_mossovet(a_sectors)
 
         for sector, tickets in a_sectors.items():
-            self.info(sector, len(tickets))
+            #self.info(sector, len(tickets))
             self.register_sector(sector.strip(), tickets)
         self.check_sectors()
