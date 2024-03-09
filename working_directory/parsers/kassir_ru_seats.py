@@ -684,7 +684,7 @@ class KassirParser(AsyncSeatsParser):
         }
         a_sectors_new = {}
         for sector, tickets in a_sectors.items():
-            print(sector, 'a_sectors.items()')
+            #print(sector, 'a_sectors.items()')
             if 'Трибуна' in sector: #Трибуна А-303
                 sector = sector.split()[-1] #А-303
                 sector = sector.replace('-', '').replace('А', 'A')
