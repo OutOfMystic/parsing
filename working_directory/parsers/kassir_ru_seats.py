@@ -1,8 +1,8 @@
 import asyncio
 import re
+from json.decoder import JSONDecodeError
 
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
@@ -20,7 +20,7 @@ class KassirParser(AsyncSeatsParser):
         self.delay = 6600
         self.driver_source = None
 
-        self.count_error = 2
+        self.count_error = 4
         self.platform = self.set_platform()
         self.headers_api = None
         self.new_venue = None
@@ -1695,7 +1695,16 @@ class KassirParser(AsyncSeatsParser):
             "User-Agent": self.user_agent
         }
         r2 = await self.session.get(url_api, headers=self.headers_api)
-        json_r2 = r2.json()
+        try:
+            json_r2 = r2.json()
+        except JSONDecodeError:
+            if r2.status_code != 200 and self.count_error > 0:
+                self.count_error -= 1
+                self.warning(f'Ban proxy! {self.proxy.args} in {self.url} status code: {r2.status_code} err:{self.count_error}')
+                await self.change_proxy(report=True)
+                return await self.load_product_info(PROD_ID, url_api=url_api)
+            else:
+                raise AssertionError(f'Stop recursion {self.proxy.args} in {self.url} {url_api} status code: {r2.status_code}')
         return json_r2
 
     @staticmethod
