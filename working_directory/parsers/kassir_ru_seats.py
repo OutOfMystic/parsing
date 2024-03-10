@@ -1855,4 +1855,4 @@ class KassirParser(AsyncSeatsParser):
         for sector, tickets in a_sectors.items():
             #self.info(sector, len(tickets))
             self.register_sector(sector.strip(), tickets)
-        self.check_sectors()
+        #self.check_sectors()
