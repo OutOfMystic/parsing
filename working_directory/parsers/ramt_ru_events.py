@@ -118,7 +118,7 @@ class AfishaEvents(AsyncEventParser):
         for event in a_events:
             event_params = {"client_key":event[4],
                             "session_id":event[3]}
-            self.info(event)
+            #self.info(event)
             self.register_event(event[0], event[2], date=event[1],
                                   event_params=str(event_params).replace("'", "\""), venue='РАМТ')
             
