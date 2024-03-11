@@ -1426,6 +1426,15 @@ class KassirParser(AsyncSeatsParser):
         for sector_ind, tickets_f in reformatted_sector_tickets.items():
             a_sectors[sector_ind]['tickets'] = tickets_f
 
+    @staticmethod
+    def reformat_ufa(a_sectrors):
+        res_sectors = {}
+        for sector, tickets in a_sectrors.items():
+            if 'уровень' in sector:
+                name = re.search(r'Сектор \d+', sector)[0]
+                sector = name
+            res_sectors.setdefault(sector, {}).update(tickets)
+        return res_sectors
 
     @staticmethod
     def reformat_mossovet(a_sectrors):
@@ -1820,7 +1829,7 @@ class KassirParser(AsyncSeatsParser):
         list_to_reformat = ['Кремлёвский дворец', 'Театр «Современник»',
                             'Театр Сатиры', 'Казанский цирк', 'Театр Маяковского'] #venue will need to reformat
 
-        #print(self.venue, self.new_venue, 'self.venue, self.new_venue')
+        print(self.venue, self.new_venue, 'self.venue, self.new_venue')
         if self.venue in list_to_reformat:
             a_sectors = self.new_reformat(a_sectors, self.venue)
         elif self.venue == 'Зимний театр':
@@ -1851,6 +1860,8 @@ class KassirParser(AsyncSeatsParser):
             a_sectors = self.reformat_g_drive(a_sectors)
         elif 'Моссовета' in self.venue:
             a_sectors = self.reformat_mossovet(a_sectors)
+        elif 'Уфа' in self.venue:
+            a_sectors = self.reformat_ufa(a_sectors)
 
         for sector, tickets in a_sectors.items():
             #self.info(sector, len(tickets))
