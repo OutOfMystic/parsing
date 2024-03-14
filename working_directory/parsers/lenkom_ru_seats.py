@@ -1,9 +1,9 @@
 import random
+import time
 
 from parse_module.coroutines import AsyncSeatsParser
 from parse_module.manager.proxy.check import SpecialConditions
-from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class Lenkom(AsyncSeatsParser):
@@ -64,7 +64,6 @@ class Lenkom(AsyncSeatsParser):
             'content-type': 'application/x-www-form-urlencoded',
             'host': 'tickets.afisha.ru',
             'origin': 'https://tickets.afisha.ru',
-            'referer': 'https://tickets.afisha.ru/wl/54/api?building_id=undefined&cat_id=undefined&gclid=991064686.1676449618&site=lenkom.ru',
             'sec-ch-ua': '"Not?A_Brand";v="8", "Chromium";v="108", "Yandex";v="23"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
@@ -77,14 +76,23 @@ class Lenkom(AsyncSeatsParser):
         if r.status_code == 499:
             return None
         elif r.status_code != 200:
-            message = f"<b>lenkom_seats response.status_code {r.status_code}\n{self.event_id_ = }</b>"
-            self.send_message_to_telegram(message)
+            self.warning(f"<b>lenkom_seats response.status_code {r.status_code}\n{self.event_id_ = }</b>")
         return r.json()
+
+    @staticmethod
+    def generate_token():
+        # Generate a random number between 0 and 1 million
+        random_number = random.randint(0, 1000000)
+        # Get the current time in milliseconds
+        current_time_millis = int(time.time() * 1000)
+        # Combine the current time and random number to form a token
+        token = f"{current_time_millis}-{random_number}"
+        return token
 
     async def get_seats(self):
         data = {
             "event_id": self.event_id_,
-            "user_token": f"167644{random.randint(1000000, 9999999)}-{random.randint(100000, 999999)}"
+            "user_token": self.generate_token()
             # "user_token": "1676449721616-847937"
         }
 
