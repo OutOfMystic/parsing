@@ -400,7 +400,6 @@ class KassirParser(AsyncSeatsParser):
 
     @staticmethod
     def reformat_vtb_arena(a_sectors):
-        print('reformat_vtb_arena format')
         vtb_reformat_dict = {
             'Press 3': 'Press 3',
             'Press 2': 'Press 2',
@@ -1486,14 +1485,14 @@ class KassirParser(AsyncSeatsParser):
                 reformat_row = re.search(r'\d+', sector)
                 if reformat_row:
                     new_row = reformat_row.group(0)
-                new_tickets = {(new_row,row_place[1]):price for row_place, price in tickets.items()}
-                new_a_sector.setdefault('Бенуар', {}).update(new_tickets)
+                    new_tickets = {(new_row,row_place[1]):price for row_place, price in tickets.items()}
+                    new_a_sector.setdefault('Бенуар', {}).update(new_tickets)
             elif re.search(r'бельэтаж', sector, re.IGNORECASE):
                 reformat_row = re.search(r'\d+', sector)
                 if reformat_row:
                     new_row = reformat_row.group(0)
-                new_tickets = {(new_row,row_place[1]):price for row_place, price in tickets.items()}
-                new_a_sector.setdefault('Бельэтаж', {}).update(new_tickets)
+                    new_tickets = {(new_row,row_place[1]):price for row_place, price in tickets.items()}
+                    new_a_sector.setdefault('Бельэтаж', {}).update(new_tickets)
             else:
                 new_a_sector.setdefault(sector, {}).update(tickets)
         return new_a_sector
@@ -1711,17 +1710,17 @@ class KassirParser(AsyncSeatsParser):
             "User-Agent": self.user_agent
         }
         r2 = await self.session.get(url_api, headers=self.headers_api)
-        try:
+        if r2.status_code != 200 and self.count_error > 0:
+            self.count_error -= 1
+            self.warning(f'Ban proxy! {self.proxy.args} in {self.url} status code: {r2.status_code} err:{self.count_error}')
+            await self.change_proxy(report=True)
+            return await self.load_product_info(PROD_ID, url_api=url_api)
+        elif r2.status_code == 200:
             json_r2 = r2.json()
-        except JSONDecodeError:
-            if r2.status_code != 200 and self.count_error > 0:
-                self.count_error -= 1
-                self.warning(f'Ban proxy! {self.proxy.args} in {self.url} status code: {r2.status_code} err:{self.count_error}')
-                await self.change_proxy(report=True)
-                return await self.load_product_info(PROD_ID, url_api=url_api)
-            else:
-                raise AssertionError(f'Stop recursion {self.proxy.args} in {self.url} {url_api} status code: {r2.status_code}')
-        return json_r2
+            return json_r2
+        else:
+            raise AssertionError(f'Stop recursion {self.proxy.args} in {self.url} {url_api} status code: {r2.status_code}')
+
 
     @staticmethod
     def make_tarif(product_info_json):
@@ -1829,7 +1828,7 @@ class KassirParser(AsyncSeatsParser):
         list_to_reformat = ['Кремлёвский дворец', 'Театр «Современник»',
                             'Театр Сатиры', 'Казанский цирк', 'Театр Маяковского'] #venue will need to reformat
 
-        print(self.venue, self.new_venue, 'self.venue, self.new_venue')
+        #print(self.venue, self.new_venue, 'self.venue, self.new_venue')
         if self.venue in list_to_reformat:
             a_sectors = self.new_reformat(a_sectors, self.venue)
         elif self.venue == 'Зимний театр':
