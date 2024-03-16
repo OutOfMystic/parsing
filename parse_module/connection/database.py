@@ -259,9 +259,9 @@ class ParsingDB(DBConnection):
                          f"WHERE id={ticket_id};"
             else:
                 # print('available-pars', price_amount, 'price_amount')
-                #print(price_amount, 'price_amount') #(1, 600000.0)
+                print(price_amount, 'price_amount') #(1, 600000.0)
                 amount, origin_price = price_amount
-                if isinstance(amount, dict):
+                if isinstance(origin_price, dict):
                     # <parse_module.models.scheme.Dancefloor object at 0x7ae374510730> (86, {'currencyCode': 'rub', 'value': 250000})
                     amount = price_amount[0]
                     origin_price = price_amount[1].get('value', 1000) // 100
