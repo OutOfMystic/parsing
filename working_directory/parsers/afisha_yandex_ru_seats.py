@@ -972,15 +972,22 @@ class YandexAfishaParser(AsyncSeatsParser):
                 })
 
 
+    def reformat_dancefloors(self, r_sector_name):
+        return r_sector_name
+
     def get_admission_seats(self, a_sectors, r_sector, r_sector_name):
         if self.is_special_case():
             self.get_special_admission_seats(a_sectors, r_sector, r_sector_name)
             return None
-
-        # """ Фанзона, Танцевальный партер """
-        # available_seat_count = r_sector['availableSeatCount']
-        # price = r_sector['prices'][0]
-        # self.register_dancefloor(r_sector_name, price, available_seat_count)
+        """ Фанзона, Танцевальный партер """
+        r_sector_name = self.reformat_dancefloors(r_sector_name)
+        available_seat_count = r_sector['availableSeatCount']
+        if not available_seat_count:
+            self.register_dancefloor(r_sector_name, 0, 0)
+        else:
+            price = r_sector['prices'][0]
+            #print(available_seat_count, r_sector_name, 'dance')
+            self.register_dancefloor(r_sector_name, price, available_seat_count)
 
     def get_special_admission_seats(self, a_sectors, r_sector, r_sector_name):
         available_seat_count = r_sector['availableSeatCount']
@@ -1014,7 +1021,6 @@ class YandexAfishaParser(AsyncSeatsParser):
     def is_special_case(self):
         if 'Барвиха' in self.venue:
             return True
-
         return False
 
     def get_sector_max_seat_count(self):
@@ -1061,6 +1067,14 @@ class YandexAfishaParser(AsyncSeatsParser):
         if r2.json()["result"]["session"]["saleStatus"] in ['not-available', 'closed', 'no-seats']:
             return False
         return True
+
+    def search_dancefloors(self, r_sector):
+        #print(r_sector, self.venue, 'search_dancefloors')
+        if 'Крокус Сити Холл' in self.venue:
+            res = any([i in r_sector for i in ['Silver', 'Platinum', 'Gold']])
+            if 'VIP-ложа' in r_sector and res:
+                return True
+        return False
 
     async def body(self):
         skip_events = [
@@ -1149,17 +1163,18 @@ class YandexAfishaParser(AsyncSeatsParser):
 
         a_sectors = []
         for r_sector in r_sectors:
+            #print(r_sector['name'], r_sector['admission'], 'all sectors we have found')
             r_sector_name = r_sector['name']
             admission = r_sector['admission']
+            maybe_it_dancefloor = self.search_dancefloors(r_sector['name'])
 
-            if not admission:
+            if not admission and not maybe_it_dancefloor:
                 self.get_regular_seats(a_sectors, r_sector, r_sector_name)
             else:
                 self.get_admission_seats(a_sectors, r_sector, r_sector_name)
-
         self.reformat(a_sectors)
 
         for sector in a_sectors:
-            #self.debug(sector['name'], len(sector['tickets']))
+            #self.info(sector['name'], len(sector['tickets']))
             self.register_sector(sector['name'], sector['tickets'])
         #self.check_sectors()
