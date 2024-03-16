@@ -251,13 +251,20 @@ class ParsingDB(DBConnection):
     def update_dancefloors(self, change_dict, margin_func, **kwargs):
         scripts = []
         for dancefloor, price_amount in change_dict.items():
+            #print(dancefloor, price_amount, 'dancefloor, price_amount')
             if price_amount is None:
                 ticket_id = dancefloor.ticket_id
                 script = f"UPDATE public.tables_tickets " \
                          f"SET status='not', no_schema_available=0 " \
                          f"WHERE id={ticket_id};"
             else:
+                # print('available-pars', price_amount, 'price_amount')
                 origin_price, amount = price_amount
+                if isinstance(amount, dict):
+                    # <parse_module.models.scheme.Dancefloor object at 0x7ae374510730> (86, {'currencyCode': 'rub', 'value': 250000})
+                    amount = price_amount[0]
+                    origin_price = price_amount[1].get('value', 1000) // 100
+
                 sell_price = margin_func(origin_price)
                 ticket_id = dancefloor.ticket_id
                 status = 'available-pars' if amount else 'not'
