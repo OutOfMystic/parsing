@@ -50,7 +50,7 @@ class YandexAfishaParser(EventParser):
            # 'https://afisha.yandex.ru/moscow/concert/places/kremlevskii-dvorets': '*',  # Кремльвский дворец
            # 'https://afisha.yandex.ru/moscow/concert/places/mts-live-holl': '*',  # MTC Live Холл
             'https://afisha.yandex.ru/moscow/theatre/places/sovremennik': '*',  # Театр Современник
-           # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr-vdnkh': '*',  # Зелёный театр ВДНХ
+            'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr-vdnkh': '*',  # Зелёный театр ВДНХ
            # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr': '*',  # Зелёный театр
            #'https://afisha.yandex.ru/organizer/teatr-baleta-borisa-eifmana?city=saint-petersburg': '*'  # Балет Ейфмана
            # 'https://afisha.yandex.ru/moscow/concert/places/kontsertnyi-zal-gostinitsy-kosmos': '*',  # Концертный зал гостиницы «Космос»
