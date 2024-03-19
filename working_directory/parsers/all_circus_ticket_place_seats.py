@@ -74,23 +74,23 @@ class SochiCirkParser(AsyncSeatsParser):
         #self.check_sectors()
 
 
-# class SaratovCirkParser(SochiCirkParser):
-#     url_filter = lambda url: 'ticket-place.ru' in url and 'saratov' in url
+class SaratovCirkParser(SochiCirkParser):
+    url_filter = lambda url: 'ticket-place.ru' in url and 'saratov' in url
 
-#     def __init__(self, *args, **extra):
-#         super().__init__(*args, **extra)
-#         self.a_sectors = []
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+        self.a_sectors = []
 
-#     @staticmethod
-#     def reformat_sector(sector):
-#         if 'левая сторона' in sector.lower():
-#             sector = 'Левая сторона'
-#         elif 'правая сторона' in sector.lower():
-#             sector = 'Правая сторона'
-#         return sector
+    @staticmethod
+    def reformat_sector(sector):
+        if 'левая сторона' in sector.lower():
+            sector = 'Левая сторона'
+        elif 'правая сторона' in sector.lower():
+            sector = 'Правая сторона'
+        return sector
+    def body(self):
+        super().body()
 
-#   async def body(self):
-#         super().body()
 
 class VladivostokCirkParser(SochiCirkParser):
     url_filter = lambda url: 'ticket-place.ru' in url and 'vladiv' in url
