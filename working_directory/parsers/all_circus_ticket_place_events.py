@@ -47,6 +47,8 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
             #'https://princess.circus.team/': [1302, 'saratov', 'Цирк им. братьев Никитиных Саратов'],
             #'https://princess.circus.team/': 'princess_saratov',
             #'https://www.circus-sochi.ru/': 'sochi'
+
+            'https://www.circus-samara.ru/': 'samara'
         }
         self.headers = {
             "accept": "application/json, text/plain, */*",
@@ -86,6 +88,13 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
         ids = [i.get('data-tp-event') for i in ids if i]
         return ids, 'sochi' , 'Сочинский Государственный Цирк'
+
+    async def samara(self):
+        r = await self.session.get(url='https://www.circus-samara.ru/', headers=self.headers)
+        soup = BeautifulSoup(r.text, 'lxml')
+        ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
+        ids = [i.get('data-tp-event') for i in ids if i]
+        return ids, 'samara', 'Самара цирк'
 
     async def load_all_events_ONE(self, url_strip, url_to_load):
         headers = {

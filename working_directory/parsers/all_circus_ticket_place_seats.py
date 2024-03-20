@@ -88,8 +88,9 @@ class SaratovCirkParser(SochiCirkParser):
         elif 'правая сторона' in sector.lower():
             sector = 'Правая сторона'
         return sector
-    def body(self):
-        super().body()
+
+    async def body(self):
+        await super().body()
 
 
 class VladivostokCirkParser(SochiCirkParser):
@@ -108,4 +109,23 @@ class VladivostokCirkParser(SochiCirkParser):
         elif 'Левая ложа' in sector:
              sector = 'Ложа 3'
         return sector
+
+    async def body(self):
+        await super().body()
+
+
+class SamaraCirkParser(SochiCirkParser):
+    url_filter = lambda url: 'ticket-place.ru' in url and 'samara' in url
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+        self.a_sectors = []
+    @staticmethod
+    def reformat_sector(sector):
+        if 'сторона' in sector:
+            place_orientation, sector_name_and_number = sector.split(',')
+            sector_name, sector_number = sector_name_and_number.split()
+            sector = f'{sector_number} {sector_name}'
+        return sector
+    async def body(self):
+        await super().body()
 
