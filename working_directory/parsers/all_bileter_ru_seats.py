@@ -17,6 +17,7 @@ class BileterSeats(AsyncSeatsParser):
         self.delay = 1200
         self.driver_source = None
         self.event_id_ = self.url.split('/')[-1]
+        self.a_sectors = {}
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
@@ -87,27 +88,25 @@ class BileterSeats(AsyncSeatsParser):
                 'Амфитеатр': self.reformat_europe_teatr
             }
 
-        self.a_sectors = {}
         for i in activePlaces:
             # print(i, 'iactivePlace')
             if i['section'] in reformat_dict:
                 section = reformat_dict.get(i['section'])
                 if inspect.ismethod(section):
                     section(i)
-                continue
+                    continue
             else:
                 section = i['section']
             if section is not None:
                 self.a_sectors.setdefault(section, {}).update(
                     {(i['row'], i['place']): i['price']}
                 )
-        return self.a_sectors
 
     async def body(self):
         url_seats = f'https://www.bileter.ru/performance/hall-scheme?IdPerformance={self.event_id_}'
         activePlaces = await self.get_seats(url_seats)
-        a_sectors = self.reformat(activePlaces, self.venue)
+        self.reformat(activePlaces, self.venue)# fill self.a_sectors
 
-        for sector_name, tickets in a_sectors.items():
-            #self.info(sector_name, len(tickets))2
+        for sector_name, tickets in self.a_sectors.items():
+            #self.info(sector_name, len(tickets))
             self.register_sector(sector_name, tickets)
