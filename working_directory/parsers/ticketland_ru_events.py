@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
@@ -59,7 +61,7 @@ class Parser(AsyncEventParser):
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    async def get_events(self, link, places_url, venue):
+    async def get_events(self, link, places_url, venue, domain):
         events = []
         number_page = 0
         achtung = False
@@ -154,11 +156,11 @@ class Parser(AsyncEventParser):
             month = month[:3].capitalize()
             time_ = card.find(class_='show-card__t').get_text().strip()
             formatted_date = f'{day} {month} {year} {time_}'
-            btn = card.find(class_='btn btn--primary')
-            if btn is None or btn in list_btn:
+            btn = card.find(class_='btn')
+            url = btn.get('href')
+            if btn is None or btn in list_btn or url is None:
+                list_btn.append(btn)
                 continue
-            list_btn.append(btn)
-            url = btn['href']
             if old_url == 'spb':
                 url = 'https://spb.ticketland.ru' + url
             elif 'sochi' == old_url:
@@ -224,13 +226,16 @@ class Parser(AsyncEventParser):
 
     async def body(self):
         for places_url, our_places in self.our_places_data.items():
+            parsed_url = urlparse(places_url)
+            domain = parsed_url.netloc  # 'spb.ticketland.ru'
+            self.info(places_url, our_places, domain, 'ticketland_check')
             headers = {
                 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
                 'accept-encoding': 'gzip, deflate, br',
                 'accept-language': 'ru,en;q=0.9',
                 'cache-control': 'max-age=0',
                 'connection': 'keep-alive',
-                'host': 'www.ticketland.ru',
+                'host': domain,
                 'sec-ch-ua': '"Not?A_Brand";v="8", "Chromium";v="108", "Yandex";v="23"',
                 'sec-ch-ua-mobile': '?0',
                 'sec-ch-ua-platform': '"Windows"',
@@ -241,10 +246,6 @@ class Parser(AsyncEventParser):
                 'upgrade-insecure-requests': '1',
                 'user-agent': self.user_agent
             }
-            if 'spb' in places_url:
-                headers['host'] = 'spb.ticketland.ru'
-            elif 'sochi' in places_url:
-                headers['host'] = 'sochi.ticketland.ru'
 
             r = await self.session.get(places_url, headers=headers)
             soup = BeautifulSoup(r.text, 'lxml')
@@ -256,13 +257,13 @@ class Parser(AsyncEventParser):
                 pagecount = 1
             teatr_links = await self.get_links_teatrs(pagecount, places_url, our_places)
             for link, venue in teatr_links.items():
-                #self.debug(link)
-                for event in await self.get_events(link, places_url, venue):
+                for event in await self.get_events(link, places_url, venue, domain):
                     #self.debug(event)
                     if 'gosudarstvennyy-kremlevskiy-dvorec' in our_places:
                         venue = 'Кремлёвский Дворец'
                         if 'kremlevskiy-dvorec/novogodnee-predstavlenie' not in event[1]:
                             continue
+                    #self.info(event, venue)
                     if len(event[1]) >= 200 or len(event[0]) >= 200:
                         self.warning(event, venue, 'too long!!!!!!!!!!!!')
                         continue
