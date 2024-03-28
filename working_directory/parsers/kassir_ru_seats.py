@@ -1729,6 +1729,13 @@ class KassirParser(AsyncSeatsParser):
         #{8213240: 850.0, 8213241: 2550.0, 8213242: 2800.0, 8213243: 3000.0, ... }
         return tarif_prices
 
+    @staticmethod
+    def check_tickets(product_info_json):
+        tarif_groups = product_info_json.get('orderKit')#если есть тарифные группы значит есть билеты
+        if tarif_groups:
+            return True
+        return False
+
     async def load_tikets_page(self, PROD_ID):
         url_tickets = f'https://api.kassir.ru/api/order-kit/{PROD_ID}/scheme?domain={self.domain}'
         r3 = await self.session.get(url_tickets, headers=self.headers_api)
@@ -1815,6 +1822,10 @@ class KassirParser(AsyncSeatsParser):
         #     json.dump(product_info_json, file, indent=4, ensure_ascii=False)
 
         self.new_venue = self.make_venue(product_info_json)
+        checker_tickets = self.check_tickets(product_info_json)
+        if not checker_tickets:
+            self.bprint(f'{self.url} dont have any tickets', color=utils.Fore.YELLOW)
+            return
         TARIFS:dict = self.make_tarif(product_info_json)
 
         tickets_json = await self.load_tikets_page(PROD_ID)
