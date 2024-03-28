@@ -1824,7 +1824,7 @@ class KassirParser(AsyncSeatsParser):
         self.new_venue = self.make_venue(product_info_json)
         checker_tickets = self.check_tickets(product_info_json)
         if not checker_tickets:
-            self.bprint(f'{self.url} dont have any tickets', color=utils.Fore.YELLOW)
+            self.warning(f'{self.url} dont have any tickets')
             return
         TARIFS:dict = self.make_tarif(product_info_json)
 
