@@ -3,15 +3,14 @@ import re
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
+from parse_module.manager.proxy.sessions import AsyncProxySession
 
 
 class HcAvtomobilistHockey(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
-        self.delay = 3600
+        self.delay = 1600
         self.driver_source = None
         self.url = 'https://tickets.hc-avto.ru'
         self.headers = {
