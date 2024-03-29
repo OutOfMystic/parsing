@@ -10,7 +10,7 @@ class HcAvtomobilistHockey(AsyncEventParser):
 
     def __init__(self, controller, name):
         super().__init__(controller, name)
-        self.delay = 1600
+        self.delay = 1000
         self.driver_source = None
         self.url = 'https://tickets.hc-avto.ru'
         self.headers = {
