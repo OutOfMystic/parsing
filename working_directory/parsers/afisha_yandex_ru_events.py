@@ -41,9 +41,9 @@ class YandexAfishaParser(EventParser):
            #'https://afisha.yandex.ru/novosibirsk/other/places/ledovyi-dvorets-sibir': '*',      # ЛД Сибирь
             'https://afisha.yandex.ru/omsk/other/places/g-drive-arena': '*',                     # G-Drive Арена
             'https://afisha.yandex.ru/kazan/concert/places/tatneft-arena': '*',                  # Татнефть Арена
-            'https://afisha.yandex.ru/moscow/concert/places/crocus-city-hall': '*',              # Крокус
-            'https://afisha.yandex.ru/moscow/concert/places/vegas-city-hall-msk': '*',           # Vegas City Hall
-            'https://afisha.yandex.ru/moscow/concert/places/backstage': '*',                     # Ресторан Backstage
+            #'https://afisha.yandex.ru/moscow/concert/places/crocus-city-hall': '*',              # Крокус
+            #'https://afisha.yandex.ru/moscow/concert/places/vegas-city-hall-msk': '*',           # Vegas City Hall
+            #'https://afisha.yandex.ru/moscow/concert/places/backstage': '*',                     # Ресторан Backstage
             #'https://afisha.yandex.ru/moscow/sport/places/bolshaia-sportivnaia-arena-luzhniki': '*',  # Лужники
            # 'https://afisha.yandex.ru/moscow/sport/places/dvorets-gimnastiki-iriny-viner-usmanovoi': '*',  # Лужники Дворец гимнастики Ирины Винер-Усмановой
             'https://afisha.yandex.ru/saint-petersburg/concert/places/bkz-oktiabrskii': '*',  # БКЗ «Октябрьский»
