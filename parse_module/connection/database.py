@@ -7,6 +7,7 @@ from collections import defaultdict
 from threading import Lock
 
 import psycopg2
+from psycopg2.extras import execute_values
 
 from ..utils.logger import logger
 from ..utils.provision import multi_try
@@ -147,13 +148,7 @@ class ParsingDB(DBConnection):
                              password="Q8kPzqBPk4fb6I",
                              database="crmdb")
         self._already_deleted = False
-        
-    # def __init__(self):
-    #     super().__init__(host="195.2.81.173",
-    #                     port="5432",
-    #                     user="tenerunayo",
-    #                     password="umauwuNg24@A",
-    #                     database="crmdb")
+
 
     @locker
     def get_scheme(self, tasks, saved_schemes, **kwargs):
@@ -259,7 +254,7 @@ class ParsingDB(DBConnection):
                          f"WHERE id={ticket_id};"
             else:
                 # print('available-pars', price_amount, 'price_amount')
-                print(price_amount, 'price_amount') #(1, 600000.0)
+                #print(price_amount, 'price_amount') #(1, 600000.0)
                 amount, origin_price = price_amount
                 if isinstance(origin_price, dict):
                     # <parse_module.models.scheme.Dancefloor object at 0x7ae374510730> (86, {'currencyCode': 'rub', 'value': 250000})
@@ -323,18 +318,18 @@ class ParsingDB(DBConnection):
 
     @locker
     def add_parsed_events(self, rows):
-        str_rows = [f"('{v1}', '{v2}', '{v3}', '{v4}', '{json.dumps(v5)}', '{v6}')"
-                    for v1, v2, v3, v4, v5, v6 in rows]
-        values = ", ".join(str_rows)
-        columns = [
-            'parent', 'event_name', 'url',
-            'venue', 'extra', 'date'
-        ]
-        joined_cloumns = ', '.join(columns)
-        script = (f"INSERT INTO public.tables_parsedevents ({joined_cloumns}) "
-                  f"VALUES {values}")
-        self.execute(script)
+        # Структура запроса с параметрами
+        script = """
+        INSERT INTO public.tables_parsedevents (parent, event_name, url, venue, extra, date)
+        VALUES %s;
+        """
+        # Подготовка данных
+        values = [(v1, v2, v3, v4, json.dumps(v5), v6) for v1, v2, v3, v4, v5, v6 in rows]
+
+        # Использование метода executemany для вставки параметризованных данных
+        psycopg2.extras.execute_values(self.cursor, script, values)
         self.commit()
+
 
     @locker
     def get_parsed_events(self, types=None):
