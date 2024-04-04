@@ -33,9 +33,9 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
             'https://www.circus-sochi.ru/tropic-show.html': ('ТРОПИК ШОУ',
                                                             'sochi' , 'Сочинский Государственный Цирк',
                         'https://ticket-place.ru/calendar-widget/26?showId=200&dateFrom=&dateTo=&page=1&maxDays=4'),
-            'https://www.circus-saratov.ru/': ('WOW',
-                                               'saratov', 'Саратовский цирк',
-                       'https://ticket-place.ru/calendar-widget/25?showId=183&dateFrom=&dateTo=&page=1&maxDays=4')
+            'https://www.circus-saratov.ru/': ('Итальянский цирк "Слоны и тигры"',
+                                               'saratov','Саратовский цирк',
+                                'https://ticket-place.ru/calendar-widget/25?showId=212&dateFrom=&dateTo=&page=1&maxDays=4')
         }
         self.urls_TWO = {
             # url: tuple('slug', 'venue') -> для поиска  ids, в вёрстке есть calendar__item!
