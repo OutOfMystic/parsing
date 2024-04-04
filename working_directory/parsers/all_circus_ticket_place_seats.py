@@ -129,3 +129,27 @@ class SamaraCirkParser(SochiCirkParser):
     async def body(self):
         await super().body()
 
+
+class NNovgorogParser(SochiCirkParser):
+    url_filter = lambda url: 'ticket-place.ru' in url and 'nnovgorod' in url
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+        self.a_sectors = []
+    @staticmethod
+    def reformat_sector(sector):
+        box = {'Левая сторона, оранжевый, сектор 1': 'Л1',
+               'Правая сторона, красный, сектор 3': 'П3',
+               'Правая сторона, зеленый, сектор 2': 'П2',
+               'Левая сторона, синий, сектор 3': 'Л3',
+               'Левая сторона, оранжевый, сектор 2': 'Л2',
+               'Правая сторона, красный, сектор 4': 'П4',
+               'Правая сторона, зеленый, сектор 1': 'П1',
+               'Левая сторона, синий, сектор 4': 'Л4'}
+        if sector in box:
+            return box[sector]
+        return sector
+
+    async def body(self):
+        await super().body()
+
+
