@@ -153,3 +153,18 @@ class NNovgorogParser(SochiCirkParser):
         await super().body()
 
 
+class TyumenParser(SochiCirkParser):
+    url_filter = lambda url: 'ticket-place.ru' in url and 'tyumen' in url
+
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+        self.a_sectors = []
+
+    @staticmethod
+    def reformat_sector(sector):
+        return sector
+
+    async def body(self):
+        await super().body()
+
+
