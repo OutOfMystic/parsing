@@ -382,7 +382,7 @@ def ai_doubts(args):
 
 
 def three_hrs(date):
-    return Date(date + datetime.timedelta(hours=3))
+    return Date(date) #+ datetime.timedelta(hours=3))
 
 
 def is_col_empty(array, col, value=None):

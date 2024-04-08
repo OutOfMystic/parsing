@@ -155,7 +155,7 @@ class Controller:
                 'priority': priority,
                 'event_id': conn['event_id'],
                 'scheme_id': conn['scheme_id'],
-                'date': Date(conn['date'] + datetime.timedelta(hours=3)),
+                'date': Date(conn['date']) ,#+ datetime.timedelta(hours=3)),
                 'url': subject_url,
                 'margin': margin_id
             }
