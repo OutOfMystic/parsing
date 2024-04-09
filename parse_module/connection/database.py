@@ -318,16 +318,17 @@ class ParsingDB(DBConnection):
 
     @locker
     def add_parsed_events(self, rows):
-        # Структура запроса с параметрами
-        script = """
-        INSERT INTO public.tables_parsedevents (parent, event_name, url, venue, extra, date)
-        VALUES %s;
-        """
-        # Подготовка данных
-        values = [(v1, v2, v3, v4, json.dumps(v5), v6) for v1, v2, v3, v4, v5, v6 in rows]
-
-        # Использование метода executemany для вставки параметризованных данных
-        psycopg2.extras.execute_values(self.cursor, script, values)
+        str_rows = [f"('{v1}', '{v2}', '{v3}', '{v4}', '{json.dumps(v5)}', '{v6}')"
+                    for v1, v2, v3, v4, v5, v6 in rows]
+        values = ", ".join(str_rows)
+        columns = [
+            'parent', 'event_name', 'url',
+            'venue', 'extra', 'date'
+        ]
+        joined_cloumns = ', '.join(columns)
+        script = (f"INSERT INTO public.tables_parsedevents ({joined_cloumns}) "
+                  f"VALUES {values}")
+        self.execute(script)
         self.commit()
 
 
