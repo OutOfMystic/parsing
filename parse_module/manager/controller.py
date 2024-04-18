@@ -24,6 +24,7 @@ from ..utils import provision, utils
 from ..utils.date import Date
 from ..utils.logger import start_async_logger, logger
 from ..utils.utils import differences
+from ..utils.MoneyConvertor import convertor
 
 PREDEFINED = True
 
@@ -410,6 +411,7 @@ class Controller:
         if self._debug_event_id:
             self.bprint(utils.red('DEBUG') + utils.green(' EVENT ID IS DEFINED!!!'))
 
+        currency_converter = convertor.CBRcurrentCourses()
         while True:
             subjects = provision.just_try(self.database_interaction, name='Controller')
             if subjects is provision.TryError:
@@ -417,6 +419,7 @@ class Controller:
                 continue
             conn_data = provision.just_try(self.load_connections, args=(subjects,), name='Controller')
             provision.just_try(self._load_notifiers, name='Controller')
+            provision.just_try(currency_converter.main, name='Controller')
             if conn_data is provision.TryError:
                 logger.error('MAKING CONNECTIONS FAILED', name='Controller')
                 continue
