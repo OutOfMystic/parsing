@@ -21,7 +21,7 @@ class CBRcurrentCourses:
         """Загружает данные о последнем обнолении
            из JSON-файла или инициализирует новый файл, если он не существует."""
         if os.path.exists(self.timestamp):
-            with open(self.timestamp, 'r') as file:
+            with open(self.timestamp, 'r', encoding='utf-8') as file:
                 return json.load(file)
         else:
             return {}
@@ -29,7 +29,7 @@ class CBRcurrentCourses:
     def _update_timestamp(self):
         """Обновляет временную отметку в данных."""
         self.data['timestamp'] = datetime.now().isoformat()
-        with open(self.timestamp, 'w') as file:
+        with open(self.timestamp, 'w', encoding='utf-8') as file:
             json.dump(self.data, file, ensure_ascii=False, indent=4)
 
     def _check_timestamp(self):
@@ -130,7 +130,7 @@ class CBRcurrentCourses:
 
             file_path = os.path.join(self.module_path, 'get_curs.json')
             # Сохраняем данные в файл
-            with open(file_path, 'w') as file:
+            with open(file_path, 'w', encoding='utf-8') as file:
                 json.dump(getcurs, file, ensure_ascii=False, indent=4)
             #обновляем временную отмтетку
             self._update_timestamp()
@@ -156,7 +156,7 @@ class ConverterManager(CBRcurrentCourses):
 
     def _load_current_corses(self):
         get_cours = os.path.join(self.module_path, 'get_curs.json')
-        with open(get_cours, "r") as json_file:
+        with open(get_cours, "r", encoding='utf-8') as json_file:
             currency_rates = json.load(json_file)
             return currency_rates
 
@@ -193,7 +193,7 @@ def convert_to_rub(amount, currency_code):
     """
     module_path = os.path.dirname(__file__)
     filename = os.path.join(module_path, 'get_curs.json')
-    with open(filename, "r") as json_file:
+    with open(filename, "r", encoding='utf-8') as json_file:
         currency_rates = json.load(json_file)
     if currency_code in currency_rates:
         currency_info = currency_rates[currency_code]
