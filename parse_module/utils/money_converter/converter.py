@@ -124,14 +124,14 @@ class CBRcurrentCourses:
 
     def main(self):
         if self._check_timestamp():
-            GetCurs_XMLtext = self._request()
-            GetCurs_json = self._make_json_from_xml(GetCurs_XMLtext)
-            GetCurs = self._convert_json(GetCurs_json)
+            getcurs_xmltext = self._request()
+            getcurs_json = self._make_json_from_xml(getcurs_xmltext)
+            getcurs = self._convert_json(getcurs_json)
 
-            file_path = os.path.join(self.module_path, 'GetCurs.json')
+            file_path = os.path.join(self.module_path, 'get_curs.json')
             # Сохраняем данные в файл
             with open(file_path, 'w') as file:
-                json.dump(GetCurs, file, ensure_ascii=False, indent=4)
+                json.dump(getcurs, file, ensure_ascii=False, indent=4)
 
 
 class ConverterManager(CBRcurrentCourses):
@@ -153,7 +153,7 @@ class ConverterManager(CBRcurrentCourses):
             self.main()
 
     def _load_current_corses(self):
-        get_cours = os.path.join(self.module_path, 'GetCurs.json')
+        get_cours = os.path.join(self.module_path, 'get_curs.json')
         with open(get_cours, "r") as json_file:
             currency_rates = json.load(json_file)
             return currency_rates
@@ -190,7 +190,7 @@ def convert_to_rub(amount, currency_code):
     :raises ValueError: Если валюта не найдена в словаре.
     """
     module_path = os.path.dirname(__file__)
-    filename = os.path.join(module_path, 'GetCurs.json')
+    filename = os.path.join(module_path, 'get_curs.json')
     with open(filename, "r") as json_file:
         currency_rates = json.load(json_file)
     if currency_code in currency_rates:
