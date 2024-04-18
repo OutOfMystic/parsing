@@ -146,7 +146,7 @@ class EventParser(ParserBase, ABC):
 
     def register_event(self, event_name, url, date=None,
                        venue=None, **columns):
-        event_name = event_name.replace('\n', ' ')
+        event_name = event_name.replace('\n', ' ').replace("'", "")
         if venue is not None:
             venue = venue.replace('\n', ' ')
         columns['venue'] = venue
