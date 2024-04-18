@@ -419,7 +419,7 @@ class Controller:
                 continue
             conn_data = provision.just_try(self.load_connections, args=(subjects,), name='Controller')
             provision.just_try(self._load_notifiers, name='Controller')
-            provision.just_try(currency_converter.main, name='Controller')
+            provision.just_try(currency_converter.main, name='CBRcurrentCourses')
             if conn_data is provision.TryError:
                 logger.error('MAKING CONNECTIONS FAILED', name='Controller')
                 continue
