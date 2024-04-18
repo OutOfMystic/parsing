@@ -24,7 +24,7 @@ from ..utils import provision, utils
 from ..utils.date import Date
 from ..utils.logger import start_async_logger, logger
 from ..utils.utils import differences
-from ..utils.MoneyConvertor import convertor
+from ..utils.money_converter import converter
 
 PREDEFINED = True
 
@@ -411,7 +411,7 @@ class Controller:
         if self._debug_event_id:
             self.bprint(utils.red('DEBUG') + utils.green(' EVENT ID IS DEFINED!!!'))
 
-        currency_converter = convertor.CBRcurrentCourses()
+        currency_converter = converter.CBRcurrentCourses()
         while True:
             subjects = provision.just_try(self.database_interaction, name='Controller')
             if subjects is provision.TryError:

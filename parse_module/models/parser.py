@@ -10,7 +10,7 @@ from ..utils import utils, provision
 from ..utils.date import Date
 from ..utils.exceptions import ParsingError, ProxyHubError
 from ..utils.logger import logger
-from ..utils.MoneyConvertor.convertor import  ConverterManager
+from ..utils.money_converter.converter import  ConverterManager
 
 
 RESTRICTED_COLUMNS = ['controller', 'event_id', 'event_name',

@@ -38,13 +38,13 @@ class CBRcurrentCourses:
         if 'timestamp' in self.data:
             last_update_time = datetime.fromisoformat(self.data['timestamp'])
             if datetime.now() - last_update_time > timedelta(hours=2):
-                logger.info("Временная отметка устарела, обновляем данные.", name='CBRcurrentCourses')
+                logger.info("Временная отметка курсов валют устарела, обновляем данные.", name='CBRcurrentCourses')
                 return True
             else:
                 logger.info("Данные курсов валют актуальны.", name='CBRcurrentCourses')
                 return False
         else:
-            logger.info("Временная отметка отсутствует, создаем новую.", name='CBRcurrentCourses')
+            logger.info("Временная отметка курсов валют отсутствует, создаем новую.", name='CBRcurrentCourses')
             self._update_timestamp()
             return True
 
@@ -132,6 +132,8 @@ class CBRcurrentCourses:
             # Сохраняем данные в файл
             with open(file_path, 'w') as file:
                 json.dump(getcurs, file, ensure_ascii=False, indent=4)
+            #обновляем временную отмтетку
+            self._update_timestamp()
 
 
 class ConverterManager(CBRcurrentCourses):
