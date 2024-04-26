@@ -30,61 +30,62 @@ class YandexAfishaParser(EventParser):
         self.delay = 7200
         self.driver_source = None
         self.our_urls = {
-           #'https://afisha.yandex.ru/moscow/concert/places/vk-stadium': '*',                    # Вк Арена
-            'https://afisha.yandex.ru/moscow/concert/places/tsska-arena': '*',                   # ЦСКА Арена
-           #'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*',                          # Уфа Арена
-           # 'https://afisha.yandex.ru/vladivostok/concert/places/fetisov-arena': '*',            # Фетисов Арена
-           #'https://afisha.yandex.ru/khabarovsk/other/places/platinum-arena': '*',              # Платинум Арена
-            'https://afisha.yandex.ru/saint-petersburg/concert/places/iubileinyi-spb': '*',      # Юбилейный
-            'https://afisha.yandex.ru/moscow/concert/places/vtb-arena': '*',                     # ВТБ Арена
-            'https://afisha.yandex.ru/moscow/other/places/megasport': '*',                       # Мегаспорт
-           #'https://afisha.yandex.ru/novosibirsk/other/places/ledovyi-dvorets-sibir': '*',      # ЛД Сибирь
-            'https://afisha.yandex.ru/omsk/other/places/g-drive-arena': '*',                     # G-Drive Арена
-            'https://afisha.yandex.ru/kazan/concert/places/tatneft-arena': '*',                  # Татнефть Арена
-            #'https://afisha.yandex.ru/moscow/concert/places/crocus-city-hall': '*',              # Крокус
-            #'https://afisha.yandex.ru/moscow/concert/places/vegas-city-hall-msk': '*',           # Vegas City Hall
-            #'https://afisha.yandex.ru/moscow/concert/places/backstage': '*',                     # Ресторан Backstage
-            #'https://afisha.yandex.ru/moscow/sport/places/bolshaia-sportivnaia-arena-luzhniki': '*',  # Лужники
-           # 'https://afisha.yandex.ru/moscow/sport/places/dvorets-gimnastiki-iriny-viner-usmanovoi': '*',  # Лужники Дворец гимнастики Ирины Винер-Усмановой
+            # 'https://afisha.yandex.ru/moscow/concert/places/vk-stadium': '*',                    # Вк Арена
+            # 'https://afisha.yandex.ru/moscow/concert/places/tsska-arena': '*',                   # ЦСКА Арена
+            # 'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*',                          # Уфа Арена
+            # 'https://afisha.yandex.ru/vladivostok/concert/places/fetisov-arena': '*',            # Фетисов Арена
+            # 'https://afisha.yandex.ru/khabarovsk/other/places/platinum-arena': '*',              # Платинум Арена
+            # 'https://afisha.yandex.ru/saint-petersburg/concert/places/iubileinyi-spb': '*',      # Юбилейный
+            # 'https://afisha.yandex.ru/moscow/concert/places/vtb-arena': '*',                     # ВТБ Арена
+            # 'https://afisha.yandex.ru/moscow/other/places/megasport': '*',                       # Мегаспорт
+            # 'https://afisha.yandex.ru/novosibirsk/other/places/ledovyi-dvorets-sibir': '*',      # ЛД Сибирь
+            # 'https://afisha.yandex.ru/omsk/other/places/g-drive-arena': '*',                     # G-Drive Арена
+            # 'https://afisha.yandex.ru/kazan/concert/places/tatneft-arena': '*',                  # Татнефть Арена
+            # 'https://afisha.yandex.ru/moscow/concert/places/crocus-city-hall': '*',              # Крокус
+            # 'https://afisha.yandex.ru/moscow/concert/places/vegas-city-hall-msk': '*',           # Vegas City Hall
+            # 'https://afisha.yandex.ru/moscow/concert/places/backstage': '*',                     # Ресторан Backstage
+            # 'https://afisha.yandex.ru/moscow/sport/places/bolshaia-sportivnaia-arena-luzhniki': '*',  # Лужники
+            # 'https://afisha.yandex.ru/moscow/sport/places/dvorets-gimnastiki-iriny-viner-usmanovoi': '*',  # Лужники Дворец гимнастики Ирины Винер-Усмановой
             'https://afisha.yandex.ru/saint-petersburg/concert/places/bkz-oktiabrskii': '*',  # БКЗ «Октябрьский»
-           # 'https://afisha.yandex.ru/moscow/concert/places/kremlevskii-dvorets': '*',  # Кремльвский дворец
-           # 'https://afisha.yandex.ru/moscow/concert/places/mts-live-holl': '*',  # MTC Live Холл
+            'https://afisha.yandex.ru/moscow/concert/places/kremlevskii-dvorets': '*',  # Кремльвский дворец
+            # 'https://afisha.yandex.ru/moscow/concert/places/mts-live-holl': '*',  # MTC Live Холл
             'https://afisha.yandex.ru/moscow/theatre/places/sovremennik': '*',  # Театр Современник
             'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr-vdnkh': '*',  # Зелёный театр ВДНХ
-           # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr': '*',  # Зелёный театр
-           #'https://afisha.yandex.ru/organizer/teatr-baleta-borisa-eifmana?city=saint-petersburg': '*'  # Балет Ейфмана
-           # 'https://afisha.yandex.ru/moscow/concert/places/kontsertnyi-zal-gostinitsy-kosmos': '*',  # Концертный зал гостиницы «Космос»
-           # 'https://afisha.yandex.ru/saint-petersburg/sport/places/gazprom-arena': '*',  # Газпром Арена
-           # 'https://afisha.yandex.ru/moscow/concert/places/dom-muzyki': '*',  # Дом музыки
+            # 'https://afisha.yandex.ru/moscow/concert/places/zelionyi-teatr': '*',  # Зелёный театр
+            # 'https://afisha.yandex.ru/organizer/teatr-baleta-borisa-eifmana?city=saint-petersburg': '*'  # Балет Ейфмана
+            # 'https://afisha.yandex.ru/moscow/concert/places/kontsertnyi-zal-gostinitsy-kosmos': '*',  # Концертный зал гостиницы «Космос»
+            # 'https://afisha.yandex.ru/saint-petersburg/sport/places/gazprom-arena': '*',  # Газпром Арена
+            # 'https://afisha.yandex.ru/moscow/concert/places/dom-muzyki': '*',  # Дом музыки
             'https://afisha.yandex.ru/saint-petersburg/theatre/places/mikhailovskii-teatr': '*',  # Михайловский питер
-           # 'https://afisha.yandex.ru/moscow/concert/places/shore-house': '*',  # Shore House
+            # 'https://afisha.yandex.ru/moscow/concert/places/shore-house': '*',  # Shore House
             'https://afisha.yandex.ru/moscow/theatre/places/teatr-satiry': '*',  # Театр сатиры
-           #'https://afisha.yandex.ru/moscow/theatre/places/teatr-rossiiskoi-armii': '*',  # Театр армии
+            # 'https://afisha.yandex.ru/moscow/theatre/places/teatr-rossiiskoi-armii': '*',  # Театр армии
             'https://afisha.yandex.ru/moscow/theatre/places/gelikon-opera': '*',  # Геликон-опера
             'https://afisha.yandex.ru/sochi/theatre/places/zimnii-teatr': '*',  # Зимний театр
             'https://afisha.yandex.ru/kazan/circus_show/places/tsirk-kazan': '*',  # Казанский цирк
-            'https://afisha.yandex.ru/moscow/theatre/places/planeta-kvn': '*',  # Планета КВН
+            # 'https://afisha.yandex.ru/moscow/theatre/places/planeta-kvn': '*',  # Планета КВН
             'https://afisha.yandex.ru/moscow/concert/places/barvikha-luxury-village': '*',  # Барвиха Luxury Village
-            #'https://afisha.yandex.ru/sochi/concert/places/sochi-park-arena': '*',  # Сочи Парк Арена
-            'https://afisha.yandex.ru/sochi/sport/places/lds-aisberg': '*',  # ЛДС «Айсберг»
-            'https://afisha.yandex.ru/simferopol/circus_show/places/tsirk-im-tezikova': '*', # Симферопольский Цирк
-            #'https://afisha.yandex.ru/moscow/theatre/places/mdm-msk': '*', # МДМ
-            #'https://afisha.yandex.ru/moscow/circus_show/places/tsirk-nikulina-na-tsvetnom-bulvare': '*', #цирк никулина
-            'https://afisha.yandex.ru/saint-petersburg/concert/places/ledovyi-dvorets': '*', #Ледовый дворец СКА
-            #'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-ermolovoi': '*', #ermolova theatre
-            #'https://afisha.yandex.ru/moscow/concert/places/izvestiia-hall': '*', # izvestiya_hall
-            #'https://afisha.yandex.ru/moscow/theatre/places/teatr-gogolia': '*', #gogolia theatre
-            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-maiakovskogo': '*', # Маяковского театр
-            'https://afisha.yandex.ru/moscow/theatre/places/mkht-im-chekhova': '*' , #МХАТ Чехова
-            'https://afisha.yandex.ru/nizhny-novgorod/concert/places/dvorets-sporta-nagornyi': '*' , #Дворец спорта «Нагорный»
-            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-stanislavskogo-i-nemirovicha-danchenko': '*' , #stanislavskogo
-            'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*', #ufa-arena
-            'https://afisha.yandex.ru/togliatti/concert/places/lada-arena': '*', #lada-arena
-            'https://afisha.yandex.ru/chelyabinsk/concert/places/ledovaia-arena-traktor': '*', #arena-traktor
-            'https://afisha.yandex.ru/yekaterinburg/sport/places/arena-uralets': '*', #arena-uralets,
-            #'https://afisha.yandex.ru/saint-petersburg/sport/places/ska-arena': '*',  # SKA arena
-            'https://afisha.yandex.ru/moscow/concert/places/khram-khrista-spasitelia-zal-tserkovnykh-soborov': '*', # hram
-            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-mossoveta': '*' #mossoveta
+            # 'https://afisha.yandex.ru/sochi/concert/places/sochi-park-arena': '*',  # Сочи Парк Арена
+            # 'https://afisha.yandex.ru/sochi/sport/places/lds-aisberg': '*',  # ЛДС «Айсберг»
+            'https://afisha.yandex.ru/simferopol/circus_show/places/tsirk-im-tezikova': '*',  # Симферопольский Цирк
+            # 'https://afisha.yandex.ru/moscow/theatre/places/mdm-msk': '*', # МДМ
+            # 'https://afisha.yandex.ru/moscow/circus_show/places/tsirk-nikulina-na-tsvetnom-bulvare': '*', #цирк никулина
+            # 'https://afisha.yandex.ru/saint-petersburg/concert/places/ledovyi-dvorets': '*', #Ледовый дворец СКА
+            # 'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-ermolovoi': '*', #ermolova theatre
+            # 'https://afisha.yandex.ru/moscow/concert/places/izvestiia-hall': '*', # izvestiya_hall
+            # 'https://afisha.yandex.ru/moscow/theatre/places/teatr-gogolia': '*', #gogolia theatre
+            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-maiakovskogo': '*',  # Маяковского театр
+            'https://afisha.yandex.ru/moscow/theatre/places/mkht-im-chekhova': '*',  # МХАТ Чехова
+            # 'https://afisha.yandex.ru/nizhny-novgorod/concert/places/dvorets-sporta-nagornyi': '*' , #Дворец спорта «Нагорный»
+            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-stanislavskogo-i-nemirovicha-danchenko': '*',
+            # stanislavskogo
+            'https://afisha.yandex.ru/ufa/sport/places/ufa-arena': '*',  # ufa-arena
+            # 'https://afisha.yandex.ru/togliatti/concert/places/lada-arena': '*', #lada-arena
+            # 'https://afisha.yandex.ru/chelyabinsk/concert/places/ledovaia-arena-traktor': '*', #arena-traktor
+            # 'https://afisha.yandex.ru/yekaterinburg/sport/places/arena-uralets': '*', #arena-uralets
+            # 'https://afisha.yandex.ru/saint-petersburg/sport/places/ska-arena': '*', #SKA arena
+            # 'https://afisha.yandex.ru/moscow/concert/places/khram-khrista-spasitelia-zal-tserkovnykh-soborov': '*', # hram
+            'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-mossoveta': '*',  # mossoveta
         }
         self.special_url = {
             #'https://afisha.yandex.ru/moscow/selections/standup': '*',  # Стендап
