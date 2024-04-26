@@ -10,6 +10,7 @@ from ..utils import utils, provision
 from ..utils.date import Date
 from ..utils.exceptions import ParsingError, ProxyHubError
 from ..utils.logger import logger
+from ..utils.money_converter.converter import  ConverterManager
 
 
 RESTRICTED_COLUMNS = ['controller', 'event_id', 'event_name',
@@ -145,7 +146,7 @@ class EventParser(ParserBase, ABC):
 
     def register_event(self, event_name, url, date=None,
                        venue=None, **columns):
-        event_name = event_name.replace('\n', ' ')
+        event_name = event_name.replace('\n', ' ').replace("'", "")
         if venue is not None:
             venue = venue.replace('\n', ' ')
         columns['venue'] = venue
@@ -187,11 +188,24 @@ class SeatsParser(ParserBase, ABC):
         self.step_counter = 10
         self.domain = str(urlparse(self.url).hostname).replace('www.', '')
         self.name = self._format_name()
+        self.current_currency = 'RUB'
+        self.converter = None
 
         self._set_extra(extra)
         self.parsed_sectors = {}
         self.parsed_dancefloors = {}
         self.stop = weakref.finalize(self, self._finalize_parser)
+
+    def check_currence(self):
+        if self.converter is None and self.current_currency != 'RUB':
+            try:
+                converter = ConverterManager()
+                if self.current_currency in converter.currency_rates:
+                    self.converter = converter
+                    logger.info(f'Валюта {self.current_currency} найдена.', name='CBRcurrentCourses')
+            except Exception as ex:
+                self.converter = False
+                logger.error(ex, name='CBRcurrentCourses')
 
     def register_sector(self, sector_name, seats):
         """
@@ -215,6 +229,11 @@ class SeatsParser(ParserBase, ABC):
             # f isinstance(seats, dict):
             row, seat = list(seats.keys())[0]
             price = seats[row, seat]
+            if self.converter:
+                try:
+                    price = self.converter.convert_to_rub(price, self.current_currency)
+                except Exception as ex:
+                    self.error(ex, 'CBRcurrentCourses')
             assert isinstance(row, str), ('row is not a string, got '
                                           f'{type(row).__name__} ({row}) instead')
             assert isinstance(seat, str), ('seat is not a string, got '
@@ -262,6 +281,11 @@ class SeatsParser(ParserBase, ABC):
         if sector_name in self.parsed_dancefloors:
             raise ParsingError(f'Sector name {sector_name} is already registered')
         else:
+            if self.converter:
+                try:
+                    price = self.converter.convert_to_rub(price, self.current_currency)
+                except Exception as ex:
+                    self.error(ex, 'CBRcurrentCourses')
             self.parsed_dancefloors[sector_name] = (price, amount,)
 
     def print_sectors_level1(self):
