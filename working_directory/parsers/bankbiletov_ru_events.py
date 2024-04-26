@@ -61,7 +61,7 @@ class BankBiletovEvents(AsyncEventParser):
         month.lower().replace('мая','май')
 
         short_months_in_russian = [
-        "янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"]
+        "янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"]
         
         date_now = datetime.now()
         current_year = date_now.year
