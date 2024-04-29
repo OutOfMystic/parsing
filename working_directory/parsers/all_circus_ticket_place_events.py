@@ -102,8 +102,8 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         ids = [i.get('data-tp-event') for i in ids if i]
         return ids, 'samara', 'Самара цирк'
 
-    def nnovgorod(self):
-        r = self.session.get(url='https://www.circus-nnovgorod.ru/', headers=self.headers)
+    async def nnovgorod(self):
+        r = await self.session.get(url='https://www.circus-nnovgorod.ru/', headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
         ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
         ids = [i.get('data-tp-event') for i in ids if i]
