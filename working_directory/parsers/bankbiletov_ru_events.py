@@ -31,7 +31,9 @@ class BankBiletovEvents(AsyncEventParser):
     
     async def before_body(self):
         self.session = AsyncProxySession(self)
-        self.yandex_session = AsyncProxySession(self)
+        new_ = BankBiletovEvents(self.controller, 'bankbiletov_ru_events')
+        new_.proxy = self.proxy
+        self.yandex_session = AsyncProxySession(new_)
 
     async def load_all_urls_and_dates_and_titles(self, place_url):
         r = await self.session.get(url=place_url, headers=self.headers)
