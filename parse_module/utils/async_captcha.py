@@ -6,7 +6,7 @@ import aiohttp
 
 from parse_module.utils.logger import logger
 
-API_KEY = 'f86fe003c5bc005f93a7516e2973658c'
+API_KEY = 'e04b59158768b48c8587f82266bbd3dc'
 
 
 async def non_selenium_recaptcha(googlekey, url,

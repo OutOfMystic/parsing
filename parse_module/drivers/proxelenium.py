@@ -20,7 +20,7 @@ from . import extension
 
 
 class ProxyWebDriver(webdriver.Chrome):
-    def __init__(self, options=None, **kwargs):
+    def __init__(self, chrome_options=None, **kwargs):
         script_directory = os.path.dirname(os.path.abspath(__file__))
         main_directory = os.path.dirname(script_directory)
         main_directory = os.path.dirname(main_directory)
