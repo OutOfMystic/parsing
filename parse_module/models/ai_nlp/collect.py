@@ -73,7 +73,7 @@ def make_matrix(subjects, objects, venues, types_on_site, labels=None):
         site_labels, parsers_labels, already_warned = {}, {}, set()
 
     for subject in subjects:
-        transform_date(subject, hrsdelta=3)
+        transform_date(subject, hrsdelta=0)
     for object_ in objects:
         transform_date(object_)
     subjects.sort(key=sort_by_date)
