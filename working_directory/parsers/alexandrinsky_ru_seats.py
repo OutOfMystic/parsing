@@ -15,7 +15,7 @@ class OutputData(NamedTuple):
 
 class AlexandrinskyRu(AsyncSeatsParser):
     url_filter = lambda url: 'afisha.ru/wl/402' in url
-    proxy_check = SpecialConditions(url='https://afisha.ru/wl/402/')
+    proxy_check = SpecialConditions(url='https://afisha.ru/')
 
     def __init__(self, *args, **extra) -> None:
         super().__init__(*args, **extra)
