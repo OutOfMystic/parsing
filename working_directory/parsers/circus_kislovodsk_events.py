@@ -53,9 +53,9 @@ class CircusKislovodsk(AsyncEventParser):
         info_about = await self.session.get(url_to_api, headers=self.headers)
 
         title = info_about.json().get("data").get("name")
-        id = info_about.get("data").get("id")
+        id = info_about.json().get("data").get("id")
         href = f'https://ticket-place.ru/widget/{id}/data|kislovodsk'
-        date = self.reformat_date(info_about.get("data").get("datetime"))
+        date = self.reformat_date(info_about.json().get("data").get("datetime"))
 
         return title, href, date
 
@@ -91,4 +91,5 @@ class CircusKislovodsk(AsyncEventParser):
             a_events.update(to_a_events)
             count -= 1
         for event in a_events:
+            #self.info(event)
             self.register_event(event[0], event[1], date=event[2], venue='Кисловодский цирк')
