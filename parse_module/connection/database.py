@@ -145,7 +145,7 @@ class ParsingDB(DBConnection):
             super().__init__(host="193.178.170.180",
                              port="5432",
                              user="django_project",
-                             password="Q8kPzqBPk4fb6I",
+                             password="XSVuQonf1w9i",
                              database="crmdb")
         self._already_deleted = False
 
