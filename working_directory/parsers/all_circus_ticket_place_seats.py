@@ -167,4 +167,19 @@ class TyumenParser(SochiCirkParser):
     async def body(self):
         await super().body()
 
+class StavropolParser(SochiCirkParser):
+    url_filter = lambda url: 'ticket-place.ru' in url and 'stavropol' in url
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+        self.a_sectors = []
+    @staticmethod
+    def reformat_sector(sector):
+        if 'сторона' in sector:
+            sector = sector.split(',')[-1].strip().capitalize()
+        elif 'Директорская' in sector:
+            sector = 'Ложа дирекции'
+        return sector
+    async def body(self):
+        await super().body()
+
 
