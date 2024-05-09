@@ -22,25 +22,26 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         self.delay = 3600
         self.driver_source = None
         self.urls_ONE = {
-            #'https://circus-saratov.ru/strashnaya-sila.html': ('Балаган', 'saratov', 'Цирк им. братьев Никитиных Саратов',
+            # 'https://www.circus-saratov.ru/': ('Итальянский цирк "Слоны и тигры"', 'saratov', 'Цирк им. братьев Никитиных Саратов',
             #        'https://ticket-place.ru/calendar-widget/25?showId=112&dateFrom=&dateTo=&page='),
-            #'https://www.circus-vladivostok.ru/novogodnee-shou-byt-po-semu.html': ('Быть по сему',
-                                                                        #'vladivostok','Цирк Владивосток',
-                        #'https://ticket-place.ru/calendar-widget/34?showId=169&dateFrom=&dateTo=&page=1&maxDays=4'),
-            'https://circus-vladivostok.ru/tigry-na-zemle-i-v-vozduhe.html': ('Тигры на земле и в воздухе',
-                                                                        'vladivostok','Цирк Владивосток',
-                        'https://ticket-place.ru/calendar-widget/34?showId=179&dateFrom=&dateTo=&page=1&maxDays=4'),
-            'https://www.circus-sochi.ru/tropic-show.html': ('ТРОПИК ШОУ',
-                                                            'sochi' , 'Сочинский Государственный Цирк',
-                        'https://ticket-place.ru/calendar-widget/26?showId=200&dateFrom=&dateTo=&page=1&maxDays=4'),
-            'https://www.circus-saratov.ru/':
-                ('Итальянский цирк "Слоны и тигры"',
-                'saratov','Саратовский цирк',
-                'https://ticket-place.ru/calendar-widget/25?showId=212&dateFrom=&dateTo=&page=1&maxDays=4'),
-            'https://circus-tyumen.ru/taina-pirata.html':
-                ('ТАЙНА ПИРАТА',
-               'tyumen', 'Цирк Тюмень',
-               'https://ticket-place.ru/calendar-widget/11?showId=193&dateFrom=&dateTo=&page=1&maxDays=4'),
+            # 'https://www.circus-vladivostok.ru/novogodnee-shou-byt-po-semu.html': ('Быть по сему',
+            #                                                             'vladivostok','Цирк Владивосток',
+            #             'https://ticket-place.ru/calendar-widget/34?showId=169&dateFrom=&dateTo=&page=1&maxDays=4'),
+            # 'https://circus-vladivostok.ru/tigry-na-zemle-i-v-vozduhe.html': ('Тигры на земле и в воздухе',
+            #                                                                  'vladivostok', 'Цирк Владивосток',
+            #                 'https://ticket-place.ru/calendar-widget/34?showId=179&dateFrom=&dateTo=&page=1&maxDays=4'),
+            # 'https://www.circus-sochi.ru/tropic-show.html': ('ТРОПИК ШОУ',
+            #                      'sochi', 'Сочинский Государственный Цирк',
+            #                      'https://ticket-place.ru/calendar-widget/26?showId=200&dateFrom=&dateTo=&page=1&maxDays=4'),
+            # 'https://www.circus-saratov.ru/': ('Итальянский цирк "Слоны и тигры"',
+            #                                    'saratov','Саратовский цирк',
+            #                     'https://ticket-place.ru/calendar-widget/25?showId=212&dateFrom=&dateTo=&page=1&maxDays=4'),
+            # 'https://circus-tyumen.ru/taina-pirata.html': ('ТАЙНА ПИРАТА',
+            #                                    'tyumen', 'Цирк Тюмень',
+            #                                    'https://ticket-place.ru/calendar-widget/11?showId=193&dateFrom=&dateTo=&page=1&maxDays=4'),
+            'https://circus-yaroslavl.ru/': ('«WOW»',
+                                             'yaroslavl', 'Ярославль цирк',
+                                             'https://ticket-place.ru/calendar-widget/6?showId=215&dateFrom=&dateTo=&page=1&maxDays=4'),
         }
         self.urls_TWO = {
             # url: tuple('slug', 'venue') -> для поиска  ids, в вёрстке есть calendar__item!
@@ -54,7 +55,7 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
             #'https://www.circus-sochi.ru/': 'sochi'
 
             'https://www.circus-samara.ru/': 'samara',
-            'https://www.circus-nnovgorod.ru/': 'nnovgorod',
+            #'https://www.circus-nnovgorod.ru/': 'nnovgorod',
             'https://www.circus-stavropol.ru/': 'stavropol',
         }
         self.headers = {

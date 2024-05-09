@@ -38,7 +38,7 @@ class SochiCirkParser(AsyncSeatsParser):
             try:
                 r1 = await self.session.get(self.url,  headers=headers)
             except TooManyRedirects:
-                self.error('TooManyREdirects')
+                self.error(f'TooManyREdirects {self.url}')
             return r1.json()
     
     @staticmethod
@@ -178,6 +178,27 @@ class StavropolParser(SochiCirkParser):
             sector = sector.split(',')[-1].strip().capitalize()
         elif 'Директорская' in sector:
             sector = 'Ложа дирекции'
+        return sector
+    async def body(self):
+        await super().body()
+
+class YaroslavlParser(SochiCirkParser):
+    url_filter = lambda url: 'ticket-place.ru' in url and 'yaroslavl' in url
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+        self.a_sectors = []
+    @staticmethod
+    def reformat_sector(sector):
+        if 'синий' in sector:
+            sector = 'Синий сектор'
+        elif 'оранжевый' in sector:
+            sector = 'Оранжевый сектор'
+        elif 'красный' in sector:
+            sector = 'Красный сектор'
+        elif 'зеленый' in sector:
+            sector = 'Зелёный сектор'
+        elif 'ложа' in sector:
+            raise KeyError
         return sector
     async def body(self):
         await super().body()
