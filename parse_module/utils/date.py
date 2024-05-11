@@ -304,3 +304,42 @@ day_parts = {
 
 def encode_month():
     return None
+
+def make_date_if_year_is_unknown(day: int, month: str, time: str, need_datetime: bool = False):
+    '''
+        Если не указан явно год на сайте - используй!
+        Логика такая - если будущий месяц имеет индекс в списке short_months_in_russian
+        меньше чем текущий - то это следующий год.
+        Например сейчас октябрь 2024, в списке short_months_in_russian
+        его индекс [9], все индексы меньше 9 (например январь индекс [0]) -
+        это скорее всего мероприятия следующего 2025 года.
+
+        day: int (10)
+        month: str (Октябрь, окт)
+        time: str (19:00)
+        need_datetime: bool (True, False)
+            True вернем <class 'datetime.datetime'> 2024-11-08 12:00:00
+            False вернем str '10 Окт 2024 19:00'
+    '''
+    short_months_in_russian = ["янв", "фев", "мар", "апр",
+                               "май", "июн", "июл", "авг",
+                               "сен", "окт", "ноя", "дек"]
+
+    date_now = dt.datetime.now()
+    current_year = date_now.year
+    current_month = date_now.month - 1  # индекс текущего месяца в short_months_in_russian
+
+    month = month[:3].lower().replace('мая', 'май')
+    month_find = short_months_in_russian.index(month)  # индекс искомого месяца в short_months_in_russian
+
+    if month_find < current_month:
+        current_year += 1
+
+    date_result = f"{day} {month.capitalize()} {current_year} {time}"
+    if need_datetime:
+        try:
+            date_string = f"{day} {month_find + 1} {current_year} {time}"
+            date_result = dt.datetime.strptime(date_string, "%d %m %Y %H:%M")
+        except Exception as ex:
+            print(ex)
+    return date_result
