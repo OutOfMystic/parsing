@@ -204,3 +204,19 @@ class YaroslavlParser(SochiCirkParser):
         await super().body()
 
 
+class IvanovoParser(SochiCirkParser):
+    url_filter = lambda url: 'ticket-place.ru' in url and 'ivanovo' in url
+    def __init__(self, *args, **extra):
+        super().__init__(*args, **extra)
+        self.a_sectors = []
+    @staticmethod
+    def reformat_sector(sector):
+        if 'сторона' in sector:
+            name, color, number = sector.split(',')
+            name += ','
+            sector = ''.join([name, color, number])
+        return sector
+    async def body(self):
+        await super().body()
+
+

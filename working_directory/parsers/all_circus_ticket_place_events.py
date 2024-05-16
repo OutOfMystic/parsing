@@ -33,12 +33,12 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
             'https://www.circus-sochi.ru/5-kontinentov.html': ('5 КОНТИНЕНТОВ',
                                                                'sochi', 'Сочинский Государственный Цирк',
                                                                'https://ticket-place.ru/calendar-widget/26?showId=218&dateFrom=&dateTo=&page=1&maxDays=4'),
-            'https://www.circus-saratov.ru/': ('ПЕСЧАНАЯ СКАЗКА',
-                                               'saratov', 'Саратовский цирк',
-                                               'https://ticket-place.ru/calendar-widget/25?showId=230&dateFrom=&dateTo=&page=1&maxDays=4'),
-            # 'https://circus-tyumen.ru/taina-pirata.html': ('ТАЙНА ПИРАТА',
-            #                                    'tyumen', 'Цирк Тюмень',
-            #                                    'https://ticket-place.ru/calendar-widget/11?showId=193&dateFrom=&dateTo=&page=1&maxDays=4'),
+            # 'https://www.circus-saratov.ru/': ('ПЕСЧАНАЯ СКАЗКА',
+            #                                    'saratov', 'Саратовский цирк',
+            #                                    'https://ticket-place.ru/calendar-widget/25?showId=230&dateFrom=&dateTo=&page=1&maxDays=4'),
+            'https://www.circus-tyumen.ru/odisseya-cirkovoy-myuzikl-na-vode.html': ('ОДИССЕЯ',
+                                                                                    'tyumen', 'Цирк Тюмень',
+                                                            'https://ticket-place.ru/calendar-widget/11?showId=229&dateFrom=&dateTo=&page=1&maxDays=4'),
             'https://circus-yaroslavl.ru/': ('«WOW»',
                                              'yaroslavl', 'Ярославль цирк',
                                              'https://ticket-place.ru/calendar-widget/6?showId=215&dateFrom=&dateTo=&page=1&maxDays=4'),
@@ -112,11 +112,18 @@ class ALL_Circus_from_ticket_place_Events(AsyncEventParser):
         return ids, 'nnovgorod', 'Цирк Нижний Новгород'
 
     async def stavropol(self):
-        r = self.session.get(url='https://www.circus-stavropol.ru/', headers=self.headers)
+        r = await self.session.get(url='https://www.circus-stavropol.ru/', headers=self.headers)
         soup = BeautifulSoup(r.text, 'lxml')
         ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
         ids = [i.get('data-tp-event') for i in ids if i]
         return ids, 'stavropol', 'Ставропольский цирк'
+
+    async def ivanovo(self):
+        r = await self.session.get(url='https://www.circus-ivanovo.ru/', headers=self.headers)
+        soup = BeautifulSoup(r.text, 'lxml')
+        ids = soup.find_all('a', attrs={'data-tp-event': re.compile(r'\d+')})
+        ids = [i.get('data-tp-event') for i in ids if i]
+        return ids, 'ivanovo', 'цирк Иваново'
 
     async def load_all_events_ONE(self, url_strip, url_to_load):
         headers = {
