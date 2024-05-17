@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Экспорт схем</title>
+    <script type="text/javascript" src="/eel.js"></script>
+    <style type="text/css">
+      .div_for_content {
+        width: 90%;
+        margin: 0 auto;
+        border: 1px solid black;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+      }
+      .div_for_no_auto {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .div_for_no_auto * {
+        margin-bottom: 20px;
+      }
+      .div_for_no_auto input:last-child {
+        margin-bottom: 0;
+      }
+      .div_for_auto {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .div_for_auto * {
+        margin-bottom: 20px;
+      }
+      .div_for_auto input {
+        width: 700px;
+      }
+      #auto_update {
+        margin-bottom: 0;
+      }
+      .div_for_management {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .div_for_management * {
+        margin-bottom: 20px;
+      }
+      #send_sector {
+        text-align: center;
+        /* margin: 0 20px 0 0; */
+      }
+      #main_svg {
+        border: 1px solid black;
+        display: block;
+        height: 1000px;
+        width: 100%;
+      }
+      text {
+        fill: black;
+        font-size: 8px;
+        pointer-events: none;
+      }
+      .is_real_coordinate {
+        fill: blue;
+      }
+      .is_ready_real_coordinate {
+        fill: red;
+      }
+      .is_choice_real_coordinate {
+        fill: green;
+      }
+      .tspan_row {
+        color: rgb(222 253 4);
+        fill: rgb(222 253 4);
+        stroke: rgb(222 253 4);
+      }
+      .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      .form-group input, .form-group small {
+        width: 100%;
+      }
+      .form-group small {
+        display: block;
+        margin-top: 5px;
+        font-size: 12px;
+        color: #555;
+      }
+      .form-group-checkbox {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .form-group-checkbox input[type="checkbox"] {
+        transform: scale(1.5);
+        margin-right: 10px;
+      }
+      .form-group-checkbox label {
+        font-size: 14px;
+      }
+    </style>
+</head>
+<body>
+  <div align="center">
+    <h2>Экспорт схем</h2>
+    <h1 id="result"></h1>
+
+    <div class="form-group">
+        <label for="input_url">URL:</label>
+        <input type="text" id="input_url" required placeholder="Введите URL" value="">
+    </div>
+
+    <div class="form-group">
+        <label for="input_name">Name:</label>
+        <input type="text" id="input_name" required placeholder="Введите имя" value="">
+    </div>
+
+    <div class="form-group">
+        <label for="input_venue">Venue:</label>
+        <input type="text" id="input_venue" required placeholder="Введите место" value="">
+    </div>
+
+    <div class="form-group">
+        <label for="input_time_sleep">Time Sleep (в секундах):</label>
+        <input type="number" id="input_time_sleep" required placeholder="Время ожидания" value="9" />
+        <small>Это время ожидания загрузки страницы перед захватом всех мест. Убедитесь, что этого времени достаточно для полной загрузки виджета со схемой мест.</small>
+    </div>
+
+    <div class="form-group-checkbox">
+        <input type="checkbox" id="input_correct_all_sectors" />
+        <label for="input_correct_all_sectors">Включить ручное редактирование секторов. Если не установлен, будет использована схема по умолчанию.</label>
+    </div>
+
+    <button id="post_inform">
+      Начать
+    </button>
+  </div>
+
+  <script>
+    async function post_inform() {
+        let input_url = document.querySelector("#input_url");
+        let input_name = document.querySelector("#input_name");
+        let input_venue = document.querySelector("#input_venue");
+        let input_time_sleep = document.querySelector("#input_time_sleep");
+        let input_correct_all_sectors = document.querySelector("#input_correct_all_sectors");
+
+        let input_url_value = input_url.value;
+        let input_name_value = input_name.value;
+        let input_venue_value = input_venue.value;
+        let input_time_sleep_value = input_time_sleep.value;
+        let input_correct_all_sectors_value = input_correct_all_sectors.checked; // true or false
+
+        let result = await eel.post_inform(
+            input_url_value,
+            input_name_value,
+            input_venue_value,
+            input_time_sleep_value,
+            input_correct_all_sectors_value
+        )();
+        document.querySelector("#result").innerHTML = result;
+        document.querySelector("#post_inform").disabled = false;
+    }
+
+    document.querySelector("#post_inform").addEventListener("click", function() {
+        this.disabled = true;
+        post_inform();
+    });
+  </script>
+</body>
+</html>
+

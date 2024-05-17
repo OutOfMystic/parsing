@@ -178,3 +178,6 @@ afisha_exporter/result.json
 # Allow
 !afisha_exporter/.env
 /working_directory/
+
+# Scheme importers
+exec_tools/loader_scheme_portal/SchPoVenv
