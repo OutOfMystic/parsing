@@ -1,0 +1,11 @@
+Это отдельный проект!
+
+Для корректного соотношения модулей и файлов откройте папку `yandex_scheme_export` в редакторе кода как основную.
+Это обеспечит правильное соотношение импортов внутри проекта.
+
+
+python -m venv yandExporter
+source yandExporter/bin/activate  # На Windows не тестировались зависимости для Selenium
+pip install -r requirements.txt
+
+Запуск afisha_exporter/afisha.py
