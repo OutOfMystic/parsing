@@ -19,22 +19,25 @@ class Parser(AsyncEventParser):
             'https://sochi.ticketland.ru/teatry/': [
                 'zimniy-teatr-sochi',
             ],
+            'https://sochi.ticketland.ru/koncertnye-zaly/': [
+                'kz-festivalnyy',
+            ],
             'https://spb.ticketland.ru/teatry/': [
                  'aleksandrinskiy-teatr',
-                 'bdt-imtovstonogova',
+                 #'bdt-imtovstonogova',
                  #'kamennoostrovskiy-teatr',
                  'mikhaylovskiy-teatr',
             ],
             'https://www.ticketland.ru/teatry/': [
                 #'teatr-lenkom',
-                'mkht-im-chekhova',
+                #'mkht-im-chekhova',
                 #'mkhat-im-m-gorkogo',
-                'malyy-teatr',
-                'teatr-imeni-evgeniya-vakhtangova',
-                'simonovskaya-scena-teatra-imeni-evgeniya-vakhtangova',
+                #'malyy-teatr',
+                #'teatr-imeni-evgeniya-vakhtangova',
+                #'simonovskaya-scena-teatra-imeni-evgeniya-vakhtangova',
                 #'teatr-satiry',
                 #'teatr-operetty',
-                'masterskaya-p-fomenko',
+                #'masterskaya-p-fomenko',
                 #'gosudarstvennyy-teatr-naciy',
                 'teatr-ugolok-dedushki-durova',
                 #'moskovskiy-teatr-sovremennik',
@@ -51,7 +54,7 @@ class Parser(AsyncEventParser):
                 #'mts-live-kholl-moskva',
             ],
             'https://www.ticketland.ru/koncertnye-zaly/': [
-                'gosudarstvennyy-kremlevskiy-dvorec',
+                #'gosudarstvennyy-kremlevskiy-dvorec',
             ],
             'https://www.ticketland.ru/vystavochnye-centry/': [
               #  'vdnh',
