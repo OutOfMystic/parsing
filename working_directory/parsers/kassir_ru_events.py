@@ -16,26 +16,26 @@ class KassirParser(AsyncEventParser):
         self.platform = self.set_platform()
 
         self.new_urls = {
-             #'https://msk.kassir.ru/koncertnye-zaly/zelenyiy-teatr-vdnh': '*', #Зелёный театр
-             #'https://msk.kassir.ru/teatry/mdm': '*', # Московский дворец молодёжи
-             #'https://msk.kassir.ru/drugoe/krasnaya-ploschad': '*', #Красная площадь
-             #'https://msk.kassir.ru/teatry/rossijskoj-armii': '*', # Театр Армии
-             'https://sochi.kassir.ru/teatry/zimniy-teatr': '', # Зимний театр Сочи
-             ###'https://msk.kassir.ru/teatry/teatr-sovremennik': '*', # Театр Современник не поддерживает новый виджет пока что
-             ###'https://msk.kassir.ru/koncertnye-zaly/gosudarstvennyj-kremlevskij-dvorec': '*', #Kreml dvorec  не поддерживает новый виджет пока что
-             ###'https://msk.kassir.ru/teatry/teatr-satiryi': '*', # teatr satiry не поддерживает новый виджет пока что
-             'https://kzn.kassir.ru/cirki/tsirk-2': '*',  # kazanskii cirk
-             ###'https://msk.kassir.ru/teatry/operetty': '*', #mosoperetta не поддерживает новый виджет пока что
-             'https://msk.kassir.ru/sportivnye-kompleksy/vtb-arena-tsentralnyiy-stadion-dinamo': '*', # Dinamo MSK stadium
-             ###'https://msk.kassir.ru/sportivnye-kompleksy/dvorets-sporta-megasport': '*', # megasport не поддерживает новый виджет пока что
-             'https://sochi.kassir.ru/koncertnye-zaly/kontsertnyiy-zal-festivalnyiy': '*', #fistivalnii sochi
-             #'https://msk.kassir.ru/teatry/ermolovoj': '*', # ermolovoi theatre
-             #'https://msk.kassir.ru/teatry/teatr-im-vlmayakovskogo': '*', #Majakousogo theatre moscow
-             #'https://omsk.kassir.ru/sportivnye-kompleksy/g-drive-arena': '*',# G-Drive Арена omsk
-             #'https://kzn.kassir.ru/koncertnye-zaly/dvorets-sportakazan': '*',#Дворец спорта Казань
-             'https://msk.kassir.ru/sportivnye-kompleksy/cska-arena': 'cska', #cska arena
-             'https://spb.kassir.ru/sportivnye-kompleksy/sk-yubileynyiy-2': '*',
-             'https://ufa.kassir.ru/sportivnye-kompleksy/ufa---arena': '*'
+            # 'https://msk.kassir.ru/koncertnye-zaly/zelenyiy-teatr-vdnh': '*', #Зелёный театр
+            # 'https://msk.kassir.ru/teatry/mdm': '*', # Московский дворец молодёжи
+            # 'https://msk.kassir.ru/drugoe/krasnaya-ploschad': '*', #Красная площадь
+            # 'https://msk.kassir.ru/teatry/rossijskoj-armii': '*', # Театр Армии
+            # 'https://sochi.kassir.ru/teatry/zimniy-teatr': '',  # Зимний театр Сочи
+            ###'https://msk.kassir.ru/teatry/teatr-sovremennik': '*', # Театр Современник не поддерживает новый виджет пока что
+            ###'https://msk.kassir.ru/koncertnye-zaly/gosudarstvennyj-kremlevskij-dvorec': '*', #Kreml dvorec  не поддерживает новый виджет пока что
+            ###'https://msk.kassir.ru/teatry/teatr-satiryi': '*', # teatr satiry не поддерживает новый виджет пока что
+            # 'https://kzn.kassir.ru/cirki/tsirk-2': '*',  # kazanskii cirk
+            ###'https://msk.kassir.ru/teatry/operetty': '*', #mosoperetta не поддерживает новый виджет пока что
+            # 'https://msk.kassir.ru/sportivnye-kompleksy/vtb-arena-tsentralnyiy-stadion-dinamo': '*',# Dinamo MSK stadium
+            ###'https://msk.kassir.ru/sportivnye-kompleksy/dvorets-sporta-megasport': '*', # megasport не поддерживает новый виджет пока что
+            'https://sochi.kassir.ru/koncertnye-zaly/kontsertnyiy-zal-festivalnyiy': '*',  # fistivalnii sochi
+            # 'https://msk.kassir.ru/teatry/ermolovoj': '*', # ermolovoi theatre
+            # 'https://msk.kassir.ru/teatry/teatr-im-vlmayakovskogo': '*', #Majakousogo theatre moscow
+            # 'https://omsk.kassir.ru/sportivnye-kompleksy/g-drive-arena': '*',# G-Drive Арена omsk
+            # 'https://kzn.kassir.ru/koncertnye-zaly/dvorets-sportakazan': '*',#Дворец спорта Казань
+            # 'https://msk.kassir.ru/sportivnye-kompleksy/cska-arena': 'cska',  # cska arena
+            # 'https://spb.kassir.ru/sportivnye-kompleksy/sk-yubileynyiy-2': '*',
+            # 'https://ufa.kassir.ru/sportivnye-kompleksy/ufa---arena': '*'
         }
 
 
