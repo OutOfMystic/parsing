@@ -103,12 +103,12 @@ class Parser(AsyncEventParser):
             for card in cards:
                 href = card.find('a', class_='card__image-link').get('href')
                 link_ = link.split('w')[0] + places_url.split('/')[2] + href
-                for event in await self.get_cards(link_, venue):
+                for event in await self.get_cards(link_, venue, places_url):
                     events.append(event)
             number_page += 1
         return events
 
-    async def get_cards(self, url, venue):
+    async def get_cards(self, url, venue, places_url):
         collected = []
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -132,12 +132,12 @@ class Parser(AsyncEventParser):
             headers['host'] = 'spb.ticketland.ru'
             old_url = 'spb'
             url = '/'.join(url.split('/')[-3:])
-            url = 'https://spb.ticketland.ru/teatry/' + url
+            url = places_url + url
         elif 'sochi' in url:
             headers['host'] = 'sochi.ticketland.ru'
             old_url = 'sochi'
             url = '/'.join(url.split('/')[-3:])
-            url = 'https://sochi.ticketland.ru/teatry/' + url
+            url = places_url + url
 
         r = await self.session.get(url, headers=headers)
         # time.sleep(1)
