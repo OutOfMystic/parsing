@@ -1,7 +1,6 @@
 import asyncio
 import re
-from json.decoder import JSONDecodeError
-
+from random import randint
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncSeatsParser
@@ -1691,6 +1690,8 @@ class KassirParser(AsyncSeatsParser):
             #raise AssertionError(f"{self.url} find data-product-id without success")
 
     async def load_product_info(self, PROD_ID, url_api=None):
+        time_before_starting = randint(10, 20)
+        await asyncio.sleep(time_before_starting)
         if not url_api:
             url_api = f'https://api.kassir.ru/api/event-page-kit/{PROD_ID}?domain={self.domain}'
         self.headers_api = {
@@ -1715,8 +1716,16 @@ class KassirParser(AsyncSeatsParser):
             self.warning(f'Ban proxy! {self.proxy.args} in {self.url} status code: {r2.status_code} err:{self.count_error}')
             await self.change_proxy(report=True)
             return await self.load_product_info(PROD_ID, url_api=url_api)
-        elif r2.status_code == 200:
+        elif r2.status_code == 200 and self.count_error > 0:
             json_r2 = r2.json()
+            if not isinstance(json_r2, dict):
+                await self.change_proxy(report=False)
+                time_to_sleep = randint(30, 40)
+                self.warning(f'Have got an empty json with event-data\n'
+                            f'{url_api} will sleep {time_to_sleep}',)
+                await asyncio.sleep(time_to_sleep)
+                self.count_error -= 1
+                return await self.load_product_info(PROD_ID, url_api=url_api)
             return json_r2
         else:
             raise AssertionError(f'Stop recursion {self.proxy.args} in {self.url} {url_api} status code: {r2.status_code}')
