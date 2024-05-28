@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+from datetime import datetime
 
 from bs4 import BeautifulSoup
 
@@ -148,17 +149,10 @@ class Parser(AsyncEventParser):
         cards = cards1 + cards2
         list_btn = []
         for card in cards:
-            dm, year = card.find_all(class_='show-card__dm')
             event_name = card.find('meta')['content'].replace("'", '"')
-            if venue == 'Михайловский театр':
-                scene = card.find('span', class_='show-card__hall').text.strip()
-                if not self.filter_events_from_mikhailovsky(event_name, scene):
-                    continue
-            day, month = dm.get_text().strip().split(' ')
-            year = year.get_text().strip()
-            month = month[:3].capitalize()
-            time_ = card.find(class_='show-card__t').get_text().strip()
-            formatted_date = f'{day} {month} {year} {time_}'
+            text_medium = card.find(class_='text-medium')
+            date_str = text_medium.get('content')
+            date_obj = datetime.fromisoformat(date_str)
             btn = card.find(class_='btn')
             url = btn.get('href')
             if btn is None or btn in list_btn or url is None:
@@ -271,13 +265,3 @@ class Parser(AsyncEventParser):
                         self.warning(event, venue, 'too long!!!!!!!!!!!!')
                         continue
                     self.register_event(event[0], event[1], date=event[2], venue=venue)
-
-    def filter_events_from_mikhailovsky(self, title, scene):
-        skip_event = [
-            ['Лебединое озеро', 'Главный зал'],
-            ['Щелкунчик', 'Главный зал'],
-            ['Жизель', 'Главный зал'],
-        ]
-        if [title, scene] not in skip_event:
-            return True
-        return False
