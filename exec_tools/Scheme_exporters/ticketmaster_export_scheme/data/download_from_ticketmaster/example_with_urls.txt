@@ -1,0 +1,8 @@
+Найди в запросах браузера похожие урлы, возможно они изменились,
+тогда ищи по похожему их содержимому, пример в data/download_from_ticketmaster
+
+Пример ссылки со всеми местами:
+    https://mapsapi.tmol.co/maps/geometry/3/event/10713/placeDetailNoKeys?systemId=MFX&useHostGrids=true&domain=UnitedArabEmirates&app=PRD1741_ICCP-FE
+
+Пример svg ссылки
+https://mapsapi.tmol.co/maps/geometry/image/33/39/333922?removeFilters=ISM_Shadow&tmSansFonts=true&app=PRD1741_ICCP-FE
