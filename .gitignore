@@ -182,3 +182,4 @@ afisha_exporter/result.json
 # Scheme importer
 /exec_tools/Scheme_exporters/loader_scheme_portal/SchPoVenv/
 /exec_tools/Scheme_exporters/yandex_scheme_export/yandExporter/
+/exec_tools/Scheme_exporters/ticketmaster_export_scheme/masterScheme/
