@@ -179,7 +179,6 @@ afisha_exporter/result.json
 !afisha_exporter/.env
 /working_directory/
 
-# Scheme importers
-exec_tools/loader_scheme_portal/SchPoVenv
-exec_tools/yandex_scheme_export/yandExporter
-exec_tools/yandex_scheme_export/yandExporter/lib64
+# Scheme importer
+/exec_tools/Scheme_exporters/loader_scheme_portal/SchPoVenv/
+/exec_tools/Scheme_exporters/yandex_scheme_export/yandExporter/
