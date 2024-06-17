@@ -56,6 +56,7 @@ class ZaryadyeHall(AsyncEventParser):
     async def _parse_data_from_event(self, event: Tag) -> Optional[Union[OutputEvent, None]]:
         title = event.find('a', class_='zh-c-item__name').text.strip().replace("'", '"')
         title = title.replace('\r', '').replace('\n', '')
+        title = title.replace('Купить билет', '')
 
         day, month = event.find('div', class_='zh-c-item__date').text.split('/')
         month = month_list[int(month)]
@@ -168,4 +169,6 @@ class ZaryadyeHall(AsyncEventParser):
         box = await self._parse_events()
         for event in box:
             #self.info(event)
-            self.register_event(event.title, event.href, date=event.date)
+            if len(event.title) >= 200:
+                event = event._replace(title=event.title[:200])
+            self.register_event(event.title, event.href, date=event.date, venue='Зарядье')
