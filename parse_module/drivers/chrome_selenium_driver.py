@@ -3,17 +3,16 @@ import time
 import os
 import zipfile
 from importlib.resources import files
-from selenium import webdriver
 
+from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.proxy import Proxy, ProxyType
-from parse_module.utils import utils
 
-from ..utils import parse_utils
-from . import extension
+from parse_module.utils import utils, parse_utils
+from parse_module.drivers import extension
 
 class ResponseReceivedeReadError(Exception):
     pass
@@ -292,7 +291,9 @@ default_blocked_hosts = [
 if __name__ == '__main__':
     with ChromeProxyWebDriver(capability=True) as driver:
         driver.get('https://ticket.bolshoi.ru')
+        time.sleep(7)
         json_seats = driver.find_data_in_responseReceived(print_all_urls=False,
                                                           find_patterns=(
                                                           'https://ticket.bolshoi.ru/api/v1/client/shows',
                                                           'tariffs'))
+        print(json_seats)
