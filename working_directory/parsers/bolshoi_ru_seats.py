@@ -34,7 +34,7 @@ class BolshoiParser(SeatsParser):
         self.count = 3
         self.driver_source = None
         self.project_root = self.find_project_root()
-        self.file_path = os.path.join(self.project_root, 'files/parsers_data/bolshoi_ru/')
+        self.file_path = os.path.join(self.project_root, 'working_directory/files/parsers_data/bolshoi_ru/')
 
     def find_project_root(self):
         current_dir = os.path.abspath(__file__)
