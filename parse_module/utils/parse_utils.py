@@ -124,3 +124,11 @@ def download(url, name=None, session=None, save=True, temp=False, **kwargs):
 
 def decode_unicode_escape(text):
     return codecs.decode(text.encode('UTF-8'), 'unicode-escape')
+def get_project_root():
+    '''
+    Получение main пути проекта
+    '''
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    while not os.path.exists(os.path.join(current_dir, 'requirements.txt')):
+        current_dir = os.path.dirname(current_dir)
+    return current_dir
