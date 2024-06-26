@@ -1,0 +1,9 @@
+{
+  "name": "selenium_with_puppeteer",
+  "version": "1.0.0",
+  "main": "intercept.js",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}
