@@ -9,14 +9,16 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from parse_module.drivers.chrome_selenium_driver import ChromeProxyWebDriver as ProxyWebDriver
+from parse_module.manager.proxy.check import SpecialConditions
 from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.sessions import ProxySession
 
 Events = namedtuple('Event', ['title', 'url', 'datetime', 'scheme'])
 class BolshoiParser(EventParser):
-    proxy_check_url = 'https://ticket.bolshoi.ru/'
-    def __init__(self, controller):
-        super().__init__(controller)
+    proxy_check_url = SpecialConditions(url='https://ticket.bolshoi.ru/')
+
+    def __init__(self, controller, name):
+        super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
         self.url_for_tickets = 'https://ticket.bolshoi.ru/show/'

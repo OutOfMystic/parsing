@@ -12,7 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from twocaptcha import TwoCaptcha
 
 from parse_module.models.parser import SeatsParser
-from parse_module.manager.proxy.instances import ProxySession
+from parse_module.manager.proxy.sessions import ProxySession
 from parse_module.utils.captcha import API_KEY
 from parse_module.drivers.chrome_selenium_driver import ChromeProxyWebDriver as ProxyWebDriver
 from parse_module.utils import utils
