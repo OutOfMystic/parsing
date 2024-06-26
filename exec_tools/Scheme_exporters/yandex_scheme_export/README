@@ -1,11 +1,7 @@
-Это отдельный проект!
+для коректной работы должен быть установлен node, npm, yarn , проверь:
+    node -v
+    npm -v
+    yarn -v
 
-Для корректного соотношения модулей и файлов откройте папку `yandex_scheme_export` в редакторе кода как основную.
-Это обеспечит правильное соотношение импортов внутри проекта.
-
-
-python -m venv yandExporter
-source yandExporter/bin/activate  # На Windows не тестировались зависимости для Selenium
-pip install -r requirements.txt
-
-Запуск afisha_exporter/afisha.py
+в директории parse_module/drivers/selenium_with_puppeteer запусти yarn init ->
+    это установит необходимые зависимости из package.json в той же директории
