@@ -343,3 +343,6 @@ def make_date_if_year_is_unknown(day: int, month: str, time: str, need_datetime:
         except Exception as ex:
             print(ex)
     return date_result
+
+def format_expiry_time(unix_time):
+    return dt.datetime.utcfromtimestamp(unix_time).strftime('%Y-%m-%d %H:%M:%S')
