@@ -183,3 +183,5 @@ afisha_exporter/result.json
 /exec_tools/Scheme_exporters/loader_scheme_portal/SchPoVenv/
 /exec_tools/Scheme_exporters/yandex_scheme_export/yandExporter/
 /exec_tools/Scheme_exporters/ticketmaster_export_scheme/masterScheme/
+/parse_module/drivers/selenium_with_puppeteer/node_modules/
+/parse_module/drivers/selenium_with_puppeteer/yarn.lock
