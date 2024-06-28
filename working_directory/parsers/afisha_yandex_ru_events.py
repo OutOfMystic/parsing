@@ -17,7 +17,7 @@ from PIL import Image, ImageOps
 from parse_module.models.parser import EventParser
 from parse_module.manager.proxy.sessions import ProxySession
 from parse_module.utils.date import month_list
-from parse_module.utils.parse_utils import double_split
+from parse_module.utils.parse_utils import double_split, extract_subdomain_urlparse
 from parse_module.utils.captcha import yandex_afisha_coordinates_captha
 from parse_module.drivers.proxelenium import ProxyWebDriver
 
@@ -86,6 +86,7 @@ class YandexAfishaParser(EventParser):
             # 'https://afisha.yandex.ru/saint-petersburg/sport/places/ska-arena': '*', #SKA arena
             # 'https://afisha.yandex.ru/moscow/concert/places/khram-khrista-spasitelia-zal-tserkovnykh-soborov': '*', # hram
             #'https://afisha.yandex.ru/moscow/theatre/places/teatr-im-mossoveta': '*',  # mossoveta
+            'https://afisha.yandex.kz/almaty/sport/places/dvorets-sporta-i-kultury-baluana-sholaka': '*',
         }
         self.special_url = {
             #'https://afisha.yandex.ru/moscow/selections/standup': '*',  # Стендап
@@ -191,13 +192,13 @@ class YandexAfishaParser(EventParser):
 
         return places
 
-    def place_request(self, place_url):
+    def place_request(self, place_url, domain_for_headers):
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru-RU,ru;q=0.9',
             'connection': 'keep-alive',
-            'host': 'afisha.yandex.ru',
+            'host': domain_for_headers,
             'sec-ch-ua': '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
@@ -261,18 +262,18 @@ class YandexAfishaParser(EventParser):
 
         return client_key
 
-    def schedule_events_request(self, request_id, date, period):
+    def schedule_events_request(self, request_id, date, period, domain_for_headers):
         # https://afisha.yandex.ru/api/places/561f5a0137753641a354609b/schedule_other?date=2023-01-02&period=30&city=moscow&_=1670503199058
         # БЕЗ ПОСЛЕДНЕГО ПАРАМЕТРА РАБОТАЕТ
         # Это какой-то непонятный счетчик запросов. Увеличивается на единицу после каждого запроса
 
-        url = f'https://afisha.yandex.ru/api/places/{self.place["id"]}/schedule_other?date={date}&period={period}&city={self.place["city_id"]}'
+        url = f'https://{domain_for_headers}/api/places/{self.place["id"]}/schedule_other?date={date}&period={period}&city={self.place["city_id"]}'
         headers = {
             'accept': 'application/json, text/javascript, */*; q=0.01',
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'ru-RU,ru;q=0.9',
             'connection': 'keep-alive',
-            'host': 'afisha.yandex.ru',
+            'host': domain_for_headers,
             'referer': self.place['url'],
             'sec-ch-ua': '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
             'sec-ch-ua-mobile': '?0',
@@ -293,7 +294,7 @@ class YandexAfishaParser(EventParser):
 
         return r.json()['schedule']['items']
 
-    def get_place_events(self, date_items, client_key):
+    def get_place_events(self, date_items, client_key, domain_for_headers):
         a_events = []
         for date_item in date_items:
             for event_info in date_item['sessions']: 
@@ -326,7 +327,7 @@ class YandexAfishaParser(EventParser):
                 widget_name = 'w2'  # Непонятно откуда брать, ссылка рабочая при любом значении этого параметра
 
                 # href = f'https://widget.afisha.yandex.ru/w/sessions/{session_id}?widgetName={widget_name}&clientKey={client_key}&lang=ru'
-                href = f'https://widget.afisha.yandex.ru/w/sessions/{session_id}?widgetName={widget_name}&lang=ru'
+                href = f'https://widget.{domain_for_headers}/w/sessions/{session_id}?widgetName={widget_name}&lang=ru'
 
                 event_params = {
                     'client_key': client_key,
@@ -867,8 +868,9 @@ class YandexAfishaParser(EventParser):
 
         # places = self.get_places()
         for url in self.our_urls:
-            self.debug(url, '<---yandex_events--->')
-            client_key, request_id, dates =  self.place_request(url)
+            domain_for_headers = extract_subdomain_urlparse(url)
+            self.debug(f"{url}, {domain_for_headers}", '<---yandex_events--->')
+            client_key, request_id, dates = self.place_request(url, domain_for_headers)
             venue = self.place['title']
             if url == 'https://afisha.yandex.ru/kazan/circus_show/places/tsirk-kazan':
                 venue = 'Казанский цирк'
@@ -883,10 +885,10 @@ class YandexAfishaParser(EventParser):
 
             # date - 2023-01-02; period - 30
             for date, period in dates.items():
-                date_items = self.schedule_events_request(request_id, date, period)
-                a_events = self.get_place_events(date_items, client_key)
+                date_items = self.schedule_events_request(request_id, date, period, domain_for_headers)
+                a_events = self.get_place_events(date_items, client_key, domain_for_headers)
                 for event in a_events:
-                    #self.debug(event)
+                    #self.info(event)
                     if 'VK Stadiaum' in venue:
                         if 'Абонемент' in event[0]:
                             continue

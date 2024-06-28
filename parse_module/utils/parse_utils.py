@@ -1,5 +1,6 @@
 import os
 from tempfile import NamedTemporaryFile
+from urllib.parse import urlparse
 
 import requests
 import codecs
@@ -132,3 +133,7 @@ def get_project_root():
     while not os.path.exists(os.path.join(current_dir, 'requirements.txt')):
         current_dir = os.path.dirname(current_dir)
     return current_dir
+
+def extract_subdomain_urlparse(url):
+    parsed_url = urlparse(url)
+    return parsed_url.netloc
