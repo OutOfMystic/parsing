@@ -60,7 +60,7 @@ class Mikhailovsky(AsyncSeatsParser):
                 seat = 'Места 1 и 3'
             elif seat == '2' or seat == '4':
                 seat = 'Места 2 и 4'
-        if sector_name == 'ВИП Партер':
+        if sector_name == 'ВИП Партер' or sector_name == 'VIP Партер':
             sector_name = 'VIP-партер'
 
         return sector_name, row, seat
@@ -94,21 +94,16 @@ class Mikhailovsky(AsyncSeatsParser):
             yield OutputData(sector_name=sector_name, tickets=tickets)
 
     def _get_place_data(self, place) -> tuple[str, str, str, int]:
+        place_seat = place.get('PROPERTY_NUMBER_VALUE')
         data_about_place = place['JS']
-
-        data_place = data_about_place['part_name']
-        data_place = list(map(lambda x: x.replace('Ряд', '').replace('Место', '').strip(), data_place))
-
-        if 'Царская ложа' in data_place:
-            place_sector, place_seat = data_place
+        section_name = data_about_place.get('section_name')
+        if 'Царская ложа' in section_name:
             place_row = '1'
         else:
-            place_sector, place_row, place_seat = data_place
+            place_row = data_about_place.get('row_name')
 
-        place_sector, place_row, place_seat = self._reformat(place_sector, place_row, place_seat)
-
+        place_sector, place_row, place_seat = self._reformat(section_name, place_row, place_seat)
         place_price = data_about_place['groupPrice']
-
         return place_sector, place_row, place_seat, place_price
 
     def _get_json_data_from_text(self, text_data: str) -> json:

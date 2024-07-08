@@ -1,146 +1,119 @@
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple, Optional
+import time
 from datetime import datetime
 
+from bs4.element import Tag
 from bs4 import BeautifulSoup
 
 from parse_module.coroutines import AsyncEventParser
-from parse_module.utils.date import month_list
-from parse_module.models.parser import EventParser
-from parse_module.manager.proxy.sessions import AsyncProxySession, ProxySession
-
+from parse_module.manager.proxy.sessions import AsyncProxySession
+from parse_module.utils.date import make_date_if_year_is_unknown
+from parse_module.utils import utils
 
 class OutputEvent(NamedTuple):
     title: str
     href: str
-    date: str
+    date: datetime
 
+class NotUrlFound(Exception):
+    pass
+class NotImplementedUrl(Exception):
+    pass
 
 class Mikhailovsky(AsyncEventParser):
-
     def __init__(self, controller, name):
         super().__init__(controller, name)
         self.delay = 3600
         self.driver_source = None
-        self.url: str = 'https://mikhailovsky.ru/afisha/performances/'
+        self.domain: str = 'https://mikhailovsky.ru'
+        self.current_year = datetime.now().year
+        self.current_month = datetime.now().month
+        self.headers = {
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-language": "en-US,en;q=0.9,ru;q=0.8",
+            "cache-control": "max-age=0",
+            "priority": "u=0, i",
+            "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "user-agent": self.user_agent,
+        }
+        self.print_errors = False
 
     async def before_body(self):
         self.session = AsyncProxySession(self)
 
-    async def _parse_events(self) -> list[OutputEvent]:
-        soup = await self._requests_to_events()
-        events, next_href = self._get_events_from_soup(soup)
-        output_events = self._parse_events_from_json(events, next_href)
-        return output_events
+    async def load_page_with_events(self, month_param, last_struct_month_param,
+                         PAGEN_NAME, PAGEN_VALUE):
+        current_timestamp = int(time.time() * 1000)
+        url = f"https://mikhailovsky.ru/afisha/performances/?q=&month={month_param}"\
+              f"&last_struct_month={last_struct_month_param}"\
+              f"&{PAGEN_NAME}={PAGEN_VALUE}&_={current_timestamp}"
+        response = await self.session.get(url, headers=self.headers)
+        return response.text
 
-    async def _parse_events_from_json(
-            self, events: list, next_href: BeautifulSoup
-                    ) -> list[OutputEvent]:
-        day_today = int(datetime.now().day)
-        month_now = month_list[datetime.now().month]
-        while True:
-            for event in events:
-                if event.name == 'h3':
-                    month_now = event.text[:3]
-                    continue
-                try:
-                    day_now = int(event.find('div', class_='day').text)
-                    if day_today > day_now:
-                        month_now = month_list.index(month_now)
-                        month_now = month_list[(month_now + 1) % len(month_list)][:3] or 'Янв'
-                    day_today = day_now
-                except Exception as ex:
-                    self.error(ex)
+    def find_all_events_in_one_page(self, soup: BeautifulSoup):
+        perfomance_list = soup.find('div', id='performance-list')
+        all_events_on_page = perfomance_list.select('div.card')
+        a_events = []
+        for event in all_events_on_page:
+            try:
+                output_event = self.parse_one_event(event)
+                a_events.append(output_event)
+            except Exception as ex:
+                if self.print_errors:
+                    self.bprint(f"{ex.__class__.__name__}: {ex}", color=utils.Fore.RED)
+        return a_events
 
-                output_data = self._parse_data_from_event(event, month_now)
-                if output_data is not None:
-                    yield output_data
+    def find_PAGEN_VALUES(self, soup):
+        PAGEN_NAME = soup.find(id='PAGEN_NAME').get('value')
+        PAGEN_VALUE = soup.find(id='PAGEN_VALUE').get('value')
+        return PAGEN_NAME, PAGEN_VALUE
 
-            if next_href is None:
-                break
-            else:
-                url = next_href.get('href')
-                url = f'https://mikhailovsky.ru{url}'
-                soup = await self._requests_to_axaj_events(url)
-                events, next_href = self._get_events_from_soup(soup)
+    def parse_one_event(self, event: Optional[Tag]):
+        title = event.find('h2').text.strip()
 
-    def _parse_data_from_event(self, event: BeautifulSoup, month_now: str) -> Optional[Union[OutputEvent, None]]:
-        month_current = datetime.now().month
-        month_event = month_list.index(month_now)
+        day = event.find(class_='card__day').text.strip()
+        month, time, day_of_week = event.find(class_='card__time').text.strip().split()
+        date = make_date_if_year_is_unknown(day, month, time, need_datetime=True)
 
-        year = datetime.now().year
-        if month_event < month_current:
-            year += 1
+        url = event.find('a', class_='button').get('href')
+        if not url:
+            raise NotUrlFound(f"{title}, {date}")
+        if ('.yandex.' in url
+                or 'maxitiket' in url
+                or 'subscriptions' in url
+                or 'wowtickets.ru' in url):
+            raise NotImplementedUrl(f"{title}, {date}")
+        href = f"{self.domain}{url}"
+        return OutputEvent(title=title, href=href, date=date)
 
-        title = event.select('div.detail a')[0].text
-
-        day = event.find('div', class_='day').text
-        time = event.select('div.time span')[0].text
-        normal_date = f'{day} {month_now} {year} {time}'
-
-        href = event.select('div.ticket a')
-        if len(href) == 0:
-            return None
-        href = href[0].get('href')
-        if '.yandex.' not in href and 'maxitiket' not in href and 'subscriptions' not in href:
-            href = f'https://mikhailovsky.ru{href}'
-        else:
-            return None
-
-        return OutputEvent(title=title, href=href, date=normal_date)
-
-    def _get_events_from_soup(self, soup: BeautifulSoup) -> tuple[list, BeautifulSoup]:
-        id_to_find_elements = '#afisha_performance_list_container'
-        events = soup.select(f'{id_to_find_elements} div.item:not([style])')
-        next_href = soup.find('a', class_='load-more')
-        return events, next_href
-
-    async def _requests_to_axaj_events(self, url: str) -> BeautifulSoup:
-        headers = {
-            'accept': '*/*',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru,en;q=0.9',
-            'cache-control': 'no-cache',
-            'connection': 'keep-alive',
-            'host': 'mikhailovsky.ru',
-            'pragma': 'no-cache',
-            'referer': 'https://mikhailovsky.ru/afisha/performances/',
-            'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': self.user_agent,
-            'x-requested-with': 'XMLHttpRequest'
-        }
-        r = await self.session.get(url, headers=headers)
-        return BeautifulSoup(r.text, 'lxml')
-
-    async def _requests_to_events(self) -> BeautifulSoup:
-        headers = {
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,'
-                      'image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'ru,en;q=0.9',
-            'cache-control': 'no-cache',
-            'connection': 'keep-alive',
-            'host': 'mikhailovsky.ru',
-            'pragma': 'no-cache',
-            'sec-ch-ua': '"Chromium";v="110", "Not A(Brand";v="24", "YaBrowser";v="23"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'same-origin',
-            'sec-fetch-user': '?1',
-            'upgrade-insecure-requests': '1',
-            'user-agent': self.user_agent
-        }
-        r = await self.session.get(self.url, headers=headers)
-        return BeautifulSoup(r.text, 'lxml')
+    async def get_events_page(self, PAGEN_NAME, PAGEN_VALUE,
+                        month_param, last_struct_month_param):
+        text = await self.load_page_with_events(month_param=month_param,
+                                last_struct_month_param=last_struct_month_param,
+                                PAGEN_NAME=PAGEN_NAME,
+                                PAGEN_VALUE=PAGEN_VALUE)
+        soup = BeautifulSoup(text, 'lxml')
+        PAGEN_NAME, PAGEN_VALUE = self.find_PAGEN_VALUES(soup)
+        events = self.find_all_events_in_one_page(soup)
+        return events, PAGEN_NAME, PAGEN_VALUE
 
     async def body(self) -> None:
-        output_events = await self._parse_events()
-        async for event in output_events:
-            #self.info(event)
-            self.register_event(event.title, event.href, date=event.date)
+        PAGEN_VALUE = 1
+        PAGEN_NAME = 'PAGEN_1'
+        month_param = f"{self.current_year}.{self.current_month}"
+        last_struct_month_param = str(self.current_month)
+        while PAGEN_VALUE:
+            events, PAGEN_NAME, PAGEN_VALUE = await self.get_events_page(PAGEN_NAME,
+                                                                   PAGEN_VALUE,
+                                                                   month_param,
+                                                                   last_struct_month_param)
+            for event in events:
+                #print(event)
+                self.register_event(event.title, event.href, date=event.date, venue='Михайловский театр')
