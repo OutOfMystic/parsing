@@ -868,21 +868,61 @@ class MikhailovskyTeatr(LenkomParser):
         ...
 
     def reformat_seat(self, sector_name, row, seat, price, ticket):
+        def row_number_find(sector_name):
+            # Ложа 2-яруса, л.4
+            *_, number_row = sector_name.split()
+            number_row = number_row.split('.')[-1]
+            return number_row
+
         if 'Партер' in sector_name:
             sector_name = 'Партер'
         elif 'Ложа' in sector_name:
             if 'бельэтажа' in sector_name:
-                sector_name = 'Ложи бельэтажа'
+                *_, number_sector = sector_name.split()
+                number_sector = number_sector.replace('№', '').strip()
+                sector_name = 'Ложи бельэтажа - (4 билета рядом) продаётся целиком'
+                row = 'Ложа номер ' + number_sector
+                seat = 'Места с 1 по 4'
             elif 'бенуара' in sector_name:
-                sector_name = 'Ложи бенуара'
-            elif '1-го яруса' in sector_name:
+                *_, number_sector = sector_name.split()
+                number_sector = number_sector.replace('№', '').strip()
+                sector_name = 'Ложи бенуара - (2 билета рядом) продаётся по два места'
+                row = 'Ложа номер ' + number_sector
+                if seat == '1' or seat == '3':
+                    seat = 'Места 1 и 3'
+                elif seat == '2' or seat == '4':
+                    seat = 'Места 2 и 4'
+            elif ('1' in sector_name and
+                  'ярус' in sector_name):
+                row = row_number_find(sector_name)
                 sector_name = 'Ложи 1 яруса'
-            elif '2-го яруса' in sector_name:
+            elif ('2' in sector_name and
+                  'ярус' in sector_name):
+                row = row_number_find(sector_name)
                 sector_name = 'Ложи 2 яруса'
-            elif '3-го яруса' in sector_name:
+            elif ('3' in sector_name and
+                  'ярус' in sector_name):
+                row = row_number_find(sector_name)
                 sector_name = 'Ложи 3 яруса'
         elif 'ЛОЖА' in sector_name:
             sector_name = 'Ложа' + ' ' + sector_name.split()[-1]
+            sector_name = sector_name + ' - (2 билета рядом) продаётся по два места'
+            if 'В' in sector_name or 'Д' in sector_name:
+                if seat == '1' or seat == '4':
+                    seat = 'Места 1 и 4'
+                elif seat == '2' or seat == '5':
+                    seat = 'Места 2 и 5'
+                elif seat == '3' or seat == '6':
+                    seat = 'Места 3 и 6'
+            else:
+                if seat == '1' or seat == '5':
+                    seat = 'Места 1 и 5'
+                elif seat == '2' or seat == '6':
+                    seat = 'Места 2 и 6'
+                elif seat == '3' or seat == '7':
+                    seat = 'Места 3 и 7'
+                else:
+                    seat = 'Места 4 и 8'
         elif '1-й ярус' in sector_name or '1-Й Ярус' in sector_name:
             sector_name = '1 ярус'
         elif '2-й ярус' in sector_name or '2-Й Ярус' in sector_name:
@@ -895,8 +935,6 @@ class MikhailovskyTeatr(LenkomParser):
             sector_name = 'Бельэтаж'
 
         return sector_name, row, seat, price
-    async def body(self):
-        await super().body()
 
 
 # # class TicketlandVdnh(LenkomParser):
@@ -978,49 +1016,49 @@ class RAMT(LenkomParser):
         await super().body()
 
 
-class TeatrGogolya(LenkomParser):
-    event = 'ticketland.ru'
-    url_filter = lambda url: 'www.ticketland.ru' in url and 'teatr-im-nvgogolya' in url
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    
-    def reformat(self, sectors, scene):
-        ...
-    async def body(self):
-        await super().body()
+# class TeatrGogolya(LenkomParser):
+#     event = 'ticketland.ru'
+#     url_filter = lambda url: 'www.ticketland.ru' in url and 'teatr-im-nvgogolya' in url
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#
+#     def reformat(self, sectors, scene):
+#         ...
+#     async def body(self):
+#         await super().body()
 
 
-class Kreml(LenkomParser):
-    event = 'ticketland.ru'
-    url_filter = lambda url: 'www.ticketland.ru' in url and 'kremlevskiy-dvorec/novogodnee-predstavlenie' in url
-
-    def __init__(self, *args, **extra):
-        super().__init__(*args, **extra)
-
-    def reformat_seat(self, sector_name, row, seat, price, ticket):
-        ref_kreml = {
-            'Партер середина': 'Партер, середина',
-            'Партер левая сторона': 'Партер, левая сторона',
-            'Партер правая сторона': 'Партер, правая сторона',
-            'Балкон правая сторона': 'Балкон, правая сторона',
-            'Балкон-середина': 'Балкон, середина',
-            'Балкон левая сторона': 'Балкон, левая сторона',
-            'Амфитеатр-середина': 'Амфитеатр, середина',
-            'Амфитеатр левая сторона': 'Амфитеатр, левая сторона',
-            'Амфитеатр правая сторона': 'Амфитеатр, правая сторона',
-            'Ложа балкона левая': 'Ложа балкона, левая сторона',
-            'Ложа балкона правая': 'Ложа балкона, правая сторона',
-            'Балкон лев.ст. откидное': 'Балкон, левая сторона (откидные)',
-            'Балкон прав.ст. откидное': 'Балкон, правая сторона (откидные)'
-        }
-        sector_name = ref_kreml.get(sector_name, sector_name)
-        return sector_name, row, seat, price
-    
-    def reformat(self, sectors, scene):
-        pass
-    async def body(self):
-        await super().body()
+# class Kreml(LenkomParser):
+#     event = 'ticketland.ru'
+#     url_filter = lambda url: 'www.ticketland.ru' in url and 'kremlevskiy-dvorec/novogodnee-predstavlenie' in url
+#
+#     def __init__(self, *args, **extra):
+#         super().__init__(*args, **extra)
+#
+#     def reformat_seat(self, sector_name, row, seat, price, ticket):
+#         ref_kreml = {
+#             'Партер середина': 'Партер, середина',
+#             'Партер левая сторона': 'Партер, левая сторона',
+#             'Партер правая сторона': 'Партер, правая сторона',
+#             'Балкон правая сторона': 'Балкон, правая сторона',
+#             'Балкон-середина': 'Балкон, середина',
+#             'Балкон левая сторона': 'Балкон, левая сторона',
+#             'Амфитеатр-середина': 'Амфитеатр, середина',
+#             'Амфитеатр левая сторона': 'Амфитеатр, левая сторона',
+#             'Амфитеатр правая сторона': 'Амфитеатр, правая сторона',
+#             'Ложа балкона левая': 'Ложа балкона, левая сторона',
+#             'Ложа балкона правая': 'Ложа балкона, правая сторона',
+#             'Балкон лев.ст. откидное': 'Балкон, левая сторона (откидные)',
+#             'Балкон прав.ст. откидное': 'Балкон, правая сторона (откидные)'
+#         }
+#         sector_name = ref_kreml.get(sector_name, sector_name)
+#         return sector_name, row, seat, price
+#
+#     def reformat(self, sectors, scene):
+#         pass
+#     async def body(self):
+#         await super().body()
 
 class MalyyParser(LenkomParser):
     event = 'ticketland.ru'
