@@ -82,15 +82,15 @@ class Mikhailovsky(AsyncEventParser):
         month, time, day_of_week = event.find(class_='card__time').text.strip().split()
         date = make_date_if_year_is_unknown(day, month, time, need_datetime=True)
 
-        url = event.find('a', class_='button').get('href')
-        if not url:
+        url = event.find('a', class_='button')
+        if not url or 'Билетов нет' in url.text:
             raise NotUrlFound(f"{title}, {date}")
         if ('.yandex.' in url
                 or 'maxitiket' in url
                 or 'subscriptions' in url
                 or 'wowtickets.ru' in url):
             raise NotImplementedUrl(f"{title}, {date}")
-        href = f"{self.domain}{url}"
+        href = f"{self.domain}{url.get('href')}"
         return OutputEvent(title=title, href=href, date=date)
 
     async def get_events_page(self, PAGEN_NAME, PAGEN_VALUE,
